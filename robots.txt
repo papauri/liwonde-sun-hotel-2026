@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /private/
+Disallow: /tmp/
+Disallow: /cache/
+
+Sitemap: https://www.liwondesunhotel.com/sitemap.xml
