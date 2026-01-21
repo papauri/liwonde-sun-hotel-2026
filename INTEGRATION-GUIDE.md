@@ -32,7 +32,7 @@ Add to your admin/staff area:
 
 ## 3. Room Listing Integration
 
-In **[rooms.php](rooms.php)**, add booking button to each room card:
+In **[rooms-showcase.php](rooms-showcase.php)**, add booking button to each room card:
 
 ```php
 <?php foreach ($rooms as $room): ?>

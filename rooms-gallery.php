@@ -280,6 +280,7 @@ try {
 		</div>
 	</main>
 	<?php include 'includes/footer.php'; ?>
+	<script src="js/main.js"></script>
 	<script>
 	// 3D card tilt effect for gallery cards
 	document.querySelectorAll('.gallery-3d-card').forEach(card => {
