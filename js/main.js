@@ -1,518 +1,566 @@
-// Mobile Navigation Toggle with WOW effects
+/**
+ * Liwonde Sun Hotel - Main JavaScript
+ * Premium Interactions & Animations
+ */
+
+// Page Loader
+window.addEventListener('load', function() {
+    const loader = document.getElementById('page-loader');
+    if (loader) {
+        setTimeout(() => {
+            loader.classList.add('hidden');
+        }, 800);
+    }
+});
+
+// Show loader on page navigation
+document.addEventListener('click', function(e) {
+    const link = e.target.closest('a');
+    if (link && link.href && !link.href.startsWith('#') && !link.target && link.href.startsWith(window.location.origin)) {
+        const loader = document.getElementById('page-loader');
+        if (loader) {
+            loader.classList.remove('hidden');
+        }
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
-    const navToggle = document.getElementById('mobile-menu');
-    const navMenu = document.querySelector('.nav-menu');
+    
+    // Time and Temperature Widget
+    function updateTimeAndTemp() {
+        const timeParts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Africa/Blantyre',
+            hour12: true,
+            hour: '2-digit',
+            minute: '2-digit'
+        }).formatToParts(new Date());
 
-    if (navToggle && navMenu) {
-        navToggle.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
-            navToggle.classList.toggle('active');
-
-            // Add ripple effect to toggle button
-            const ripple = document.createElement('span');
-            ripple.classList.add('ripple');
-            navToggle.appendChild(ripple);
-
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
-        });
+        const hours = timeParts.find(p => p.type === 'hour')?.value || '--';
+        const minutes = timeParts.find(p => p.type === 'minute')?.value || '--';
+        const ampm = (timeParts.find(p => p.type === 'dayPeriod')?.value || 'AM').toUpperCase();
+        
+        // Desktop widget
+        const timeDisplay = document.getElementById('heroTime');
+        const ampmDisplay = document.getElementById('heroAmpm');
+        
+        if (timeDisplay) timeDisplay.textContent = `${hours}:${minutes}`;
+        if (ampmDisplay) ampmDisplay.textContent = ampm;
+        
+        // Mobile widget
+        const timeDisplayMobile = document.getElementById('heroTimeMobile');
+        const ampmDisplayMobile = document.getElementById('heroAmpmMobile');
+        
+        if (timeDisplayMobile) timeDisplayMobile.textContent = `${hours}:${minutes}`;
+        if (ampmDisplayMobile) ampmDisplayMobile.textContent = ampm;
+        
+        // Update Temperature (simulated with random value for demo)
+        const tempDisplay = document.getElementById('heroTemp');
+        const tempDisplayMobile = document.getElementById('heroTempMobile');
+        
+        if (tempDisplay || tempDisplayMobile) {
+            const temp = Math.round(22 + Math.random() * 8); // 22-30°C range
+            if (tempDisplay) tempDisplay.textContent = `${temp}°C`;
+            if (tempDisplayMobile) tempDisplayMobile.textContent = `${temp}°C`;
+        }
     }
-
-    // Close mobile menu when clicking on a link
-    const navLinks = document.querySelectorAll('.nav-menu a');
+    
+    // Initial update
+    updateTimeAndTemp();
+    
+    // Update every minute
+    setInterval(updateTimeAndTemp, 60000);
+    
+    // Smooth scrolling for navigation links
+    const navLinks = document.querySelectorAll('a[href^="#"]');
     navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            navMenu.classList.remove('active');
-            navToggle.classList.remove('active');
-
-            // Add ripple effect to clicked link
-            const ripple = document.createElement('span');
-            ripple.classList.add('ripple');
-            link.appendChild(ripple);
-
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
-        });
-    });
-
-    // Add mobile-specific animations for elements coming into view
-    if ('IntersectionObserver' in window) {
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    // Add animation classes based on element type
-                    if (entry.target.classList.contains('room-card')) {
-                        entry.target.style.animation = 'fadeInUp 0.8s ease forwards, floatCard 6s ease-in-out infinite';
-                    } else if (entry.target.classList.contains('facility-card')) {
-                        entry.target.style.animation = 'fadeInUp 0.8s ease 0.2s forwards, floatCard 8s ease-in-out infinite';
-                    } else if (entry.target.classList.contains('testimonial-card')) {
-                        entry.target.style.animation = 'fadeInUp 0.8s ease 0.4s forwards, floatCard 7s ease-in-out infinite';
-                    } else if (entry.target.classList.contains('section-header')) {
-                        entry.target.style.animation = 'fadeInDown 0.8s ease forwards, glowHeader 4s ease-in-out infinite';
-                    }
-                }
-            });
-        }, observerOptions);
-
-        // Observe elements that should animate when in view
-        document.querySelectorAll('.room-card, .facility-card, .testimonial-card, .section-header').forEach(el => {
-            observer.observe(el);
-        });
-    }
-
-    // Add mobile-specific touch interactions
-    const touchElements = document.querySelectorAll('.room-card, .facility-card, .testimonial-card, .btn');
-    touchElements.forEach(element => {
-        element.addEventListener('touchstart', function() {
-            this.style.transform = 'scale(0.98)';
-        });
-
-        element.addEventListener('touchend', function() {
-            this.style.transform = '';
-        });
-    });
-
-    // Header scroll effect
-    const header = document.querySelector('.header');
-    window.addEventListener('scroll', function() {
-        if (window.scrollY > 100) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
-        }
-    });
-
-    // Hero Slider with enhanced animations
-    const slides = document.querySelectorAll('.slide');
-    const indicators = document.querySelectorAll('.indicator');
-    const prevBtn = document.querySelector('.prev-slide');
-    const nextBtn = document.querySelector('.next-slide');
-    let currentSlide = 0;
-    let slideInterval;
-
-    function showSlide(index) {
-        // Remove active class from all slides with animation
-        slides.forEach((slide, i) => {
-            if (i === index) {
-                slide.classList.add('active');
-                // Trigger animation on active slide content
-                animateSlideContent(slide);
-            } else {
-                slide.classList.remove('active');
-            }
-        });
-
-        indicators.forEach((indicator, i) => {
-            indicator.classList.toggle('active', i === index);
-        });
-
-        currentSlide = index;
-    }
-
-    function animateSlideContent(slide) {
-        const elements = slide.querySelectorAll('.slide-content > *');
-        elements.forEach((el, i) => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            setTimeout(() => {
-                el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-                el.style.opacity = '1';
-                el.style.transform = 'translateY(0)';
-            }, 150 * i);
-        });
-    }
-
-    function nextSlide() {
-        let nextIndex = (currentSlide + 1) % slides.length;
-        showSlide(nextIndex);
-    }
-
-    function prevSlide() {
-        let prevIndex = (currentSlide - 1 + slides.length) % slides.length;
-        showSlide(prevIndex);
-    }
-
-    // Auto slide
-    function startSlideShow() {
-        slideInterval = setInterval(nextSlide, 6000); // Extended to 6 seconds for better experience
-    }
-
-    function stopSlideShow() {
-        clearInterval(slideInterval);
-    }
-
-    // Event listeners for slider controls
-    if (prevBtn) prevBtn.addEventListener('click', () => {
-        stopSlideShow();
-        prevSlide();
-        startSlideShow();
-    });
-
-    if (nextBtn) nextBtn.addEventListener('click', () => {
-        stopSlideShow();
-        nextSlide();
-        startSlideShow();
-    });
-
-    // Indicator click event
-    indicators.forEach((indicator, index) => {
-        indicator.addEventListener('click', () => {
-            stopSlideShow();
-            showSlide(index);
-            startSlideShow();
-        });
-    });
-
-    // Initialize slider
-    showSlide(currentSlide);
-    // Animate initial slide content
-    if (slides[currentSlide]) {
-        animateSlideContent(slides[currentSlide]);
-    }
-    startSlideShow();
-
-    // Pause slideshow on hover
-    const heroSlider = document.querySelector('.hero-slider');
-    if (heroSlider) {
-        heroSlider.addEventListener('mouseenter', stopSlideShow);
-        heroSlider.addEventListener('mouseleave', startSlideShow);
-    }
-
-    // Enhanced parallax effect for hero section
-    window.addEventListener('scroll', function() {
-        const scrolled = window.pageYOffset;
-        const parallax = document.querySelector('.hero');
-        if (parallax) {
-            const speed = scrolled * 0.5;
-            parallax.style.transform = `translateY(${speed}px)`;
-        }
-    });
-
-    // Smooth scrolling for anchor links
-    const anchorLinks = document.querySelectorAll('a[href^="#"]');
-    anchorLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const targetId = this.getAttribute('href');
             if (targetId === '#') return;
-
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
+            
+            const targetSection = document.querySelector(targetId);
+            if (targetSection) {
+                const headerOffset = 80;
+                const elementPosition = targetSection.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                
                 window.scrollTo({
-                    top: targetElement.offsetTop - 80,
+                    top: offsetPosition,
                     behavior: 'smooth'
                 });
             }
         });
     });
-
-    // Animate elements when they come into view
+    
+    // Supreme Premium Header Scroll Effect
+    const header = document.querySelector('.header');
+    let lastScroll = 0;
+    
+    window.addEventListener('scroll', function() {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll > 50) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+        
+        lastScroll = currentScroll;
+    });
+    
+    // Active nav link on scroll
+    const sections = document.querySelectorAll('section[id]');
+    const navItems = document.querySelectorAll('.nav-link');
+    
+    function highlightNavigation() {
+        const scrollPos = window.pageYOffset + 100;
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            const sectionId = section.getAttribute('id');
+            
+            if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+                navItems.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + sectionId) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
+    }
+    
+    window.addEventListener('scroll', highlightNavigation);
+    
+    // Intersection Observer for fade-in animations
     const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
     };
-
+    
     const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animated');
-
-                // Specific animations based on element type
-                if (entry.target.classList.contains('room-card')) {
-                    entry.target.style.animation = 'fadeInUp 0.8s ease forwards';
-                } else if (entry.target.classList.contains('facility-card')) {
-                    entry.target.style.animation = 'fadeInUp 0.8s ease 0.2s forwards';
-                } else if (entry.target.classList.contains('testimonial-card')) {
-                    entry.target.style.animation = 'fadeInUp 0.8s ease 0.4s forwards';
-                }
-            }
-        });
-    }, observerOptions);
-
-    // Observe elements that should animate when in view
-    document.querySelectorAll('.room-card, .facility-card, .testimonial-card, .section-header').forEach(el => {
-        observer.observe(el);
-    });
-
-    // Newsletter form submission
-    const newsletterForms = document.querySelectorAll('.newsletter-form, .footer-form');
-    newsletterForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const emailInput = this.querySelector('input[type="email"]');
-            const email = emailInput.value.trim();
-
-            if (!validateEmail(email)) {
-                alert('Please enter a valid email address.');
-                return;
-            }
-
-            // Simulate form submission
-            alert('Thank you for subscribing to our newsletter!');
-            this.reset();
-        });
-    });
-
-    // Booking form submission (for demo purposes)
-    const bookingForm = document.querySelector('#booking-form');
-    if (bookingForm) {
-        bookingForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            // Simulate booking submission
-            alert('Booking request submitted successfully! We will contact you shortly.');
-            this.reset();
-        });
-    }
-
-    // Contact form submission (for demo purposes)
-    const contactForm = document.querySelector('#contact-form');
-    if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const name = this.querySelector('[name="name"]').value;
-            const email = this.querySelector('[name="email"]').value;
-            const subject = this.querySelector('[name="subject"]').value;
-            const message = this.querySelector('[name="message"]').value;
-
-            if (!name || !email || !message) {
-                alert('Please fill in all required fields.');
-                return;
-            }
-
-            if (!validateEmail(email)) {
-                alert('Please enter a valid email address.');
-                return;
-            }
-
-            // Simulate form submission
-            alert('Thank you for contacting us! We will get back to you soon.');
-            this.reset();
-        });
-    }
-});
-
-// Email validation helper function
-function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-}
-
-// Image gallery lightbox functionality
-function initImageGallery() {
-    const galleryItems = document.querySelectorAll('.gallery-item');
-    galleryItems.forEach(item => {
-        item.addEventListener('click', function() {
-            const imgSrc = this.querySelector('img').getAttribute('src');
-            const caption = this.getAttribute('data-caption') || '';
-
-            // Create lightbox overlay
-            const lightbox = document.createElement('div');
-            lightbox.className = 'lightbox';
-            lightbox.innerHTML = `
-                <div class="lightbox-content">
-                    <span class="close-lightbox">&times;</span>
-                    <img src="${imgSrc}" alt="${caption}">
-                    <div class="lightbox-caption">${caption}</div>
-                </div>
-            `;
-
-            document.body.appendChild(lightbox);
-
-            // Close lightbox when clicking on close button or outside the image
-            const closeBtn = lightbox.querySelector('.close-lightbox');
-            closeBtn.addEventListener('click', function() {
-                document.body.removeChild(lightbox);
-            });
-
-            lightbox.addEventListener('click', function(e) {
-                if (e.target === lightbox) {
-                    document.body.removeChild(lightbox);
-                }
-            });
-        });
-    });
-}
-
-// Initialize gallery if on gallery page
-if (document.querySelector('.gallery-page')) {
-    initImageGallery();
-}
-
-// Room selection functionality
-function initRoomSelection() {
-    const roomCards = document.querySelectorAll('.room-card');
-    roomCards.forEach(card => {
-        card.addEventListener('click', function() {
-            // Remove selected class from all cards
-            roomCards.forEach(c => c.classList.remove('selected'));
-
-            // Add selected class to clicked card
-            this.classList.add('selected');
-
-            // Scroll to booking section
-            const bookingSection = document.querySelector('#booking-section');
-            if (bookingSection) {
-                bookingSection.scrollIntoView({ behavior: 'smooth' });
-            }
-        });
-    });
-}
-
-// Initialize room selection if on rooms page
-if (document.querySelector('.rooms-page')) {
-    initRoomSelection();
-}
-
-// Form validation for booking page
-function validateBookingForm(formData) {
-    const requiredFields = ['checkin', 'checkout', 'guests', 'room-type'];
-    for (const field of requiredFields) {
-        if (!formData[field]) {
-            return { valid: false, message: `Please fill in the ${field.replace('-', ' ')} field.` };
-        }
-    }
-
-    // Check if check-in is before check-out
-    const checkinDate = new Date(formData.checkin);
-    const checkoutDate = new Date(formData.checkout);
-
-    if (checkinDate >= checkoutDate) {
-        return { valid: false, message: 'Check-out date must be after check-in date.' };
-    }
-
-    // Check if dates are in the future
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (checkinDate < today) {
-        return { valid: false, message: 'Check-in date must be today or in the future.' };
-    }
-
-    return { valid: true, message: 'Form is valid.' };
-}
-
-// Initialize tooltips
-function initTooltips() {
-    const tooltipElements = document.querySelectorAll('[data-tooltip]');
-    tooltipElements.forEach(element => {
-        element.addEventListener('mouseenter', function() {
-            const tooltipText = this.getAttribute('data-tooltip');
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip';
-            tooltip.textContent = tooltipText;
-            document.body.appendChild(tooltip);
-
-            const rect = this.getBoundingClientRect();
-            tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
-            tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
-        });
-
-        element.addEventListener('mouseleave', function() {
-            const tooltip = document.querySelector('.tooltip');
-            if (tooltip) {
-                document.body.removeChild(tooltip);
-            }
-        });
-    });
-}
-
-// Initialize tooltips if any exist
-if (document.querySelectorAll('[data-tooltip]').length > 0) {
-    initTooltips();
-}
-
-// Add scroll reveal animations
-function initScrollAnimations() {
-    const animatedElements = document.querySelectorAll('.room-card, .facility-card, .testimonial-card, .section-header');
-
-    const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.style.opacity = '1';
                 entry.target.style.transform = 'translateY(0)';
+                observer.unobserve(entry.target);
             }
         });
-    }, { threshold: 0.1 });
-
-    animatedElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-        observer.observe(el);
+    }, observerOptions);
+    
+    // Observe all cards
+    const cards = document.querySelectorAll('.room-card, .facility-card, .testimonial-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = `all 0.6s ease ${index * 0.1}s`;
+        observer.observe(card);
     });
-}
 
-// Initialize scroll animations when DOM is loaded
-document.addEventListener('DOMContentLoaded', initScrollAnimations);
+        // Toggle: Rooms hover expand (dynamic grid)
+        const toggleRoomsHoverBtn = document.getElementById('toggleRoomsHover');
+        const roomsGridEl = document.getElementById('roomsGrid');
+        if (toggleRoomsHoverBtn && roomsGridEl) {
+            // Set room count on load
+            const roomCount = roomsGridEl.querySelectorAll('.room-card').length;
+            roomsGridEl.setAttribute('data-room-count', roomCount);
+            
+            toggleRoomsHoverBtn.addEventListener('click', function() {
+                const enabled = roomsGridEl.classList.toggle('expand-hover');
+                this.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+                this.classList.toggle('active', enabled);
+                this.textContent = enabled ? 'Disable Hover Expand' : 'Enable Hover Expand';
+            });
+        }
+    
+    // Mobile menu functionality
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const navMenu = document.querySelector('.nav-menu');
+    const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+    
+    if (mobileMenuBtn && navMenu) {
+        mobileMenuBtn.addEventListener('click', function() {
+            navMenu.classList.toggle('active');
+            mobileMenuBtn.classList.toggle('active');
+            mobileMenuOverlay.classList.toggle('active');
+            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+        });
+        
+        // Close menu when clicking overlay
+        if (mobileMenuOverlay) {
+            mobileMenuOverlay.addEventListener('click', function() {
+                navMenu.classList.remove('active');
+                mobileMenuBtn.classList.remove('active');
+                mobileMenuOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        }
+        
+        // Close menu when clicking on a link
+        const mobileLinks = navMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                navMenu.classList.remove('active');
+                mobileMenuBtn.classList.remove('active');
+                mobileMenuOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        });
+    }
+    
+    // Hero carousel
+    const heroSlides = document.querySelectorAll('.hero-slide');
+    const heroIndicators = document.querySelectorAll('.hero-indicator');
+    const prevBtns = document.querySelectorAll('.hero-prev');
+    const nextBtns = document.querySelectorAll('.hero-next');
+    let heroIndex = 0;
+    let heroTimer;
 
-// Gallery filtering functionality
-function initGalleryFiltering() {
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    const galleryItems = document.querySelectorAll('.gallery-item');
+    function setHeroSlide(index) {
+        if (!heroSlides.length) return;
+        heroIndex = (index + heroSlides.length) % heroSlides.length;
+        heroSlides.forEach((slide, i) => {
+            slide.classList.toggle('active', i === heroIndex);
+        });
+        heroIndicators.forEach((dot, i) => {
+            dot.classList.toggle('active', i === heroIndex);
+        });
+    }
 
-    if (filterButtons.length > 0) {
-        filterButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                // Remove active class from all buttons
-                filterButtons.forEach(btn => btn.classList.remove('active'));
+    function nextHeroSlide() {
+        setHeroSlide(heroIndex + 1);
+    }
 
-                // Add active class to clicked button
+    function prevHeroSlideFn() {
+        setHeroSlide(heroIndex - 1);
+    }
+
+    function startHeroAuto() {
+        if (heroTimer) clearInterval(heroTimer);
+        heroTimer = setInterval(nextHeroSlide, 6000);
+    }
+
+    if (heroSlides.length) {
+        startHeroAuto();
+        setHeroSlide(0);
+
+        heroIndicators.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const index = parseInt(dot.dataset.index, 10);
+                setHeroSlide(index);
+                startHeroAuto();
+            });
+        });
+
+        nextBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                nextHeroSlide();
+                startHeroAuto();
+            });
+        });
+
+        prevBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                prevHeroSlideFn();
+                startHeroAuto();
+            });
+        });
+
+        // Pause on hover (desktop)
+        const heroSection = document.querySelector('.hero');
+        if (heroSection) {
+            heroSection.addEventListener('mouseenter', () => heroTimer && clearInterval(heroTimer));
+            heroSection.addEventListener('mouseleave', startHeroAuto);
+        }
+    }
+    
+    // Add hover effect to room cards
+    const roomCards = document.querySelectorAll('.room-card');
+    roomCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+    
+    // Lazy loading for images
+    const images = document.querySelectorAll('img[data-src]');
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+                imageObserver.unobserve(img);
+            }
+        });
+    });
+    
+    images.forEach(img => imageObserver.observe(img));
+
+    // Policy modals
+    const policyLinks = document.querySelectorAll('.policy-link');
+    const policyOverlay = document.querySelector('[data-policy-overlay]');
+    const policyModals = document.querySelectorAll('[data-policy-modal]');
+
+    function closeAllPolicies() {
+        policyModals.forEach(modal => modal.classList.remove('active'));
+        if (policyOverlay) policyOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function openPolicy(slug) {
+        const target = document.querySelector(`[data-policy-modal="${slug}"]`);
+        if (!target) return;
+        closeAllPolicies();
+        target.classList.add('active');
+        if (policyOverlay) policyOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    policyLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const slug = this.dataset.policy;
+            openPolicy(slug);
+        });
+    });
+
+    if (policyOverlay) {
+        policyOverlay.addEventListener('click', closeAllPolicies);
+    }
+
+    document.querySelectorAll('[data-policy-close]').forEach(btn => {
+        btn.addEventListener('click', closeAllPolicies);
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeAllPolicies();
+    });
+
+    // Room Detail Carousel - DISABLED (Using Grid Layout Instead)
+    // The carousel functionality has been replaced with a modern grid layout
+    // in rooms.php. Keep this code commented out for reference.
+    /*
+    const roomCarousel = document.getElementById('roomCarousel');
+    if (roomCarousel) {
+        const slides = roomCarousel.querySelectorAll('.carousel-slide');
+        const carouselDots = document.getElementById('carouselDots');
+        const prevBtn = roomCarousel.querySelector('.carousel-prev');
+        const nextBtn = roomCarousel.querySelector('.carousel-next');
+        
+        let currentSlide = 0;
+
+        // Create dots
+        slides.forEach((_, index) => {
+            const dot = document.createElement('button');
+            dot.className = `carousel-dot ${index === 0 ? 'active' : ''}`;
+            dot.setAttribute('aria-label', `Go to slide ${index + 1}`);
+            dot.addEventListener('click', () => goToSlide(index));
+            carouselDots.appendChild(dot);
+        });
+
+        function updateCarousel() {
+            slides.forEach(slide => slide.classList.remove('active'));
+            carouselDots.querySelectorAll('.carousel-dot').forEach(dot => dot.classList.remove('active'));
+            
+            slides[currentSlide].classList.add('active');
+            carouselDots.children[currentSlide].classList.add('active');
+        }
+
+        function goToSlide(index) {
+            currentSlide = (index + slides.length) % slides.length;
+            updateCarousel();
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % slides.length;
+            updateCarousel();
+        }
+
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+            updateCarousel();
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', prevSlide);
+        if (nextBtn) nextBtn.addEventListener('click', nextSlide);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (roomCarousel.offsetParent !== null) { // Only if visible
+                if (e.key === 'ArrowLeft') prevSlide();
+                if (e.key === 'ArrowRight') nextSlide();
+            }
+        });
+
+        // Auto-advance carousel every 6 seconds
+        setInterval(nextSlide, 6000);
+    }
+    */
+
+    // Room Filter Chips
+    const filterChips = document.querySelectorAll('.chip');
+    const roomTiles = document.querySelectorAll('.room-tile');
+
+    if (filterChips.length > 0 && roomTiles.length > 0) {
+        filterChips.forEach(chip => {
+            chip.addEventListener('click', function() {
+                const filterValue = this.getAttribute('data-filter');
+                
+                // Update active chip
+                filterChips.forEach(c => c.classList.remove('active'));
                 this.classList.add('active');
 
-                const filterValue = this.getAttribute('data-filter');
-
-                galleryItems.forEach(item => {
-                    if (filterValue === 'all' || item.getAttribute('data-category') === filterValue) {
-                        item.style.display = 'block';
+                // Filter rooms
+                roomTiles.forEach(tile => {
+                    const tileFilter = tile.getAttribute('data-filter');
+                    
+                    // Show/hide based on filter
+                    if (filterValue === 'all-rooms' || tileFilter.includes(filterValue)) {
+                        tile.style.display = '';
+                        // Trigger animation
+                        setTimeout(() => {
+                            tile.style.opacity = '1';
+                            tile.style.transform = 'translateY(0)';
+                        }, 10);
                     } else {
-                        item.style.display = 'none';
+                        tile.style.opacity = '0';
+                        tile.style.transform = 'translateY(10px)';
+                        setTimeout(() => {
+                            tile.style.display = 'none';
+                        }, 300);
                     }
                 });
             });
         });
-    }
-}
 
-// Initialize gallery filtering if on gallery page
-if (document.querySelector('.gallery-page')) {
-    initGalleryFiltering();
-}
-
-// FAQ accordion functionality
-function initFAQAccordion() {
-    const faqQuestions = document.querySelectorAll('.faq-question');
-
-    faqQuestions.forEach(question => {
-        question.addEventListener('click', function() {
-            const faqItem = this.parentElement;
-            const answer = faqItem.querySelector('.faq-answer');
-            const icon = this.querySelector('i');
-
-            // Toggle answer visibility
-            if (answer.style.maxHeight) {
-                answer.style.maxHeight = null;
-                icon.classList.remove('fa-minus');
-                icon.classList.add('fa-plus');
-            } else {
-                answer.style.maxHeight = answer.scrollHeight + 'px';
-                icon.classList.remove('fa-plus');
-                icon.classList.add('fa-minus');
-            }
+        // Add transition styles to room tiles
+        roomTiles.forEach(tile => {
+            tile.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            tile.style.opacity = '1';
+            tile.style.transform = 'translateY(0)';
         });
-    });
-}
-
-// Initialize FAQ accordion if on contact page
-if (document.querySelector('.faq-question')) {
-    initFAQAccordion();
-}
+    }
+    
+    // Hotel Gallery Carousel
+    const galleryCarousel = document.querySelector('.gallery-carousel-track');
+    const galleryItems = document.querySelectorAll('.gallery-carousel-item');
+    const galleryPrevBtn = document.querySelector('.gallery-nav-prev');
+    const galleryNextBtn = document.querySelector('.gallery-nav-next');
+    const galleryDots = document.querySelectorAll('.gallery-dot');
+    
+    if (galleryCarousel && galleryItems.length > 0) {
+        let currentGalleryIndex = 0;
+        let itemsToShow = getItemsToShow();
+        
+        function getItemsToShow() {
+            if (window.innerWidth <= 768) return 1;
+            if (window.innerWidth <= 1024) return 3;
+            return 4;
+        }
+        
+        function updateCarousel(smooth = true) {
+            const itemWidth = galleryItems[0].offsetWidth;
+            const gap = 20;
+            const offset = currentGalleryIndex * (itemWidth + gap);
+            
+            galleryCarousel.style.transition = smooth ? 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
+            galleryCarousel.style.transform = `translateX(-${offset}px)`;
+            
+            // Update active dot
+            galleryDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentGalleryIndex);
+            });
+        }
+        
+        function nextSlide() {
+            const maxIndex = Math.max(0, galleryItems.length - itemsToShow);
+            currentGalleryIndex = Math.min(currentGalleryIndex + 1, maxIndex);
+            updateCarousel();
+        }
+        
+        function prevSlide() {
+            currentGalleryIndex = Math.max(currentGalleryIndex - 1, 0);
+            updateCarousel();
+        }
+        
+        // Navigation buttons
+        if (galleryNextBtn) {
+            galleryNextBtn.addEventListener('click', nextSlide);
+        }
+        
+        if (galleryPrevBtn) {
+            galleryPrevBtn.addEventListener('click', prevSlide);
+        }
+        
+        // Dot navigation
+        galleryDots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                currentGalleryIndex = index;
+                updateCarousel();
+            });
+        });
+        
+        // Auto-play carousel
+        let autoplayInterval = setInterval(nextSlide, 4000);
+        
+        // Pause on hover
+        const carouselWrapper = document.querySelector('.gallery-carousel-wrapper');
+        if (carouselWrapper) {
+            carouselWrapper.addEventListener('mouseenter', () => {
+                clearInterval(autoplayInterval);
+            });
+            
+            carouselWrapper.addEventListener('mouseleave', () => {
+                autoplayInterval = setInterval(nextSlide, 4000);
+            });
+        }
+        
+        // Responsive resize handler
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                const newItemsToShow = getItemsToShow();
+                if (newItemsToShow !== itemsToShow) {
+                    itemsToShow = newItemsToShow;
+                    currentGalleryIndex = Math.min(currentGalleryIndex, Math.max(0, galleryItems.length - itemsToShow));
+                    updateCarousel(false);
+                }
+            }, 250);
+        });
+        
+        // Touch/swipe support
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        if (carouselWrapper) {
+            carouselWrapper.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+            }, { passive: true });
+            
+            carouselWrapper.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].clientX;
+                const swipeDistance = touchStartX - touchEndX;
+                
+                if (Math.abs(swipeDistance) > 50) {
+                    if (swipeDistance > 0) {
+                        nextSlide();
+                    } else {
+                        prevSlide();
+                    }
+                }
+            }, { passive: true });
+        }
+        
+        // Initialize
+        updateCarousel(false);
+    }
+    
+    console.log('Liwonde Sun Hotel - Website loaded successfully');
+});
