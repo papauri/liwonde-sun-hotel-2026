@@ -344,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Room Detail Carousel - DISABLED (Using Grid Layout Instead)
     // The carousel functionality has been replaced with a modern grid layout
-    // in rooms.php. Keep this code commented out for reference.
+    // in rooms-showcase.php. Keep this code commented out for reference.
     /*
     const roomCarousel = document.getElementById('roomCarousel');
     if (roomCarousel) {
