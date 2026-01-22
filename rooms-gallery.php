@@ -105,8 +105,8 @@ try {
 		.gallery-3d-grid {
 			perspective: 1600px;
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-			gap: 42px;
+			grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+			gap: 28px;
 			margin-top: 50px;
 			transform-style: preserve-3d;
 		}
@@ -114,14 +114,15 @@ try {
 			background: linear-gradient(135deg, rgba(12, 20, 40, 0.95), rgba(25, 38, 72, 0.9));
 			border-radius: 22px;
 			box-shadow: 0 20px 50px rgba(2, 6, 18, 0.6), 0 0 0 1px rgba(111, 160, 255, 0.15);
-			transition: transform 0.6s cubic-bezier(.25,1.5,.5,1), box-shadow 0.3s;
+			transition: transform 0.7s cubic-bezier(.25,1.5,.5,1), box-shadow 0.3s, opacity 0.6s ease;
 			position: relative;
 			overflow: hidden;
 			z-index: 1;
 			will-change: transform;
 			transform-style: preserve-3d;
-			transform: rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)) translateZ(0);
+			transform: translateY(28px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)) translateZ(0);
 			backdrop-filter: blur(6px);
+			opacity: 0;
 		}
 		.gallery-3d-card:before {
 			content: '';
@@ -169,17 +170,19 @@ try {
 			transform: translateZ(22px);
 		}
 		.gallery-3d-card .gallery-card-badge {
-			background: linear-gradient(90deg, var(--futuristic-indigo), var(--futuristic-cyan));
+			background: linear-gradient(120deg, var(--gold), var(--dark-gold));
 			color: #fff;
-			box-shadow: 0 8px 20px rgba(69, 240, 255, 0.4);
+			box-shadow: 0 8px 18px rgba(212, 175, 55, 0.35);
 			position: absolute;
 			top: 18px;
 			left: 18px;
-			padding: 6px 16px;
-			border-radius: 12px;
-			font-size: 13px;
+			padding: 5px 12px;
+			border-radius: 999px;
+			font-size: 12px;
 			font-weight: 600;
 			z-index: 3;
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
 		}
 		.gallery-3d-card:focus {
 			outline: none;
@@ -202,13 +205,18 @@ try {
 			opacity: 1;
 		}
 		.gallery-3d-card.is-visible {
-			animation: float-card 6s ease-in-out infinite;
+			animation: float-card 6s ease-in-out infinite, glow-rise 0.9s ease forwards;
+			opacity: 1;
+			transform: translateY(0) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg));
 		}
 		.gallery-3d-card.is-visible:nth-child(2n) {
-			animation-delay: 0.8s;
+			animation-delay: 0.12s;
 		}
 		.gallery-3d-card.is-visible:nth-child(3n) {
-			animation-delay: 1.4s;
+			animation-delay: 0.24s;
+		}
+		.gallery-3d-card.is-visible:nth-child(4n) {
+			animation-delay: 0.36s;
 		}
 		.gallery-empty {
 			border-radius: 24px;
@@ -225,6 +233,16 @@ try {
 		@keyframes float-card {
 			0%, 100% { transform: translateY(0) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)); }
 			50% { transform: translateY(-12px) rotateX(calc(var(--rotate-x, 0deg) + 1deg)) rotateY(calc(var(--rotate-y, 0deg) - 1deg)); }
+		}
+		@keyframes glow-rise {
+			0% {
+				opacity: 0;
+				transform: translateY(28px) scale(0.96);
+			}
+			100% {
+				opacity: 1;
+				transform: translateY(0) scale(1);
+			}
 		}
 		@keyframes pulse-orb {
 			0%, 100% { transform: scale(1); opacity: 0.5; }
