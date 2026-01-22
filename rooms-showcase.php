@@ -279,7 +279,7 @@ foreach ($rooms as $room) {
                     ?>
                     <article class="room-tile fancy-3d-card" tabindex="0" data-room-id="<?php echo (int)$room['id']; ?>" data-room-slug="<?php echo htmlspecialchars($room['slug']); ?>" data-badge="<?php echo htmlspecialchars(strtolower(str_replace(' ', '-', $room['badge'] ?? 'all-rooms'))); ?>" data-filter="all-rooms <?php echo htmlspecialchars(strtolower(str_replace(' ', '-', $room['badge'] ?? ''))); ?>">
                         <div class="room-tile__3d-bg"></div>
-                        <a class="room-tile__image" href="rooms.php?room=<?php echo urlencode($room['slug']); ?>#book" aria-label="Open booking for <?php echo htmlspecialchars($room['name']); ?>">
+                        <a class="room-tile__image" href="rooms-showcase.php?room=<?php echo urlencode($room['slug']); ?>#book" aria-label="Open booking for <?php echo htmlspecialchars($room['name']); ?>">
                             <img src="<?php echo htmlspecialchars($room['image_url']); ?>" alt="<?php echo htmlspecialchars($room['name']); ?>">
                             <?php if (!empty($room['badge'])): ?>
                             <span class="room-tile__badge"><?php echo htmlspecialchars($room['badge']); ?></span>
@@ -307,7 +307,7 @@ foreach ($rooms as $room) {
                                 <?php endforeach; ?>
                             </div>
                             <div class="room-tile__actions">
-                                <a class="btn btn-outline" href="rooms.php?room=<?php echo urlencode($room['slug']); ?>">View Details</a>
+                                <a class="btn btn-outline" href="rooms-showcase.php?room=<?php echo urlencode($room['slug']); ?>">View Details</a>
                                 <a class="btn btn-primary" href="index.php?room=<?php echo urlencode($room['slug']); ?>#book" data-room-book="<?php echo htmlspecialchars($room['slug']); ?>">Book Now</a>
                             </div>
                         </div>

@@ -627,6 +627,7 @@ function getRoomGalleryImages($pdo, $room_id) {
             <li><a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
             <li><a href="bookings.php"><i class="fas fa-calendar-check"></i> Bookings</a></li>
             <li><a href="room-management.php" class="active"><i class="fas fa-bed"></i> Rooms</a></li>
+            <li><a href="conference-management.php"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
             <li><a href="menu-management.php"><i class="fas fa-utensils"></i> Menu</a></li>
             <li><a href="events-management.php"><i class="fas fa-calendar-alt"></i> Events</a></li>
             <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
