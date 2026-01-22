@@ -1,6 +1,15 @@
 <?php
 require_once 'config/database.php';
 
+// Fetch policies for footer modals
+$policies = [];
+try {
+    $policyStmt = $pdo->query("SELECT slug, title, summary, content FROM policies WHERE is_active = 1 ORDER BY display_order ASC, id ASC");
+    $policies = $policyStmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $policies = [];
+}
+
 // Fetch active conference rooms
 try {
     $stmt = $pdo->prepare("SELECT * FROM conference_rooms WHERE is_active = 1 ORDER BY display_order ASC");
@@ -84,6 +93,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $currency_symbol = getSetting('currency_symbol', 'K');
 $site_name = getSetting('site_name', 'Liwonde Sun Hotel');
 $site_logo = getSetting('site_logo', 'images/logo.png');
+$site_tagline = getSetting('site_tagline', 'Where Luxury Meets Nature');
+
+function resolveConferenceImage(?string $imagePath): string
+{
+    $fallback = 'images/hero/slide1.jpg';
+    if (!empty($imagePath)) {
+        $normalized = ltrim($imagePath, '/');
+        $fullPath = __DIR__ . '/' . $normalized;
+        if (file_exists($fullPath)) {
+            return $normalized;
+        }
+    }
+
+    if (file_exists(__DIR__ . '/' . $fallback)) {
+        return $fallback;
+    }
+
+    return '';
+}
+$hero_image = resolveConferenceImage('images/hero/slide1.jpg');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -96,8 +125,8 @@ $site_logo = getSetting('site_logo', 'images/logo.png');
     <style>
         .conference-hero {
             background: linear-gradient(135deg, rgba(15, 29, 46, 0.95) 0%, rgba(20, 40, 65, 0.9) 100%), 
-                        url('images/conference/conference-hero.jpg') center/cover;
-            min-height: 400px;
+                        url('<?php echo htmlspecialchars($hero_image); ?>') center/cover;
+            min-height: 420px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -117,12 +146,12 @@ $site_logo = getSetting('site_logo', 'images/logo.png');
             font-size: 20px;
             max-width: 700px;
             margin: 0 auto;
-            color: var(--cream);
+            color: rgba(255, 255, 255, 0.85);
         }
 
         .conference-rooms-section {
-            padding: 80px 0;
-            background: var(--cream);
+            padding: 90px 0;
+            background: #f4f7fb;
         }
 
         .conference-room-card {
@@ -130,7 +159,8 @@ $site_logo = getSetting('site_logo', 'images/logo.png');
             border-radius: 16px;
             overflow: hidden;
             margin-bottom: 40px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(15, 29, 46, 0.08);
+            box-shadow: 0 12px 40px rgba(10, 20, 35, 0.08);
             transition: all 0.4s ease;
         }
 
@@ -146,7 +176,7 @@ $site_logo = getSetting('site_logo', 'images/logo.png');
         }
 
         .conference-room-content {
-            padding: 40px;
+            padding: 40px 44px;
         }
 
         .conference-room-header {
@@ -368,6 +398,20 @@ $site_logo = getSetting('site_logo', 'images/logo.png');
             border: 1px solid #f5c6cb;
         }
 
+        .conference-empty {
+            padding: 40px;
+            background: white;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid rgba(15, 29, 46, 0.08);
+            box-shadow: 0 12px 40px rgba(10, 20, 35, 0.08);
+        }
+
+        .conference-empty h2 {
+            color: var(--navy);
+            margin-bottom: 12px;
+        }
+
         @media (max-width: 768px) {
             .conference-hero h1 {
                 font-size: 32px;
@@ -389,38 +433,37 @@ $site_logo = getSetting('site_logo', 'images/logo.png');
     </style>
 </head>
 <body>
-    <!-- Page Loader -->
-    <div class="page-loader">
-        <div class="loader-ring"></div>
-        <div class="loader-ring"></div>
-        <div class="loader-ring"></div>
-    </div>
-
+    <?php include 'includes/loader.php'; ?>
     <?php include 'includes/header.php'; ?>
-    
-    <!-- Mobile Menu Overlay -->
-    <div class="mobile-menu-overlay" role="presentation"></div>
 
     <!-- Hero Section -->
     <section class="conference-hero">
         <div class="container">
             <h1>Conference & Meeting Facilities</h1>
-            <p>Professional venues equipped with state-of-the-art technology and premium amenities for your business events</p>
+            <p>Business-ready venues with premium technology, flexible layouts, and tailored service for every executive gathering.</p>
         </div>
     </section>
 
     <!-- Conference Rooms Section -->
     <section class="conference-rooms-section">
         <div class="container">
+            <?php if (empty($conference_rooms)): ?>
+                <div class="conference-empty">
+                    <h2>No conference rooms available</h2>
+                    <p>Our team is preparing the conference lineup. Please check back soon or contact us for tailored corporate options.</p>
+                </div>
+            <?php endif; ?>
             <?php foreach ($conference_rooms as $room): ?>
                 <?php 
                 $amenities = !empty($room['amenities']) ? explode(',', $room['amenities']) : [];
+                $image_path = resolveConferenceImage($room['image_path'] ?? '');
                 ?>
                 <div class="conference-room-card">
-                    <img src="<?php echo htmlspecialchars($room['image_path']); ?>" 
-                         alt="<?php echo htmlspecialchars($room['name']); ?>" 
-                         class="conference-room-image"
-                         onerror="this.src='images/placeholder-conference.jpg'">
+                    <?php if (!empty($image_path)): ?>
+                        <img src="<?php echo htmlspecialchars($image_path); ?>" 
+                             alt="<?php echo htmlspecialchars($room['name']); ?>" 
+                             class="conference-room-image">
+                    <?php endif; ?>
                     
                     <div class="conference-room-content">
                         <div class="conference-room-header">
@@ -440,6 +483,10 @@ $site_logo = getSetting('site_logo', 'images/logo.png');
                             <div class="detail-item">
                                 <i class="fas fa-users"></i>
                                 <span>Capacity: <?php echo $room['capacity']; ?> people</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-briefcase"></i>
+                                <span>Executive-ready service</span>
                             </div>
                         </div>
 
@@ -585,6 +632,7 @@ $site_logo = getSetting('site_logo', 'images/logo.png');
         </div>
     </div>
 
+    <?php include 'includes/footer.php'; ?>
     <script src="js/main.js"></script>
     <script>
         function openInquiryModal(roomId, roomName) {

@@ -89,7 +89,7 @@ Place these images in `images/events/`:
 
 The following pages now include Conference & Events in their navigation:
 - ✅ index.php (Homepage)
-- ✅ rooms.php
+- ✅ rooms-showcase.php
 - ✅ restaurant.php
 - ✅ conference.php (new)
 - ✅ events.php (new)
