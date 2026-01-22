@@ -105,7 +105,7 @@ try {
 		.gallery-3d-grid {
 			perspective: 1600px;
 			display: grid;
-			grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+			grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 			gap: 28px;
 			margin-top: 50px;
 			transform-style: preserve-3d;
@@ -128,7 +128,7 @@ try {
 			isolation: isolate;
 			display: flex;
 			flex-direction: column;
-			min-height: 440px;
+			min-height: clamp(360px, 52vh, 440px);
 			height: 100%;
 		}
 		.gallery-3d-card:before {
@@ -165,7 +165,7 @@ try {
 		}
 		.gallery-3d-card .gallery-card-image {
 			position: relative;
-			height: 210px;
+			height: clamp(180px, 22vw, 220px);
 			overflow: hidden;
 			transform: translateZ(26px);
 			aspect-ratio: 4 / 3;
@@ -187,18 +187,18 @@ try {
 			transform: translateZ(22px);
 			display: grid;
 			gap: 10px;
-			min-height: 190px;
+			min-height: clamp(150px, 20vh, 190px);
 			flex: 1;
 		}
 		.gallery-3d-card .gallery-card-body h3 {
-			min-height: 48px;
+			min-height: clamp(40px, 6vh, 52px);
 			display: -webkit-box;
 			-webkit-line-clamp: 2;
 			-webkit-box-orient: vertical;
 			overflow: hidden;
 		}
 		.gallery-3d-card .gallery-card-body p {
-			min-height: 78px;
+			min-height: clamp(60px, 10vh, 84px);
 			display: -webkit-box;
 			-webkit-line-clamp: 3;
 			-webkit-box-orient: vertical;
@@ -341,7 +341,14 @@ try {
 				font-size: 2.6rem;
 			}
 			.gallery-3d-grid {
-				gap: 28px;
+				gap: 22px;
+				grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			}
+			.gallery-3d-card {
+				min-height: clamp(320px, 56vh, 420px);
+			}
+			.gallery-3d-card .gallery-card-image {
+				height: clamp(170px, 32vw, 200px);
 			}
 		}
 	</style>
