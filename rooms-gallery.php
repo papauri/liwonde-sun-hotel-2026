@@ -105,10 +105,11 @@ try {
 		.gallery-3d-grid {
 			perspective: 1600px;
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+			grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 			gap: 28px;
 			margin-top: 50px;
 			transform-style: preserve-3d;
+			align-items: stretch;
 		}
 		.gallery-3d-card {
 			background: linear-gradient(135deg, rgba(12, 20, 40, 0.95), rgba(25, 38, 72, 0.9));
@@ -123,6 +124,12 @@ try {
 			transform: translateY(28px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)) translateZ(0);
 			backdrop-filter: blur(6px);
 			opacity: 0;
+			border: 1px solid rgba(91, 124, 255, 0.2);
+			isolation: isolate;
+			display: flex;
+			flex-direction: column;
+			min-height: 440px;
+			height: 100%;
 		}
 		.gallery-3d-card:before {
 			content: '';
@@ -156,11 +163,21 @@ try {
 			z-index: 1;
 			pointer-events: none;
 		}
+		.gallery-3d-card .gallery-card-image {
+			position: relative;
+			height: 210px;
+			overflow: hidden;
+			transform: translateZ(26px);
+			aspect-ratio: 4 / 3;
+		}
 		.gallery-3d-card .gallery-card-image img {
 			border-radius: 18px 18px 0 0;
 			box-shadow: 0 12px 40px rgba(2, 6, 18, 0.65);
 			transition: transform 0.6s cubic-bezier(.25,1.5,.5,1);
 			transform: translateZ(28px);
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
 		}
 		.gallery-3d-card:hover .gallery-card-image img {
 			transform: translateZ(36px) scale(1.06) translateY(-6px) rotateZ(-1deg);
@@ -168,6 +185,24 @@ try {
 		.gallery-3d-card .gallery-card-body {
 			padding-bottom: 22px;
 			transform: translateZ(22px);
+			display: grid;
+			gap: 10px;
+			min-height: 190px;
+			flex: 1;
+		}
+		.gallery-3d-card .gallery-card-body h3 {
+			min-height: 48px;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+		.gallery-3d-card .gallery-card-body p {
+			min-height: 78px;
+			display: -webkit-box;
+			-webkit-line-clamp: 3;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
 		}
 		.gallery-3d-card .gallery-card-badge {
 			background: linear-gradient(120deg, var(--gold), var(--dark-gold));
@@ -194,6 +229,59 @@ try {
 			border-radius: 22px;
 			background: linear-gradient(120deg, rgba(91, 124, 255, 0.22) 0%, rgba(6, 12, 28, 0.15) 100%);
 			z-index: -2;
+		}
+		.gallery-3d-card .gallery-card-portal {
+			position: absolute;
+			inset: 0;
+			border-radius: 22px;
+			background: conic-gradient(from 120deg, rgba(69, 240, 255, 0.3), rgba(255, 102, 196, 0.2), rgba(91, 124, 255, 0.3), rgba(69, 240, 255, 0.3));
+			opacity: 0.18;
+			filter: blur(20px);
+			transform: translateZ(-40px);
+			z-index: -3;
+		}
+		.gallery-3d-card .gallery-card-ring {
+			position: absolute;
+			inset: 12px;
+			border-radius: 18px;
+			border: 1px solid rgba(69, 240, 255, 0.2);
+			box-shadow: 0 0 18px rgba(69, 240, 255, 0.15);
+			transform: translateZ(8px);
+			pointer-events: none;
+			z-index: 2;
+		}
+		.gallery-3d-card .gallery-card-holo {
+			position: absolute;
+			inset: 18px;
+			border-radius: 18px;
+			background: linear-gradient(135deg, rgba(69, 240, 255, 0.12), rgba(255, 102, 196, 0.1), transparent 70%);
+			mix-blend-mode: screen;
+			opacity: 0.55;
+			transform: translateZ(14px);
+			pointer-events: none;
+			z-index: 2;
+		}
+		.gallery-3d-card .gallery-card-floor {
+			position: absolute;
+			left: 50%;
+			bottom: -30px;
+			width: 70%;
+			height: 44px;
+			background: radial-gradient(ellipse at center, rgba(69, 240, 255, 0.28) 0%, rgba(10,25,41,0.02) 70%);
+			filter: blur(12px);
+			border-radius: 50%;
+			transform: translateX(-50%) translateZ(-20px);
+			z-index: -1;
+		}
+		.gallery-3d-card .gallery-card-frame {
+			position: absolute;
+			inset: 8px;
+			border-radius: 18px;
+			border: 1px solid rgba(255, 255, 255, 0.08);
+			box-shadow: inset 0 0 18px rgba(69, 240, 255, 0.08);
+			transform: translateZ(12px);
+			pointer-events: none;
+			z-index: 2;
 		}
 		.gallery-3d-card .gallery-card-body h3 {
 			color: #f8fbff;
@@ -275,9 +363,14 @@ try {
 					<?php foreach ($rooms as $room): ?>
 					<a class="gallery-3d-card" tabindex="0" href="pages/room.php?room=<?php echo urlencode($room['slug']); ?>">
 						<div class="gallery-card-3d-bg"></div>
+						<div class="gallery-card-portal"></div>
+						<div class="gallery-card-ring"></div>
+						<div class="gallery-card-holo"></div>
 						<div class="gallery-card-sheen"></div>
+						<div class="gallery-card-floor"></div>
+						<div class="gallery-card-frame"></div>
 						<div class="gallery-card-image">
-							<img src="<?php echo htmlspecialchars($room['image_url']); ?>" alt="<?php echo htmlspecialchars($room['name']); ?>">
+							<img src="<?php echo htmlspecialchars($room['image_url']); ?>" alt="<?php echo htmlspecialchars($room['name']); ?>" loading="lazy">
 							<?php if (!empty($room['badge'])): ?>
 							<span class="gallery-card-badge"><?php echo htmlspecialchars($room['badge']); ?></span>
 							<?php endif; ?>
