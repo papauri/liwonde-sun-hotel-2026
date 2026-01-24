@@ -154,109 +154,150 @@ $hero_image = resolveConferenceImage('images/hero/slide1.jpg');
             background: #f4f7fb;
         }
 
+        .conference-rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            align-items: stretch;
+        }
+
         .conference-room-card {
             background: white;
             border-radius: 16px;
             overflow: hidden;
-            margin-bottom: 40px;
-            border: 1px solid rgba(15, 29, 46, 0.08);
-            box-shadow: 0 12px 40px rgba(10, 20, 35, 0.08);
-            transition: all 0.4s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .conference-room-card.featured {
+            border: 2px solid var(--gold);
         }
 
         .conference-room-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+            transform: translateY(-12px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
         }
 
         .conference-room-image {
+            position: relative;
             width: 100%;
-            height: 350px;
+            height: 260px;
+            overflow: hidden;
+        }
+
+        .conference-room-image img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .conference-room-card:hover .conference-room-image img {
+            transform: scale(1.1);
         }
 
         .conference-room-content {
-            padding: 40px 44px;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
         }
 
         .conference-room-header {
             display: flex;
             justify-content: space-between;
-            align-items: start;
-            margin-bottom: 20px;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 16px;
         }
 
         .conference-room-title {
-            font-size: 32px;
+            font-size: 24px;
             font-family: var(--font-serif);
             color: var(--navy);
-            margin: 0;
+            margin: 0 0 12px 0;
+            line-height: 1.3;
         }
 
         .conference-room-capacity {
             background: var(--gold);
             color: var(--deep-navy);
-            padding: 8px 16px;
-            border-radius: 24px;
-            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 13px;
             white-space: nowrap;
         }
 
         .conference-room-description {
             color: #666;
             line-height: 1.8;
-            margin-bottom: 24px;
+            margin-bottom: 16px;
+            flex: 1;
         }
 
         .conference-room-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 16px;
+            color: #666;
+            font-size: 14px;
         }
 
         .detail-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: var(--navy);
+            gap: 6px;
         }
 
         .detail-item i {
             color: var(--gold);
-            font-size: 18px;
         }
 
         .amenities-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 8px;
+            margin-bottom: 16px;
         }
 
         .amenity-tag {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            color: var(--navy);
-            border: 1px solid #dee2e6;
+            background: #f5f5f5;
+            color: #555;
+            padding: 6px 11px;
+            border-radius: 6px;
+            transition: all 0.25s ease;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .amenity-tag:hover {
+            background: var(--navy);
+            color: white;
+            border-color: var(--navy);
         }
 
         .pricing-section {
-            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 100%);
-            padding: 24px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+            color: var(--navy);
+            padding: 16px;
             border-radius: 12px;
-            color: white;
-            margin-bottom: 24px;
+            border: 1px solid rgba(212, 175, 55, 0.35);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.15);
         }
 
         .pricing-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
         }
 
         .pricing-row:last-child {
@@ -264,14 +305,15 @@ $hero_image = resolveConferenceImage('images/hero/slide1.jpg');
         }
 
         .pricing-label {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
         }
 
         .pricing-value {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
-            color: var(--gold);
+            color: var(--navy);
         }
 
         .btn-inquire {
@@ -412,14 +454,94 @@ $hero_image = resolveConferenceImage('images/hero/slide1.jpg');
             margin-bottom: 12px;
         }
 
+        @media (max-width: 1024px) {
+            .conference-rooms-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 24px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .conference-rooms-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
         @media (max-width: 768px) {
             .conference-hero h1 {
                 font-size: 32px;
             }
 
+            .conference-rooms-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .conference-room-card {
+                margin-bottom: 0;
+            }
+
+            .conference-room-image {
+                height: 200px;
+            }
+
+            .conference-room-content {
+                padding: 20px 16px;
+            }
+
             .conference-room-header {
-                flex-direction: column;
                 gap: 12px;
+                margin-bottom: 16px;
+            }
+
+            .conference-room-title {
+                font-size: 20px;
+                margin-bottom: 10px;
+            }
+
+            .conference-room-capacity {
+                padding: 8px 12px;
+                font-size: 11px;
+                width: fit-content;
+            }
+
+            .conference-room-description {
+                font-size: 13px;
+                margin-bottom: 16px;
+            }
+
+            .conference-room-details {
+                gap: 12px;
+                font-size: 13px;
+                margin-bottom: 16px;
+            }
+
+            .amenities-list {
+                gap: 8px;
+                margin-bottom: 16px;
+            }
+
+            .amenity-tag {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+
+            .pricing-section {
+                padding: 12px 12px;
+                margin-bottom: 16px;
+            }
+
+            .pricing-row {
+                padding: 8px 0;
+            }
+
+            .pricing-label {
+                font-size: 13px;
+            }
+
+            .pricing-value {
+                font-size: 18px;
             }
 
             .form-row {
@@ -428,6 +550,39 @@ $hero_image = resolveConferenceImage('images/hero/slide1.jpg');
 
             .inquiry-form-container {
                 padding: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .conference-hero {
+                min-height: 300px;
+                padding: 70px 16px 30px;
+            }
+
+            .conference-hero h1 {
+                font-size: 26px;
+            }
+
+            .conference-hero p {
+                font-size: 14px;
+            }
+
+            .conference-room-image {
+                height: 180px;
+            }
+
+            .conference-room-title {
+                font-size: 18px;
+            }
+
+            .conference-room-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .conference-room-details {
+                flex-direction: column;
+                gap: 8px;
             }
         }
     </style>
@@ -452,71 +607,78 @@ $hero_image = resolveConferenceImage('images/hero/slide1.jpg');
                     <h2>No conference rooms available</h2>
                     <p>Our team is preparing the conference lineup. Please check back soon or contact us for tailored corporate options.</p>
                 </div>
-            <?php endif; ?>
-            <?php foreach ($conference_rooms as $room): ?>
-                <?php 
-                $amenities = !empty($room['amenities']) ? explode(',', $room['amenities']) : [];
-                $image_path = resolveConferenceImage($room['image_path'] ?? '');
-                ?>
-                <div class="conference-room-card">
-                    <?php if (!empty($image_path)): ?>
-                        <img src="<?php echo htmlspecialchars($image_path); ?>" 
-                             alt="<?php echo htmlspecialchars($room['name']); ?>" 
-                             class="conference-room-image">
-                    <?php endif; ?>
-                    
-                    <div class="conference-room-content">
-                        <div class="conference-room-header">
-                            <h2 class="conference-room-title"><?php echo htmlspecialchars($room['name']); ?></h2>
-                            <span class="conference-room-capacity">
-                                <i class="fas fa-users"></i> Up to <?php echo $room['capacity']; ?> People
-                            </span>
+            <?php else: ?>
+                <div class="conference-rooms-grid">
+                    <?php foreach ($conference_rooms as $room): ?>
+                        <?php
+                        $amenities = !empty($room['amenities']) ? explode(',', $room['amenities']) : [];
+                        $image_path = resolveConferenceImage($room['image_path'] ?? '');
+                        ?>
+                        <div class="conference-room-card">
+                            <?php if (!empty($image_path)): ?>
+                                <img src="<?php echo htmlspecialchars($image_path); ?>"
+                                     alt="<?php echo htmlspecialchars($room['name']); ?>"
+                                     class="conference-room-image">
+                            <?php else: ?>
+                                <div class="conference-room-image" style="background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%); display: flex; align-items: center; justify-content: center; color: #999;">
+                                    <i class="fas fa-image" style="font-size: 32px;"></i>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <div class="conference-room-content">
+                                <div class="conference-room-header">
+                                    <h2 class="conference-room-title"><?php echo htmlspecialchars($room['name']); ?></h2>
+                                    <span class="conference-room-capacity">
+                                        <i class="fas fa-users"></i> Up to <?php echo $room['capacity']; ?> People
+                                    </span>
+                                </div>
+
+                                <p class="conference-room-description"><?php echo htmlspecialchars($room['description']); ?></p>
+
+                                <div class="conference-room-details">
+                                    <div class="detail-item">
+                                        <i class="fas fa-expand-arrows-alt"></i>
+                                        <span><?php echo number_format($room['size_sqm'], 0); ?> sqm</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-users"></i>
+                                        <span>Capacity: <?php echo $room['capacity']; ?> people</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-briefcase"></i>
+                                        <span>Executive-ready service</span>
+                                    </div>
+                                </div>
+
+                                <?php if (!empty($amenities)): ?>
+                                <div class="amenities-list">
+                                    <?php foreach ($amenities as $amenity): ?>
+                                        <span class="amenity-tag">
+                                            <i class="fas fa-check"></i> <?php echo trim(htmlspecialchars($amenity)); ?>
+                                        </span>
+                                    <?php endforeach; ?>
+                                </div>
+                                <?php endif; ?>
+
+                                <div class="pricing-section">
+                                    <div class="pricing-row">
+                                        <span class="pricing-label">Hourly Rate</span>
+                                        <span class="pricing-value"><?php echo $currency_symbol . number_format($room['hourly_rate'], 0); ?>/hour</span>
+                                    </div>
+                                    <div class="pricing-row">
+                                        <span class="pricing-label">Full Day Rate</span>
+                                        <span class="pricing-value"><?php echo $currency_symbol . number_format($room['daily_rate'], 0); ?>/day</span>
+                                    </div>
+                                </div>
+
+                                <button class="btn-inquire" onclick="openInquiryModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name']); ?>')">
+                                    <i class="fas fa-envelope"></i> Send Inquiry
+                                </button>
+                            </div>
                         </div>
-
-                        <p class="conference-room-description"><?php echo htmlspecialchars($room['description']); ?></p>
-
-                        <div class="conference-room-details">
-                            <div class="detail-item">
-                                <i class="fas fa-expand-arrows-alt"></i>
-                                <span><?php echo number_format($room['size_sqm'], 0); ?> sqm</span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-users"></i>
-                                <span>Capacity: <?php echo $room['capacity']; ?> people</span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-briefcase"></i>
-                                <span>Executive-ready service</span>
-                            </div>
-                        </div>
-
-                        <?php if (!empty($amenities)): ?>
-                        <div class="amenities-list">
-                            <?php foreach ($amenities as $amenity): ?>
-                                <span class="amenity-tag">
-                                    <i class="fas fa-check"></i> <?php echo trim(htmlspecialchars($amenity)); ?>
-                                </span>
-                            <?php endforeach; ?>
-                        </div>
-                        <?php endif; ?>
-
-                        <div class="pricing-section">
-                            <div class="pricing-row">
-                                <span class="pricing-label">Hourly Rate</span>
-                                <span class="pricing-value"><?php echo $currency_symbol . number_format($room['hourly_rate'], 0); ?>/hour</span>
-                            </div>
-                            <div class="pricing-row">
-                                <span class="pricing-label">Full Day Rate</span>
-                                <span class="pricing-value"><?php echo $currency_symbol . number_format($room['daily_rate'], 0); ?>/day</span>
-                            </div>
-                        </div>
-
-                        <button class="btn-inquire" onclick="openInquiryModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name']); ?>')">
-                            <i class="fas fa-envelope"></i> Send Inquiry
-                        </button>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
-            <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </section>
 

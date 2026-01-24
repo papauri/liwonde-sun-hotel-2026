@@ -11,6 +11,7 @@ require_once '../config/database.php';
 $user = $_SESSION['admin_user'];
 $message = '';
 $error = '';
+$current_page = basename($_SERVER['PHP_SELF']);
 
 function uploadConferenceImage(array $fileInput): ?string
 {
@@ -152,54 +153,76 @@ try {
             color: #333;
         }
         .admin-header {
-            background: var(--deep-navy);
+            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 100%);
             color: white;
-            padding: 20px 30px;
+            padding: 20px 32px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         .admin-header h1 {
-            font-size: 22px;
-            margin: 0;
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: var(--gold);
         }
         .user-info {
             display: flex;
             align-items: center;
             gap: 14px;
         }
-        .btn-logout {
+        .user-name {
+            font-size: 14px;
+        }
+        .user-role {
             background: var(--gold);
             color: var(--deep-navy);
-            padding: 8px 16px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 6px;
             text-decoration: none;
-            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
         .admin-nav {
-            background: var(--navy);
-            padding: 12px 30px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 32px;
         }
         .admin-nav ul {
             list-style: none;
             margin: 0;
             padding: 0;
             display: flex;
-            flex-wrap: wrap;
-            gap: 14px;
+            gap: 32px;
         }
         .admin-nav a {
-            color: white;
+            display: block;
+            padding: 16px 0;
+            color: #666;
             text-decoration: none;
             font-size: 14px;
-            padding: 8px 12px;
-            border-radius: 6px;
-            transition: background 0.3s ease;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
         }
         .admin-nav a.active,
         .admin-nav a:hover {
-            background: var(--gold);
-            color: var(--deep-navy);
+            color: var(--gold);
+            border-bottom-color: var(--gold);
         }
         .content {
             padding: 30px;
@@ -310,6 +333,33 @@ try {
             font-size: 13px;
             color: #555;
         }
+        .room-image-container {
+            width: 100%;
+            height: 140px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+        }
+
+        .room-image-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .room-image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 32px;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+        }
+
         .room-actions {
             display: flex;
             gap: 10px;
@@ -322,8 +372,8 @@ try {
         <h1><i class="fas fa-briefcase"></i> Conference Rooms</h1>
         <div class="user-info">
             <div>
-                <div><?php echo htmlspecialchars($user['full_name']); ?></div>
-                <div style="font-size: 12px; opacity: 0.8;"><?php echo htmlspecialchars($user['role']); ?></div>
+                <div class="user-name"><?php echo htmlspecialchars($user['full_name']); ?></div>
+                <div class="user-role"><?php echo htmlspecialchars($user['role']); ?></div>
             </div>
             <a href="logout.php" class="btn-logout">
                 <i class="fas fa-sign-out-alt"></i> Logout
@@ -333,13 +383,12 @@ try {
 
     <nav class="admin-nav">
         <ul>
-            <li><a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="bookings.php"><i class="fas fa-calendar-check"></i> Bookings</a></li>
-            <li><a href="room-management.php"><i class="fas fa-bed"></i> Rooms</a></li>
-            <li><a href="conference-management.php" class="active"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
-            <li><a href="room-gallery-management.php"><i class="fas fa-images"></i> Room Gallery</a></li>
-            <li><a href="menu-management.php"><i class="fas fa-utensils"></i> Menu</a></li>
-            <li><a href="events-management.php"><i class="fas fa-calendar-alt"></i> Events</a></li>
+            <li><a href="dashboard.php" class="<?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="bookings.php" class="<?php echo $current_page === 'bookings.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
+            <li><a href="room-management.php" class="<?php echo $current_page === 'room-management.php' ? 'active' : ''; ?>"><i class="fas fa-bed"></i> Rooms</a></li>
+            <li><a href="conference-management.php" class="<?php echo $current_page === 'conference-management.php' ? 'active' : ''; ?>"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
+            <li><a href="menu-management.php" class="<?php echo $current_page === 'menu-management.php' ? 'active' : ''; ?>"><i class="fas fa-utensils"></i> Menu</a></li>
+            <li><a href="events-management.php" class="<?php echo $current_page === 'events-management.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
             <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
         </ul>
     </nav>
@@ -411,6 +460,20 @@ try {
                             <h3><?php echo htmlspecialchars($room['name']); ?></h3>
                             <span class="badge"><?php echo $room['is_active'] ? 'Active' : 'Inactive'; ?></span>
                         </div>
+                        
+                        <!-- Image Display -->
+                        <div class="room-image-container">
+                            <?php if (!empty($room['image_path'])): ?>
+                                <img src="../<?php echo htmlspecialchars($room['image_path']); ?>"
+                                     alt="<?php echo htmlspecialchars($room['name']); ?>"
+                                     class="room-image-preview">
+                            <?php else: ?>
+                                <div class="room-image-placeholder">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
                         <div class="room-meta">
                             <span><i class="fas fa-users"></i> <?php echo (int) $room['capacity']; ?> Guests</span>
                             <span><i class="fas fa-expand-arrows-alt"></i> <?php echo number_format($room['size_sqm'] ?? 0, 0); ?> sqm</span>

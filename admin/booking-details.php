@@ -122,6 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
 
 $site_name = getSetting('site_name', 'Liwonde Sun Hotel');
 $currency_symbol = getSetting('currency_symbol', 'K');
+$current_page = 'bookings.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -157,11 +158,68 @@ $currency_symbol = getSetting('currency_symbol', 'K');
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         .admin-header h1 {
             font-family: 'Playfair Display', serif;
             font-size: 24px;
             color: var(--gold);
+        }
+        .admin-header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .admin-header .user-name {
+            font-size: 14px;
+        }
+        .admin-header .user-role {
+            background: var(--gold);
+            color: var(--deep-navy);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .admin-nav {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 32px;
+        }
+        .admin-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 32px;
+        }
+        .admin-nav a {
+            display: block;
+            padding: 16px 0;
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        .admin-nav a:hover,
+        .admin-nav a.active {
+            color: var(--gold);
+            border-bottom-color: var(--gold);
         }
         .btn-back {
             background: rgba(255, 255, 255, 0.1);
@@ -339,10 +397,28 @@ $currency_symbol = getSetting('currency_symbol', 'K');
 <body>
     <div class="admin-header">
         <h1><i class="fas fa-hotel"></i> Booking Details</h1>
-        <a href="dashboard.php" class="btn-back">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
+        <div class="user-info">
+            <div>
+                <div class="user-name"><?php echo htmlspecialchars($user['full_name']); ?></div>
+                <div class="user-role"><?php echo htmlspecialchars($user['role']); ?></div>
+            </div>
+            <a href="logout.php" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
     </div>
+
+    <nav class="admin-nav">
+        <ul>
+            <li><a href="dashboard.php" class="<?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="bookings.php" class="<?php echo $current_page === 'bookings.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
+            <li><a href="room-management.php" class="<?php echo $current_page === 'room-management.php' ? 'active' : ''; ?>"><i class="fas fa-bed"></i> Rooms</a></li>
+            <li><a href="conference-management.php" class="<?php echo $current_page === 'conference-management.php' ? 'active' : ''; ?>"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
+            <li><a href="menu-management.php" class="<?php echo $current_page === 'menu-management.php' ? 'active' : ''; ?>"><i class="fas fa-utensils"></i> Menu</a></li>
+            <li><a href="events-management.php" class="<?php echo $current_page === 'events-management.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
+            <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
+        </ul>
+    </nav>
 
     <div class="booking-details-container">
         <div class="details-card">

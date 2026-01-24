@@ -4,76 +4,60 @@ require_once 'config/database.php';
 // Handle booking submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        // Validate and sanitize inputs
-        $room_id = filter_var($_POST['room_id'], FILTER_VALIDATE_INT);
-        $guest_name = trim($_POST['guest_name']);
-        $guest_email = filter_var(trim($_POST['guest_email']), FILTER_VALIDATE_EMAIL);
-        $guest_phone = trim($_POST['guest_phone']);
-        $guest_country = trim($_POST['guest_country'] ?? '');
-        $guest_address = trim($_POST['guest_address'] ?? '');
-        $number_of_guests = filter_var($_POST['number_of_guests'], FILTER_VALIDATE_INT);
-        $check_in_date = $_POST['check_in_date'];
-        $check_out_date = $_POST['check_out_date'];
-        $special_requests = trim($_POST['special_requests'] ?? '');
+        // Collect booking data
+        $booking_data = [
+            'room_id' => filter_var($_POST['room_id'], FILTER_VALIDATE_INT),
+            'guest_name' => trim($_POST['guest_name']),
+            'guest_email' => trim($_POST['guest_email']),
+            'guest_phone' => trim($_POST['guest_phone']),
+            'guest_country' => trim($_POST['guest_country'] ?? ''),
+            'guest_address' => trim($_POST['guest_address'] ?? ''),
+            'number_of_guests' => filter_var($_POST['number_of_guests'], FILTER_VALIDATE_INT),
+            'check_in_date' => $_POST['check_in_date'],
+            'check_out_date' => $_POST['check_out_date'],
+            'special_requests' => trim($_POST['special_requests'] ?? '')
+        ];
 
-        // Validate required fields
-        if (!$room_id || !$guest_name || !$guest_email || !$guest_phone || !$number_of_guests || !$check_in_date || !$check_out_date) {
-            throw new Exception('Please fill in all required fields.');
+        // Use enhanced validation with availability check
+        $validation_result = validateBookingWithAvailability($booking_data);
+
+        if (!$validation_result['valid']) {
+            // Handle validation errors
+            if ($validation_result['type'] === 'availability') {
+                // Room availability issue - provide detailed conflict info
+                $conflict_message = $validation_result['errors']['availability'];
+                if (!empty($validation_result['conflicts'])) {
+                    $conflict_message .= ' ' . $validation_result['errors']['conflicts'];
+                }
+                throw new Exception($conflict_message);
+            } elseif ($validation_result['type'] === 'capacity') {
+                // Room capacity issue
+                throw new Exception($validation_result['errors']['number_of_guests']);
+            } else {
+                // General validation errors
+                $error_messages = [];
+                foreach ($validation_result['errors'] as $field => $message) {
+                    $error_messages[] = "$field: $message";
+                }
+                throw new Exception(implode('; ', $error_messages));
+            }
         }
 
-        // Validate dates
-        $check_in = new DateTime($check_in_date);
-        $check_out = new DateTime($check_out_date);
-        $today = new DateTime('today');
+        // All validations passed - proceed with booking
+        $room_id = $booking_data['room_id'];
+        $guest_name = $booking_data['guest_name'];
+        $guest_email = $booking_data['guest_email'];
+        $guest_phone = $booking_data['guest_phone'];
+        $guest_country = $booking_data['guest_country'];
+        $guest_address = $booking_data['guest_address'];
+        $number_of_guests = $booking_data['number_of_guests'];
+        $check_in_date = $booking_data['check_in_date'];
+        $check_out_date = $booking_data['check_out_date'];
+        $special_requests = $booking_data['special_requests'];
 
-        if ($check_in < $today) {
-            throw new Exception('Check-in date cannot be in the past.');
-        }
-
-        if ($check_out <= $check_in) {
-            throw new Exception('Check-out date must be after check-in date.');
-        }
-
-        // Calculate nights and total amount
-        $number_of_nights = $check_in->diff($check_out)->days;
-        
-        // Get room details
-        $room_stmt = $pdo->prepare("SELECT id, name, price_per_night, max_guests FROM rooms WHERE id = ? AND is_active = 1");
-        $room_stmt->execute([$room_id]);
-        $room = $room_stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$room) {
-            throw new Exception('Selected room is not available.');
-        }
-
-        if ($number_of_guests > $room['max_guests']) {
-            throw new Exception("This room can accommodate maximum {$room['max_guests']} guests.");
-        }
-
-        // Check room availability for the dates (ENHANCED - prevents overbooking)
-        // Use FOR UPDATE to lock the row during availability check
-        $pdo->beginTransaction(); // Start transaction
-        
-        $availability_stmt = $pdo->prepare("
-            SELECT COUNT(*) as bookings 
-            FROM bookings 
-            WHERE room_id = ? 
-            AND status IN ('pending', 'confirmed', 'checked-in')
-            AND NOT (check_out_date <= ? OR check_in_date >= ?)
-            FOR UPDATE
-        ");
-        $availability_stmt->execute([
-            $room_id,
-            $check_in_date, // New booking check-in
-            $check_out_date  // New booking check-out
-        ]);
-        $availability = $availability_stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($availability['bookings'] > 0) {
-            $pdo->rollBack(); // Cancel transaction
-            throw new Exception('This room is not available for the selected dates. Please choose different dates or another room.');
-        }
-
+        // Get room details for pricing
+        $room = $validation_result['availability']['room'];
+        $number_of_nights = $validation_result['availability']['nights'];
         $total_amount = $room['price_per_night'] * $number_of_nights;
 
         // Generate unique booking reference (guaranteed unique)
@@ -84,37 +68,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ref_exists = $ref_check->fetch(PDO::FETCH_ASSOC)['count'] > 0;
         } while ($ref_exists);
 
-        // Insert booking
-        $insert_stmt = $pdo->prepare("
-            INSERT INTO bookings (
-                booking_reference, room_id, guest_name, guest_email, guest_phone, 
-                guest_country, guest_address, number_of_guests, check_in_date, 
-                check_out_date, number_of_nights, total_amount, special_requests, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-        ");
+        // Insert booking with transaction for data integrity
+        $pdo->beginTransaction(); // Start transaction
+        
+        try {
+            $insert_stmt = $pdo->prepare("
+                INSERT INTO bookings (
+                    booking_reference, room_id, guest_name, guest_email, guest_phone, 
+                    guest_country, guest_address, number_of_guests, check_in_date, 
+                    check_out_date, number_of_nights, total_amount, special_requests, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+            ");
 
-        $insert_stmt->execute([
-            $booking_reference, $room_id, $guest_name, $guest_email, $guest_phone,
-            $guest_country, $guest_address, $number_of_guests, $check_in_date,
-            $check_out_date, $number_of_nights, $total_amount, $special_requests
-        ]);
+            $insert_stmt->execute([
+                $booking_reference, $room_id, $guest_name, $guest_email, $guest_phone,
+                $guest_country, $guest_address, $number_of_guests, $check_in_date,
+                $check_out_date, $number_of_nights, $total_amount, $special_requests
+            ]);
 
-        // Commit transaction - booking secured!
-        $pdo->commit();
+            // Commit transaction - booking secured with foreign key constraints!
+            $pdo->commit();
 
-        // Success - redirect to confirmation
-        $_SESSION['booking_success'] = [
-            'reference' => $booking_reference,
-            'guest_name' => $guest_name,
-            'room_name' => $room['name'],
-            'check_in' => $check_in_date,
-            'check_out' => $check_out_date,
-            'nights' => $number_of_nights,
-            'total' => $total_amount
-        ];
+            // Success - redirect to confirmation
+            $_SESSION['booking_success'] = [
+                'reference' => $booking_reference,
+                'guest_name' => $guest_name,
+                'room_name' => $room['name'],
+                'check_in' => $check_in_date,
+                'check_out' => $check_out_date,
+                'nights' => $number_of_nights,
+                'total' => $total_amount
+            ];
 
-        header('Location: booking-confirmation.php?ref=' . $booking_reference);
-        exit;
+            header('Location: booking-confirmation.php?ref=' . $booking_reference);
+            exit;
+            
+        } catch (Exception $e) {
+            // Rollback on insert error
+            $pdo->rollBack();
+            throw $e;
+        }
 
     } catch (Exception $e) {
         // Rollback transaction on any error

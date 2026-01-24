@@ -73,7 +73,11 @@ try {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#0A1929">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=yes">
     <title>Upcoming Events - <?php echo htmlspecialchars($site_name); ?></title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -88,6 +92,7 @@ try {
             text-align: center;
             color: white;
             padding: 100px 20px 60px;
+            margin-top: 70px;
         }
 
         .events-hero h1 {
@@ -113,6 +118,7 @@ try {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 32px;
+            align-items: stretch;
         }
 
         .event-card {
@@ -122,6 +128,8 @@ try {
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         .event-card.featured {
@@ -136,7 +144,7 @@ try {
         .event-image-container {
             position: relative;
             width: 100%;
-            height: 240px;
+            height: 260px;
             overflow: hidden;
         }
 
@@ -201,7 +209,7 @@ try {
             padding: 28px;
             display: flex;
             flex-direction: column;
-            min-height: 320px;
+            flex: 1;
         }
 
         .event-title {
@@ -234,8 +242,8 @@ try {
         .event-description {
             color: #666;
             line-height: 1.7;
-            margin-bottom: auto;
-            flex-grow: 1;
+            margin-bottom: 16px;
+            flex: 1;
         }
 
         .event-footer {
@@ -246,6 +254,7 @@ try {
             padding-top: 20px;
             border-top: 1px solid #eee;
             margin-top: auto;
+            flex-shrink: 0;
         }
 
         .event-price {
@@ -311,18 +320,134 @@ try {
         }
 
         @media (max-width: 768px) {
+            .events-hero {
+                min-height: 350px;
+                padding: 80px 20px 40px;
+                margin-top: 70px;
+            }
+
             .events-hero h1 {
                 font-size: 32px;
             }
 
+            .events-hero p {
+                font-size: 16px;
+            }
+
+            .events-section {
+                padding: 50px 0;
+            }
+
             .events-grid {
                 grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .event-card {
+                margin-bottom: 0;
+            }
+
+            .event-image-container {
+                height: 200px;
+            }
+
+            .event-date-badge {
+                padding: 8px 12px;
+            }
+
+            .event-date-day {
+                font-size: 20px;
+            }
+
+            .event-date-month {
+                font-size: 10px;
+            }
+
+            .event-content {
+                padding: 20px 16px;
+                min-height: auto;
+            }
+
+            .event-title {
+                font-size: 20px;
+                margin-bottom: 10px;
+            }
+
+            .event-meta {
+                gap: 12px;
+                font-size: 13px;
+            }
+
+            .event-description {
+                font-size: 14px;
+                margin-bottom: 16px;
             }
 
             .event-footer {
                 flex-direction: column;
                 gap: 12px;
-                align-items: start;
+                align-items: flex-start;
+                padding-top: 16px;
+            }
+
+            .event-price {
+                width: 100%;
+                justify-content: center;
+                padding: 10px 14px;
+            }
+
+            .event-price .price-value {
+                font-size: 18px;
+            }
+
+            .event-price .price-label {
+                font-size: 11px;
+                padding: 5px 8px;
+            }
+
+            .no-events {
+                padding: 40px 20px;
+            }
+
+            .no-events i {
+                font-size: 48px;
+                margin-bottom: 16px;
+            }
+
+            .no-events h3 {
+                font-size: 22px;
+            }
+
+            .no-events p {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .events-hero {
+                min-height: 300px;
+                padding: 70px 16px 30px;
+            }
+
+            .events-hero h1 {
+                font-size: 26px;
+            }
+
+            .events-hero p {
+                font-size: 14px;
+            }
+
+            .event-image-container {
+                height: 180px;
+            }
+
+            .event-title {
+                font-size: 18px;
+            }
+
+            .event-meta {
+                flex-direction: column;
+                gap: 8px;
             }
         }
     </style>

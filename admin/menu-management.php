@@ -12,6 +12,7 @@ require_once '../config/database.php';
 $user = $_SESSION['admin_user'];
 $message = '';
 $error = '';
+$current_page = basename($_SERVER['PHP_SELF']);
 
 // Handle menu item actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -139,6 +140,18 @@ try {
             align-items: center;
             gap: 24px;
         }
+        .admin-header .user-name {
+            font-size: 14px;
+        }
+        .admin-header .user-role {
+            background: var(--gold);
+            color: var(--deep-navy);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
         .btn-logout {
             background: rgba(255, 255, 255, 0.1);
             color: white;
@@ -169,8 +182,9 @@ try {
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
-            border-bottom: 3px solid transparent;
+            border-bottom: 2px solid transparent;
             transition: all 0.3s ease;
+            white-space: nowrap;
         }
         .admin-nav a:hover,
         .admin-nav a.active {
@@ -557,8 +571,8 @@ try {
         <h1><i class="fas fa-utensils"></i> Menu Management</h1>
         <div class="user-info">
             <div>
-                <div><?php echo htmlspecialchars($user['full_name']); ?></div>
-                <div style="font-size: 12px; opacity: 0.8;"><?php echo htmlspecialchars($user['role']); ?></div>
+                <div class="user-name"><?php echo htmlspecialchars($user['full_name']); ?></div>
+                <div class="user-role"><?php echo htmlspecialchars($user['role']); ?></div>
             </div>
             <a href="logout.php" class="btn-logout">
                 <i class="fas fa-sign-out-alt"></i> Logout
@@ -568,13 +582,12 @@ try {
 
     <nav class="admin-nav">
         <ul>
-            <li><a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="bookings.php"><i class="fas fa-calendar-check"></i> Bookings</a></li>
-            <li><a href="room-management.php"><i class="fas fa-bed"></i> Rooms</a></li>
-            <li><a href="conference-management.php"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
-            <li><a href="room-gallery-management.php"><i class="fas fa-images"></i> Room Gallery</a></li>
-            <li><a href="menu-management.php" class="active"><i class="fas fa-utensils"></i> Menu</a></li>
-            <li><a href="events-management.php"><i class="fas fa-calendar-alt"></i> Events</a></li>
+            <li><a href="dashboard.php" class="<?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="bookings.php" class="<?php echo $current_page === 'bookings.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
+            <li><a href="room-management.php" class="<?php echo $current_page === 'room-management.php' ? 'active' : ''; ?>"><i class="fas fa-bed"></i> Rooms</a></li>
+            <li><a href="conference-management.php" class="<?php echo $current_page === 'conference-management.php' ? 'active' : ''; ?>"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
+            <li><a href="menu-management.php" class="<?php echo $current_page === 'menu-management.php' ? 'active' : ''; ?>"><i class="fas fa-utensils"></i> Menu</a></li>
+            <li><a href="events-management.php" class="<?php echo $current_page === 'events-management.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
             <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
         </ul>
     </nav>

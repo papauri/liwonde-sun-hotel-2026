@@ -3,30 +3,41 @@ session_start();
 
 // Check authentication
 if (!isset($_SESSION['admin_user'])) {
+    // For AJAX requests, return JSON with 401 instead of redirecting HTML
+    $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    if ($is_ajax) {
+        header('Content-Type: application/json');
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Session expired. Please login again.']);
+        exit;
+    }
     header('Location: login.php');
     exit;
 }
 
 require_once '../config/database.php';
 
-// Handle AJAX requests for gallery images
-if (isset($_GET['action']) && $_GET['action'] === 'get_gallery' && isset($_GET['room_id'])) {
-    header('Content-Type: application/json');
-    $room_id = intval($_GET['room_id']);
-    try {
-        $stmt = $pdo->prepare("SELECT * FROM gallery WHERE room_id = ? AND is_active = 1 ORDER BY display_order ASC, id DESC");
-        $stmt->execute([$room_id]);
-        $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        echo json_encode($images);
-    } catch (PDOException $e) {
-        echo json_encode([]);
+// Helpers
+function ini_bytes($val) {
+    $val = trim((string)$val);
+    if ($val === '') return 0;
+    $last = strtolower($val[strlen($val) - 1]);
+    $num = (int)$val;
+    switch ($last) {
+        case 'g': $num *= 1024;
+        case 'm': $num *= 1024;
+        case 'k': $num *= 1024;
     }
-    exit;
+    return $num;
+}
+function is_ajax_request() {
+    return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 }
 
 $user = $_SESSION['admin_user'];
 $message = '';
 $error = '';
+$current_page = basename($_SERVER['PHP_SELF']);
 
 // Handle room actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -77,8 +88,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $allowed = ['jpg', 'jpeg', 'png', 'webp'];
                 $filename = $_FILES['room_image']['name'];
                 $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                $size = isset($_FILES['room_image']['size']) ? (int)$_FILES['room_image']['size'] : 0;
+                if ($size > 20 * 1024 * 1024) {
+                    $error = 'File too large. Max size is 20MB.';
+                    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'message' => $error]);
+                        exit;
+                    }
+                }
                 
-                if (in_array($ext, $allowed)) {
+                // Optional MIME check to prevent spoofed extensions
+                $mime_ok = true;
+                if (function_exists('finfo_open')) {
+                    $f = finfo_open(FILEINFO_MIME_TYPE);
+                    if ($f) {
+                        $mime = finfo_file($f, $_FILES['room_image']['tmp_name']);
+                        finfo_close($f);
+                        $allowed_mimes = ['image/jpeg','image/png','image/webp'];
+                        $mime_ok = in_array($mime, $allowed_mimes, true);
+                    }
+                }
+
+                if (in_array($ext, $allowed) && $mime_ok) {
                     // Create upload directory if not exists
                     $upload_dir = '../images/rooms/';
                     if (!is_dir($upload_dir)) {
@@ -90,63 +122,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $upload_path = $upload_dir . $new_filename;
                     
                     if (move_uploaded_file($_FILES['room_image']['tmp_name'], $upload_path)) {
-                        // Update database with new image path
+                        // New image path
                         $image_url = 'images/rooms/' . $new_filename;
+
+                        // Fetch old image (if any) before updating
+                        $oldStmt = $pdo->prepare("SELECT image_url FROM rooms WHERE id = ?");
+                        $oldStmt->execute([$room_id]);
+                        $old_image = $oldStmt->fetchColumn();
+
+                        // Update database with new image path
                         $stmt = $pdo->prepare("UPDATE rooms SET image_url = ? WHERE id = ?");
                         $stmt->execute([$image_url, $room_id]);
                         $message = 'Featured room image uploaded successfully!';
+
+                        // Delete old local file if it exists and is not a remote URL
+                        if ($old_image && !preg_match('#^https?://#i', $old_image)) {
+                            $old_path = '../' . $old_image;
+                            if (file_exists($old_path)) {
+                                @unlink($old_path);
+                            }
+                        }
+
+                        // If request is AJAX, return JSON with the new image URL so client can update modal without closing it
+                        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                            header('Content-Type: application/json');
+                            echo json_encode(['success' => true, 'image_url' => $image_url]);
+                            exit;
+                        }
                     } else {
                         $error = 'Failed to upload image.';
+                        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                            header('Content-Type: application/json');
+                            echo json_encode(['success' => false, 'message' => 'Failed to upload image.']);
+                            exit;
+                        }
                     }
                 } else {
                     $error = 'Invalid file type. Only JPG, PNG, and WEBP allowed.';
+                    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'message' => $error]);
+                        exit;
+                    }
                 }
             } else {
-                $error = 'No image selected or upload error.';
-            }
+                // POST may exceed post_max_size causing empty $_FILES
+                $contentLen = isset($_SERVER['CONTENT_LENGTH']) ? (int)$_SERVER['CONTENT_LENGTH'] : 0;
+                $postMax = ini_bytes(ini_get('post_max_size'));
+                if ($contentLen > 0 && $postMax > 0 && $contentLen >= $postMax) {
+                    $error = 'Upload too large. Server POST limit is ' . ini_get('post_max_size') . '. Please contact admin to increase limit.';
+                    if (is_ajax_request()) {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'message' => $error]);
+                        exit;
+                    }
+                }
 
-        } elseif ($action === 'upload_gallery_image') {
-            // Handle gallery image upload
-            if (isset($_FILES['gallery_image']) && $_FILES['gallery_image']['error'] === 0) {
-                $room_id = $_POST['room_id'];
-                $title = $_POST['image_title'] ?? 'Room View';
-                $description = $_POST['image_description'] ?? '';
-                $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-                $filename = $_FILES['gallery_image']['name'];
-                $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-                
-                if (in_array($ext, $allowed)) {
-                    // Create upload directory if not exists
-                    $upload_dir = '../images/rooms/gallery/';
-                    if (!is_dir($upload_dir)) {
-                        mkdir($upload_dir, 0755, true);
-                    }
-                    
-                    // Generate unique filename
-                    $new_filename = 'room_' . $room_id . '_gallery_' . time() . '.' . $ext;
-                    $upload_path = $upload_dir . $new_filename;
-                    
-                    if (move_uploaded_file($_FILES['gallery_image']['tmp_name'], $upload_path)) {
-                        // Insert into gallery table
-                        $image_url = 'images/rooms/gallery/' . $new_filename;
-                        $stmt = $pdo->prepare("INSERT INTO gallery (title, description, image_url, category, room_id, is_active) VALUES (?, ?, ?, 'rooms', ?, 1)");
-                        $stmt->execute([$title, $description, $image_url, $room_id]);
-                        $message = 'Gallery image uploaded successfully!';
-                    } else {
-                        $error = 'Failed to upload gallery image.';
-                    }
+                $err = $_FILES['room_image']['error'] ?? 0;
+                if ($err === UPLOAD_ERR_INI_SIZE || $err === UPLOAD_ERR_FORM_SIZE) {
+                    $error = 'File too large. Max size is 20MB.';
+                } elseif ($err === UPLOAD_ERR_PARTIAL) {
+                    $error = 'Upload was partial. Please try again.';
+                } elseif ($err === UPLOAD_ERR_NO_FILE) {
+                    $error = 'No image selected.';
                 } else {
-                    $error = 'Invalid file type. Only JPG, PNG, and WEBP allowed.';
+                    $error = 'Upload error (code ' . $err . ').';
                 }
-            } else {
-                $error = 'No image selected or upload error.';
+                if (is_ajax_request()) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => $error]);
+                    exit;
+                }
             }
 
-        } elseif ($action === 'delete_gallery_image') {
-            $image_id = $_POST['image_id'];
-            $stmt = $pdo->prepare("DELETE FROM gallery WHERE id = ?");
-            $stmt->execute([$image_id]);
-            $message = 'Gallery image deleted successfully!';
         }
 
     } catch (PDOException $e) {
@@ -163,16 +211,6 @@ try {
     $rooms = [];
 }
 
-// Function to get room gallery images
-function getRoomGalleryImages($pdo, $room_id) {
-    try {
-        $stmt = $pdo->prepare("SELECT * FROM gallery WHERE room_id = ? AND is_active = 1 ORDER BY display_order ASC, id DESC");
-        $stmt->execute([$room_id]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        return [];
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -247,8 +285,9 @@ function getRoomGalleryImages($pdo, $room_id) {
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
-            border-bottom: 3px solid transparent;
+            border-bottom: 2px solid transparent;
             transition: all 0.3s ease;
+            white-space: nowrap;
         }
         .admin-nav a:hover,
         .admin-nav a.active {
@@ -624,12 +663,12 @@ function getRoomGalleryImages($pdo, $room_id) {
 
     <nav class="admin-nav">
         <ul>
-            <li><a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="bookings.php"><i class="fas fa-calendar-check"></i> Bookings</a></li>
-            <li><a href="room-management.php" class="active"><i class="fas fa-bed"></i> Rooms</a></li>
-            <li><a href="conference-management.php"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
-            <li><a href="menu-management.php"><i class="fas fa-utensils"></i> Menu</a></li>
-            <li><a href="events-management.php"><i class="fas fa-calendar-alt"></i> Events</a></li>
+            <li><a href="dashboard.php" class="<?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="bookings.php" class="<?php echo $current_page === 'bookings.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
+            <li><a href="room-management.php" class="<?php echo $current_page === 'room-management.php' ? 'active' : ''; ?>"><i class="fas fa-bed"></i> Rooms</a></li>
+            <li><a href="conference-management.php" class="<?php echo $current_page === 'conference-management.php' ? 'active' : ''; ?>"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
+            <li><a href="menu-management.php" class="<?php echo $current_page === 'menu-management.php' ? 'active' : ''; ?>"><i class="fas fa-utensils"></i> Menu</a></li>
+            <li><a href="events-management.php" class="<?php echo $current_page === 'events-management.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
             <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
         </ul>
     </nav>
@@ -676,13 +715,14 @@ function getRoomGalleryImages($pdo, $room_id) {
                         <?php foreach ($rooms as $room): ?>
                             <tr id="row-<?php echo $room['id']; ?>">
                                 <td>
-                                    <?php if (!empty($room['image_url']) && file_exists('../' . $room['image_url'])): ?>
-                                        <img src="../<?php echo htmlspecialchars($room['image_url']); ?>" 
-                                             alt="<?php echo htmlspecialchars($room['name']); ?>" 
+                                    <?php if (!empty($room['image_url'])): ?>
+                                        <?php $imgSrc = preg_match('#^https?://#i', $room['image_url']) ? $room['image_url'] : '../' . $room['image_url']; ?>
+                                        <img src="<?php echo htmlspecialchars($imgSrc); ?>" 
+                                         alt="<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>" 
                                              class="room-image-preview" 
-                                             onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name']); ?>', '<?php echo htmlspecialchars($room['image_url']); ?>')">
+                                         onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($room['image_url'], ENT_QUOTES); ?>')">
                                     <?php else: ?>
-                                        <div class="no-image" onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name']); ?>', '')">
+                                        <div class="no-image" onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>', '')">
                                             <i class="fas fa-camera"></i>
                                         </div>
                                     <?php endif; ?>
@@ -762,11 +802,8 @@ function getRoomGalleryImages($pdo, $room_id) {
                                         <button class="btn-action btn-featured" onclick="toggleFeatured(<?php echo $room['id']; ?>)">
                                             <i class="fas fa-star"></i> Featured
                                         </button>
-                                        <button class="btn-action" style="background: #6f42c1; color: white;" onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name']); ?>', '<?php echo htmlspecialchars($room['image_url'] ?? ''); ?>')">
+                                        <button class="btn-action" style="background: #6f42c1; color: white;" onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($room['image_url'] ?? '', ENT_QUOTES); ?>')">
                                             <i class="fas fa-image"></i> Featured
-                                        </button>
-                                        <button class="btn-action" style="background: #17a2b8; color: white;" onclick="openGalleryModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name']); ?>')">
-                                            <i class="fas fa-images"></i> Gallery (<?php echo count(getRoomGalleryImages($pdo, $room['id'])); ?>)
                                         </button>
                                     </div>
                                 </td>
@@ -824,61 +861,19 @@ function getRoomGalleryImages($pdo, $room_id) {
         </div>
     </div>
 
-    <!-- Room Gallery Modal -->
-    <div class="modal" id="galleryModal">
-        <div class="modal-content" style="max-width: 900px;">
-            <div class="modal-header">
-                <span id="modalGalleryRoomName">Room Gallery</span>
-                <span class="modal-close" onclick="closeGalleryModal()">&times;</span>
-            </div>
-            
-            <div id="galleryImagesContainer">
-                <h4 style="margin-bottom: 16px; color: #666;">Room Gallery Images</h4>
-                <div id="galleryImagesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
-                    <!-- Gallery images will be loaded here -->
-                </div>
-            </div>
-
-            <h4 style="margin: 24px 0 12px 0; color: #666; border-top: 2px solid #f0f0f0; padding-top: 24px;">Upload New Gallery Image</h4>
-            <form method="POST" enctype="multipart/form-data" id="galleryUploadForm">
-                <input type="hidden" name="action" value="upload_gallery_image">
-                <input type="hidden" name="room_id" id="uploadGalleryRoomId">
-                
-                <div class="form-group">
-                    <label>Image Title *</label>
-                    <input type="text" name="image_title" placeholder="e.g., Bedroom View" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Image Description</label>
-                    <textarea name="image_description" rows="2" placeholder="Optional description"></textarea>
-                </div>
-
-                <div class="upload-area" onclick="document.getElementById('galleryImageInput').click()">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p style="margin: 8px 0; color: #666;">Click to select an image or drag and drop</p>
-                    <small style="color: #999;">JPG, PNG, WEBP (Max 5MB)</small>
-                </div>
-
-                <div class="form-group">
-                    <label>Select Image File *</label>
-                    <input type="file" name="gallery_image" id="galleryImageInput" accept="image/jpeg,image/png,image/webp" required>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn-action btn-cancel" onclick="closeGalleryModal()">
-                        <i class="fas fa-times"></i> Close
-                    </button>
-                    <button type="submit" class="btn-action btn-save">
-                        <i class="fas fa-upload"></i> Upload to Gallery
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <script>
         let currentEditingId = null;
+
+        function escapeHtml(str) {
+            if (str === undefined || str === null) return '';
+            return String(str)
+                .replace(/&/g, '&')
+                .replace(/</g, '<')
+                .replace(/>/g, '>')
+                .replace(/"/g, '"')
+                .replace(/'/g, '&#39;');
+        }
 
         // Image Modal Functions
         function openImageModal(roomId, roomName, currentImageUrl) {
@@ -886,7 +881,8 @@ function getRoomGalleryImages($pdo, $room_id) {
             document.getElementById('uploadRoomId').value = roomId;
             
             if (currentImageUrl && currentImageUrl !== '') {
-                document.getElementById('currentImage').src = '../' + currentImageUrl;
+                const resolved = /^https?:\/\//i.test(currentImageUrl) ? currentImageUrl : ('../' + currentImageUrl);
+                document.getElementById('currentImage').src = resolved;
                 document.getElementById('currentImageContainer').style.display = 'block';
             } else {
                 document.getElementById('currentImageContainer').style.display = 'none';
@@ -900,71 +896,87 @@ function getRoomGalleryImages($pdo, $room_id) {
             document.getElementById('imageUploadForm').reset();
         }
 
-        // Gallery Modal Functions
-        function openGalleryModal(roomId, roomName) {
-            document.getElementById('modalGalleryRoomName').textContent = roomName + ' - Gallery';
-            document.getElementById('uploadGalleryRoomId').value = roomId;
-            
-            // Load existing gallery images
-            fetch(`?action=get_gallery&room_id=${roomId}`)
-                .then(response => response.json())
-                .then(images => {
-                    const container = document.getElementById('galleryImagesList');
-                    if (images.length === 0) {
-                        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; padding: 40px;">No gallery images yet. Upload your first image below.</p>';
-                    } else {
-                        container.innerHTML = images.map(img => `
-                            <div style="position: relative; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
-                                <img src="../${img.image_url}" alt="${img.title}" style="width: 100%; height: 150px; object-fit: cover;">
-                                <div style="padding: 8px; background: #f8f9fa;">
-                                    <div style="font-weight: 600; font-size: 13px; color: #333; margin-bottom: 4px;">${img.title}</div>
-                                    ${img.description ? `<div style="font-size: 11px; color: #666;">${img.description}</div>` : ''}
-                                </div>
-                                <button onclick="deleteGalleryImage(${img.id})" 
-                                        style="position: absolute; top: 8px; right: 8px; background: rgba(220, 53, 69, 0.9); color: white; border: none; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-size: 11px;">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        `).join('');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading gallery:', error);
-                });
-            
-            document.getElementById('galleryModal').classList.add('active');
-        }
+        // Auto-submit featured image upload on file selection (keeps modal open)
+        document.getElementById('roomImageInput').addEventListener('change', function() {
+            const form = document.getElementById('imageUploadForm');
+            performImageFormAjax(form);
+        });
 
-        function closeGalleryModal() {
-            document.getElementById('galleryModal').classList.remove('active');
-            document.getElementById('galleryUploadForm').reset();
-        }
-
-        function deleteGalleryImage(imageId) {
-            if (!confirm('Are you sure you want to delete this gallery image?')) return;
-            
-            const formData = new FormData();
-            formData.append('action', 'delete_gallery_image');
-            formData.append('image_id', imageId);
-            
+        // Image modal AJAX handling - keep featured-image modal open after upload
+        function performImageFormAjax(form) {
+            const formData = new FormData(form);
             fetch(window.location.href, {
                 method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    alert('Error deleting image');
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
+            })
+            .then(async response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return null;
+                }
+                const ct = response.headers.get('content-type') || '';
+                if (!ct.includes('application/json')) {
+                    return null;
+                }
+                // try to parse JSON response from server
+                return response.json().catch(() => null);
+            })
+            .then(data => {
+                if (data && data.success) {
+                    // Update featured image preview in modal
+                    const currentImage = document.getElementById('currentImage');
+                    if (currentImage) {
+                        const _src = /^https?:\/\//i.test(data.image_url) ? data.image_url : ('../' + data.image_url);
+                        currentImage.src = _src + '?t=' + Date.now();
+                        document.getElementById('currentImageContainer').style.display = 'block';
+                    }
+                    // Also update the featured image preview in the table row
+                    const roomId = document.getElementById('uploadRoomId').value;
+                    const row = document.getElementById('row-' + roomId);
+                    if (row) {
+                        let tableImg = row.querySelector('.room-image-preview');
+                        if (tableImg) {
+                            const _src2 = /^https?:\/\//i.test(data.image_url) ? data.image_url : ('../' + data.image_url);
+                            tableImg.src = _src2 + '?t=' + Date.now();
+                            // Ensure subsequent clicks open modal with the new image URL
+                            const name = row.querySelector('.cell-view strong')?.textContent || 'Room';
+                            tableImg.onclick = () => openImageModal(roomId, name, data.image_url);
+                        } else {
+                            const cell = row.querySelector('td:first-child');
+                            if (cell) {
+                                cell.innerHTML = '';
+                                const imgEl = document.createElement('img');
+                                imgEl.className = 'room-image-preview';
+                                imgEl.alt = (row.querySelector('.cell-view strong')?.textContent || 'Room');
+                                const _src3 = /^https?:\/\//i.test(data.image_url) ? data.image_url : ('../' + data.image_url);
+                                imgEl.src = _src3 + '?t=' + Date.now();
+                                imgEl.addEventListener('click', () => {
+                                    const name = row.querySelector('.cell-view strong')?.textContent || 'Room';
+                                    openImageModal(roomId, name, data.image_url);
+                                });
+                                cell.appendChild(imgEl);
+                            }
+                        }
+                    }
+                    form.reset();
+                } else {
+                    alert(data && data.message ? data.message : 'Error uploading image');
+                }
+            })
+            .catch(err => {
+                console.error('Error uploading featured image:', err);
+                alert('Error uploading image');
             });
         }
 
-        // Close modals on outside click
-        document.getElementById('galleryModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeGalleryModal();
-            }
+        // Intercept featured image form submit and use AJAX so modal remains open
+        document.getElementById('imageUploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            performImageFormAjax(this);
         });
 
         // Close modal on outside click
@@ -974,27 +986,32 @@ function getRoomGalleryImages($pdo, $room_id) {
             }
         });
 
-        // Drag and drop functionality
-        const uploadArea = document.querySelector('.upload-area');
-        const fileInput = document.getElementById('roomImageInput');
+        // Drag and drop functionality (featured image area)
+        document.querySelectorAll('.upload-area').forEach(area => {
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('dragover');
+            });
 
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
+            area.addEventListener('dragleave', () => {
+                area.classList.remove('dragover');
+            });
 
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (!files || files.length === 0) return;
 
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                fileInput.files = files;
-            }
+                const form = area.closest('form');
+                if (!form) return;
+
+                const input = form.querySelector('input[type="file"]');
+                if (input) {
+                    input.files = files;
+                }
+            });
         });
 
         // Edit Mode Functions

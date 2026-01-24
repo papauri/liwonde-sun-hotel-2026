@@ -25,6 +25,50 @@ document.addEventListener('click', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
+        // Room Featured Image AJAX Upload
+        const imageUploadForm = document.getElementById('imageUploadForm');
+        const currentImage = document.getElementById('currentImage');
+        const currentImageContainer = document.getElementById('currentImageContainer');
+        if (imageUploadForm) {
+            imageUploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(imageUploadForm);
+                // Debug: Log form data keys and values
+                for (let pair of formData.entries()) {
+                    console.log('FormData:', pair[0], pair[1]);
+                }
+                fetch('room-management.php', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(async res => {
+                    let text = await res.text();
+                    try {
+                        let data = JSON.parse(text);
+                        console.log('Upload response:', data);
+                        if (data.success && data.image_url) {
+                            if (currentImage) {
+                                currentImage.src = '../' + data.image_url;
+                                currentImageContainer.style.display = 'block';
+                            }
+                            alert('Image uploaded successfully!');
+                        } else {
+                            alert(data.message || 'Upload failed.');
+                        }
+                    } catch (err) {
+                        console.error('Invalid JSON response:', text);
+                        alert('Upload failed. Server error or invalid response.');
+                    }
+                })
+                .catch((err) => {
+                    console.error('Network or JS error:', err);
+                    alert('Upload failed. Network or server error.');
+                });
+            });
+        }
     
     // Time and Temperature Widget
     function updateTimeAndTemp() {
@@ -91,6 +135,21 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Debug: capture menu link clicks and defaultPrevented state
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (link && link.closest('.nav-menu')) {
+            console.log('[mobile-menu] capture click', {
+                href: link.getAttribute('href'),
+                defaultPrevented: e.defaultPrevented,
+                cancelable: e.cancelable
+            });
+            setTimeout(() => {
+                console.log('[mobile-menu] post-click location', window.location.href);
+            }, 100);
+        }
+    }, true);
     
     // Supreme Premium Header Scroll Effect
     const header = document.querySelector('.header');
@@ -158,54 +217,88 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(card);
     });
 
-        // Toggle: Rooms hover expand (dynamic grid)
-        const toggleRoomsHoverBtn = document.getElementById('toggleRoomsHover');
-        const roomsGridEl = document.getElementById('roomsGrid');
-        if (toggleRoomsHoverBtn && roomsGridEl) {
-            // Set room count on load
-            const roomCount = roomsGridEl.querySelectorAll('.room-card').length;
-            roomsGridEl.setAttribute('data-room-count', roomCount);
-            
-            toggleRoomsHoverBtn.addEventListener('click', function() {
-                const enabled = roomsGridEl.classList.toggle('expand-hover');
-                this.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-                this.classList.toggle('active', enabled);
-                this.textContent = enabled ? 'Disable Hover Expand' : 'Enable Hover Expand';
+    // Scroll to Top Button
+    const scrollToTopBtn = document.getElementById('scrollToTop');
+    
+    if (scrollToTopBtn) {
+        // Show/hide button based on scroll position
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+        
+        // Scroll to top on click
+        scrollToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
             });
-        }
+        });
+    }
     
     // Mobile menu functionality
     const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
     const navMenu = document.querySelector('.nav-menu');
     const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
-    
+
     if (mobileMenuBtn && navMenu) {
+        const setMenuOpen = (open) => {
+            navMenu.classList.toggle('active', open);
+            mobileMenuBtn.classList.toggle('active', open);
+            if (mobileMenuOverlay) mobileMenuOverlay.classList.toggle('active', open);
+
+            mobileMenuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            mobileMenuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+
+            document.body.style.overflow = open ? 'hidden' : '';
+
+            if (open) {
+                // Ensure menu is at top of screen and visible
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            console.log('[mobile-menu] setMenuOpen', {
+                open,
+                navMenuActive: navMenu.classList.contains('active'),
+                overlayActive: mobileMenuOverlay ? mobileMenuOverlay.classList.contains('active') : null
+            });
+        };
+
+        const isMenuOpen = () => navMenu.classList.contains('active');
+
+        // Primary toggle
         mobileMenuBtn.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
-            mobileMenuBtn.classList.toggle('active');
-            mobileMenuOverlay.classList.toggle('active');
-            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+            console.log('[mobile-menu] toggle button clicked');
+            setMenuOpen(!isMenuOpen());
         });
-        
+
         // Close menu when clicking overlay
         if (mobileMenuOverlay) {
             mobileMenuOverlay.addEventListener('click', function() {
-                navMenu.classList.remove('active');
-                mobileMenuBtn.classList.remove('active');
-                mobileMenuOverlay.classList.remove('active');
-                document.body.style.overflow = '';
+                console.log('[mobile-menu] overlay clicked');
+                setMenuOpen(false);
             });
         }
-        
+
         // Close menu when clicking on a link
-        const mobileLinks = navMenu.querySelectorAll('a');
-        mobileLinks.forEach(link => {
+        navMenu.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', function() {
-                navMenu.classList.remove('active');
-                mobileMenuBtn.classList.remove('active');
-                mobileMenuOverlay.classList.remove('active');
-                document.body.style.overflow = '';
+                console.log('[mobile-menu] nav link clicked', this.getAttribute('href'));
+                setMenuOpen(false);
             });
+        });
+
+        // Close on ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isMenuOpen()) setMenuOpen(false);
+        });
+
+        // Safety: if we resize to desktop, force-close and unlock scroll
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1025 && isMenuOpen()) setMenuOpen(false);
         });
     }
     

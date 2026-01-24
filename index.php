@@ -293,9 +293,6 @@ foreach ($footer_links_raw as $link) {
                 <span class="section-subtitle">Accommodations</span>
                 <h2 class="section-title">Luxurious Rooms & Suites</h2>
                 <p class="section-description">Experience unmatched comfort in our meticulously designed rooms and suites</p>
-                <div style="margin-top:14px;">
-                    <button id="toggleRoomsHover" class="chip" type="button" aria-pressed="false">Enable Hover Expand</button>
-                </div>
             </div>
             
             <div class="rooms-grid" id="roomsGrid" data-room-count="<?php echo count($featured_rooms); ?>">
@@ -578,5 +575,10 @@ foreach ($footer_links_raw as $link) {
 
     <!-- JavaScript -->
     <script src="js/main.js" defer></script>
+    
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTop" class="scroll-to-top" aria-label="Scroll to top">
+        <img src="images/logo/logo.jpg" alt="Liwonde Sun Hotel Logo" class="scroll-to-top-logo">
+    </button>
 </body>
 </html>
