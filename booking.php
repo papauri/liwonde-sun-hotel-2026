@@ -123,10 +123,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $rooms_stmt = $pdo->query("SELECT id, name, price_per_night, max_guests, short_description, image_url FROM rooms WHERE is_active = 1 ORDER BY display_order ASC");
 $available_rooms = $rooms_stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Fetch site settings
 $site_name = getSetting('site_name');
+$site_logo = getSetting('site_logo');
 $currency_symbol = getSetting('currency_symbol');
 $phone_main = getSetting('phone_main');
 $email_reservations = getSetting('email_reservations');
+
+// Fetch policies for footer modals
+$policies = [];
+try {
+    $policyStmt = $pdo->query("SELECT slug, title, summary, content FROM policies WHERE is_active = 1 ORDER BY display_order ASC, id ASC");
+    $policies = $policyStmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Error fetching policies: " . $e->getMessage());
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -405,6 +416,8 @@ $email_reservations = getSetting('email_reservations');
 <body class="booking-page">
     <?php include 'includes/loader.php'; ?>
     
+    <?php include 'includes/header.php'; ?>
+    
     <div class="booking-container">
         <div class="booking-header">
             <h1>Book Your Stay</h1>
@@ -530,6 +543,8 @@ $email_reservations = getSetting('email_reservations');
             </p>
         </form>
     </div>
+
+    <?php include 'includes/footer.php'; ?>
 
     <script src="js/main.js"></script>
     <script>

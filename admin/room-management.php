@@ -360,6 +360,11 @@ try {
             vertical-align: middle;
             background: white;
         }
+        .room-table td.image-cell {
+            padding: 12px;
+            text-align: center;
+            vertical-align: middle;
+        }
         .room-table tbody tr {
             transition: background 0.2s ease;
         }
@@ -457,35 +462,51 @@ try {
             color: var(--deep-navy);
         }
         .room-image-preview {
-            width: 80px;
-            height: 60px;
+            width: 120px;
+            height: 90px;
             object-fit: cover;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            transition: transform 0.2s ease;
-            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+            border: 3px solid #e8e8e8;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         .room-image-preview:hover {
-            transform: scale(1.05);
+            transform: scale(1.08);
             border-color: var(--gold);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
         }
         .no-image {
-            width: 80px;
-            height: 60px;
-            background: #f0f0f0;
-            border-radius: 8px;
+            width: 120px;
+            height: 90px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            border-radius: 12px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             color: #999;
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
-            border: 2px dashed #ddd;
-            transition: all 0.2s ease;
+            border: 3px dashed #ccc;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
         .no-image:hover {
-            background: #e8e8e8;
+            background: linear-gradient(135deg, #fff8f0 0%, #ffe8cc 100%);
             border-color: var(--gold);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+        }
+        .no-image i {
+            margin-bottom: 4px;
+        }
+        .no-image::after {
+            content: 'No Image';
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
         }
         .modal {
             display: none;
@@ -750,7 +771,7 @@ try {
                 <table class="room-table">
                     <thead>
                         <tr>
-                            <th style="width: 100px;">Image</th>
+                            <th style="width: 150px;">Image</th>
                             <th style="width: 80px;">Order</th>
                             <th style="width: 200px;">Room Name</th>
                             <th style="width: 250px;">Short Desc</th>
@@ -767,7 +788,7 @@ try {
                     <tbody>
                         <?php foreach ($rooms as $room): ?>
                             <tr id="row-<?php echo $room['id']; ?>">
-                                <td>
+                                <td class="image-cell">
                                     <?php if (!empty($room['image_url'])): ?>
                                         <?php $imgSrc = preg_match('#^https?://#i', $room['image_url']) ? $room['image_url'] : '../' . $room['image_url']; ?>
                                         <img src="<?php echo htmlspecialchars($imgSrc); ?>" 
