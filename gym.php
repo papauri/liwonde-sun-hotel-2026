@@ -1,23 +1,30 @@
 <?php
-require_once '../config/database.php';
-require_once '../config/email.php';
+require_once 'config/database.php';
+require_once 'config/email.php';
 
 // Fetch site settings
 $site_name = getSetting('site_name');
 $site_logo = getSetting('site_logo');
 $email_main = getSetting('email_main');
 
+// Fetch page hero (DB-driven)
+$pageHero = getPageHero('gym');
+
+$gymHero = [
+    'page_url' => '/gym.php',
+    'hero_title' => $pageHero['hero_title'],
+    'hero_subtitle' => $pageHero['hero_subtitle'],
+    'hero_description' => $pageHero['hero_description'],
+    'hero_image_path' => $pageHero['hero_image_path'],
+];
+
 // Fetch gym content
 $gymContent = [
-    'hero_title' => 'Fitness & Wellness Center',
-    'hero_subtitle' => 'Health & Vitality',
-    'hero_description' => 'State-of-the-art facilities designed to elevate your physical and mental well-being',
-    'hero_image_path' => 'images/gym/hero-bg.jpg',
-    'wellness_title' => 'Transform Your Body & Mind',
-    'wellness_description' => 'Our fitness and wellness center offers everything you need to maintain your health routine while traveling or start a new wellness journey.',
-    'wellness_image_path' => 'images/gym/fitness-center.jpg',
-    'badge_text' => 'Award-Winning Facilities',
-    'personal_training_image_path' => 'images/gym/personal-training.jpg'
+    'wellness_title' => '',
+    'wellness_description' => '',
+    'wellness_image_path' => '',
+    'badge_text' => '',
+    'personal_training_image_path' => ''
 ];
 
 try {
@@ -156,24 +163,24 @@ try {
     <meta name="description" content="State-of-the-art fitness center and wellness facilities at <?php echo htmlspecialchars($site_name); ?>. Modern gym equipment, spa services, yoga classes, personal training, and holistic wellness programs.">
     <meta name="keywords" content="fitness center malawi, hotel gym, spa malawi, yoga classes, wellness center, personal training, health club">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/pages/gym.php">
+    <link rel="canonical" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/gym.php">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://<?php echo $_SERVER['HTTP_HOST']; ?>/pages/gym.php">
+    <meta property="og:url" content="https://<?php echo $_SERVER['HTTP_HOST']; ?>/gym.php">
     <meta property="og:title" content="Fitness & Wellness Center - <?php echo htmlspecialchars($site_name); ?>">
     <meta property="og:description" content="State-of-the-art fitness center with modern equipment, spa, yoga, and personal training services.">
     <meta property="og:image" content="https://<?php echo $_SERVER['HTTP_HOST']; ?>/images/gym/hero.jpg">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://<?php echo $_SERVER['HTTP_HOST']; ?>/pages/gym.php">
+    <meta property="twitter:url" content="https://<?php echo $_SERVER['HTTP_HOST']; ?>/gym.php">
     <meta property="twitter:title" content="Fitness & Wellness Center - <?php echo htmlspecialchars($site_name); ?>">
     <meta property="twitter:description" content="State-of-the-art fitness center with modern equipment, spa, yoga, and personal training services.">
     <meta property="twitter:image" content="https://<?php echo $_SERVER['HTTP_HOST']; ?>/images/gym/hero.jpg">
     
     <!-- Preload Critical Resources -->
-    <link rel="preload" href="../css/style.css" as="style">
+    <link rel="preload" href="css/style.css" as="style">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" as="style">
     
     <!-- Fonts -->
@@ -187,7 +194,7 @@ try {
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
     
     <!-- Structured Data - Sports Activity Location Schema -->
     <script type="application/ld+json">
@@ -197,12 +204,12 @@ try {
       "name": "<?php echo htmlspecialchars($site_name); ?> Fitness & Wellness Center",
       "image": "https://<?php echo $_SERVER['HTTP_HOST']; ?>/images/gym/hero.jpg",
       "description": "State-of-the-art fitness center with modern equipment, spa, yoga, and personal training services",
-      "url": "https://<?php echo $_SERVER['HTTP_HOST']; ?>/pages/gym.php"
+      "url": "https://<?php echo $_SERVER['HTTP_HOST']; ?>/gym.php"
     }
     </script>
 </head>
 <body>
-    <?php include '../includes/loader.php'; ?>
+    <?php include 'includes/loader.php'; ?>
     
     <!-- Loading Animation -->
     <div class="page-loader">
@@ -228,18 +235,18 @@ try {
     </div>
     <?php endif; ?>
     
-    <?php include '../includes/header.php'; ?>
+    <?php include 'includes/header.php'; ?>
     
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" role="presentation"></div>
 
     <!-- Hero Section -->
-    <section class="page-hero" style="background-image: url('../<?php echo htmlspecialchars($gymContent['hero_image_path']); ?>');">
+    <section class="page-hero" style="background-image: url('<?php echo htmlspecialchars($gymHero['hero_image_path']); ?>');">
         <div class="hero-overlay"></div>
         <div class="hero-content">
-            <span class="hero-subtitle"><?php echo htmlspecialchars($gymContent['hero_subtitle']); ?></span>
-            <h1 class="hero-title"><?php echo htmlspecialchars($gymContent['hero_title']); ?></h1>
-            <p class="hero-description"><?php echo htmlspecialchars($gymContent['hero_description']); ?></p>
+            <span class="hero-subtitle"><?php echo htmlspecialchars($gymHero['hero_subtitle']); ?></span>
+            <h1 class="hero-title"><?php echo htmlspecialchars($gymHero['hero_title']); ?></h1>
+            <p class="hero-description"><?php echo htmlspecialchars($gymHero['hero_description']); ?></p>
         </div>
     </section>
 
@@ -297,7 +304,7 @@ try {
                 </div>
                 
                 <div class="wellness-image" data-aos="fade-left">
-                    <img src="../<?php echo htmlspecialchars($gymContent['wellness_image_path']); ?>" alt="Modern Fitness Center" loading="lazy">
+                    <img src="<?php echo htmlspecialchars($gymContent['wellness_image_path']); ?>" alt="Modern Fitness Center" loading="lazy">
                     <div class="image-badge">
                         <i class="fas fa-trophy"></i>
                         <span><?php echo htmlspecialchars($gymContent['badge_text']); ?></span>
@@ -435,7 +442,7 @@ try {
         <div class="container">
             <div class="training-content-grid">
                 <div class="training-image" data-aos="fade-right">
-                    <img src="../<?php echo htmlspecialchars($gymContent['personal_training_image_path']); ?>" alt="Personal Training" loading="lazy">
+                    <img src="<?php echo htmlspecialchars($gymContent['personal_training_image_path']); ?>" alt="Personal Training" loading="lazy">
                 </div>
                 
                 <div class="training-text" data-aos="fade-left">
@@ -621,10 +628,10 @@ try {
         </div>
     </div>
 
-    <?php include '../includes/footer.php'; ?>
+    <?php include 'includes/footer.php'; ?>
 
     <!-- Scripts -->
-    <script src="../js/main.js"></script>
+    <script src="js/main.js"></script>
     <script>
         // Page loader
         window.addEventListener('load', function() {
