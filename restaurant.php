@@ -1,11 +1,131 @@
 <?php
 require_once 'config/database.php';
 
+// AJAX Endpoint - Handle menu data requests
+if (isset($_GET['ajax']) && $_GET['ajax'] === 'menu') {
+    header('Content-Type: application/json');
+    
+    $menu_type = isset($_GET['menu_type']) ? strtolower($_GET['menu_type']) : 'food';
+    $currency_symbol = getSetting('currency_symbol');
+    $currency_code = getSetting('currency_code');
+    
+    $response = [
+        'success' => false,
+        'menu_type' => $menu_type,
+        'categories' => [],
+        'currency' => [
+            'symbol' => $currency_symbol,
+            'code' => $currency_code
+        ]
+    ];
+    
+    try {
+        if ($menu_type === 'food') {
+            $stmt = $pdo->query("SELECT * FROM food_menu ORDER BY category, display_order ASC, id ASC");
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Group by category
+            foreach ($items as $item) {
+                $category = $item['category'];
+                if (!isset($response['categories'][$category])) {
+                    $response['categories'][$category] = [
+                        'name' => $category,
+                        'slug' => strtolower(str_replace(' ', '-', $category)),
+                        'items' => []
+                    ];
+                }
+                $response['categories'][$category]['items'][] = [
+                    'id' => $item['id'],
+                    'name' => $item['item_name'],
+                    'description' => $item['description'] ?? '',
+                    'price' => (float)$item['price'],
+                    'is_featured' => (bool)$item['is_featured'],
+                    'is_vegetarian' => (bool)$item['is_vegetarian'],
+                    'is_vegan' => (bool)$item['is_vegan'],
+                    'allergens' => $item['allergens'] ?? ''
+                ];
+            }
+            $response['success'] = true;
+            
+        } elseif ($menu_type === 'coffee') {
+            $stmt = $pdo->query("SELECT * FROM drink_menu WHERE category = 'Coffee' ORDER BY display_order ASC, id ASC");
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $response['categories']['Coffee'] = [
+                'name' => 'Coffee',
+                'slug' => 'coffee',
+                'items' => []
+            ];
+            
+            foreach ($items as $item) {
+                $response['categories']['Coffee']['items'][] = [
+                    'id' => $item['id'],
+                    'name' => $item['item_name'],
+                    'description' => $item['description'] ?? '',
+                    'price' => (float)$item['price'],
+                    'tags' => !empty($item['tags']) ? array_map('trim', explode(',', $item['tags'])) : []
+                ];
+            }
+            $response['success'] = true;
+            
+        } elseif ($menu_type === 'bar') {
+            $stmt = $pdo->query("SELECT * FROM drink_menu WHERE category != 'Coffee' ORDER BY category, display_order ASC, id ASC");
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Group by category
+            foreach ($items as $item) {
+                $category = $item['category'];
+                if (!isset($response['categories'][$category])) {
+                    $response['categories'][$category] = [
+                        'name' => $category,
+                        'slug' => strtolower(str_replace(' ', '-', $category)),
+                        'items' => []
+                    ];
+                }
+                $response['categories'][$category]['items'][] = [
+                    'id' => $item['id'],
+                    'name' => $item['item_name'],
+                    'description' => $item['description'] ?? '',
+                    'price' => (float)$item['price'],
+                    'tags' => !empty($item['tags']) ? array_map('trim', explode(',', $item['tags'])) : []
+                ];
+            }
+            $response['success'] = true;
+        }
+    } catch (PDOException $e) {
+        error_log("Error fetching menu: " . $e->getMessage());
+        $response['error'] = 'Failed to load menu data';
+    }
+    
+    echo json_encode($response);
+    exit;
+}
+
 // Fetch site settings
-$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
-$site_logo = getSetting('site_logo', 'images/logo/logo.png');
-$currency_symbol = getSetting('currency_symbol', 'K');
-$currency_code = getSetting('currency_code', 'MWK');
+$site_name = getSetting('site_name');
+$site_logo = getSetting('site_logo');
+$currency_symbol = getSetting('currency_symbol');
+$currency_code = getSetting('currency_code');
+
+// Fetch restaurant gallery
+$gallery_images = [];
+try {
+    $stmt = $pdo->query("SELECT * FROM restaurant_gallery WHERE is_active = 1 ORDER BY display_order ASC, id ASC");
+    $gallery_images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Error fetching gallery: " . $e->getMessage());
+}
+
+// Fetch page hero (DB-driven)
+$pageHero = getPageHero('restaurant');
+
+$restaurantHero = [
+    'page_url' => '/restaurant.php',
+    'hero_title' => $pageHero['hero_title'],
+    'hero_subtitle' => $pageHero['hero_subtitle'],
+    'hero_description' => $pageHero['hero_description'],
+    'hero_image_path' => $pageHero['hero_image_path'],
+];
 
 // Fetch policies for footer modals
 $policies = [];
@@ -13,58 +133,8 @@ try {
     $policyStmt = $pdo->query("SELECT slug, title, summary, content FROM policies WHERE is_active = 1 ORDER BY display_order ASC, id ASC");
     $policies = $policyStmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    $policies = [];
+    error_log("Error fetching policies: " . $e->getMessage());
 }
-
-// Determine which menu to display (default: Food)
-$menu_type = isset($_GET['menu']) ? $_GET['menu'] : 'Food';
-$valid_menus = ['Food', 'Coffee', 'Bar'];
-if (!in_array($menu_type, $valid_menus)) {
-    $menu_type = 'Food';
-}
-
-// Menu type labels and icons
-$menu_labels = [
-    'Food' => ['label' => 'Food Menu', 'icon' => 'fa-utensils'],
-    'Coffee' => ['label' => 'Coffee Shop', 'icon' => 'fa-mug-hot'],
-    'Bar' => ['label' => 'Bar & Drinks', 'icon' => 'fa-wine-glass']
-];
-
-// Fetch menu items for the selected menu type
-try {
-    $stmt = $pdo->prepare("
-        SELECT * FROM menu_items 
-        WHERE is_active = 1 AND menu_type = ?
-        ORDER BY category_order ASC, item_order ASC
-    ");
-    $stmt->execute([$menu_type]);
-    $all_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $all_items = [];
-}
-
-// Group items by category
-$menu_items = [];
-$category_orders = [];
-foreach ($all_items as $item) {
-    $cat = $item['category'];
-    if (!isset($menu_items[$cat])) {
-        $menu_items[$cat] = [];
-        $category_orders[$cat] = $item['category_order'];
-    }
-    $menu_items[$cat][] = $item;
-}
-
-// Sort by category order
-uasort($menu_items, function($a, $b) use ($category_orders) {
-    $cat_a = array_key_first($a);
-    $cat_b = array_key_first($b);
-    return ($category_orders[$cat_a] ?? 0) - ($category_orders[$cat_b] ?? 0);
-});
-
-// Generate QR code URL
-$current_url = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/restaurant.php?menu=' . urlencode($menu_type);
-$qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . urlencode($current_url);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -75,780 +145,711 @@ $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=yes">
-    <title><?php echo htmlspecialchars($site_name); ?> - Restaurant</title>
+    <title>Fine Dining Restaurant - <?php echo htmlspecialchars($site_name); ?> | Gourmet Cuisine in Malawi</title>
+    <meta name="description" content="Experience exquisite fine dining at <?php echo htmlspecialchars($site_name); ?>. Fresh local cuisine, international dishes, craft cocktails, and premium bar service in an elegant setting.">
+    <meta name="keywords" content="fine dining malawi, gourmet restaurant, lake malawi dining, luxury restaurant liwonde, international cuisine">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/restaurant.php">
     
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="restaurant">
+    <meta property="og:url" content="https://<?php echo $_SERVER['HTTP_HOST']; ?>/restaurant.php">
+    <meta property="og:title" content="Fine Dining Restaurant - <?php echo htmlspecialchars($site_name); ?>">
+    <meta property="og:description" content="Experience exquisite fine dining with fresh local cuisine, international dishes, and premium bar service.">
+    <meta property="og:image" content="https://<?php echo $_SERVER['HTTP_HOST']; ?>/images/restaurant/hero.jpg">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://<?php echo $_SERVER['HTTP_HOST']; ?>/restaurant.php">
+    <meta property="twitter:title" content="Fine Dining Restaurant - <?php echo htmlspecialchars($site_name); ?>">
+    <meta property="twitter:description" content="Experience exquisite fine dining with fresh local cuisine, international dishes, and premium bar service.">
+    <meta property="twitter:image" content="https://<?php echo $_SERVER['HTTP_HOST']; ?>/images/restaurant/hero.jpg">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="css/style.css" as="style">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" as="style">
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+    
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Structured Data - Restaurant Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Restaurant",
+      "name": "<?php echo htmlspecialchars($site_name); ?> Restaurant",
+      "image": "https://<?php echo $_SERVER['HTTP_HOST']; ?>/images/restaurant/hero.jpg",
+      "description": "Fine dining restaurant offering fresh local cuisine, international dishes, and premium bar service",
+      "servesCuisine": ["International", "African", "Continental"],
+      "priceRange": "$$$",
+      "url": "https://<?php echo $_SERVER['HTTP_HOST']; ?>/restaurant.php"
+    }
+    </script>
+    
     <style>
-        /* Restaurant Page Specific Styles */
-        .restaurant-hero {
+        /* Japandi Style Menu */
+        :root {
+            --japandi-bg: #f8f6f3;
+            --japandi-card-bg: #ffffff;
+            --japandi-text-primary: #2d2d2d;
+            --japandi-text-secondary: #6b6b6b;
+            --japandi-accent: #8b7355;
+            --japandi-border: #e8e4df;
+            --japandi-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --japandi-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+        
+        /* Loading Spinner */
+        .menu-loading {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .menu-loading.active {
+            display: block;
+        }
+        .menu-loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(139, 115, 85, 0.1);
+            border-top-color: var(--japandi-accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .menu-loading-text {
+            color: var(--japandi-text-secondary);
+            font-size: 1.1rem;
+        }
+        
+        /* Menu Container */
+        .menu-container {
             position: relative;
-            min-height: 620px;
-            display: flex;
-            align-items: center;
-            background: linear-gradient(135deg, var(--deep-navy) 0%, #1a2844 100%);
-            padding: 120px 0 80px 0;
-            overflow: hidden;
-            margin-top: 0;
         }
-
-        .restaurant-hero::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(212, 175, 55, 0.03) 35px, rgba(212, 175, 55, 0.03) 70px);
-            animation: slidePattern 20s linear infinite;
-        }
-
-        @keyframes slidePattern {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(70px); }
-        }
-
-        .restaurant-hero .container {
-            position: relative;
-            z-index: 10;
-        }
-
-        .restaurant-hero-content {
-            position: relative;
-            color: white;
-            animation: fadeInUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s backwards;
-            max-width: 100%;
-            padding: 0;
-        }
-
-        .restaurant-hero-layout {
-            display: grid;
-            grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
-            gap: 32px;
-            align-items: center;
-        }
-
-        .hero-copy {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .hero-eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 14px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            font-size: 12px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .hero-eyebrow i {
-            color: var(--gold);
-        }
-
-        .restaurant-hero-content h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 60px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, var(--gold) 0%, #ffd700 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .restaurant-hero-content p {
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.8);
-            letter-spacing: 0.6px;
-            text-transform: none;
-            max-width: 640px;
-            margin-bottom: 20px;
-        }
-
+        
+        /* Restaurant Hero Actions */
         .restaurant-hero-actions {
             display: flex;
-            flex-direction: column;
-            gap: 16px;
-            align-items: flex-start;
-        }
-
-        /* Menu Type Selector */
-        .menu-type-selector {
-            display: flex;
-            gap: 20px;
-            justify-content: flex-start;
-            margin: 16px 0 0 0;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
             flex-wrap: wrap;
         }
-
-        .menu-type-btn {
+        .restaurant-hero-actions .btn {
+            min-width: 180px;
+        }
+        
+        /* Menu Type Tabs - Japandi Style */
+        .menu-type-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        .menu-type-tab {
+            background: var(--japandi-card-bg);
+            border: 1px solid var(--japandi-border);
+            color: var(--japandi-text-primary);
+            padding: 14px 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 15px 30px;
-            background: transparent;
-            border: 2px solid var(--gold);
-            color: var(--gold);
-            font-family: 'Poppins', sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            position: relative;
-            text-decoration: none;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
-
-        .menu-type-btn:hover {
-            background: rgba(212, 175, 55, 0.1);
-            transform: translateY(-2px);
+        .menu-type-tab:hover {
+            border-color: var(--japandi-accent);
+            color: var(--japandi-accent);
         }
-
-        .menu-type-btn.active {
-            background: linear-gradient(135deg, var(--gold) 0%, #ffc700 100%);
-            color: var(--deep-navy);
-            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+        .menu-type-tab.active {
+            background: var(--japandi-accent);
+            border-color: var(--japandi-accent);
+            color: #ffffff;
         }
-
-        .menu-type-btn i {
-            font-size: 20px;
-        }
-
-        .hero-qr-card {
-            background: rgba(10, 25, 41, 0.65);
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            border-radius: 18px;
-            padding: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-            backdrop-filter: blur(14px);
-        }
-
-        .qr-section {
+        
+        /* Category Tabs - Japandi Style */
+        .menu-tabs {
             display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .qr-text {
-            text-align: left;
-        }
-
-        .qr-text h4 {
-            margin: 0 0 10px 0;
-            color: #fff;
-            font-size: 16px;
-        }
-
-        .qr-text p {
-            margin: 0 0 10px 0;
-            color: rgba(255, 255, 255, 0.78);
-            font-size: 13px;
-        }
-
-        .qr-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            font-size: 12px;
-            letter-spacing: 0.4px;
-            text-transform: uppercase;
-        }
-
-        /* Menu Container */
-        .menu-container {
-            background: #fafafa;
-            padding: 60px 0;
-        }
-
-        .menu-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 36px;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .menu-header-text {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .menu-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 42px;
-            color: var(--deep-navy);
-            margin: 0;
-        }
-
-        .qr-code {
-            width: 150px;
-            height: 150px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            background: white;
-        }
-
-        .qr-code img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .menu-kicker {
-            margin: 0;
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        /* Category Buttons */
-        .menu-categories {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 50px;
-            flex-wrap: wrap;
             justify-content: center;
+            gap: 6px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
         }
-
-        .category-btn {
+        .menu-tab {
+            background: transparent;
+            border: none;
+            color: var(--japandi-text-secondary);
             padding: 12px 24px;
-            background: white;
-            border: 2px solid #ddd;
-            color: var(--deep-navy);
-            font-family: 'Poppins', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
             cursor: pointer;
-            border-radius: 25px;
-            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 400;
+            letter-spacing: 1px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            position: relative;
         }
-
-        .category-btn:hover {
-            border-color: var(--gold);
-            color: var(--gold);
-            transform: translateY(-2px);
+        .menu-tab:hover {
+            color: var(--japandi-text-primary);
         }
-
-        .category-btn.active {
-            background: var(--gold);
-            border-color: var(--gold);
-            color: white;
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+        .menu-tab.active {
+            color: var(--japandi-text-primary);
+            font-weight: 600;
         }
-
-        /* Menu Sections */
-        .menu-section {
+        .menu-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 2px;
+            background: var(--japandi-accent);
+        }
+        
+        /* Menu Categories */
+        .menu-categories-wrapper {
+            min-height: 400px;
+        }
+        .menu-category {
             display: none;
-            animation: fadeIn 0.5s ease-in;
+            animation: fadeIn 0.5s ease;
         }
-
-        .menu-section.active {
+        .menu-category.active {
             display: block;
         }
-
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        .section-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 36px;
-            font-weight: 700;
-            color: var(--deep-navy);
-            margin-bottom: 45px;
-            padding-bottom: 18px;
-            border-bottom: 4px solid transparent;
-            background: linear-gradient(to right, var(--gold) 0%, var(--gold) 40%, transparent 40%);
-            background-position: bottom;
-            background-size: 100% 4px;
-            background-repeat: no-repeat;
-            display: inline-block;
-            position: relative;
-        }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            width: 40%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--gold) 0%, #ffd700 100%);
-            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
-        }
-
-        /* Menu Grid */
-        .menu-grid {
+        
+        /* Menu Items Grid - Japandi Style */
+        .menu-items-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 35px;
-            margin-bottom: 60px;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 32px;
         }
-
         @media (max-width: 768px) {
-            .menu-grid {
-                grid-template-columns: 1fr;
-                gap: 25px;
-            }
-        }
-
-        .menu-item {
-            background: white;
-            padding: 28px;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            border: 1px solid rgba(212, 175, 55, 0.12);
-            border-left: 4px solid var(--gold);
-            animation: slideUp 0.5s ease forwards;
-            display: flex;
-            flex-direction: column;
-            min-height: 220px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .menu-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--gold) 0%, #ffd700 50%, var(--gold) 100%);
-            transform: scaleX(0);
-            transition: transform 0.4s ease;
-        }
-
-        .menu-item:hover::before {
-            transform: scaleX(1);
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .menu-item:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 35px rgba(212, 175, 55, 0.25);
-            border-color: var(--gold);
-            border-left-width: 5px;
-        }
-
-        .item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-            gap: 20px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-        }
-
-        .item-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--deep-navy);
-            line-height: 1.3;
-            flex: 1;
-        }
-
-        .item-price {
-            color: var(--gold);
-            font-weight: 800;
-            font-size: 20px;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-            background: linear-gradient(135deg, var(--gold) 0%, #ffd700 50%, var(--dark-gold) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .item-description {
-            color: #555;
-            font-size: 15px;
-            line-height: 1.7;
-            margin-bottom: 18px;
-            flex-grow: 1;
-            font-weight: 400;
-        }
-
-        .item-tags {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: auto;
-        }
-
-        .tag {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(212, 175, 55, 0.08) 100%);
-            color: var(--gold);
-            padding: 6px 14px;
-            font-size: 11px;
-            border-radius: 20px;
-            font-weight: 700;
-            text-transform: uppercase;
-            border: 1px solid rgba(212, 175, 55, 0.25);
-            transition: all 0.3s ease;
-            letter-spacing: 0.5px;
-        }
-
-        .tag:hover {
-            background: var(--gold);
-            color: var(--deep-navy);
-            transform: scale(1.05);
-        }
-
-        @media (max-width: 1024px) {
-            .menu-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .restaurant-hero-content h1 {
-                font-size: 48px;
-            }
-
-            .restaurant-hero-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .restaurant-hero {
-                min-height: 580px;
-                align-items: center;
-                padding: 100px 0 60px 0;
-            }
-
-            .restaurant-hero-layout {
+            .menu-items-grid {
                 grid-template-columns: 1fr;
                 gap: 24px;
             }
+        }
+        
+        /* Menu Item - Japandi Style */
+        .menu-item {
+            background: var(--japandi-card-bg);
+            border: 1px solid var(--japandi-border);
+            border-radius: 8px;
+            padding: 32px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .menu-item:hover {
+            border-color: var(--japandi-accent);
+            box-shadow: var(--japandi-shadow-hover);
+            transform: translateY(-4px);
+        }
+        .menu-item.featured {
+            border-color: var(--japandi-accent);
+            background: linear-gradient(135deg, #ffffff 0%, #faf8f5 100%);
+        }
+        
+        /* Featured Badge - Japandi Style */
+        .featured-badge {
+            position: static;
+            background: var(--japandi-accent);
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 2px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
 
-            .hero-eyebrow {
-                font-size: 10px;
-                padding: 6px 12px;
-            }
-
-            .restaurant-hero-content h1 {
-                font-size: 28px;
-                margin-bottom: 8px;
-            }
-
-            .restaurant-hero-content p {
-                font-size: 14px;
-                margin-bottom: 16px;
-            }
-
-            .menu-type-selector {
-                gap: 10px;
-                margin: 16px 0 0 0;
-                flex-wrap: wrap;
-            }
-
-            .menu-type-btn {
-                padding: 12px 18px;
-                font-size: 12px;
-                border-radius: 8px;
-            }
-
-            .menu-type-btn i {
-                font-size: 16px;
-            }
-
-            .hero-qr-card {
-                padding: 20px;
-            }
-
-            .qr-code {
-                width: 100px;
-                height: 100px;
-            }
-
-            .qr-text h4 {
-                font-size: 14px;
-                margin-bottom: 8px;
-            }
-
-            .qr-text p {
-                font-size: 12px;
-                margin-bottom: 8px;
-            }
-
-            .qr-pill {
-                font-size: 10px;
-                padding: 6px 10px;
-            }
-
-            .menu-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-
-            .menu-categories {
-                gap: 10px;
-            }
-
-            .category-btn {
-                padding: 10px 18px;
-                font-size: 12px;
-            }
-
-            .qr-section {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .qr-text {
-                text-align: center;
-            }
-
-            .menu-header {
-                margin-bottom: 30px;
-            }
-
-            .menu-title {
-                font-size: 28px;
-            }
-
-            .section-title {
-                font-size: 24px;
-            }
+        .menu-item-title {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        /* Menu Item Header - Japandi Style */
+        .menu-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            gap: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--japandi-border);
+        }
+        .menu-item-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.35rem;
+            font-weight: 500;
+            color: var(--japandi-text-primary);
+            margin: 0;
+            line-height: 1.3;
+        }
+        .menu-item-price {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--japandi-accent);
+            white-space: nowrap;
+        }
+        
+        /* Menu Item Description - Japandi Style */
+        .menu-item-description {
+            color: var(--japandi-text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.8;
+            margin: 0 0 20px 0;
+            font-weight: 300;
+        }
+        
+        /* Menu Item Tags - Japandi Style */
+        .menu-item-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 2px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .tag-vegetarian {
+            background: rgba(76, 175, 80, 0.1);
+            color: #5a8f5e;
+            border: 1px solid rgba(76, 175, 80, 0.2);
+        }
+        .tag-vegan {
+            background: rgba(139, 195, 74, 0.1);
+            color: #7a9f4a;
+            border: 1px solid rgba(139, 195, 74, 0.2);
+        }
+        .tag-allergen {
+            background: rgba(244, 67, 54, 0.08);
+            color: #c62828;
+            border: 1px solid rgba(244, 67, 54, 0.15);
+        }
+        .tag-drink {
+            background: rgba(139, 115, 85, 0.1);
+            color: var(--japandi-accent);
+            border: 1px solid rgba(139, 115, 85, 0.2);
+        }
+        
+        /* Menu CTA */
+        .menu-cta {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 50px;
+            flex-wrap: wrap;
+        }
+        
+        /* Empty State - Japandi Style */
+        .menu-empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--japandi-text-secondary);
+        }
+        .menu-empty-state i {
+            font-size: 3rem;
+            color: var(--japandi-accent);
+            opacity: 0.3;
+            margin-bottom: 24px;
+        }
+        .menu-empty-state h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--japandi-text-primary);
+            margin-bottom: 12px;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
     <?php include 'includes/loader.php'; ?>
     
-    <?php include 'includes/header.php'; ?>
+    <!-- Loading Animation -->
+    <div class="page-loader">
+        <div class="loader-content">
+            <div class="luxury-spinner"></div>
+            <p class="loader-text">Preparing Your Culinary Experience</p>
+        </div>
+    </div>
     
+    <?php include 'includes/header.php'; ?>
+
+    <main>
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" role="presentation"></div>
 
-    <!-- Restaurant Hero -->
-    <section class="restaurant-hero">
+    <!-- Hero Section -->
+    <section class="page-hero" style="background-image: url('<?php echo htmlspecialchars($restaurantHero['hero_image_path']); ?>');">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="hero-subtitle"><?php echo htmlspecialchars($restaurantHero['hero_subtitle']); ?></span>
+            <h1 class="hero-title"><?php echo htmlspecialchars($restaurantHero['hero_title']); ?></h1>
+            <p class="hero-description"><?php echo htmlspecialchars($restaurantHero['hero_description']); ?></p>
+        </div>
+    </section>
+
+    <!-- Restaurant Gallery Grid -->
+    <section class="restaurant-gallery section-padding">
         <div class="container">
-            <div class="restaurant-hero-content">
-                <div class="restaurant-hero-layout">
-                    <div class="hero-copy">
-                        <span class="hero-eyebrow"><i class="fas fa-gem"></i> Dining & Drinks</span>
-                        <h1>Our Restaurant</h1>
-                        <p>Fine Dining Experience</p>
-                        <div class="restaurant-hero-actions">
-                            <div class="menu-type-selector">
-                                <?php foreach ($valid_menus as $menu): ?>
-                                    <a href="restaurant.php?menu=<?php echo urlencode($menu); ?>" 
-                                       class="menu-type-btn <?php echo $menu === $menu_type ? 'active' : ''; ?>">
-                                        <i class="fas <?php echo $menu_labels[$menu]['icon']; ?>"></i>
-                                        <?php echo $menu_labels[$menu]['label']; ?>
-                                    </a>
-                                <?php endforeach; ?>
+            <div class="section-header text-center">
+                <span class="section-label">Visual Journey</span>
+                <h2 class="section-title">Our Dining Spaces</h2>
+                <p class="section-description">From elegant interiors to breathtaking views, every detail creates the perfect ambiance</p>
+            </div>
+
+            <div class="gallery-grid">
+                <?php if (!empty($gallery_images)): ?>
+                    <?php foreach ($gallery_images as $index => $image): ?>
+                        <div class="gallery-item" data-aos="fade-up" data-aos-delay="<?php echo $index * 100; ?>">
+                            <img src="<?php echo htmlspecialchars($image['image_path']); ?>" alt="<?php echo htmlspecialchars($image['caption']); ?>" loading="lazy">
+                            <div class="gallery-overlay">
+                                <p class="gallery-caption"><?php echo htmlspecialchars($image['caption']); ?></p>
                             </div>
                         </div>
-                    </div>
-                    <div class="hero-qr-card">
-                        <div class="qr-section">
-                            <div class="qr-code">
-                                <img src="<?php echo htmlspecialchars($qr_code_url); ?>" alt="QR Code" />
-                            </div>
-                            <div class="qr-text">
-                                <h4>Access on Mobile</h4>
-                                <p>Scan to open the <?php echo $menu_labels[$menu_type]['label']; ?> instantly.</p>
-                                <div class="qr-pill"><i class="fas <?php echo $menu_labels[$menu_type]['icon']; ?>"></i> Now viewing: <?php echo $menu_labels[$menu_type]['label']; ?></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <!-- Fallback images if database is empty -->
+                    <div class="gallery-item"><img src="images/restaurant/dining-area-1.jpg" alt="Elegant Dining Area" loading="lazy"><div class="gallery-overlay"><p class="gallery-caption">Elegant Dining Area</p></div></div>
+                    <div class="gallery-item"><img src="images/restaurant/dining-area-2.jpg" alt="Intimate Indoor Seating" loading="lazy"><div class="gallery-overlay"><p class="gallery-caption">Intimate Indoor Seating</p></div></div>
+                    <div class="gallery-item"><img src="images/restaurant/bar-area.jpg" alt="Premium Bar" loading="lazy"><div class="gallery-overlay"><p class="gallery-caption">Premium Bar</p></div></div>
+                    <div class="gallery-item"><img src="images/restaurant/food-platter.jpg" alt="Fresh Seafood" loading="lazy"><div class="gallery-overlay"><p class="gallery-caption">Fresh Seafood</p></div></div>
+                    <div class="gallery-item"><img src="images/restaurant/fine-dining.jpg" alt="Fine Dining Experience" loading="lazy"><div class="gallery-overlay"><p class="gallery-caption">Fine Dining Experience</p></div></div>
+                    <div class="gallery-item"><img src="images/restaurant/outdoor-terrace.jpg" alt="Alfresco Terrace" loading="lazy"><div class="gallery-overlay"><p class="gallery-caption">Alfresco Terrace</p></div></div>
+                <?php endif; ?>
             </div>
         </div>
     </section>
 
     <!-- Menu Section -->
-    <section class="menu-container">
+    <section class="restaurant-menu section-padding" style="background: var(--japandi-bg);">
         <div class="container">
-            <!-- Menu Header with QR Code -->
-            <div class="menu-header">
-                <div class="menu-header-text">
-                    <h2 class="menu-title">
-                        <i class="fas <?php echo $menu_labels[$menu_type]['icon']; ?>"></i>
-                        <?php echo $menu_labels[$menu_type]['label']; ?>
-                    </h2>
-                    <p class="menu-kicker">Curated selections for <?php echo $menu_labels[$menu_type]['label']; ?>.</p>
-                </div>
+            <div class="section-header text-center">
+                <span class="section-label">Culinary Delights</span>
+                <h2 class="section-title">Our Menu</h2>
+                <p class="section-description">Discover our carefully curated selection of dishes and beverages</p>
             </div>
 
-            <!-- Category Buttons (if multiple categories exist) -->
-            <?php if (count($menu_items) > 1): ?>
-            <div class="menu-categories">
-                <?php $first = true; foreach ($menu_items as $category => $items): ?>
-                    <button class="category-btn <?php echo $first ? 'active' : ''; ?>" 
-                            data-category="<?php echo htmlspecialchars($category); ?>">
-                        <?php echo htmlspecialchars($category); ?>
+            <!-- Menu Container -->
+            <div class="menu-container">
+                <!-- Restaurant Hero Actions (moved here) -->
+                <div class="restaurant-hero-actions">
+                    <a href="#book" class="btn btn-primary"><i class="fas fa-utensils"></i> Reserve a Table</a>
+                    <a href="#contact" class="btn btn-outline"><i class="fas fa-phone"></i> Call Restaurant</a>
+                </div>
+
+                <!-- Menu Type Tabs -->
+                <div class="menu-type-tabs">
+                    <button type="button" class="menu-type-tab active" data-type="food">
+                        <i class="fas fa-utensils"></i> Food Menu
                     </button>
-                    <?php $first = false; endforeach; ?>
-            </div>
-            <?php endif; ?>
+                    <button type="button" class="menu-type-tab" data-type="coffee">
+                        <i class="fas fa-coffee"></i> Coffee
+                    </button>
+                    <button type="button" class="menu-type-tab" data-type="bar">
+                        <i class="fas fa-glass-martini-alt"></i> Bar & Drinks
+                    </button>
+                </div>
 
-            <!-- Menu Items by Category -->
-            <?php $first = true; foreach ($menu_items as $category => $items): ?>
-            <div class="menu-section <?php echo $first ? 'active' : ''; ?>" 
-                 data-category="<?php echo htmlspecialchars($category); ?>">
-                <h3 class="section-title"><?php echo htmlspecialchars($category); ?></h3>
-                <div class="menu-grid">
-                    <?php foreach ($items as $index => $item): ?>
-                    <div class="menu-item" style="animation-delay: <?php echo $index * 0.1; ?>s">
-                        <div class="item-header">
-                            <span class="item-name"><?php echo htmlspecialchars($item['name']); ?></span>
-                            <span class="item-price"><?php echo htmlspecialchars($currency_symbol); ?><?php echo number_format($item['price'], 2); ?></span>
-                        </div>
-                        <p class="item-description"><?php echo htmlspecialchars($item['description']); ?></p>
-                        <?php if (!empty($item['tags'])): ?>
-                        <div class="item-tags">
-                            <?php foreach (explode(',', $item['tags']) as $tag): ?>
-                                <span class="tag"><?php echo htmlspecialchars(trim($tag)); ?></span>
-                            <?php endforeach; ?>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                    <?php endforeach; ?>
+                <!-- Loading State -->
+                <div class="menu-loading" id="menuLoading">
+                    <div class="menu-loading-spinner"></div>
+                    <p class="menu-loading-text">Loading menu...</p>
+                </div>
+
+                <!-- Menu Categories Wrapper -->
+                <div class="menu-categories-wrapper" id="menuCategoriesWrapper">
+                    <!-- Category Tabs -->
+                    <div class="menu-tabs" id="menuTabs"></div>
+                    
+                    <!-- Menu Content -->
+                    <div id="menuContent"></div>
                 </div>
             </div>
-            <?php $first = false; endforeach; ?>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer" id="contact">
+    <!-- Experience Section -->
+    <section class="restaurant-experience section-padding">
         <div class="container">
-            <div class="footer-grid">
-                <div class="footer-column">
-                    <h4>About Us</h4>
-                    <ul class="footer-links">
-                        <li><a href="index.php">Home</a></li>
-                        <li><a href="index.php#rooms">Our Rooms</a></li>
-                        <li><a href="restaurant.php">Restaurant</a></li>
-                        <li><a href="index.php#facilities">Facilities</a></li>
-                    </ul>
+            <div class="experience-grid">
+                <div class="experience-item" data-aos="fade-up">
+                    <div class="experience-icon"><i class="fas fa-utensils"></i></div>
+                    <h3>Fine Dining</h3>
+                    <p>Experience culinary artistry with our carefully crafted menu featuring local Malawian flavors and international cuisine</p>
                 </div>
-                
-                <div class="footer-column">
-                    <h4>Quick Links</h4>
-                    <ul class="footer-links">
-                        <li><a href="index.php#testimonials">Reviews</a></li>
-                        <li><a href="index.php#contact">Contact</a></li>
-                        <li><a href="#" class="policy-link" data-policy="booking-policy">Booking Policy</a></li>
-                        <li><a href="#" class="policy-link" data-policy="cancellation-policy">Cancellation</a></li>
-                    </ul>
+                <div class="experience-item" data-aos="fade-up" data-aos-delay="100">
+                    <div class="experience-icon"><i class="fas fa-cocktail"></i></div>
+                    <h3>Premium Bar</h3>
+                    <p>Enjoy handcrafted cocktails, fine wines, and premium spirits in our elegant bar lounge</p>
                 </div>
-                
-                <div class="footer-column">
-                    <h4>Policies</h4>
-                    <ul class="footer-links">
-                        <li><a href="#" class="policy-link" data-policy="booking-policy">Booking Policy</a></li>
-                        <li><a href="#" class="policy-link" data-policy="cancellation-policy">Cancellation</a></li>
-                        <li><a href="#" class="policy-link" data-policy="dining-policy">Dining Policy</a></li>
-                        <li><a href="#" class="policy-link" data-policy="faqs">FAQs</a></li>
-                    </ul>
+                <div class="experience-item" data-aos="fade-up" data-aos-delay="200">
+                    <div class="experience-icon"><i class="fas fa-fish"></i></div>
+                    <h3>Fresh Local Ingredients</h3>
+                    <p>We source the freshest chambo from Lake Malawi and seasonal produce from local farms</p>
                 </div>
-                
-                <div class="footer-column">
-                    <h4>Contact Information</h4>
-                    <ul class="contact-info">
-                        <li>
-                            <i class="fas fa-phone"></i>
-                            <a href="tel:+265123456789">+265 123 456 789</a>
-                        </li>
-                        <li>
-                            <i class="fas fa-envelope"></i>
-                            <a href="mailto:info@liwondesunhotel.com">info@liwondesunhotel.com</a>
-                        </li>
-                        <li>
-                            <i class="fas fa-map-marker-alt"></i>
-                            <a href="https://www.google.com/maps/search/Liwonde+Malawi" target="_blank">Liwonde, Malawi</a>
-                        </li>
-                        <li>
-                            <i class="fas fa-clock"></i>
-                            <span>24/7 Available</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; 2026 Liwonde Sun Hotel. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-
-    <?php if (!empty($policies)): ?>
-    <div class="policy-overlay" data-policy-overlay></div>
-    <div class="policy-modals">
-        <?php foreach ($policies as $policy): ?>
-        <div class="policy-modal" data-policy-modal="<?php echo htmlspecialchars($policy['slug']); ?>">
-            <div class="policy-modal__content">
-                <button class="policy-modal__close" aria-label="Close policy modal" data-policy-close>&times;</button>
-                <div class="policy-modal__header">
-                    <span class="policy-pill">Policy</span>
-                    <h3><?php echo htmlspecialchars($policy['title']); ?></h3>
-                    <?php if (!empty($policy['summary'])): ?>
-                    <p class="policy-summary"><?php echo htmlspecialchars($policy['summary']); ?></p>
-                    <?php endif; ?>
-                </div>
-                <div class="policy-modal__body">
-                    <p><?php echo nl2br(htmlspecialchars($policy['content'])); ?></p>
+                <div class="experience-item" data-aos="fade-up" data-aos-delay="300">
+                    <div class="experience-icon"><i class="fas fa-sun"></i></div>
+                    <h3>Alfresco Dining</h3>
+                    <p>Dine under the stars on our terrace with breathtaking views of the surrounding landscape</p>
                 </div>
             </div>
         </div>
-        <?php endforeach; ?>
-    </div>
-    <?php endif; ?>
+    </section>
 
+    </main>
+    <?php include 'includes/footer.php'; ?>
+
+    <!-- Scripts -->
     <script src="js/main.js"></script>
     <script>
-        // Menu category filtering
-        document.querySelectorAll('.category-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const category = this.dataset.category;
+        // Currency settings (from PHP)
+        const currencySymbol = '<?php echo $currency_symbol; ?>';
+        const currencyCode = '<?php echo $currency_code; ?>';
+        
+        // Current menu state
+        let currentMenuType = 'food';
+        let currentCategory = null;
+        let menuData = null;
+        
+        // DOM Elements
+        const menuTypeTabs = document.querySelectorAll('.menu-type-tab');
+        const menuTabs = document.getElementById('menuTabs');
+        const menuContent = document.getElementById('menuContent');
+        const menuLoading = document.getElementById('menuLoading');
+        const menuCategoriesWrapper = document.getElementById('menuCategoriesWrapper');
+        
+        // Fetch menu data via AJAX
+        async function fetchMenuData(menuType) {
+            showLoading();
+            
+            try {
+                const response = await fetch(`?ajax=menu&menu_type=${menuType}`);
+                const data = await response.json();
                 
-                // Update active button
-                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Update active section
-                document.querySelectorAll('.menu-section').forEach(section => {
-                    section.classList.remove('active');
+                if (data.success) {
+                    menuData = data;
+                    renderMenu(data);
+                } else {
+                    showError(data.error || 'Failed to load menu');
+                }
+            } catch (error) {
+                console.error('Error fetching menu:', error);
+                showError('An error occurred while loading the menu');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Show loading state
+        function showLoading() {
+            menuLoading.classList.add('active');
+            menuCategoriesWrapper.style.opacity = '0.5';
+        }
+        
+        // Hide loading state
+        function hideLoading() {
+            menuLoading.classList.remove('active');
+            menuCategoriesWrapper.style.opacity = '1';
+        }
+        
+        // Show error state
+        function showError(message) {
+            menuContent.innerHTML = `
+                <div class="menu-empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Unable to Load Menu</h3>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="fetchMenuData('${currentMenuType}')" style="margin-top: 20px;">
+                        <i class="fas fa-redo"></i> Try Again
+                    </button>
+                </div>
+            `;
+            menuTabs.innerHTML = '';
+        }
+        
+        // Render menu
+        function renderMenu(data) {
+            const categories = Object.values(data.categories);
+            
+            if (categories.length === 0) {
+                menuTabs.innerHTML = '';
+                menuContent.innerHTML = `
+                    <div class="menu-empty-state">
+                        <i class="fas fa-utensils"></i>
+                        <h3>No Items Available</h3>
+                        <p>Menu items for this category are coming soon. Please contact our restaurant for current offerings.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Render category tabs
+            menuTabs.innerHTML = categories.map((cat, index) => `
+                <button type="button" class="menu-tab ${index === 0 ? 'active' : ''}" data-category="${cat.slug}">
+                    ${cat.name}
+                </button>
+            `).join('');
+            
+            // Render menu content
+            menuContent.innerHTML = categories.map((cat, index) => `
+                <div class="menu-category ${index === 0 ? 'active' : ''}" data-category="${cat.slug}">
+                    <div class="menu-items-grid">
+                        ${cat.items.map(item => renderMenuItem(item, data.menu_type)).join('')}
+                    </div>
+                </div>
+            `).join('');
+            
+            // Set current category to first one
+            currentCategory = categories[0].slug;
+            
+            // Add event listeners to category tabs
+            menuTabs.querySelectorAll('.menu-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const category = this.getAttribute('data-category');
+                    switchCategory(category);
                 });
-                document.querySelector(`.menu-section[data-category="${category}"]`).classList.add('active');
             });
+        }
+        
+        // Render single menu item
+        function renderMenuItem(item, menuType) {
+            if (menuType === 'food') {
+                return `
+                    <div class="menu-item ${item.is_featured ? 'featured' : ''}">
+                        <div class="menu-item-header">
+                            <div class="menu-item-title">
+                                <h3 class="menu-item-name">${escapeHtml(item.name)}</h3>
+                                ${item.is_featured ? '<span class="featured-badge"><i class="fas fa-star"></i> Chef\'s Special</span>' : ''}
+                            </div>
+                            <span class="menu-item-price">${currencySymbol}${item.price.toFixed(2)}</span>
+                        </div>
+                        ${item.description ? `<p class="menu-item-description">${escapeHtml(item.description)}</p>` : ''}
+                        <div class="menu-item-tags">
+                            ${item.is_vegetarian ? '<span class="tag tag-vegetarian"><i class="fas fa-leaf"></i> Vegetarian</span>' : ''}
+                            ${item.is_vegan ? '<span class="tag tag-vegan"><i class="fas fa-seedling"></i> Vegan</span>' : ''}
+                            ${item.allergens ? `<span class="tag tag-allergen"><i class="fas fa-exclamation-triangle"></i> ${escapeHtml(item.allergens)}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="menu-item">
+                    <div class="menu-item-header">
+                        <h3 class="menu-item-name">${escapeHtml(item.name)}</h3>
+                        <span class="menu-item-price">${currencySymbol}${item.price.toFixed(2)}</span>
+                    </div>
+                    ${item.description ? `<p class="menu-item-description">${escapeHtml(item.description)}</p>` : ''}
+                    ${item.tags && item.tags.length > 0 ? `
+                        <div class="menu-item-tags">
+                            ${item.tags.map(tag => `<span class="tag tag-drink"><i class="fas fa-tag"></i> ${escapeHtml(tag)}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        // Switch category
+        function switchCategory(category) {
+            currentCategory = category;
+            
+            // Update active tab
+            menuTabs.querySelectorAll('.menu-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.getAttribute('data-category') === category);
+            });
+            
+            // Update active category
+            menuContent.querySelectorAll('.menu-category').forEach(cat => {
+                cat.classList.toggle('active', cat.getAttribute('data-category') === category);
+            });
+        }
+        
+        // Switch menu type
+        function switchMenuType(menuType) {
+            if (currentMenuType === menuType) return;
+            
+            currentMenuType = menuType;
+            currentCategory = null;
+            
+            // Update active type tab
+            menuTypeTabs.forEach(tab => {
+                tab.classList.toggle('active', tab.getAttribute('data-type') === menuType);
+            });
+            
+            // Fetch new menu data
+            fetchMenuData(menuType);
+        }
+        
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Initialize menu type tabs
+        menuTypeTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const menuType = this.getAttribute('data-type');
+                switchMenuType(menuType);
+            });
+        });
+        
+        // Load default menu on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchMenuData('food');
+        });
+        
+        // Page loader
+        window.addEventListener('load', function() {
+            const pageLoader = document.querySelector('.page-loader');
+            if (pageLoader) {
+                pageLoader.classList.add('fade-out');
+                setTimeout(() => {
+                    pageLoader.style.display = 'none';
+                }, 500);
+            }
         });
     </script>
 </body>

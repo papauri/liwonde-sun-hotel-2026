@@ -3,9 +3,9 @@ require_once '../config/database.php';
 require_once '../config/email.php';
 
 // Fetch site settings
-$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
-$site_logo = getSetting('site_logo', 'images/logo/logo.png');
-$email_main = getSetting('email_main', 'info@liwondesunhotel.com');
+$site_name = getSetting('site_name');
+$site_logo = getSetting('site_logo');
+$email_main = getSetting('email_main');
 
 // Fetch gym content
 $gymContent = [
@@ -488,7 +488,7 @@ try {
                                 <div class="package-duration"><?php echo htmlspecialchars($package['duration_label']); ?></div>
                             <?php endif; ?>
                             <div class="package-price">
-                                <span class="price-currency"><?php echo htmlspecialchars($package['currency_code'] ?? 'MWK'); ?></span>
+                                <span class="price-currency"><?php echo htmlspecialchars($package['currency_code']); ?></span>
                                 <span class="price-amount"><?php echo number_format($package['price'] ?? 0, 0); ?></span>
                             </div>
                             <button class="btn <?php echo !empty($package['is_featured']) ? 'btn-primary' : 'btn-outline'; ?>" type="button" data-open-booking>Book Package</button>
@@ -507,7 +507,7 @@ try {
                         </ul>
                         <div class="package-duration">5 Days</div>
                         <div class="package-price">
-                            <span class="price-currency">MWK</span>
+                            <span class="price-currency"><?php echo htmlspecialchars(getSetting('currency_code')); ?></span>
                             <span class="price-amount">45,000</span>
                         </div>
                         <button class="btn btn-outline" type="button" data-open-booking>Book Package</button>
@@ -526,7 +526,7 @@ try {
                         </ul>
                         <div class="package-duration">7 Days</div>
                         <div class="package-price">
-                            <span class="price-currency">MWK</span>
+                            <span class="price-currency"><?php echo htmlspecialchars(getSetting('currency_code')); ?></span>
                             <span class="price-amount">85,000</span>
                         </div>
                         <button class="btn btn-primary" type="button" data-open-booking>Book Package</button>
@@ -543,7 +543,7 @@ try {
                         </ul>
                         <div class="package-duration">3 Days</div>
                         <div class="package-price">
-                            <span class="price-currency">MWK</span>
+                            <span class="price-currency"><?php echo htmlspecialchars(getSetting('currency_code')); ?></span>
                             <span class="price-amount">28,000</span>
                         </div>
                         <button class="btn btn-outline" type="button" data-open-booking>Book Package</button>
@@ -596,7 +596,7 @@ try {
                             <option value="">Choose a package</option>
                             <?php foreach ($gymPackages as $pkg): ?>
                                 <option value="<?php echo htmlspecialchars($pkg['name']); ?>">
-                                    <?php echo htmlspecialchars($pkg['name']); ?> (<?php echo htmlspecialchars($pkg['currency_code'] ?? 'MWK'); ?> <?php echo number_format($pkg['price'] ?? 0, 0); ?>)
+                                    <?php echo htmlspecialchars($pkg['name']); ?> (<?php echo htmlspecialchars($pkg['currency_code']); ?> <?php echo number_format($pkg['price'], 0); ?>)
                                 </option>
                             <?php endforeach; ?>
                             <?php if (empty($gymPackages)): ?>

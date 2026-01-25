@@ -36,8 +36,8 @@ class EmailSender {
         $this->username = getenv('SMTP_USER') ?: null;
         $this->password = getenv('SMTP_PASS') ?: null;
         
-        $this->from_email = getSetting('email_main', 'info@liwondesunhotel.com');
-        $this->from_name = getSetting('site_name', 'Liwonde Sun Hotel');
+        $this->from_email = getSetting('email_main');
+        $this->from_name = getSetting('site_name');
         
         // Determine if we should use SMTP
         $this->use_smtp = !empty($this->host) && !empty($this->username) && !empty($this->password);

@@ -1,6 +1,15 @@
 <?php
 require_once 'config/database.php';
 
+// Fetch page hero (DB-driven)
+$pageHero = getCurrentPageHero();
+$conferenceHero = [
+    'hero_title' => $pageHero['hero_title'],
+    'hero_subtitle' => $pageHero['hero_subtitle'],
+    'hero_description' => $pageHero['hero_description'],
+    'hero_image_path' => $pageHero['hero_image_path'],
+];
+
 // Fetch policies for footer modals
 $policies = [];
 try {
@@ -90,14 +99,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$currency_symbol = getSetting('currency_symbol', 'K');
-$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
-$site_logo = getSetting('site_logo', 'images/logo.png');
-$site_tagline = getSetting('site_tagline', 'Where Luxury Meets Nature');
+$currency_symbol = getSetting('currency_symbol');
+$site_name = getSetting('site_name');
+$site_logo = getSetting('site_logo');
+$site_tagline = getSetting('site_tagline');
 
 function resolveConferenceImage(?string $imagePath): string
 {
-    $fallback = 'images/hero/slide1.jpg';
     if (!empty($imagePath)) {
         $normalized = ltrim($imagePath, '/');
         $fullPath = __DIR__ . '/' . $normalized;
@@ -106,13 +114,9 @@ function resolveConferenceImage(?string $imagePath): string
         }
     }
 
-    if (file_exists(__DIR__ . '/' . $fallback)) {
-        return $fallback;
-    }
-
     return '';
 }
-$hero_image = resolveConferenceImage('images/hero/slide1.jpg');
+$hero_image = resolveConferenceImage($conferenceHero['hero_image_path']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -123,32 +127,6 @@ $hero_image = resolveConferenceImage('images/hero/slide1.jpg');
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .conference-hero {
-            background: linear-gradient(135deg, rgba(15, 29, 46, 0.95) 0%, rgba(20, 40, 65, 0.9) 100%), 
-                        url('<?php echo htmlspecialchars($hero_image); ?>') center/cover;
-            min-height: 420px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: white;
-            padding: 100px 20px 60px;
-        }
-
-        .conference-hero h1 {
-            font-size: 48px;
-            font-family: var(--font-serif);
-            margin-bottom: 16px;
-            color: var(--gold);
-        }
-
-        .conference-hero p {
-            font-size: 20px;
-            max-width: 700px;
-            margin: 0 auto;
-            color: rgba(255, 255, 255, 0.85);
-        }
-
         .conference-rooms-section {
             padding: 90px 0;
             background: #f4f7fb;
@@ -469,10 +447,6 @@ $hero_image = resolveConferenceImage('images/hero/slide1.jpg');
         }
 
         @media (max-width: 768px) {
-            .conference-hero h1 {
-                font-size: 32px;
-            }
-
             .conference-rooms-grid {
                 grid-template-columns: 1fr;
                 gap: 20px;
@@ -554,18 +528,6 @@ $hero_image = resolveConferenceImage('images/hero/slide1.jpg');
         }
 
         @media (max-width: 480px) {
-            .conference-hero {
-                min-height: 300px;
-                padding: 70px 16px 30px;
-            }
-
-            .conference-hero h1 {
-                font-size: 26px;
-            }
-
-            .conference-hero p {
-                font-size: 14px;
-            }
 
             .conference-room-image {
                 height: 180px;
@@ -592,10 +554,12 @@ $hero_image = resolveConferenceImage('images/hero/slide1.jpg');
     <?php include 'includes/header.php'; ?>
 
     <!-- Hero Section -->
-    <section class="conference-hero">
-        <div class="container">
-            <h1>Conference & Meeting Facilities</h1>
-            <p>Business-ready venues with premium technology, flexible layouts, and tailored service for every executive gathering.</p>
+    <section class="page-hero" style="background-image: url('<?php echo htmlspecialchars($hero_image); ?>');">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="hero-subtitle"><?php echo htmlspecialchars($conferenceHero['hero_subtitle']); ?></span>
+            <h1 class="hero-title"><?php echo htmlspecialchars($conferenceHero['hero_title']); ?></h1>
+            <p class="hero-description"><?php echo htmlspecialchars($conferenceHero['hero_description']); ?></p>
         </div>
     </section>
 

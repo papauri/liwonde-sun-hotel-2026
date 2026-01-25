@@ -120,8 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
     }
 }
 
-$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
-$currency_symbol = getSetting('currency_symbol', 'K');
+$site_name = getSetting('site_name');
+$currency_symbol = getSetting('currency_symbol');
 $current_page = 'bookings.php';
 ?>
 <!DOCTYPE html>
@@ -395,18 +395,7 @@ $current_page = 'bookings.php';
     </style>
 </head>
 <body>
-    <div class="admin-header">
-        <h1><i class="fas fa-hotel"></i> Booking Details</h1>
-        <div class="user-info">
-            <div>
-                <div class="user-name"><?php echo htmlspecialchars($user['full_name']); ?></div>
-                <div class="user-role"><?php echo htmlspecialchars($user['role']); ?></div>
-            </div>
-            <a href="logout.php" class="btn-logout">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </div>
-    </div>
+	<?php include 'admin-header.php'; ?>
 
     <nav class="admin-nav">
         <ul>
@@ -422,22 +411,6 @@ $current_page = 'bookings.php';
 
     <div class="booking-details-container">
         <div class="details-card">
-            <div class="card-header">
-                <h2>Booking Information</h2>
-                <div class="booking-ref"><?php echo htmlspecialchars($booking['booking_reference']); ?></div>
-            </div>
-
-            <div class="details-grid">
-                <div class="detail-item">
-                    <label>Guest Name</label>
-                    <div class="value"><?php echo htmlspecialchars($booking['guest_name']); ?></div>
-                </div>
-                <div class="detail-item">
-                    <label>Email</label>
-                    <div class="value"><?php echo htmlspecialchars($booking['guest_email']); ?></div>
-                </div>
-                <div class="detail-item">
-                    <label>Phone</label>
                     <div class="value"><?php echo htmlspecialchars($booking['guest_phone']); ?></div>
                 </div>
                 <div class="detail-item">
@@ -504,25 +477,25 @@ $current_page = 'bookings.php';
                 <label style="display: block; margin-bottom: 12px; font-weight: 600;">Quick Actions</label>
                 <div class="action-buttons">
                     <?php if ($booking['status'] == 'pending'): ?>
-                    <a href="booking-action.php?id=<?php echo $booking_id; ?>&action=confirm" class="btn btn-success" onclick="return confirm('Confirm this booking?')">
+                    <a href="booking-details.php?id=<?php echo $booking_id; ?>&action=confirm" class="btn btn-success" onclick="return confirm('Confirm this booking?')">
                         <i class="fas fa-check"></i> Confirm Booking
                     </a>
                     <?php endif; ?>
 
                     <?php if ($booking['status'] == 'confirmed'): ?>
-                    <a href="booking-action.php?id=<?php echo $booking_id; ?>&action=checkin" class="btn btn-primary" onclick="return confirm('Check in this guest?')">
+                    <a href="booking-details.php?id=<?php echo $booking_id; ?>&action=checkin" class="btn btn-primary" onclick="return confirm('Check in this guest?')">
                         <i class="fas fa-sign-in-alt"></i> Check In
                     </a>
                     <?php endif; ?>
 
                     <?php if ($booking['status'] == 'checked-in'): ?>
-                    <a href="booking-action.php?id=<?php echo $booking_id; ?>&action=checkout" class="btn btn-warning" onclick="return confirm('Check out this guest?')">
+                    <a href="booking-details.php?id=<?php echo $booking_id; ?>&action=checkout" class="btn btn-warning" onclick="return confirm('Check out this guest?')">
                         <i class="fas fa-sign-out-alt"></i> Check Out
                     </a>
                     <?php endif; ?>
 
                     <?php if (!in_array($booking['status'], ['checked-out', 'cancelled'])): ?>
-                    <a href="booking-action.php?id=<?php echo $booking_id; ?>&action=cancel" class="btn btn-danger" onclick="return confirm('Cancel this booking? This cannot be undone.')">
+                    <a href="booking-details.php?id=<?php echo $booking_id; ?>&action=cancel" class="btn btn-danger" onclick="return confirm('Cancel this booking? This cannot be undone.')">
                         <i class="fas fa-times"></i> Cancel Booking
                     </a>
                     <?php endif; ?>

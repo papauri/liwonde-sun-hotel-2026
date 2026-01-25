@@ -28,11 +28,11 @@ try {
     $error = "Unable to retrieve booking details.";
 }
 
-$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
-$currency_symbol = getSetting('currency_symbol', 'K');
-$phone_main = getSetting('phone_main', '+265 123 456 789');
-$email_reservations = getSetting('email_reservations', 'book@liwondesunhotel.com');
-$whatsapp_number = getSetting('whatsapp_number', '265123456789');
+$site_name = getSetting('site_name');
+$currency_symbol = getSetting('currency_symbol');
+$phone_main = getSetting('phone_main');
+$email_reservations = getSetting('email_reservations');
+$whatsapp_number = getSetting('whatsapp_number');
 ?>
 <!DOCTYPE html>
 <html lang="en">

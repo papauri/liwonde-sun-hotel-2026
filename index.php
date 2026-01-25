@@ -12,12 +12,12 @@ function resolveImageUrl($path) {
 }
 
 // Fetch site settings
-$hero_title = getSetting('hero_title', 'Experience Unparalleled Luxury');
-$hero_subtitle = getSetting('hero_subtitle', 'Discover the perfect blend of comfort and elegance');
-$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
+$hero_title = getSetting('hero_title');
+$hero_subtitle = getSetting('hero_subtitle');
+$site_name = getSetting('site_name');
 $site_logo = getSetting('site_logo');
-$currency_symbol = getSetting('currency_symbol', 'K');
-$currency_code = getSetting('currency_code', 'MWK');
+$currency_symbol = getSetting('currency_symbol');
+$currency_code = getSetting('currency_code');
 
 // Fetch policies for footer modals
 $policies = [];
@@ -37,51 +37,6 @@ try {
     $hero_slides = [];
 }
 
-// Fallback slides if table is empty or missing
-if (!$hero_slides) {
-    $hero_slides = [
-        [
-            'title' => $hero_title,
-            'subtitle' => getSetting('site_tagline', 'Where Luxury Meets Nature'),
-            'description' => $hero_subtitle,
-            'primary_cta_text' => 'Book a Suite',
-            'primary_cta_link' => '#book',
-            'secondary_cta_text' => 'View Rooms',
-            'secondary_cta_link' => '#rooms',
-            'image_path' => 'images/hero/slide1.jpg'
-        ],
-        [
-            'title' => 'Sunrise Over the Shire River',
-            'subtitle' => 'Golden hours above pristine waters',
-            'description' => 'Wake to breathtaking Malawian sunrises framed by elegant interiors.',
-            'primary_cta_text' => 'See Gallery',
-            'primary_cta_link' => '#gallery',
-            'secondary_cta_text' => 'Plan Your Stay',
-            'secondary_cta_link' => '#contact',
-            'image_path' => 'images/hero/slide2.jpg'
-        ],
-        [
-            'title' => 'Award-Winning Dining',
-            'subtitle' => 'Michelin-Star Culinary Excellence',
-            'description' => 'Savor exceptional cuisine crafted by our renowned chefs.',
-            'primary_cta_text' => 'View Menu',
-            'primary_cta_link' => '#facilities',
-            'secondary_cta_text' => 'Reserve a Table',
-            'secondary_cta_link' => '#contact',
-            'image_path' => 'images/hero/slide3.jpg'
-        ],
-        [
-            'title' => 'Ultimate Relaxation & Wellness',
-            'subtitle' => 'Your sanctuary of serenity',
-            'description' => 'Indulge in our luxury spa and state-of-the-art fitness facilities.',
-            'primary_cta_text' => 'Explore Spa',
-            'primary_cta_link' => '#facilities',
-            'secondary_cta_text' => 'Book Treatment',
-            'secondary_cta_link' => '#book',
-            'image_path' => 'images/hero/slide4.jpg'
-        ]
-    ];
-}
 
 // Fetch featured rooms
 $stmt = $pdo->query("
@@ -207,13 +162,13 @@ foreach ($footer_links_raw as $link) {
       "description": "<?php echo htmlspecialchars($hero_subtitle); ?>",
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "<?php echo htmlspecialchars($contact['address_line1'] ?? 'Liwonde National Park Road'); ?>",
+        "streetAddress": "<?php echo htmlspecialchars($contact['address_line1']); ?>",
         "addressLocality": "Liwonde",
         "addressRegion": "Southern Region",
         "addressCountry": "MW"
       },
-      "telephone": "<?php echo htmlspecialchars($contact['phone_main'] ?? '+265 123 456 789'); ?>",
-      "email": "<?php echo htmlspecialchars($contact['email_main'] ?? 'info@liwondesunhotel.com'); ?>",
+      "telephone": "<?php echo htmlspecialchars($contact['phone_main']); ?>",
+      "email": "<?php echo htmlspecialchars($contact['email_main']); ?>",
       "url": "https://<?php echo $_SERVER['HTTP_HOST']; ?>/",
       "starRating": {
         "@type": "Rating",
@@ -229,6 +184,7 @@ foreach ($footer_links_raw as $link) {
     <!-- Header & Navigation - Supreme Premium -->
     <?php include 'includes/header.php'; ?>
 
+    <main>
     <!-- Hero Section: Luxury Carousel -->
     <section class="hero" id="home">
         <div class="hero-carousel">
@@ -236,16 +192,16 @@ foreach ($footer_links_raw as $link) {
             <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?>" data-index="<?php echo $index; ?>" style="background-image: url('<?php echo htmlspecialchars($slide['image_path']); ?>');">
                 <div class="hero-overlay"></div>
                 <div class="hero-content fade-in-up">
-                    <span class="hero-subtitle"><?php echo htmlspecialchars($slide['subtitle'] ?? getSetting('site_tagline', 'Where Luxury Meets Nature')); ?></span>
-                    <h1 class="hero-title"><?php echo htmlspecialchars($slide['title'] ?? $hero_title); ?></h1>
-                    <p class="hero-description"><?php echo htmlspecialchars($slide['description'] ?? $hero_subtitle); ?></p>
+                    <span class="hero-subtitle"><?php echo htmlspecialchars($slide['subtitle']); ?></span>
+                    <h1 class="hero-title"><?php echo htmlspecialchars($slide['title']); ?></h1>
+                    <p class="hero-description"><?php echo htmlspecialchars($slide['description']); ?></p>
                     
                     <div class="hero-cta">
                         <?php if (!empty($slide['primary_cta_text'])): ?>
-                            <a href="<?php echo htmlspecialchars($slide['primary_cta_link'] ?? '#rooms'); ?>" class="btn btn-primary"><?php echo htmlspecialchars($slide['primary_cta_text']); ?></a>
+                            <a href="<?php echo htmlspecialchars($slide['primary_cta_link']); ?>" class="btn btn-primary"><?php echo htmlspecialchars($slide['primary_cta_text']); ?></a>
                         <?php endif; ?>
                         <?php if (!empty($slide['secondary_cta_text'])): ?>
-                            <a href="<?php echo htmlspecialchars($slide['secondary_cta_link'] ?? '#contact'); ?>" class="btn btn-outline"><?php echo htmlspecialchars($slide['secondary_cta_text']); ?></a>
+                            <a href="<?php echo htmlspecialchars($slide['secondary_cta_link']); ?>" class="btn btn-outline"><?php echo htmlspecialchars($slide['secondary_cta_text']); ?></a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -470,6 +426,7 @@ foreach ($footer_links_raw as $link) {
         </div>
     </section>
 
+    </main>
     <!-- Footer -->
     <footer class="footer" id="contact">
         <div class="container">
@@ -500,19 +457,19 @@ foreach ($footer_links_raw as $link) {
                     <ul class="contact-info">
                         <li>
                             <i class="fas fa-phone"></i>
-                            <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $contact['phone_main'] ?? '+265 123 456 789')); ?>"><?php echo htmlspecialchars($contact['phone_main'] ?? '+265 123 456 789'); ?></a>
+                            <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $contact['phone_main'])); ?>"><?php echo htmlspecialchars($contact['phone_main']); ?></a>
                         </li>
                         <li>
                             <i class="fas fa-envelope"></i>
-                            <a href="mailto:<?php echo htmlspecialchars($contact['email_main'] ?? 'info@liwondesunhotel.com'); ?>"><?php echo htmlspecialchars($contact['email_main'] ?? 'info@liwondesunhotel.com'); ?></a>
+                            <a href="mailto:<?php echo htmlspecialchars($contact['email_main']); ?>"><?php echo htmlspecialchars($contact['email_main']); ?></a>
                         </li>
                         <li>
                             <i class="fas fa-map-marker-alt"></i>
-                            <a href="https://www.google.com/maps/search/<?php echo urlencode(htmlspecialchars($contact['address_line1'] ?? 'Liwonde, Malawi')); ?>" target="_blank"><?php echo htmlspecialchars($contact['address_line1'] ?? 'Liwonde, Malawi'); ?></a>
+                            <a href="https://www.google.com/maps/search/<?php echo urlencode(htmlspecialchars($contact['address_line1'])); ?>" target="_blank"><?php echo htmlspecialchars($contact['address_line1']); ?></a>
                         </li>
                         <li>
                             <i class="fas fa-clock"></i>
-                            <span><?php echo htmlspecialchars($contact['working_hours'] ?? '24/7 Available'); ?></span>
+                            <span><?php echo htmlspecialchars($contact['working_hours']); ?></span>
                         </li>
                     </ul>
                     
@@ -545,7 +502,7 @@ foreach ($footer_links_raw as $link) {
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text', '2026 Liwonde Sun Hotel. All rights reserved.')); ?></p>
+                <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text')); ?></p>
             </div>
         </div>
     </footer>
@@ -578,7 +535,7 @@ foreach ($footer_links_raw as $link) {
     
     <!-- Scroll to Top Button -->
     <button id="scrollToTop" class="scroll-to-top" aria-label="Scroll to top">
-        <img src="images/logo/logo.jpg" alt="Liwonde Sun Hotel Logo" class="scroll-to-top-logo">
+        <img src="images/logo/logo.jpg" alt="<?php echo htmlspecialchars($site_name); ?> Logo" class="scroll-to-top-logo">
     </button>
 </body>
 </html>

@@ -1,0 +1,1261 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.2
+-- https://www.phpmyadmin.net/
+--
+-- Host: localhost:3306
+-- Generation Time: Jan 25, 2026 at 07:19 PM
+-- Server version: 8.0.44-cll-lve
+-- PHP Version: 8.4.16
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `p601229_hotels`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admin_users`
+--
+
+CREATE TABLE `admin_users` (
+  `id` int UNSIGNED NOT NULL,
+  `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password_hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `full_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `role` enum('admin','receptionist','manager') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'receptionist',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `last_login` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `admin_users`
+--
+
+INSERT INTO `admin_users` (`id`, `username`, `email`, `password_hash`, `full_name`, `role`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
+(1, 'admin', 'admin@liwondesunhotel.com', '$2y$10$kHKXltLQhR3JuVFtHQ7mZ.KhVjTNKJf7tEU0IwD8HKzKdvyG1Cy/W', 'System Administrator', 'admin', 1, NULL, '2026-01-20 19:08:40', '2026-01-20 19:08:40'),
+(2, 'receptionist', 'reception@liwondesunhotel.com', '$2y$10$OFHlFcgoqltOd7X6Z3IqVeg0961Adk9LxyfW8UBBfENSawMRZ3fF6', 'Front Desk', 'receptionist', 1, '2026-01-24 23:24:06', '2026-01-20 19:08:40', '2026-01-24 23:24:06');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bookings`
+--
+
+CREATE TABLE `bookings` (
+  `id` int UNSIGNED NOT NULL,
+  `booking_reference` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `room_id` int UNSIGNED NOT NULL,
+  `guest_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `guest_email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `guest_phone` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `guest_country` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `guest_address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `number_of_guests` int NOT NULL DEFAULT '1',
+  `check_in_date` date NOT NULL,
+  `check_out_date` date NOT NULL,
+  `number_of_nights` int NOT NULL,
+  `total_amount` decimal(10,2) NOT NULL,
+  `special_requests` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('pending','confirmed','checked-in','checked-out','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `payment_status` enum('unpaid','partial','paid') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'unpaid',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `bookings`
+--
+
+INSERT INTO `bookings` (`id`, `booking_reference`, `room_id`, `guest_name`, `guest_email`, `guest_phone`, `guest_country`, `guest_address`, `number_of_guests`, `check_in_date`, `check_out_date`, `number_of_nights`, `total_amount`, `special_requests`, `status`, `payment_status`, `created_at`, `updated_at`) VALUES
+(1, 'LSH2026001', 1, 'John Banda', 'john.banda@example.com', '+265 999 123 456', NULL, NULL, 2, '2026-01-25', '2026-01-28', 3, 450000.00, NULL, 'confirmed', 'paid', '2026-01-20 19:08:40', '2026-01-25 00:33:36'),
+(2, 'LSH2026002', 2, 'Sarah Phiri', 'sarah.phiri@example.com', '+265 888 234 567', NULL, NULL, 1, '2026-02-01', '2026-02-03', 2, 280000.00, NULL, 'confirmed', 'unpaid', '2026-01-20 19:08:40', '2026-01-25 00:33:39'),
+(3, 'LSH2026003', 3, 'Michael Chimbwanda', 'michael.c@example.com', '+265 777 345 678', NULL, NULL, 4, '2026-02-05', '2026-02-08', 3, 600000.00, NULL, 'confirmed', 'unpaid', '2026-01-20 19:08:40', '2026-01-24 16:30:42'),
+(4, 'LSH2026004', 1, 'Grace Mwale', 'grace.mwale@example.com', '+265 666 456 789', NULL, NULL, 2, '2026-02-10', '2026-02-12', 2, 300000.00, NULL, 'pending', 'unpaid', '2026-01-20 19:08:40', '2026-01-20 19:08:40');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `booking_notes`
+--
+
+CREATE TABLE `booking_notes` (
+  `id` int UNSIGNED NOT NULL,
+  `booking_id` int UNSIGNED NOT NULL,
+  `note_text` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_by` int UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `conference_inquiries`
+--
+
+CREATE TABLE `conference_inquiries` (
+  `id` int NOT NULL,
+  `inquiry_reference` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `conference_room_id` int NOT NULL,
+  `company_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `contact_person` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `event_date` date NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `number_of_attendees` int NOT NULL,
+  `event_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `special_requirements` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `catering_required` tinyint(1) DEFAULT '0',
+  `av_equipment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('pending','confirmed','cancelled','completed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `total_amount` decimal(10,2) DEFAULT NULL,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `conference_inquiries`
+--
+
+INSERT INTO `conference_inquiries` (`id`, `inquiry_reference`, `conference_room_id`, `company_name`, `contact_person`, `email`, `phone`, `event_date`, `start_time`, `end_time`, `number_of_attendees`, `event_type`, `special_requirements`, `catering_required`, `av_equipment`, `status`, `total_amount`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 'CONF-2026-48238', 4, 'ProManaged', 'John', 'johnpaulchirwa@gmail.com', '0860081635', '2026-01-30', '23:27:00', '03:31:00', 12, 'Meeting', '', 1, 'TV', 'pending', 299000.00, NULL, '2026-01-25 11:27:17', '2026-01-25 11:27:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `conference_rooms`
+--
+
+CREATE TABLE `conference_rooms` (
+  `id` int NOT NULL,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `capacity` int NOT NULL,
+  `size_sqm` decimal(10,2) DEFAULT NULL,
+  `hourly_rate` decimal(10,2) NOT NULL,
+  `daily_rate` decimal(10,2) NOT NULL,
+  `amenities` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `display_order` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `conference_rooms`
+--
+
+INSERT INTO `conference_rooms` (`id`, `name`, `description`, `capacity`, `size_sqm`, `hourly_rate`, `daily_rate`, `amenities`, `image_path`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'Executive Boardroom', 'Intimate boardroom perfect for high-level meetings and presentations. Features mahogany furnishings, premium leather seating, and state-of-the-art video conferencing capabilities.', 12, 35.00, 15000.00, 100000.00, 'Video Conferencing, Smart TV, Whiteboard, High-Speed WiFi, Coffee Service', 'images/conference/executive-boardroom.jpg', 1, 1, '2026-01-20 22:35:58', '2026-01-20 22:35:58'),
+(2, 'Grand Conference Hall', 'Our largest conference space, ideal for seminars, workshops, and corporate events. Divisible into three sections with soundproof partitions for flexible event configurations.', 150, 200.00, 35000.00, 250000.00, 'Stage & Podium, Professional Sound System, Projection Screen, WiFi, Air Conditioning, Breakout Rooms', 'images/conference/grand-hall.jpg', 1, 2, '2026-01-20 22:35:58', '2026-01-20 22:35:58'),
+(3, 'Lakeside Meeting Room', 'Modern meeting space with panoramic views of the lake. Natural lighting and contemporary design create an inspiring environment for creative sessions and strategic planning.', 30, 60.00, 20000.00, 140000.00, 'Projector & Screen, Video Conferencing, Whiteboard, WiFi, Lake View, Terrace Access', 'images/conference/lakeside-room.jpg', 1, 3, '2026-01-20 22:35:58', '2026-01-20 22:35:58'),
+(4, 'Executive Boardroom', 'Intimate boardroom perfect for high-level meetings and presentations. Features mahogany furnishings, premium leather seating, and state-of-the-art video conferencing capabilities.', 12, 35.00, 15000.00, 100000.00, 'Video Conferencing, Smart TV, Whiteboard, High-Speed WiFi, Coffee Service', 'images/conference/executive-boardroom.jpg', 1, 1, '2026-01-20 22:36:31', '2026-01-20 22:36:31'),
+(5, 'Grand Conference Hall', 'Our largest conference space, ideal for seminars, workshops, and corporate events. Divisible into three sections with soundproof partitions for flexible event configurations.', 150, 200.00, 35000.00, 250000.00, 'Stage & Podium, Professional Sound System, Projection Screen, WiFi, Air Conditioning, Breakout Rooms', 'images/conference/grand-hall.jpg', 1, 2, '2026-01-20 22:36:31', '2026-01-20 22:36:31'),
+(6, 'Lakeside Meeting Room', 'Modern meeting space with panoramic views of the lake. Natural lighting and contemporary design create an inspiring environment for creative sessions and strategic planning.', 30, 60.00, 20000.00, 140000.00, 'Projector & Screen, Video Conferencing, Whiteboard, WiFi, Lake View, Terrace Access', 'images/conference/lakeside-room.jpg', 1, 3, '2026-01-20 22:36:31', '2026-01-20 22:36:31');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `drink_menu`
+--
+
+CREATE TABLE `drink_menu` (
+  `id` int NOT NULL,
+  `category` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Coffee, Wine, Cocktails, Beer, Non-Alcoholic, etc.',
+  `item_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `price` decimal(10,2) NOT NULL,
+  `currency_code` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'MWK',
+  `image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_available` tinyint(1) DEFAULT '1',
+  `is_featured` tinyint(1) DEFAULT '0' COMMENT 'Featured items shown prominently',
+  `tags` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Comma-separated tags',
+  `display_order` int DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `drink_menu`
+--
+
+INSERT INTO `drink_menu` (`id`, `category`, `item_name`, `description`, `price`, `currency_code`, `image_path`, `is_available`, `is_featured`, `tags`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'Coffee', 'Espresso', 'Rich Italian espresso', 600.00, 'MWK', NULL, 1, 0, 'Hot, Premium', 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(2, 'Coffee', 'Cappuccino', 'Creamy cappuccino with artistic latte art', 850.00, 'MWK', NULL, 1, 1, 'Hot, Classic', 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(3, 'Coffee', 'Cortado', 'Perfect balance of espresso and steamed milk', 750.00, 'MWK', NULL, 1, 0, 'Hot, Balanced', 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(4, 'Coffee', 'Latte', 'Smooth latte with your choice of milk', 800.00, 'MWK', NULL, 1, 0, 'Hot, Creamy', 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(5, 'Coffee', 'Macchiato', 'Espresso marked with a touch of foam', 700.00, 'MWK', NULL, 1, 0, 'Hot, Strong', 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(6, 'Coffee', 'Americano', 'Bold americano with hot water', 650.00, 'MWK', NULL, 1, 0, 'Hot, Classic', 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(7, 'Coffee', 'Mocha', 'Rich espresso with chocolate and steamed milk', 950.00, 'MWK', NULL, 1, 1, 'Hot, Chocolate', 7, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(8, 'Coffee', 'Iced Coffee', 'Cold brew coffee served over ice', 750.00, 'MWK', NULL, 1, 0, 'Cold, Refreshing', 8, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(9, 'Coffee', 'Flat White', 'Espresso with velvety microfoam milk', 900.00, 'MWK', NULL, 1, 0, 'Hot, Premium', 9, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(10, 'Coffee', 'Irish Coffee', 'Coffee with whiskey, sugar, and whipped cream', 1400.00, 'MWK', NULL, 1, 1, 'Hot, Alcohol', 10, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(11, 'Wine', 'Château Margaux 2015', 'Bordeaux blend, full-bodied with dark fruit notes', 18500.00, 'MWK', NULL, 1, 1, 'Red Wine, Bordeaux', 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(12, 'Wine', 'Opus One 2019', 'California Cabernet blend, elegant and balanced', 16500.00, 'MWK', NULL, 1, 0, 'Red Wine, California', 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(13, 'Wine', 'Chablis Grand Cru', 'Crisp and mineral, perfect for seafood pairing', 6500.00, 'MWK', NULL, 1, 0, 'White Wine, French', 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(14, 'Wine', 'Champagne Cristal', 'Prestige cuvée with fine bubbles and complexity', 27500.00, 'MWK', NULL, 1, 1, 'Champagne, Premium', 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(15, 'Wine', 'Pinot Noir Reserve', 'Elegant red with notes of cherry and oak', 8500.00, 'MWK', NULL, 1, 0, 'Red Wine, Light', 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(16, 'Wine', 'Sauvignon Blanc', 'Crisp white with citrus and tropical fruit notes', 5500.00, 'MWK', NULL, 1, 0, 'White Wine, Fresh', 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(17, 'Cocktails', 'Margarita', 'Classic tequila, lime, and triple sec', 1200.00, 'MWK', NULL, 1, 0, 'Tequila, Classic', 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(18, 'Cocktails', 'Mojito', 'Rum with fresh mint, lime, and soda', 1350.00, 'MWK', NULL, 1, 1, 'Rum, Refreshing', 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(19, 'Cocktails', 'Manhattan', 'Whiskey, vermouth, and bitters', 1400.00, 'MWK', NULL, 1, 0, 'Whiskey, Classic', 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(20, 'Cocktails', 'Espresso Martini', 'Vodka, coffee liqueur, and fresh espresso', 1500.00, 'MWK', NULL, 1, 1, 'Vodka, Coffee', 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(21, 'Cocktails', 'Old Fashioned', 'Whiskey, sugar, bitters, and orange twist', 1450.00, 'MWK', NULL, 1, 0, 'Whiskey, Classic', 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(22, 'Cocktails', 'Cosmopolitan', 'Vodka, cranberry, lime, and triple sec', 1300.00, 'MWK', NULL, 1, 0, 'Vodka, Fruity', 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(23, 'Cocktails', 'Piña Colada', 'Rum, coconut cream, and pineapple', 1250.00, 'MWK', NULL, 1, 0, 'Rum, Tropical', 7, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(24, 'Cocktails', 'Daiquiri', 'White rum, fresh lime juice, and sugar', 1150.00, 'MWK', NULL, 1, 0, 'Rum, Classic', 8, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(25, 'Beer', 'Craft Beer - IPA', 'Bold hoppy India Pale Ale', 850.00, 'MWK', NULL, 1, 1, 'IPA, Craft', 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(26, 'Beer', 'Craft Beer - Stout', 'Rich and creamy stout with chocolate notes', 900.00, 'MWK', NULL, 1, 0, 'Stout, Craft', 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(27, 'Beer', 'Craft Beer - Lager', 'Crisp and refreshing lager', 750.00, 'MWK', NULL, 1, 0, 'Lager, Craft', 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(28, 'Beer', 'Carlsberg', 'Premium Danish lager', 1200.00, 'MWK', NULL, 1, 0, 'Lager, Imported', 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(29, 'Beer', 'Kuche Kuche', 'Local Malawian lager', 1000.00, 'MWK', NULL, 1, 1, 'Lager, Local', 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(30, 'Beer', 'Guinness', 'Irish dry stout', 1300.00, 'MWK', NULL, 1, 0, 'Stout, Irish', 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(31, 'Non-Alcoholic', 'Fresh Orange Juice', 'Freshly squeezed orange juice', 800.00, 'MWK', NULL, 1, 1, 'Fresh, Juice', 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(32, 'Non-Alcoholic', 'Sparkling Water', 'Perrier or San Pellegrino', 700.00, 'MWK', NULL, 1, 0, 'Sparkling, Refreshing', 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(33, 'Non-Alcoholic', 'Fresh Tropical Juice', 'Mango, pineapple, or passion fruit - freshly squeezed', 800.00, 'MWK', NULL, 1, 0, 'Fresh, Juice', 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(34, 'Non-Alcoholic', 'Malawian Masala Tea', 'Spiced tea with ginger, cardamom, and cinnamon', 600.00, 'MWK', NULL, 1, 1, 'Hot, Tea', 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(35, 'Non-Alcoholic', 'Smoothie Bowl', 'Blended fruits with granola, coconut, and honey', 1800.00, 'MWK', NULL, 1, 0, 'Fresh, Healthy', 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(36, 'Non-Alcoholic', 'Lemonade', 'Fresh lemonade with mint', 650.00, 'MWK', NULL, 1, 0, 'Fresh, Cold', 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `events`
+--
+
+CREATE TABLE `events` (
+  `id` int NOT NULL,
+  `title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `event_date` date NOT NULL,
+  `start_time` time DEFAULT NULL,
+  `end_time` time DEFAULT NULL,
+  `location` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ticket_price` decimal(10,2) DEFAULT '0.00',
+  `capacity` int DEFAULT NULL,
+  `is_featured` tinyint(1) DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `display_order` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `events`
+--
+
+INSERT INTO `events` (`id`, `title`, `description`, `event_date`, `start_time`, `end_time`, `location`, `image_path`, `ticket_price`, `capacity`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'New Year Gala Dinner', 'Ring in the New Year with an elegant five-course dinner, live entertainment, and spectacular fireworks display over the lake. Dress code: Black tie.', '2026-12-31', '19:00:00', '01:00:00', 'Grand Conference Hall', 'images/events/gala-dinner.jpg', 50000.00, 150, 1, 1, 1, '2026-01-20 22:35:58', '2026-01-20 22:35:58'),
+(2, 'Wine Tasting Evening', 'Join our sommelier for an exclusive tasting of premium South African wines paired with artisan cheeses and canapés. Learn about wine regions, varietals, and perfect food pairings.', '2026-02-14', '18:00:00', '21:00:00', 'Lakeside Terrace', 'images/events/event_1769125595_5057.png', 25000.00, 40, 1, 1, 2, '2026-01-20 22:35:58', '2026-01-22 23:46:35'),
+(3, 'Business Networking Breakfast', 'Monthly networking event for local business leaders and entrepreneurs. Complimentary breakfast buffet with opportunities to connect and collaborate.', '2026-02-28', '07:00:00', '09:30:00', 'Executive Boardroom', 'images/events/business-breakfast.jpg', 0.00, 30, 0, 1, 3, '2026-01-20 22:35:58', '2026-01-20 22:35:58'),
+(4, 'Easter Sunday Brunch', 'Celebrate Easter with a lavish buffet brunch featuring international cuisines, live cooking stations, and entertainment for children. Perfect for the whole family.', '2026-04-05', '11:00:00', '15:00:00', 'Restaurant & Terrace', 'images/events/easter-brunch.jpg', 35000.00, 100, 1, 1, 4, '2026-01-20 22:35:58', '2026-01-20 22:35:58'),
+(5, 'Lake Festival Cultural Night', 'Experience traditional Malawian culture with live music, dance performances, and authentic local cuisine. Supporting local artists and community initiatives.', '2026-05-15', '17:00:00', '22:00:00', 'Outdoor Grounds', 'images/events/cultural-night.jpg', 15000.00, 200, 1, 1, 5, '2026-01-20 22:35:58', '2026-01-20 22:35:58'),
+(6, 'New Year Gala Dinner', 'Ring in the New Year with an elegant five-course dinner, live entertainment, and spectacular fireworks display over the lake. Dress code: Black tie.', '2026-12-31', '19:00:00', '01:00:00', 'Grand Conference Hall', 'images/events/gala-dinner.jpg', 50000.00, 150, 1, 1, 1, '2026-01-20 22:36:31', '2026-01-20 22:36:31'),
+(7, 'Wine Tasting Evening', 'Join our sommelier for an exclusive tasting of premium South African wines paired with artisan cheeses and canapés. Learn about wine regions, varietals, and perfect food pairings.', '2026-02-14', '18:00:00', '21:00:00', 'Lakeside Terrace', 'images/events/wine-tasting.jpg', 25000.00, 40, 1, 1, 2, '2026-01-20 22:36:31', '2026-01-20 22:36:31'),
+(8, 'Business Networking Breakfast', 'Monthly networking event for local business leaders and entrepreneurs. Complimentary breakfast buffet with opportunities to connect and collaborate.', '2026-02-28', '07:00:00', '09:30:00', 'Executive Boardroom', 'images/events/business-breakfast.jpg', 0.00, 30, 0, 1, 3, '2026-01-20 22:36:31', '2026-01-20 22:36:31'),
+(9, 'Easter Sunday Brunch', 'Celebrate Easter with a lavish buffet brunch featuring international cuisines, live cooking stations, and entertainment for children. Perfect for the whole family.', '2026-04-05', '11:00:00', '15:00:00', 'Restaurant & Terrace', 'images/events/easter-brunch.jpg', 35000.00, 100, 1, 1, 4, '2026-01-20 22:36:31', '2026-01-20 22:36:31'),
+(10, 'Lake Festival Cultural Night', 'Experience traditional Malawian culture with live music, dance performances, and authentic local cuisine. Supporting local artists and community initiatives.', '2026-05-15', '17:00:00', '22:00:00', 'Outdoor Grounds', 'images/events/cultural-night.jpg', 15000.00, 200, 1, 1, 5, '2026-01-20 22:36:31', '2026-01-20 22:36:31');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `facilities`
+--
+
+CREATE TABLE `facilities` (
+  `id` int NOT NULL,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `short_description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `icon_class` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `page_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `image_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_featured` tinyint(1) DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `display_order` int DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `facilities`
+--
+
+INSERT INTO `facilities` (`id`, `name`, `slug`, `description`, `short_description`, `icon_class`, `page_url`, `image_url`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'Fine Dining Restaurant', 'fine-dining', 'Award-winning restaurant serving international and local cuisine. Our Michelin-star chef creates exceptional culinary experiences using the finest ingredients. Open 6am-11pm daily.', 'World-class cuisine with Michelin-star chef', 'fas fa-utensils', 'pages/restaurant.php', NULL, 1, 1, 1, '2026-01-19 20:22:49', '2026-01-20 14:17:17'),
+(2, 'Luxury Spa & Wellness', 'spa-wellness', 'Full-service spa offering massages, facials, and wellness treatments. Expert therapists provide personalized experiences using premium organic products. Includes sauna and steam room.', 'Rejuvenating spa treatments and wellness services', 'fas fa-spa', NULL, NULL, 1, 1, 2, '2026-01-19 20:22:49', '2026-01-19 20:22:49'),
+(3, 'Olympic Swimming Pool', 'swimming-pool', 'Olympic-sized outdoor pool with heated water, children\'s pool, waterslide, and poolside bar service. Perfect for relaxation and recreation year-round.', 'Heated Olympic pool with poolside service', 'fas fa-swimming-pool', NULL, NULL, 1, 1, 3, '2026-01-19 20:22:49', '2026-01-19 20:22:49'),
+(4, 'State-of-the-Art Fitness Center', 'fitness-center', 'Modern gym with personal trainers, cardio machines, weights, and dedicated yoga studio. Daily classes available. Open 24/7 for guests.', 'Premium gym with personal training available', 'fas fa-dumbbell', 'pages/gym.php', NULL, 1, 1, 4, '2026-01-19 20:22:49', '2026-01-20 14:17:17'),
+(5, 'High-Speed WiFi', 'wifi', 'Ultra-fast fiber internet throughout the hotel. Dedicated business center with meeting facilities and tech support available.', 'Complimentary ultra-fast internet access', 'fas fa-wifi', NULL, NULL, 1, 1, 5, '2026-01-19 20:22:49', '2026-01-19 20:22:49'),
+(6, '24/7 Concierge Service', 'concierge', 'Dedicated concierge team for all your needs. Arrange tours, transportation, dining reservations, and special requests anytime.', 'Personalized service around the clock', 'fas fa-concierge-bell', NULL, NULL, 1, 1, 6, '2026-01-19 20:22:49', '2026-01-19 20:22:49');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `food_menu`
+--
+
+CREATE TABLE `food_menu` (
+  `id` int NOT NULL,
+  `category` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Breakfast, Lunch, Dinner, Desserts, etc.',
+  `item_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `price` decimal(10,2) NOT NULL,
+  `currency_code` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'MWK',
+  `image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_available` tinyint(1) DEFAULT '1',
+  `is_featured` tinyint(1) DEFAULT '0' COMMENT 'Featured items shown prominently',
+  `is_vegetarian` tinyint(1) DEFAULT '0',
+  `is_vegan` tinyint(1) DEFAULT '0',
+  `allergens` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Comma-separated allergen list',
+  `display_order` int DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `food_menu`
+--
+
+INSERT INTO `food_menu` (`id`, `category`, `item_name`, `description`, `price`, `currency_code`, `image_path`, `is_available`, `is_featured`, `is_vegetarian`, `is_vegan`, `allergens`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'Breakfast', 'Continental Breakfast', 'Assorted pastries, fresh fruits, yogurt, cereals, and freshly brewed coffee', 2500.00, 'MWK', NULL, 1, 1, 1, 1, NULL, 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(2, 'Breakfast', 'Full English Breakfast', 'Eggs, bacon, sausages, grilled tomatoes, mushrooms, beans, and toast', 3500.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(3, 'Breakfast', 'Malawian Breakfast Platter', 'Nsima with traditional relish, fresh mandasi, and masala tea', 2800.00, 'MWK', NULL, 1, 1, 0, 0, NULL, 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(4, 'Breakfast', 'Pancake Stack', 'Fluffy pancakes with maple syrup, fresh berries, and whipped cream', 2200.00, 'MWK', NULL, 1, 0, 1, 0, NULL, 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(5, 'Breakfast', 'Avocado Toast', 'Sourdough bread with smashed avocado, poached eggs, and chili flakes', 3000.00, 'MWK', NULL, 1, 0, 1, 0, NULL, 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(6, 'Breakfast', 'Oatmeal Bowl', 'Steel-cut oats with honey, fresh berries, and nuts', 1800.00, 'MWK', NULL, 1, 0, 1, 1, NULL, 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(7, 'Lunch', 'Chambo Fish & Chips', 'Fresh chambo from Lake Malawi, crispy chips, and tartar sauce', 4500.00, 'MWK', NULL, 1, 1, 0, 0, NULL, 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(8, 'Lunch', 'Grilled Chicken Caesar Salad', 'Tender chicken breast, crisp romaine, parmesan, croutons, and Caesar dressing', 3800.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(9, 'Lunch', 'Vegetable Curry with Rice', 'Aromatic curry with seasonal vegetables, served with basmati rice', 3200.00, 'MWK', NULL, 1, 1, 1, 1, NULL, 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(10, 'Lunch', 'Club Sandwich Deluxe', 'Triple-decker with turkey, bacon, lettuce, tomato, and fries', 3500.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(11, 'Lunch', 'Beef Burger', 'Juicy beef patty with cheese, lettuce, tomato, and house sauce', 4000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(12, 'Lunch', 'Quinoa Salad', 'Fresh quinoa with roasted vegetables, feta cheese, and lemon vinaigrette', 2800.00, 'MWK', NULL, 1, 0, 1, 1, NULL, 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(13, 'Dinner', 'Grilled T-Bone Steak', 'Premium aged beef, herb butter, roasted vegetables, and choice of sides', 8500.00, 'MWK', NULL, 1, 1, 0, 0, NULL, 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(14, 'Dinner', 'Pan-Seared Chambo', 'Lake Malawi chambo with lemon butter sauce, seasonal vegetables', 6500.00, 'MWK', NULL, 1, 1, 0, 0, NULL, 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(15, 'Dinner', 'Slow-Roasted Lamb Shank', 'Tender lamb with red wine jus, creamy mashed potatoes, and greens', 7800.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(16, 'Dinner', 'Vegetarian Risotto', 'Creamy mushroom and truffle risotto with parmesan and fresh herbs', 4500.00, 'MWK', NULL, 1, 0, 1, 0, NULL, 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(17, 'Dinner', 'Seafood Platter', 'Grilled prawns, calamari, fish fillet, and mussels with garlic butter', 9500.00, 'MWK', NULL, 1, 1, 0, 0, NULL, 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(18, 'Dinner', 'Grilled Chicken Breast', 'Herb-marinated chicken with roasted potatoes and seasonal vegetables', 5500.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(19, 'Desserts', 'Chocolate Lava Cake', 'Warm chocolate cake with molten center, vanilla ice cream', 2200.00, 'MWK', NULL, 1, 1, 1, 0, NULL, 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(20, 'Desserts', 'Malawian Banana Fritters', 'Sweet fried bananas with honey and cinnamon', 1500.00, 'MWK', NULL, 1, 0, 1, 1, NULL, 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(21, 'Desserts', 'Cheesecake Selection', 'Classic, strawberry, or chocolate cheesecake', 2000.00, 'MWK', NULL, 1, 0, 1, 0, NULL, 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(22, 'Desserts', 'Fresh Fruit Platter', 'Seasonal tropical fruits with passion fruit coulis', 1800.00, 'MWK', NULL, 1, 1, 1, 1, NULL, 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(23, 'Desserts', 'Crème Brûlée', 'Classic vanilla bean crème brûlée with torched sugar crust', 2500.00, 'MWK', NULL, 1, 0, 1, 0, NULL, 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
+(24, 'Desserts', 'Tiramisu', 'Traditional Italian tiramisu with layers of mascarpone and espresso', 2300.00, 'MWK', NULL, 1, 0, 1, 0, NULL, 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `footer_links`
+--
+
+CREATE TABLE `footer_links` (
+  `id` int NOT NULL,
+  `column_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `link_text` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `link_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `display_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `footer_links`
+--
+
+INSERT INTO `footer_links` (`id`, `column_name`, `link_text`, `link_url`, `display_order`, `is_active`) VALUES
+(1, 'About Hotel', 'About Us', '/about', 1, 1),
+(2, 'About Hotel', 'Sustainability', '/sustainability', 2, 1),
+(3, 'About Hotel', 'Awards', '/awards', 3, 1),
+(4, 'About Hotel', 'History', '/history', 4, 1),
+(5, 'Guest Services', 'Rooms & Suites', '/rooms', 1, 1),
+(6, 'Guest Services', 'Facilities', '/facilities', 2, 1),
+(7, 'Guest Services', 'Special Offers', '/offers', 3, 1),
+(8, 'Guest Services', 'Group Bookings', '/groups', 4, 1),
+(9, 'Dining & Entertainment', 'Fine Dining', '/dining', 1, 1),
+(10, 'Dining & Entertainment', 'Spa Services', '/spa', 2, 1),
+(11, 'Dining & Entertainment', 'Events & Conferences', '/events', 3, 1),
+(12, 'Dining & Entertainment', 'Activities', '/activities', 4, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `gallery`
+--
+
+CREATE TABLE `gallery` (
+  `id` int NOT NULL,
+  `title` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `image_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `room_id` int DEFAULT NULL,
+  `display_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `gallery`
+--
+
+INSERT INTO `gallery` (`id`, `title`, `description`, `image_url`, `category`, `room_id`, `display_order`, `is_active`, `created_at`) VALUES
+(2, 'Fine Dining Restaurant', 'World-class cuisine', 'images/hotel-exterior-1024x572.jpg', 'dining', NULL, 2, 1, '2026-01-19 20:22:49'),
+(3, 'Olympic Pool', 'Heated swimming pool', 'images/hotel-exterior-1024x572.jpg', 'facilities', NULL, 3, 1, '2026-01-19 20:22:49'),
+(4, 'Hotel Exterior', 'Main entrance', 'images/hotel-exterior-1024x572.jpg', 'exterior', NULL, 4, 1, '2026-01-19 20:22:49'),
+(5, 'Luxury Spa', 'Wellness center', 'images/hotel-exterior-1024x572.jpg', 'facilities', NULL, 5, 1, '2026-01-19 20:22:49'),
+(6, 'Sunset View', 'Evening beauty', 'images/hotel-exterior-1024x572.jpg', 'exterior', NULL, 6, 1, '2026-01-19 20:22:49'),
+(7, 'Presidential Suite Living Area', 'Spacious living area with premium furnishings', 'images/gallery/hotel-lobby.jpg', 'rooms', NULL, NULL, 1, '2026-01-20 07:57:13'),
+(8, 'Hotel Exterior View', 'Stunning hotel facade during golden hour', 'images/gallery/hotel-exterior_1-1024x572.jpg', 'exterior', NULL, 8, 1, '2026-01-20 07:57:13'),
+(9, 'Pool Area Relaxation', 'Olympic pool with panoramic views', 'images/gallery/pool-area-1024x683.jpg', 'facilities', NULL, 9, 1, '2026-01-20 07:57:13'),
+(10, 'Fitness Excellence', 'State-of-the-art fitness facilities', 'images/gallery/fitness-center-1024x683.jpg', 'facilities', NULL, 10, 1, '2026-01-20 07:57:13'),
+(11, 'Presidential Suite Living Area', 'Spacious living area with premium furnishings', 'images/gallery/hotel-lobby.jpg', 'rooms', NULL, NULL, 1, '2026-01-20 08:03:22'),
+(12, 'Hotel Exterior View', 'Stunning hotel facade during golden hour', 'images/gallery/hotel-exterior_1-1024x572.jpg', 'exterior', NULL, 8, 1, '2026-01-20 08:03:22'),
+(13, 'Pool Area Relaxation', 'Olympic pool with panoramic views', 'images/gallery/pool-area-1024x683.jpg', 'facilities', NULL, 9, 1, '2026-01-20 08:03:22'),
+(14, 'Fitness Excellence', 'State-of-the-art fitness facilities', 'images/gallery/fitness-center-1024x683.jpg', 'facilities', NULL, 10, 1, '2026-01-20 08:03:22'),
+(15, 'Presidential Suite Living Area', 'Spacious living area with premium furnishings', 'images/gallery/hotel-lobby.jpg', 'rooms', NULL, NULL, 1, '2026-01-20 08:07:18'),
+(16, 'Hotel Exterior View', 'Stunning hotel facade during golden hour', 'images/gallery/hotel-exterior_1-1024x572.jpg', 'exterior', NULL, 8, 1, '2026-01-20 08:07:18'),
+(17, 'Pool Area Relaxation', 'Olympic pool with panoramic views', 'images/gallery/pool-area-1024x683.jpg', 'facilities', NULL, 9, 1, '2026-01-20 08:07:18'),
+(18, 'Fitness Excellence', 'State-of-the-art fitness facilities', 'images/gallery/fitness-center-1024x683.jpg', 'facilities', NULL, 10, 1, '2026-01-20 08:07:18'),
+(23, 'Executive Suite - Bedroom', 'Premium bedroom with king bed', 'images/rooms/executive-bedroom.jpg', 'rooms', 2, 1, 1, '2026-01-20 16:07:07'),
+(24, 'Executive Suite - Work Area', 'Dedicated workspace with desk and business amenities', 'images/rooms/executive-work.jpg', 'rooms', 2, 2, 1, '2026-01-20 16:07:07'),
+(25, 'Executive Suite - Lounge', 'Comfortable lounge area', 'images/rooms/executive-lounge.jpg', 'rooms', 2, 3, 1, '2026-01-20 16:07:07'),
+(26, 'Executive Suite - Bathroom', 'Modern bathroom with premium toiletries', 'images/rooms/executive-bathroom.jpg', 'rooms', 2, 4, 1, '2026-01-20 16:07:07'),
+(27, 'Family Suite - Main Bedroom', 'Spacious master bedroom with king bed', 'images/rooms/family-main.jpg', 'rooms', 3, 1, 1, '2026-01-20 16:07:07'),
+(28, 'Family Suite - Second Bedroom', 'Comfortable second bedroom with double bed', 'images/rooms/family-second.jpg', 'rooms', 3, 2, 1, '2026-01-20 16:07:07'),
+(29, 'Family Suite - Living Area', 'Shared living and dining space', 'images/rooms/family-living.jpg', 'rooms', 3, 3, 1, '2026-01-20 16:07:07'),
+(30, 'Family Suite - Kitchen', 'Kitchenette with cooking facilities', 'images/rooms/family-kitchen.jpg', 'rooms', 3, 4, 1, '2026-01-20 16:07:07'),
+(34, 'Test', 'Test', 'images/rooms/gallery/room_1_gallery_1769091599.png', 'rooms', 1, NULL, 1, '2026-01-20 16:31:10'),
+(35, 'Executive Suite - Bedroom', 'Premium bedroom with king bed', 'images/rooms/gallery/room_2_gallery_1769091563.png', 'rooms', 2, 1, 1, '2026-01-20 16:31:10'),
+(36, 'Executive Suite - Work Area', 'Dedicated workspace with desk and business amenities', 'https://source.unsplash.com/1200x1200/?hotel,workspace,desk', 'rooms', 2, 2, 1, '2026-01-20 16:31:10'),
+(37, 'Executive Suite - Lounge', 'Comfortable lounge area', 'https://source.unsplash.com/1200x1200/?hotel,lounge,sofa', 'rooms', 2, 3, 1, '2026-01-20 16:31:10'),
+(38, 'Executive Suite - Bathroom', 'Modern bathroom with premium toiletries', 'https://source.unsplash.com/1200x1200/?hotel,bathroom,modern', 'rooms', 2, 4, 1, '2026-01-20 16:31:10'),
+(39, 'Family Suite - Main Bedroom', 'Spacious master bedroom with king bed', 'https://source.unsplash.com/1200x1200/?family,hotel,room', 'rooms', 3, 1, 1, '2026-01-20 16:31:10'),
+(40, 'Family Suite - Second Bedroom', 'Comfortable second bedroom with double bed', 'https://source.unsplash.com/1200x1200/?kids,bedroom,hotel', 'rooms', 3, 2, 1, '2026-01-20 16:31:10'),
+(41, 'Family Suite - Living Area', 'Shared living and dining space', 'https://source.unsplash.com/1200x1200/?family,living,room', 'rooms', 3, 3, 1, '2026-01-20 16:31:10'),
+(42, 'Family Suite - Kitchen', 'Kitchenette with cooking facilities', 'https://source.unsplash.com/1200x1200/?kitchenette,hotel,apartment', 'rooms', 3, 4, 1, '2026-01-20 16:31:10'),
+(43, 'Bedroom', 'New View', 'images/rooms/gallery/room_4_gallery_1769093132.png', 'rooms', 4, 0, 1, '2026-01-22 14:45:32');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `gym_classes`
+--
+
+CREATE TABLE `gym_classes` (
+  `id` int NOT NULL,
+  `title` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `day_label` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `time_label` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `level_label` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'All Levels',
+  `display_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `gym_classes`
+--
+
+INSERT INTO `gym_classes` (`id`, `title`, `description`, `day_label`, `time_label`, `level_label`, `display_order`, `is_active`) VALUES
+(13, 'Morning Yoga Flow', 'Start your day with energizing yoga sequences', 'Monday - Friday', '6:30 AM', 'All Levels', 1, 1),
+(14, 'HIIT Bootcamp', 'High-intensity interval training for maximum results', 'Tuesday & Thursday', '7:00 AM', 'Intermediate', 2, 1),
+(15, 'Pilates Core', 'Strengthen your core with controlled movements', 'Wednesday & Saturday', '8:00 AM', 'All Levels', 3, 1),
+(16, 'Evening Meditation', 'Wind down with guided meditation and breathing', 'Daily', '6:00 PM', 'All Levels', 4, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `gym_content`
+--
+
+CREATE TABLE `gym_content` (
+  `id` int NOT NULL,
+  `hero_title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Fitness & Wellness Center',
+  `hero_subtitle` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Health & Vitality',
+  `hero_description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `hero_image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'images/gym/hero-bg.jpg',
+  `wellness_title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Transform Your Body & Mind',
+  `wellness_description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `wellness_image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'images/gym/fitness-center.jpg',
+  `badge_text` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Award-Winning Facilities',
+  `personal_training_image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'images/gym/personal-training.jpg',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `gym_content`
+--
+
+INSERT INTO `gym_content` (`id`, `hero_title`, `hero_subtitle`, `hero_description`, `hero_image_path`, `wellness_title`, `wellness_description`, `wellness_image_path`, `badge_text`, `personal_training_image_path`, `is_active`, `created_at`, `updated_at`) VALUES
+(4, 'Fitness & Wellness Center', 'Health & Vitality', 'State-of-the-art facilities designed to elevate your physical and mental well-being', 'images/gym/hero-bg.jpg', 'Transform Your Body & Mind', 'Our fitness and wellness center offers everything you need to maintain your health routine while traveling or start a new wellness journey.', 'images/gym/fitness-center.jpg', 'Award-Winning Facilities', 'images/gym/personal-training.jpg', 1, '2026-01-20 15:26:43', '2026-01-20 15:26:43');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `gym_facilities`
+--
+
+CREATE TABLE `gym_facilities` (
+  `id` int NOT NULL,
+  `icon_class` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'fas fa-check',
+  `title` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `display_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `gym_facilities`
+--
+
+INSERT INTO `gym_facilities` (`id`, `icon_class`, `title`, `description`, `display_order`, `is_active`) VALUES
+(19, 'fas fa-running', 'Cardio Zone', 'Treadmills, ellipticals, bikes, and rowers with entertainment screens and HR monitoring', 1, 1),
+(20, 'fas fa-dumbbell', 'Strength Training', 'Full range of free weights, barbells, and functional rigs', 2, 1),
+(21, 'fas fa-child', 'Yoga & Pilates Studio', 'Dedicated studio for yoga, pilates, and meditation with daily classes', 3, 1),
+(22, 'fas fa-swimming-pool', 'Lap Pool', '25-meter heated pool ideal for swim workouts and aqua aerobics', 4, 1),
+(23, 'fas fa-hot-tub', 'Spa & Sauna', 'Traditional sauna, steam room, and jacuzzi for recovery', 5, 1),
+(24, 'fas fa-apple-alt', 'Nutrition Bar', 'Smoothies, protein shakes, and healthy snacks to fuel your workout', 6, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `gym_features`
+--
+
+CREATE TABLE `gym_features` (
+  `id` int NOT NULL,
+  `icon_class` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'fas fa-dumbbell',
+  `title` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `display_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `gym_features`
+--
+
+INSERT INTO `gym_features` (`id`, `icon_class`, `title`, `description`, `display_order`, `is_active`) VALUES
+(13, 'fas fa-dumbbell', 'Modern Equipment', 'Latest cardio machines, free weights, and resistance training equipment', 1, 1),
+(14, 'fas fa-user-md', 'Personal Training', 'Certified trainers available for one-on-one sessions and customized programs', 2, 1),
+(15, 'fas fa-spa', 'Spa & Recovery', 'Massage therapy, sauna, and steam rooms for post-workout relaxation', 3, 1),
+(16, 'fas fa-clock', 'Flexible Hours', 'Open daily from 5:30 AM to 10:00 PM for your convenience', 4, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `gym_packages`
+--
+
+CREATE TABLE `gym_packages` (
+  `id` int NOT NULL,
+  `name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `icon_class` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'fas fa-leaf',
+  `includes_text` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'Line-separated bullet points',
+  `duration_label` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `currency_code` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'MWK',
+  `cta_text` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Book Package',
+  `cta_link` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '#book',
+  `is_featured` tinyint(1) DEFAULT '0',
+  `display_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `gym_packages`
+--
+
+INSERT INTO `gym_packages` (`id`, `name`, `icon_class`, `includes_text`, `duration_label`, `price`, `currency_code`, `cta_text`, `cta_link`, `is_featured`, `display_order`, `is_active`) VALUES
+(7, 'Rejuvenation Retreat', 'fas fa-leaf', '3 personal training sessions\nDaily yoga classes\n2 spa massages\nNutrition consultation\nComplimentary smoothie bar access', '5 Days', 45000.00, 'MWK', 'Book Package', '#book', 0, 1, 1),
+(8, 'Ultimate Wellness', 'fas fa-star', '5 personal training sessions\nUnlimited group classes\n4 spa treatments\nFull nutrition program\nFitness assessment & tracking\nComplimentary wellness amenities', '7 Days', 8500.00, 'MWK', 'Book Package', '#book', 1, 2, 1),
+(9, 'Fitness Kickstart', 'fas fa-dumbbell', '2 personal training sessions\nGroup class pass (5 classes)\n1 spa massage\nFitness assessment\nWorkout plan to take home', '3 Days', 28000.00, 'MWK', 'Book Package', '#book', 0, 3, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hero_slides`
+--
+
+CREATE TABLE `hero_slides` (
+  `id` int NOT NULL,
+  `title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `subtitle` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `primary_cta_text` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `primary_cta_link` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `secondary_cta_text` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `secondary_cta_link` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `display_order` int DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `hero_slides`
+--
+
+INSERT INTO `hero_slides` (`id`, `title`, `subtitle`, `description`, `image_path`, `primary_cta_text`, `primary_cta_link`, `secondary_cta_text`, `secondary_cta_link`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'Experience Unparalleled Luxury', 'Where Luxury Meets Nature', 'Discover the perfect blend of comfort, elegance, and exceptional service at Malawi\'s premier destination', 'images/hero/slide1.jpg', 'Book a Suite', '#book', 'View Rooms', '#rooms', 1, 1, '2026-01-20 07:55:39', '2026-01-20 07:55:39'),
+(2, 'Sunrise Over the Shire River', 'Golden hours above pristine waters', 'Wake to breathtaking Malawian sunrises framed by elegant interiors and world-class amenities', 'images/hero/slide2.jpg', 'See Gallery', '#gallery', 'Plan Your Stay', '#contact', 1, 2, '2026-01-20 07:55:39', '2026-01-20 07:55:39'),
+(3, 'Award-Winning Dining', 'Michelin-Star Culinary Excellence', 'Savor exceptional cuisine crafted by our renowned chefs using the finest local and international ingredients', 'images/hero/slide3.jpg', 'View Menu', '#facilities', 'Reserve a Table', '#contact', 1, 3, '2026-01-20 07:55:39', '2026-01-20 07:55:39'),
+(4, 'Ultimate Relaxation & Wellness', 'Your sanctuary of serenity', 'Indulge in our luxury spa, Olympic pool, and state-of-the-art fitness facilities designed for your well-being', 'images/hero/slide4.jpg', 'Explore Spa', '#facilities', 'Book Treatment', '#book', 1, 4, '2026-01-20 07:55:39', '2026-01-20 07:55:39');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hotel_gallery`
+--
+
+CREATE TABLE `hotel_gallery` (
+  `id` int UNSIGNED NOT NULL,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `image_url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'general' COMMENT 'e.g., exterior, interior, rooms, facilities, dining, events',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `display_order` int NOT NULL DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `hotel_gallery`
+--
+
+INSERT INTO `hotel_gallery` (`id`, `title`, `description`, `image_url`, `category`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'Hotel Exterior View', 'Stunning front view of Liwonde Sun Hotel', 'images/hotel_gallery/art.jpg', 'exterior', 1, 1, '2026-01-20 17:25:33', '2026-01-20 17:27:39'),
+(2, 'Luxury Pool Area', 'Infinity pool overlooking the Shire River', 'images/hotel_gallery/Outside2.png', 'facilities', 1, 2, '2026-01-20 17:25:33', '2026-01-20 17:29:31'),
+(3, 'Elegant Dining Hall', 'Our award-winning restaurant interior', 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80', 'dining', 1, 3, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
+(4, 'Executive Suite', 'Spacious suite with panoramic views', 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80', 'rooms', 1, 4, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
+(5, 'Rooftop Lounge', 'Sunset views from our rooftop bar', 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80', 'facilities', 1, 5, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
+(6, 'Grand Lobby', 'Welcome to luxury and elegance', 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80', 'interior', 1, 6, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
+(7, 'Spa & Wellness', 'Rejuvenate in our world-class spa', 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80', 'facilities', 1, 7, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
+(8, 'Garden Terrace', 'Lush gardens perfect for events', 'https://images.unsplash.com/photo-1519167758481-83f29da8c11f?w=800&q=80', 'exterior', 1, 8, '2026-01-20 17:25:33', '2026-01-20 17:25:33');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `menu_categories`
+--
+
+CREATE TABLE `menu_categories` (
+  `id` int NOT NULL,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `display_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `menu_categories`
+--
+
+INSERT INTO `menu_categories` (`id`, `name`, `slug`, `description`, `display_order`, `is_active`) VALUES
+(1, 'Breakfast', 'breakfast', 'Start your day with our gourmet breakfast selection', 1, 1),
+(2, 'Appetizers', 'appetizers', 'Elegant starters to begin your meal', 2, 1),
+(3, 'Main Courses', 'main-courses', 'Exquisite main dishes prepared by our Michelin-star chef', 3, 1),
+(4, 'Desserts', 'desserts', 'Indulgent sweet creations', 4, 1),
+(5, 'Beverages', 'beverages', 'Premium drinks and cocktails', 5, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `newsletter_subscribers`
+--
+
+CREATE TABLE `newsletter_subscribers` (
+  `id` int NOT NULL,
+  `email` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `subscription_status` enum('active','unsubscribed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `subscribed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `unsubscribed_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `page_heroes`
+--
+
+CREATE TABLE `page_heroes` (
+  `id` int NOT NULL,
+  `page_slug` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Unique page identifier e.g., restaurant, conference',
+  `page_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'URL path e.g., /restaurant.php',
+  `hero_title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `hero_subtitle` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `hero_description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `hero_image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `display_order` int NOT NULL DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `page_heroes`
+--
+
+INSERT INTO `page_heroes` (`id`, `page_slug`, `page_url`, `hero_title`, `hero_subtitle`, `hero_description`, `hero_image_path`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'restaurant', '/restaurant.php', 'Fine Dining Restaurant & Bars', 'Culinary Excellences', 'Savor exceptional cuisine crafted from finest local and international ingredients', 'images/restaurant/hero-bg.jpg', 1, 1, '2026-01-25 18:03:42', '2026-01-25 19:09:20'),
+(2, 'conference', '/conference.php', 'Conference & Meetinxg Facilities', 'Business Excellence', 'Business-ready venues with premium technology, flexibles layouts, and tailored service for every executive gathering.', 'images/hero/slide1.jpg', 1, 2, '2026-01-25 18:03:42', '2026-01-25 19:04:33'),
+(3, 'events', '/events.php', 'Events & Experiences', 'Celebrations & Gatherings', 'From exclusive wine tastings to cultural nights—discover moments worth remembering at Liwonde Sun Hotel.', 'images/events/event_1769125595_5057.png', 1, 3, '2026-01-25 18:03:42', '2026-01-25 18:03:42'),
+(4, 'rooms-showcase', '/rooms-showcase.php', 'Rooms & Suites', 'Riverfront Luxury', 'Explore contemporary rooms and suites with panoramic views of the Shire River, featuring premium amenities and seamless booking integration.', 'images/rooms/room_1_1768949756.png', 1, 4, '2026-01-25 19:08:32', '2026-01-25 19:08:32');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `policies`
+--
+
+CREATE TABLE `policies` (
+  `id` int NOT NULL,
+  `slug` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `summary` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `display_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `policies`
+--
+
+INSERT INTO `policies` (`id`, `slug`, `title`, `summary`, `content`, `display_order`, `is_active`, `updated_at`) VALUES
+(1, 'booking-policy', 'Booking Policy', 'Flexible bookings with secure guarantees', 'Bookings are confirmed upon receipt of payment guarantee. Amendments are subject to availability. Early check-in and late check-out are available on request and may incur additional charges.', 1, 1, '2026-01-20 10:54:23'),
+(2, 'cancellation-policy', 'Cancellation Policy', 'Simple cancellations with fair terms', 'Cancellations up to 48 hours before arrival are free of charge. Within 48 hours or no-shows incur the first night charge. Non-refundable rates are fully prepaid and non-changeable.', 2, 1, '2026-01-20 10:54:23'),
+(3, 'dining-policy', 'Dining Policy', 'Elegant dining etiquette', 'Smart casual dress code applies after 6pm. Outside food and beverages are not permitted in dining venues. Allergy and dietary requests are accommodated with advance notice.', 3, 1, '2026-01-20 10:54:23'),
+(4, 'faqs', 'FAQs', 'Quick answers to common questions', 'Check-in: 14:00, Check-out: 11:00. Airport transfers can be arranged. Children are welcome; extra beds available on request. High-speed WiFi is complimentary throughout the property.', 4, 1, '2026-01-20 10:54:23');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `restaurant_gallery`
+--
+
+CREATE TABLE `restaurant_gallery` (
+  `id` int NOT NULL,
+  `image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `caption` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'restaurant' COMMENT 'restaurant, bar, dining-area, food',
+  `display_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `restaurant_gallery`
+--
+
+INSERT INTO `restaurant_gallery` (`id`, `image_path`, `caption`, `category`, `display_order`, `is_active`, `created_at`) VALUES
+(2, 'images/restaurant/dining-area-2.jpg', 'Intimate indoor seating', 'dining-area', 2, 1, '2026-01-20 14:17:17'),
+(3, 'images/restaurant/bar-area.jpg', 'Premium bar with signature cocktails', 'bar', 3, 1, '2026-01-20 14:17:17'),
+(4, 'images/restaurant/food-platter.jpg', 'Fresh seafood platter', 'food', 4, 1, '2026-01-20 14:17:17'),
+(13, 'images/restaurant/dining-area-1.jpg', 'Elegant dining area with panoramic views', 'dining-area', 1, 1, '2026-01-20 15:22:41'),
+(17, 'images/restaurant/fine-dining.jpg', 'Fine dining experience', 'restaurant', 5, 1, '2026-01-20 15:22:41'),
+(18, 'images/restaurant/outdoor-terrace.jpg', 'Alfresco dining terrace', 'dining-area', 6, 1, '2026-01-20 15:22:41');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `rooms`
+--
+
+CREATE TABLE `rooms` (
+  `id` int NOT NULL,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `short_description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `price_per_night` decimal(10,2) NOT NULL,
+  `size_sqm` int DEFAULT NULL,
+  `max_guests` int DEFAULT '2',
+  `rooms_available` int DEFAULT '5' COMMENT 'Number of rooms currently available for booking',
+  `total_rooms` int DEFAULT '5' COMMENT 'Total number of rooms of this type',
+  `bed_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `image_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `badge` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `amenities` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `is_featured` tinyint(1) DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `display_order` int DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `rooms`
+--
+
+INSERT INTO `rooms` (`id`, `name`, `slug`, `description`, `short_description`, `price_per_night`, `size_sqm`, `max_guests`, `rooms_available`, `total_rooms`, `bed_type`, `image_url`, `badge`, `amenities`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'Presidential Suite', 'presidential-suite', 'Ultimate luxury with private terrace and exclusive service', 'Ultimate luxury with private terrace and exclusive service', 50000.00, 110, 4, 0, 0, 'King Bed', 'images/rooms/room_1_1768949756.png', 'Luxury', 'King Bed,Private Terrace,Jacuzzi,Butler Service,Living Area,Dining Area,Full Kitchen,Smart TV,Premium WiFi,Climate Control', 1, 1, 1, '2026-01-19 20:22:49', '2026-01-25 01:55:55'),
+(2, 'Executive Suite', 'executive-suite', 'Designed for discerning business travelers, featuring separate work area, premium furnishings, and personalized butler service. Perfect blend of productivity and comfort.', 'Premium executive suite with work area and butler service', 30050.00, 60, 3, 5, 5, 'King Bed', 'images\\rooms\\Deluxe Room.jpg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-01-20 16:57:11'),
+(3, 'Family Suite', 'family-suite', 'Spacious two-bedroom suite perfect for families, featuring two king beds, dual bathrooms, and separate living area. Create lasting memories in ultimate comfort.', 'Spacious family accommodation with 2 bedrooms', 30020.00, 55, 6, 5, 5, '2 King Beds', 'images\\rooms\\family_suite.jpg', 'Family', '2 King Beds,2 Bathrooms,Living Area,Kitchenette,Smart TV,Kids Welcome,Free WiFi,Climate Control', 1, 1, 3, '2026-01-19 20:22:49', '2026-01-20 17:01:46'),
+(4, 'Deluxe Suite', 'deluxe-suite', 'Luxurious suite with marble bathroom featuring jacuzzi tub, separate living area, and premium bedding. Experience sophistication and indulgence.', 'Luxury suite with jacuzzi and separate living area', 28000.00, 45, 2, 5, 5, 'King Bed', 'images/rooms/room_4_featured_1769093172.png', 'Popular', 'King Bed,Jacuzzi Tub,Living Area,Marble Bathroom,Premium Bedding,Smart TV,Mini Bar,Free WiFi', 1, 1, 4, '2026-01-19 20:22:49', '2026-01-22 14:46:13'),
+(5, 'Superior Room', 'superior-room', 'Spacious room with premium furnishings, stunning views, and modern amenities. Enjoy comfort and elegance in every detail.', 'Spacious room with premium amenities and views', 21000.00, 35, 2, 5, 5, 'King Bed', 'https://source.unsplash.com/1600x900/?superior,hotel,room,view,interior', NULL, 'King Bed,City View,Balcony,Smart TV,Free WiFi,Coffee Machine,Safe,Climate Control', 0, 0, 5, '2026-01-19 20:22:49', '2026-01-22 23:45:09'),
+(6, 'Standard Room', 'standard-room', 'Comfortable and well-appointed room with all essential amenities for a pleasant stay. Perfect for travelers seeking quality at exceptional value.', 'Comfortable room with essential amenities', 15000.00, 25, 2, 5, 5, 'Queen Bed', 'https://source.unsplash.com/1600x900/?standard,hotel,room,interior', 'Value', 'Queen Bed,Free WiFi,Smart TV,Daily Breakfast,Climate Control,Safe,Coffee Machine', 0, 0, 6, '2026-01-19 20:22:49', '2026-01-22 23:45:13');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `site_settings`
+--
+
+CREATE TABLE `site_settings` (
+  `id` int NOT NULL,
+  `setting_key` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `setting_value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `setting_group` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `site_settings`
+--
+
+INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_group`, `updated_at`) VALUES
+(1, 'site_name', 'Liwonde Sun Hotel', 'general', '2026-01-19 20:22:49'),
+(2, 'site_tagline', 'Where Luxury Meets Nature', 'general', '2026-01-19 20:22:49'),
+(3, 'hero_title', 'Experience Unparalleled Luxury', 'hero', '2026-01-19 20:22:49'),
+(4, 'hero_subtitle', 'Discover the perfect blend of comfort, elegance, and exceptional service at Malawi\'s premier destination', 'hero', '2026-01-19 20:22:49'),
+(5, 'phone_main', '+265 123 456 785', 'contact', '2026-01-20 07:43:44'),
+(6, 'phone_reservations', '+265 987 654 321', 'contact', '2026-01-19 20:22:49'),
+(7, 'email_main', 'info@liwondesunhotel.com', 'contact', '2026-01-19 20:22:49'),
+(8, 'email_reservations', 'book@liwondesunhotel.com', 'contact', '2026-01-19 20:22:49'),
+(9, 'address_line1', 'Liwonde National Park Road', 'contact', '2026-01-19 20:22:49'),
+(10, 'address_line2', 'Liwonde, Southern Region', 'contact', '2026-01-19 20:22:49'),
+(11, 'address_country', 'Malawi', 'contact', '2026-01-19 20:22:49'),
+(12, 'facebook_url', 'https://facebook.com/liwondesunhotel', 'social', '2026-01-19 20:22:49'),
+(13, 'instagram_url', 'https://instagram.com/liwondesunhotel', 'social', '2026-01-19 20:22:49'),
+(14, 'twitter_url', 'https://twitter.com/liwondesunhotel', 'social', '2026-01-19 20:22:49'),
+(15, 'linkedin_url', 'https://linkedin.com/company/liwondesunhotel', 'social', '2026-01-19 20:22:49'),
+(16, 'working_hours', '24/7 Available', 'contact', '2026-01-19 20:22:49'),
+(17, 'copyright_text', '2026 Liwonde Sun Hotel. All rights reserved.', 'general', '2026-01-19 20:22:49'),
+(18, 'currency_symbol', 'MWK', 'general', '2026-01-20 10:16:28'),
+(19, 'currency_code', 'MWK', 'general', '2026-01-20 10:16:13'),
+(20, 'site_logo', '', 'general', '2026-01-21 23:24:01');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `testimonials`
+--
+
+CREATE TABLE `testimonials` (
+  `id` int NOT NULL,
+  `guest_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `guest_location` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `rating` int DEFAULT '5',
+  `testimonial_text` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `stay_date` date DEFAULT NULL,
+  `guest_image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_featured` tinyint(1) DEFAULT '0',
+  `is_approved` tinyint(1) DEFAULT '1',
+  `display_order` int DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `testimonials`
+--
+
+INSERT INTO `testimonials` (`id`, `guest_name`, `guest_location`, `rating`, `testimonial_text`, `stay_date`, `guest_image`, `is_featured`, `is_approved`, `display_order`, `created_at`) VALUES
+(1, 'Sarah Johnson', 'London, UK', 5, 'Absolutely stunning hotel! The service was impeccable, rooms were luxurious, and the restaurant exceeded all expectations. Can\'t wait to return.', '2025-12-15', NULL, 1, 1, 1, '2026-01-19 20:22:49'),
+(2, 'Michael Chen', 'Singapore', 5, 'Best hotel experience in Africa. The attention to detail, the spa facilities, and the breathtaking views made our anniversary unforgettable.', '2025-11-20', NULL, 1, 1, 2, '2026-01-19 20:22:49'),
+(3, 'Emma Williams', 'New York, USA', 5, 'Five stars aren\'t enough! From check-in to check-out, everything was perfect. The staff went above and beyond to make our stay special.', '2026-01-05', NULL, 1, 1, 3, '2026-01-19 20:22:49');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `admin_users`
+--
+ALTER TABLE `admin_users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
+-- Indexes for table `bookings`
+--
+ALTER TABLE `bookings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `booking_reference` (`booking_reference`),
+  ADD KEY `idx_booking_ref` (`booking_reference`),
+  ADD KEY `idx_room_id` (`room_id`),
+  ADD KEY `idx_guest_email` (`guest_email`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_dates` (`check_in_date`,`check_out_date`);
+
+--
+-- Indexes for table `booking_notes`
+--
+ALTER TABLE `booking_notes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_booking_id` (`booking_id`),
+  ADD KEY `idx_created_by` (`created_by`);
+
+--
+-- Indexes for table `conference_inquiries`
+--
+ALTER TABLE `conference_inquiries`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `inquiry_reference` (`inquiry_reference`),
+  ADD KEY `idx_conference_inquiry_date` (`event_date`,`status`);
+
+--
+-- Indexes for table `conference_rooms`
+--
+ALTER TABLE `conference_rooms`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_conference_room_active` (`is_active`,`display_order`);
+
+--
+-- Indexes for table `drink_menu`
+--
+ALTER TABLE `drink_menu`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `category` (`category`),
+  ADD KEY `is_available` (`is_available`),
+  ADD KEY `is_featured` (`is_featured`);
+
+--
+-- Indexes for table `events`
+--
+ALTER TABLE `events`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_events_date` (`event_date`,`is_active`),
+  ADD KEY `idx_events_featured` (`is_featured`,`is_active`);
+
+--
+-- Indexes for table `facilities`
+--
+ALTER TABLE `facilities`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`),
+  ADD KEY `idx_facilities_featured` (`is_featured`,`is_active`);
+
+--
+-- Indexes for table `food_menu`
+--
+ALTER TABLE `food_menu`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `category` (`category`),
+  ADD KEY `is_available` (`is_available`),
+  ADD KEY `is_featured` (`is_featured`);
+
+--
+-- Indexes for table `footer_links`
+--
+ALTER TABLE `footer_links`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `gallery`
+--
+ALTER TABLE `gallery`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `room_id` (`room_id`);
+
+--
+-- Indexes for table `gym_classes`
+--
+ALTER TABLE `gym_classes`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `gym_content`
+--
+ALTER TABLE `gym_content`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `gym_facilities`
+--
+ALTER TABLE `gym_facilities`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `gym_features`
+--
+ALTER TABLE `gym_features`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `gym_packages`
+--
+ALTER TABLE `gym_packages`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `hero_slides`
+--
+ALTER TABLE `hero_slides`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `hotel_gallery`
+--
+ALTER TABLE `hotel_gallery`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_active_order` (`is_active`,`display_order`);
+
+--
+-- Indexes for table `menu_categories`
+--
+ALTER TABLE `menu_categories`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`);
+
+--
+-- Indexes for table `newsletter_subscribers`
+--
+ALTER TABLE `newsletter_subscribers`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
+-- Indexes for table `page_heroes`
+--
+ALTER TABLE `page_heroes`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `page_slug` (`page_slug`),
+  ADD UNIQUE KEY `page_url` (`page_url`),
+  ADD KEY `idx_page_heroes_active_order` (`is_active`,`display_order`);
+
+--
+-- Indexes for table `policies`
+--
+ALTER TABLE `policies`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`);
+
+--
+-- Indexes for table `restaurant_gallery`
+--
+ALTER TABLE `restaurant_gallery`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `rooms`
+--
+ALTER TABLE `rooms`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`),
+  ADD KEY `idx_rooms_featured` (`is_featured`,`is_active`),
+  ADD KEY `idx_rooms_price` (`price_per_night`);
+
+--
+-- Indexes for table `site_settings`
+--
+ALTER TABLE `site_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `setting_key` (`setting_key`);
+
+--
+-- Indexes for table `testimonials`
+--
+ALTER TABLE `testimonials`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_testimonials_featured` (`is_featured`,`is_approved`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `admin_users`
+--
+ALTER TABLE `admin_users`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `bookings`
+--
+ALTER TABLE `bookings`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `booking_notes`
+--
+ALTER TABLE `booking_notes`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `conference_inquiries`
+--
+ALTER TABLE `conference_inquiries`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `conference_rooms`
+--
+ALTER TABLE `conference_rooms`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `drink_menu`
+--
+ALTER TABLE `drink_menu`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+
+--
+-- AUTO_INCREMENT for table `events`
+--
+ALTER TABLE `events`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `facilities`
+--
+ALTER TABLE `facilities`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `food_menu`
+--
+ALTER TABLE `food_menu`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+
+--
+-- AUTO_INCREMENT for table `footer_links`
+--
+ALTER TABLE `footer_links`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT for table `gallery`
+--
+ALTER TABLE `gallery`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+
+--
+-- AUTO_INCREMENT for table `gym_classes`
+--
+ALTER TABLE `gym_classes`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT for table `gym_content`
+--
+ALTER TABLE `gym_content`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `gym_facilities`
+--
+ALTER TABLE `gym_facilities`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+
+--
+-- AUTO_INCREMENT for table `gym_features`
+--
+ALTER TABLE `gym_features`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT for table `gym_packages`
+--
+ALTER TABLE `gym_packages`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `hero_slides`
+--
+ALTER TABLE `hero_slides`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT for table `hotel_gallery`
+--
+ALTER TABLE `hotel_gallery`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `menu_categories`
+--
+ALTER TABLE `menu_categories`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `newsletter_subscribers`
+--
+ALTER TABLE `newsletter_subscribers`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `page_heroes`
+--
+ALTER TABLE `page_heroes`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `policies`
+--
+ALTER TABLE `policies`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `restaurant_gallery`
+--
+ALTER TABLE `restaurant_gallery`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+
+--
+-- AUTO_INCREMENT for table `rooms`
+--
+ALTER TABLE `rooms`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `site_settings`
+--
+ALTER TABLE `site_settings`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+
+--
+-- AUTO_INCREMENT for table `testimonials`
+--
+ALTER TABLE `testimonials`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `gallery`
+--
+ALTER TABLE `gallery`
+  ADD CONSTRAINT `gallery_ibfk_1` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

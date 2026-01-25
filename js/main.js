@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Safety: if we resize to desktop, force-close and unlock scroll
         window.addEventListener('resize', function() {
-            if (window.innerWidth >= 1025 && isMenuOpen()) setMenuOpen(false);
+            if (window.innerWidth >= 1191 && isMenuOpen()) setMenuOpen(false);
         });
     }
     
@@ -418,6 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
     policyLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             const slug = this.dataset.policy;
             openPolicy(slug);
         });

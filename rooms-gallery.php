@@ -2,12 +2,21 @@
 // Liwonde Sun Hotel - Rooms Gallery (Modern Cards)
 require_once 'config/database.php';
 
-$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
-$site_logo = getSetting('site_logo', 'images/logo/logo.png');
-$site_tagline = getSetting('site_tagline', 'Where Luxury Meets Nature');
-$currency_symbol = getSetting('currency_symbol', 'K');
-$email_reservations = getSetting('email_reservations', 'book@liwondesunhotel.com');
-$phone_main = getSetting('phone_main', '+265 123 456 789');
+$site_name = getSetting('site_name');
+$site_logo = getSetting('site_logo');
+$site_tagline = getSetting('site_tagline');
+$currency_symbol = getSetting('currency_symbol');
+$email_reservations = getSetting('email_reservations');
+$phone_main = getSetting('phone_main');
+
+// Fetch page hero (DB-driven)
+$pageHero = getCurrentPageHero();
+$roomsHero = [
+    'hero_title' => $pageHero['hero_title'],
+    'hero_subtitle' => $pageHero['hero_subtitle'],
+    'hero_description' => $pageHero['hero_description'],
+    'hero_image_path' => $pageHero['hero_image_path'],
+];
 
 // Fetch all active rooms
 $rooms = [];
@@ -18,7 +27,16 @@ try {
     $rooms = [];
 }
 
-$hero_image = $rooms[0]['image_url'] ?? 'images/hero/slide1.jpg';
+// Policies for modals
+$policies = [];
+try {
+    $policyStmt = $pdo->query("SELECT slug, title, summary, content FROM policies WHERE is_active = 1 ORDER BY display_order ASC, id ASC");
+    $policies = $policyStmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $policies = [];
+}
+
+$hero_image = $roomsHero['hero_image_path'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -40,16 +58,14 @@ $hero_image = $rooms[0]['image_url'] ?? 'images/hero/slide1.jpg';
     <?php include 'includes/loader.php'; ?>
     <?php include 'includes/header.php'; ?>
 
-    <section class="rooms-hero" style="background-image: linear-gradient(135deg, rgba(5, 9, 15, 0.76), rgba(10, 25, 41, 0.75)), url('<?php echo htmlspecialchars($hero_image); ?>');">
-        <div class="container">
-            <div class="rooms-hero__content">
-                <div class="pill">Rooms & Suites</div>
-                <h1>Find your perfect stay</h1>
-                <p>Browse our room collection and open any suite for full details, photos, and amenities.</p>
-                <div class="rooms-hero__actions">
-                    <a class="btn btn-primary" href="#collection">Explore Rooms</a>
-                    <a class="btn btn-outline" href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $phone_main)); ?>"><i class="fas fa-phone"></i> Call Reservations</a>
-                </div>
+    <section class="page-hero" style="background-image: url('<?php echo htmlspecialchars($hero_image); ?>');">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="hero-subtitle"><?php echo htmlspecialchars($roomsHero['hero_subtitle']); ?></span>
+            <h1 class="hero-title"><?php echo htmlspecialchars($roomsHero['hero_title']); ?></h1>
+            <p class="hero-description"><?php echo htmlspecialchars($roomsHero['hero_description']); ?></p>
+            <div class="rooms-hero__actions" style="justify-content:center;">
+                <a class="btn btn-primary" href="#collection">Explore Rooms</a>
             </div>
         </div>
     </section>
@@ -65,8 +81,8 @@ $hero_image = $rooms[0]['image_url'] ?? 'images/hero/slide1.jpg';
                             $amenities = array_slice($amenities, 0, 4);
 
                             $max_guests = $room['max_guests'] ?? 2;
-                            $size_sqm = $room['size_sqm'] ?? 40;
-                            $bed_type = $room['bed_type'] ?? 'King Bed';
+                            $size_sqm = $room['size_sqm'];
+                            $bed_type = $room['bed_type'];
                         ?>
                             <article class="room-tile fancy-3d-card" tabindex="0" data-room-id="<?php echo (int)$room['id']; ?>" data-room-slug="<?php echo htmlspecialchars($room['slug']); ?>">
                                 <div class="room-tile__3d-bg"></div>
@@ -106,7 +122,6 @@ $hero_image = $rooms[0]['image_url'] ?? 'images/hero/slide1.jpg';
                                     <?php endif; ?>
 
                                     <div class="room-tile__actions">
-                                        <a class="btn btn-outline" href="pages/room.php?room=<?php echo urlencode($room['slug']); ?>">View Details</a>
                                         <a class="btn btn-primary" href="pages/room.php?room=<?php echo urlencode($room['slug']); ?>#book">View & Book</a>
                                     </div>
                                 </div>

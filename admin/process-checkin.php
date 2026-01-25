@@ -4,29 +4,96 @@ header('Content-Type: application/json');
 
 // Check authentication
 if (!isset($_SESSION['admin_user'])) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit;
 }
 
 require_once '../config/database.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'checkin') {
-    try {
-        $booking_id = (int)$_POST['booking_id'];
-        
-        // Update booking status to checked-in
-        $stmt = $pdo->prepare("UPDATE bookings SET status = 'checked-in' WHERE id = ?");
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action'])) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Invalid request']);
+    exit;
+}
+
+$action = $_POST['action'];
+$booking_id = (int)($_POST['booking_id'] ?? 0);
+
+if ($booking_id <= 0) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Invalid booking ID']);
+    exit;
+}
+
+try {
+    if ($action === 'checkin') {
+        // Only allow check-in when booking is confirmed AND fully paid
+        $stmt = $pdo->prepare("UPDATE bookings SET status = 'checked-in' WHERE id = ? AND status = 'confirmed' AND payment_status = 'paid'");
         $stmt->execute([$booking_id]);
-        
+
         if ($stmt->rowCount() > 0) {
             echo json_encode(['success' => true, 'message' => 'Guest checked in successfully']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Booking not found']);
+            exit;
         }
-    } catch (PDOException $e) {
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+
+        // Give a helpful reason
+        $check = $pdo->prepare("SELECT status, payment_status FROM bookings WHERE id = ?");
+        $check->execute([$booking_id]);
+        $row = $check->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Booking not found']);
+            exit;
+        }
+
+        if ($row['status'] !== 'confirmed') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => "Cannot check in: booking must be confirmed (current: {$row['status']})"]);
+            exit;
+        }
+
+        if ($row['payment_status'] !== 'paid') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => "Cannot check in: payment must be PAID (current: {$row['payment_status']})"]);
+            exit;
+        }
+
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Cannot check in: booking not eligible']);
+        exit;
     }
-} else {
-    echo json_encode(['success' => false, 'message' => 'Invalid request']);
+
+    if ($action === 'cancel_checkin') {
+        // Undo a check-in (revert to confirmed)
+        $stmt = $pdo->prepare("UPDATE bookings SET status = 'confirmed' WHERE id = ? AND status = 'checked-in'");
+        $stmt->execute([$booking_id]);
+
+        if ($stmt->rowCount() > 0) {
+            echo json_encode(['success' => true, 'message' => 'Check-in cancelled (reverted to confirmed)']);
+            exit;
+        }
+
+        $check = $pdo->prepare("SELECT status FROM bookings WHERE id = ?");
+        $check->execute([$booking_id]);
+        $row = $check->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Booking not found']);
+            exit;
+        }
+
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => "Cannot cancel check-in: booking is not checked-in (current: {$row['status']})"]);
+        exit;
+    }
+
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Unknown action']);
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }
 ?>

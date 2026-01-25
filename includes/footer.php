@@ -17,18 +17,18 @@
             
             // Fetch contact settings
             $contact = [
-                'phone_main' => getSetting('phone_main', '+265 123 456 789'),
-                'email_main' => getSetting('email_main', 'info@liwondesunhotel.com'),
-                'address_line1' => getSetting('address_line1', 'Liwonde, Malawi'),
-                'working_hours' => getSetting('working_hours', '24/7 Available')
+                'phone_main' => getSetting('phone_main'),
+                'email_main' => getSetting('email_main'),
+                'address_line1' => getSetting('address_line1'),
+                'working_hours' => getSetting('working_hours')
             ];
             
             // Fetch social links
             $social = [
-                'facebook_url' => getSetting('facebook_url', ''),
-                'instagram_url' => getSetting('instagram_url', ''),
-                'twitter_url' => getSetting('twitter_url', ''),
-                'linkedin_url' => getSetting('linkedin_url', '')
+                'facebook_url' => getSetting('facebook_url'),
+                'instagram_url' => getSetting('instagram_url'),
+                'twitter_url' => getSetting('twitter_url'),
+                'linkedin_url' => getSetting('linkedin_url')
             ];
             
             foreach ($footer_links as $column_name => $links): 
@@ -103,7 +103,7 @@
         </div>
         
         <div class="footer-bottom">
-            <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text', '2026 Liwonde Sun Hotel. All rights reserved.')); ?></p>
+            <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text')); ?></p>
         </div>
     </div>
 </footer>

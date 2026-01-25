@@ -19,9 +19,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
 
         if ($action === 'update_status') {
-            $stmt = $pdo->prepare("UPDATE bookings SET status = ? WHERE id = ?");
-            $stmt->execute([$_POST['status'], $_POST['id']]);
-            $message = 'Booking status updated!';
+            $booking_id = (int)($_POST['id'] ?? 0);
+            $new_status = $_POST['status'] ?? '';
+
+            if ($booking_id <= 0) {
+                throw new Exception('Invalid booking id');
+            }
+
+            // Enforce business rules:
+            // - Check-in only allowed when confirmed AND paid
+            // - Cancel check-in (undo) allowed only when currently checked-in
+            if ($new_status === 'checked-in') {
+                $stmt = $pdo->prepare("UPDATE bookings SET status = 'checked-in' WHERE id = ? AND status = 'confirmed' AND payment_status = 'paid'");
+                $stmt->execute([$booking_id]);
+                if ($stmt->rowCount() === 0) {
+                    $check = $pdo->prepare("SELECT status, payment_status FROM bookings WHERE id = ?");
+                    $check->execute([$booking_id]);
+                    $row = $check->fetch(PDO::FETCH_ASSOC);
+                    if (!$row) {
+                        throw new Exception('Booking not found');
+                    }
+                    throw new Exception("Cannot check in unless booking is CONFIRMED and PAID (current: status={$row['status']}, payment={$row['payment_status']})");
+                }
+                $message = 'Guest checked in!';
+
+            } elseif ($new_status === 'cancel-checkin') {
+                $stmt = $pdo->prepare("UPDATE bookings SET status = 'confirmed' WHERE id = ? AND status = 'checked-in'");
+                $stmt->execute([$booking_id]);
+                if ($stmt->rowCount() === 0) {
+                    $check = $pdo->prepare("SELECT status FROM bookings WHERE id = ?");
+                    $check->execute([$booking_id]);
+                    $row = $check->fetch(PDO::FETCH_ASSOC);
+                    if (!$row) {
+                        throw new Exception('Booking not found');
+                    }
+                    throw new Exception("Cannot cancel check-in unless booking is currently checked-in (current: {$row['status']})");
+                }
+                $message = 'Check-in cancelled (reverted to confirmed).';
+            } else {
+                $allowed = ['pending', 'confirmed', 'checked-out', 'cancelled'];
+                if (!in_array($new_status, $allowed, true)) {
+                    throw new Exception('Invalid status');
+                }
+                $stmt = $pdo->prepare("UPDATE bookings SET status = ? WHERE id = ?");
+                $stmt->execute([$new_status, $booking_id]);
+                $message = 'Booking status updated!';
+            }
 
         } elseif ($action === 'update_payment') {
             $stmt = $pdo->prepare("UPDATE bookings SET payment_status = ? WHERE id = ?");
@@ -29,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = 'Payment status updated!';
         }
 
-    } catch (PDOException $e) {
+    } catch (Throwable $e) {
         $error = 'Error: ' . $e->getMessage();
     }
 }
@@ -62,7 +105,6 @@ $total_bookings = count($bookings);
 $pending = count(array_filter($bookings, fn($b) => $b['status'] === 'pending'));
 $confirmed = count(array_filter($bookings, fn($b) => $b['status'] === 'confirmed'));
 $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-in'));
-$current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -160,8 +202,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
         }
         .content {
             padding: 32px;
-            max-width: 1600px;
+            max-width: 100%;
             margin: 0 auto;
+            overflow-x: auto;
         }
         .stats-grid {
             display: grid;
@@ -223,6 +266,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
             padding: 24px;
             margin-bottom: 24px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
         }
         .section-title {
             font-size: 20px;
@@ -235,21 +279,24 @@ $current_page = basename($_SERVER['PHP_SELF']);
         .booking-table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 1800px;
+            border: 1px solid #d0d7de;
         }
         .booking-table th {
-            background: #f8f9fa;
+            background: #f6f8fa;
             padding: 12px;
             text-align: left;
             font-size: 13px;
             font-weight: 600;
             color: #666;
             text-transform: uppercase;
-            border-bottom: 2px solid #dee2e6;
+            border: 1px solid #d0d7de;
         }
         .booking-table td {
             padding: 12px;
-            border-bottom: 1px solid #f0f0f0;
+            border: 1px solid #d0d7de;
             vertical-align: middle;
+            background: white;
         }
         .booking-table tbody tr:hover {
             background: #f8f9fa;
@@ -272,25 +319,54 @@ $current_page = basename($_SERVER['PHP_SELF']);
         .badge-new { background: #17a2b8; color: white; }
         .badge-contacted { background: #6c757d; color: white; }
         .quick-action {
-            padding: 4px 8px;
+            padding: 6px 14px;
             border: none;
-            border-radius: 4px;
-            font-size: 11px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             margin-right: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .quick-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         .quick-action.confirm {
             background: #28a745;
             color: white;
         }
+        .quick-action.confirm:hover {
+            background: #229954;
+        }
         .quick-action.check-in {
             background: #17a2b8;
             color: white;
         }
+        .quick-action.check-in:hover {
+            background: #138496;
+        }
+        .quick-action.undo-checkin {
+            background: #6c757d;
+            color: white;
+        }
+        .quick-action.undo-checkin:hover {
+            background: #5a6268;
+        }
+        .quick-action.disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
         .quick-action.paid {
             background: var(--gold);
             color: var(--deep-navy);
+        }
+        .quick-action.paid:hover {
+            background: #c19b2e;
         }
         .empty-state {
             text-align: center;
@@ -342,30 +418,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
     </style>
 </head>
 <body>
-    <div class="admin-header">
-        <h1><i class="fas fa-calendar-check"></i> All Bookings</h1>
-        <div class="user-info">
-            <div>
-                <div class="user-name"><?php echo htmlspecialchars($user['full_name']); ?></div>
-                <div class="user-role"><?php echo htmlspecialchars($user['role']); ?></div>
-            </div>
-            <a href="logout.php" class="btn-logout">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </div>
-    </div>
+    <?php include 'admin-header.php'; ?>
 
-    <nav class="admin-nav">
-        <ul>
-            <li><a href="dashboard.php" class="<?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="bookings.php" class="<?php echo $current_page === 'bookings.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
-            <li><a href="room-management.php" class="<?php echo $current_page === 'room-management.php' ? 'active' : ''; ?>"><i class="fas fa-bed"></i> Rooms</a></li>
-            <li><a href="conference-management.php" class="<?php echo $current_page === 'conference-management.php' ? 'active' : ''; ?>"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
-            <li><a href="menu-management.php" class="<?php echo $current_page === 'menu-management.php' ? 'active' : ''; ?>"><i class="fas fa-utensils"></i> Menu</a></li>
-            <li><a href="events-management.php" class="<?php echo $current_page === 'events-management.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
-            <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
-        </ul>
-    </nav>
 
     <div class="content">
         <div class="stats-grid">
@@ -414,17 +468,17 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <table class="booking-table">
                     <thead>
                         <tr>
-                            <th>Ref</th>
-                            <th>Guest Name</th>
-                            <th>Room</th>
-                            <th>Check In</th>
-                            <th>Check Out</th>
-                            <th>Nights</th>
-                            <th>Guests</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Payment</th>
-                            <th>Actions</th>
+                            <th style="width: 120px;">Ref</th>
+                            <th style="width: 200px;">Guest Name</th>
+                            <th style="width: 180px;">Room</th>
+                            <th style="width: 140px;">Check In</th>
+                            <th style="width: 140px;">Check Out</th>
+                            <th style="width: 80px;">Nights</th>
+                            <th style="width: 80px;">Guests</th>
+                            <th style="width: 120px;">Total</th>
+                            <th style="width: 120px;">Status</th>
+                            <th style="width: 120px;">Payment</th>
+                            <th style="width: 400px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -458,8 +512,15 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                         </button>
                                     <?php endif; ?>
                                     <?php if ($booking['status'] === 'confirmed'): ?>
-                                        <button class="quick-action check-in" onclick="updateStatus(<?php echo $booking['id']; ?>, 'checked-in')">
+                                        <?php $can_checkin = ($booking['payment_status'] === 'paid'); ?>
+                                        <button class="quick-action check-in <?php echo $can_checkin ? '' : 'disabled'; ?>"
+                                                onclick="<?php echo $can_checkin ? "updateStatus({$booking['id']}, 'checked-in')" : "alert('Cannot check in: booking must be PAID first.')"; ?>">
                                             <i class="fas fa-sign-in-alt"></i> Check In
+                                        </button>
+                                    <?php endif; ?>
+                                    <?php if ($booking['status'] === 'checked-in'): ?>
+                                        <button class="quick-action undo-checkin" onclick="updateStatus(<?php echo $booking['id']; ?>, 'cancel-checkin')">
+                                            <i class="fas fa-undo"></i> Cancel Check-in
                                         </button>
                                     <?php endif; ?>
                                     <?php if ($booking['payment_status'] !== 'paid'): ?>
@@ -493,13 +554,13 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <table class="booking-table">
                     <thead>
                         <tr>
-                            <th>Date Received</th>
-                            <th>Company/Name</th>
-                            <th>Contact</th>
-                            <th>Event Type</th>
-                            <th>Expected Date</th>
-                            <th>Attendees</th>
-                            <th>Status</th>
+                            <th style="width: 140px;">Date Received</th>
+                            <th style="width: 220px;">Company/Name</th>
+                            <th style="width: 220px;">Contact</th>
+                            <th style="width: 180px;">Event Type</th>
+                            <th style="width: 140px;">Expected Date</th>
+                            <th style="width: 100px;">Attendees</th>
+                            <th style="width: 140px;">Status</th>
                         </tr>
                     </thead>
                     <tbody>

@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once 'config/database.php';
 
 // Handle booking submission
@@ -122,10 +123,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $rooms_stmt = $pdo->query("SELECT id, name, price_per_night, max_guests, short_description, image_url FROM rooms WHERE is_active = 1 ORDER BY display_order ASC");
 $available_rooms = $rooms_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
-$currency_symbol = getSetting('currency_symbol', 'K');
-$phone_main = getSetting('phone_main', '+265 123 456 789');
-$email_reservations = getSetting('email_reservations', 'book@liwondesunhotel.com');
+$site_name = getSetting('site_name');
+$currency_symbol = getSetting('currency_symbol');
+$phone_main = getSetting('phone_main');
+$email_reservations = getSetting('email_reservations');
 ?>
 <!DOCTYPE html>
 <html lang="en">

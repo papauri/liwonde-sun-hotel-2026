@@ -7,12 +7,12 @@ if (!$room_slug) {
     exit;
 }
 
-$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
-$site_tagline = getSetting('site_tagline', 'Where Luxury Meets Nature');
-$site_logo = getSetting('site_logo', 'images/logo/logo.png');
-$currency_symbol = getSetting('currency_symbol', 'MWK');
-$email_reservations = getSetting('email_reservations', 'book@liwondesunhotel.com');
-$phone_main = getSetting('phone_main', '+265 123 456 789');
+$site_name = getSetting('site_name');
+$site_tagline = getSetting('site_tagline');
+$site_logo = getSetting('site_logo');
+$currency_symbol = getSetting('currency_symbol');
+$email_reservations = getSetting('email_reservations');
+$phone_main = getSetting('phone_main');
 
 function resolveImageUrl($path) {
     if (!$path) return '';
@@ -92,7 +92,7 @@ if (empty($room_images) && !empty($room['image_url'])) {
     ];
 }
 
-$hero_image = resolveImageUrl($room_images[0]['image_url'] ?? $room['image_url'] ?? 'images/hero/slide1.jpg');
+$hero_image = resolveImageUrl($room_images[0]['image_url'] ?? $room['image_url']);
 $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '')));
 ?>
 <!DOCTYPE html>
@@ -123,30 +123,50 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
 
     <section class="rooms-hero" style="background-image: linear-gradient(135deg, rgba(5, 9, 15, 0.76), rgba(10, 25, 41, 0.75)), url('<?php echo htmlspecialchars($hero_image); ?>');">
         <div class="container">
-            <div class="rooms-hero__content">
-                <div class="pill">Signature Stay</div>
-                <h1><?php echo htmlspecialchars($room['name']); ?></h1>
-                <p><?php echo htmlspecialchars($room['short_description'] ?? $site_tagline); ?></p>
-                <!-- rooms-hero__meta removed as requested -->
-                <div class="rooms-hero__actions">
-                    <a class="btn btn-primary" href="../index.php?room=<?php echo urlencode($room['slug']); ?>#book">Book This Room</a>
-                    <a class="btn btn-outline" href="../index.php#rooms">View All Rooms</a>
+            <div class="rooms-hero__grid">
+                <div class="rooms-hero__content">
+                    <div class="pill">Signature Stay</div>
+                    <h1><?php echo htmlspecialchars($room['name']); ?></h1>
+                    <p><?php echo htmlspecialchars($room['short_description'] ?? $site_tagline); ?></p>
+                    <div class="rooms-hero__actions">
+                        <a class="btn btn-primary" href="../booking.php?room_id=<?php echo $room['id']; ?>">Book This Room</a>
+                        <a class="btn btn-outline" href="../index.php#rooms">View All Rooms</a>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="section" style="padding-top: 40px; padding-bottom: 40px;">
+    <section class="section room-detail-below" style="padding-top: 30px; padding-bottom: 40px;">
         <div class="container">
-            <div class="room-detail-info">
-                <h2 class="room-detail-title">About the Room</h2>
+
+            <?php if (!empty($room_images)): ?>
+            <h3 style="font-size: 24px; color: var(--navy); margin: 40px 0 24px 0; font-weight: 700;">Room Gallery</h3>
+            <div class="room-gallery-grid">
+                <?php foreach ($room_images as $img): ?>
+                <div class="gallery-item">
+                    <img src="<?php echo htmlspecialchars(resolveImageUrl($img['image_url'])); ?>" alt="<?php echo htmlspecialchars($img['title']); ?>">
+                    <div class="gallery-item-label"><?php echo htmlspecialchars($img['title']); ?></div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+
+            <!-- Room Details Section - Moved below gallery -->
+            <aside class="room-detail-info room-detail-info--horizontal" aria-label="Room details">
+                <div class="room-detail-header">
+                    <h2 class="room-detail-title">About the Room</h2>
+                    <a class="btn btn-primary btn-booking" href="../booking.php?room_id=<?php echo $room['id']; ?>">
+                        <i class="fas fa-calendar-check"></i> Book Now
+                    </a>
+                </div>
                 <p class="room-detail-description"><?php echo htmlspecialchars($room['description'] ?? $room['short_description']); ?></p>
                 <div class="room-detail-specs">
                     <div class="spec-item"><i class="fas fa-users"></i><div class="spec-label">Guests</div><div class="spec-value">Up to <?php echo htmlspecialchars($room['max_guests'] ?? 2); ?></div></div>
-                    <div class="spec-item"><i class="fas fa-ruler-combined"></i><div class="spec-label">Floor Space</div><div class="spec-value"><?php echo htmlspecialchars($room['size_sqm'] ?? 40); ?> sqm</div></div>
-                    <div class="spec-item"><i class="fas fa-bed"></i><div class="spec-label">Bed Type</div><div class="spec-value"><?php echo htmlspecialchars($room['bed_type'] ?? 'King'); ?></div></div>
+                    <div class="spec-item"><i class="fas fa-ruler-combined"></i><div class="spec-label">Floor Space</div><div class="spec-value"><?php echo htmlspecialchars($room['size_sqm']); ?> sqm</div></div>
+                    <div class="spec-item"><i class="fas fa-bed"></i><div class="spec-label">Bed Type</div><div class="spec-value"><?php echo htmlspecialchars($room['bed_type']); ?></div></div>
                     <div class="spec-item"><i class="fas fa-tag"></i><div class="spec-label">Nightly Rate</div><div class="spec-value"><?php echo htmlspecialchars($currency_symbol); ?><?php echo number_format($room['price_per_night'], 0); ?></div></div>
-                    <?php 
+                    <?php
                     $available = $room['rooms_available'] ?? 0;
                     $total = $room['total_rooms'] ?? 0;
                     if ($total > 0):
@@ -161,29 +181,15 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
                 </div>
                 <?php if (!empty($amenities)): ?>
                 <div class="amenities-list">
-                    <h3 style="font-size: 18px; color: var(--navy); margin-bottom: 14px; font-weight: 700;">Room Amenities</h3>
-                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <h3 class="amenities-list__title">Room Amenities</h3>
+                    <div class="amenities-list__chips">
                         <?php foreach ($amenities as $amenity): ?>
-                        <span style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.08) 100%); color: var(--navy); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; border: 1px solid rgba(212, 175, 55, 0.25);">
-                            <i class="fas fa-check" style="color: var(--gold); margin-right: 6px;"></i><?php echo htmlspecialchars($amenity); ?>
-                        </span>
+                        <span class="amenities-chip"><i class="fas fa-check"></i><?php echo htmlspecialchars($amenity); ?></span>
                         <?php endforeach; ?>
                     </div>
                 </div>
                 <?php endif; ?>
-            </div>
-
-            <?php if (!empty($room_images)): ?>
-            <h3 style="font-size: 24px; color: var(--navy); margin: 40px 0 24px 0; font-weight: 700;">Room Gallery</h3>
-            <div class="room-gallery-grid">
-                <?php foreach ($room_images as $img): ?>
-                <div class="gallery-item">
-                    <img src="<?php echo htmlspecialchars(resolveImageUrl($img['image_url'])); ?>" alt="<?php echo htmlspecialchars($img['title'] ?? $room['name']); ?>">
-                    <div class="gallery-item-label"><?php echo htmlspecialchars($img['title'] ?? 'Room View'); ?></div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
+            </aside>
         </div>
     </section>
 
@@ -203,7 +209,7 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
                 <div class="booking-cta__row"><span>Nightly Rate</span><strong><?php echo htmlspecialchars($currency_symbol); ?><?php echo number_format($room['price_per_night'], 0); ?></strong></div>
                 <div class="booking-cta__row"><span>Capacity</span><strong><?php echo htmlspecialchars($room['max_guests'] ?? 2); ?> guests</strong></div>
                 <div class="booking-cta__row"><span>Floor Space</span><strong><?php echo htmlspecialchars($room['size_sqm'] ?? 40); ?> sqm</strong></div>
-                <a class="btn btn-primary" href="../index.php?room=<?php echo urlencode($room['slug']); ?>#book">Proceed to Booking</a>
+                <a class="btn btn-primary" href="../booking.php?room_id=<?php echo $room['id']; ?>">Proceed to Booking</a>
             </div>
         </div>
     </section>
@@ -237,8 +243,8 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
                     <ul class="contact-info">
                         <li><i class="fas fa-phone"></i><a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $contact['phone_main'] ?? $phone_main)); ?>"><?php echo htmlspecialchars($contact['phone_main'] ?? $phone_main); ?></a></li>
                         <li><i class="fas fa-envelope"></i><a href="mailto:<?php echo htmlspecialchars($contact['email_main'] ?? $email_reservations); ?>"><?php echo htmlspecialchars($contact['email_main'] ?? $email_reservations); ?></a></li>
-                        <li><i class="fas fa-map-marker-alt"></i><a href="https://www.google.com/maps/search/<?php echo urlencode(htmlspecialchars($contact['address_line1'] ?? 'Liwonde, Malawi')); ?>" target="_blank"><?php echo htmlspecialchars($contact['address_line1'] ?? 'Liwonde, Malawi'); ?></a></li>
-                        <li><i class="fas fa-clock"></i><span><?php echo htmlspecialchars($contact['working_hours'] ?? '24/7 Available'); ?></span></li>
+                        <li><i class="fas fa-map-marker-alt"></i><a href="https://www.google.com/maps/search/<?php echo urlencode(htmlspecialchars($contact['address_line1'] ?? getSetting('address_line1'))); ?>" target="_blank"><?php echo htmlspecialchars($contact['address_line1'] ?? getSetting('address_line1')); ?></a></li>
+                        <li><i class="fas fa-clock"></i><span><?php echo htmlspecialchars($contact['working_hours'] ?? getSetting('working_hours')); ?></span></li>
                     </ul>
                     <div class="social-links">
                         <?php if (!empty($social['facebook_url'])): ?><a href="<?php echo htmlspecialchars($social['facebook_url']); ?>" class="social-icon" target="_blank"><i class="fab fa-facebook-f"></i></a><?php endif; ?>
@@ -249,7 +255,7 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text', '2026 Liwonde Sun Hotel. All rights reserved.')); ?></p>
+                <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text')); ?></p>
             </div>
         </div>
     </footer>

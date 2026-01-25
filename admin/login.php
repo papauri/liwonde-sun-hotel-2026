@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
+$site_name = getSetting('site_name');
 ?>
 <!DOCTYPE html>
 <html lang="en">

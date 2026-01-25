@@ -67,24 +67,6 @@ SetEnv SMTP_PASS LiwondeSunHotel26!
     ExpiresByType application/json "access plus 1 month"
 </IfModule>
 
-# Cache-Control Headers
-<IfModule mod_headers.c>
-    # CSS & JavaScript
-    <FilesMatch "\.(css|js)$">
-        Header set Cache-Control "max-age=31536000, public, immutable"
-    </FilesMatch>
-    
-    # Images
-    <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|ico)$">
-        Header set Cache-Control "max-age=31536000, public, immutable"
-    </FilesMatch>
-    
-    # Fonts
-    <FilesMatch "\.(ttf|otf|woff|woff2|eot)$">
-        Header set Cache-Control "max-age=31536000, public, immutable"
-    </FilesMatch>
-</IfModule>
-
 # ====================
 # SECURITY HEADERS
 # ====================

@@ -1,0 +1,35 @@
+<?php
+// admin-header.php: Shared header and navbar for admin pages
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (!isset($_SESSION['admin_user'])) {
+    header('Location: login.php');
+    exit;
+}
+require_once '../config/database.php';
+$site_name = getSetting('site_name');
+$user = $_SESSION['admin_user'];
+$current_page = basename($_SERVER['PHP_SELF']);
+?>
+<div class="admin-header">
+    <h1><i class="fas fa-hotel"></i> <?php echo htmlspecialchars($site_name); ?></h1>
+    <div class="user-info">
+        <div>
+            <div class="user-name"><?php echo htmlspecialchars($user['full_name']); ?></div>
+            <div class="user-role"><?php echo htmlspecialchars($user['role']); ?></div>
+        </div>
+        <a href="logout.php" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+    </div>
+</div>
+<nav class="admin-nav">
+    <ul>
+        <li><a href="dashboard.php" class="<?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="bookings.php" class="<?php echo $current_page === 'bookings.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
+        <li><a href="room-management.php" class="<?php echo $current_page === 'room-management.php' ? 'active' : ''; ?>"><i class="fas fa-bed"></i> Rooms</a></li>
+        <li><a href="conference-management.php" class="<?php echo $current_page === 'conference-management.php' ? 'active' : ''; ?>"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
+        <li><a href="menu-management.php" class="<?php echo $current_page === 'menu-management.php' ? 'active' : ''; ?>"><i class="fas fa-utensils"></i> Menu</a></li>
+        <li><a href="events-management.php" class="<?php echo $current_page === 'events-management.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
+        <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
+    </ul>
+</nav>

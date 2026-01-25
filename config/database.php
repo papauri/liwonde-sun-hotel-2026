@@ -5,50 +5,40 @@
  * Supports both LOCAL and PRODUCTION environments
  */
 
-// Detect environment (local vs production)
-$isLocal = (
-    in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1', 'localhost']) ||
-    strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false ||
-    strpos($_SERVER['SERVER_NAME'] ?? '', 'localhost') !== false
-);
+// Database configuration - multiple security options
+// Priority: 1. Local config file, 2. Environment variables, 3. Hardcoded fallback
 
-// Environment overrides via OS env vars (helps when testing locally against remote DB)
-$envHost = getenv('DB_HOST') ?: null;
-$envPort = getenv('DB_PORT') ?: '3306';
-$envName = getenv('DB_NAME') ?: null;
-$envUser = getenv('DB_USER') ?: null;
-$envPass = getenv('DB_PASS') ?: null;
-$forceProd = filter_var(getenv('DB_FORCE_PROD'), FILTER_VALIDATE_BOOL) || filter_var(getenv('DB_FORCE_PRODUCTION'), FILTER_VALIDATE_BOOL);
-
-// Database credentials based on environment / overrides
-if ($envHost || $envName || $envUser || $envPass || $forceProd) {
-    // ENV override: always use when supplied (useful for remote DB from local machine)
-    define('DB_HOST', $envHost ?: 'localhost');
-    define('DB_PORT', $envPort ?: '3306');
-    define('DB_NAME', $envName ?: 'p601229_hotels');
-    define('DB_USER', $envUser ?: 'p601229_hotel_admin');
-    define('DB_PASS', $envPass ?: '2:p2WpmX[0YTs7');
-    define('DB_CHARSET', 'utf8mb4');
-} elseif ($isLocal) {
-    // LOCAL DEVELOPMENT SETTINGS (connect to live DB)
-    define('DB_HOST', 'promanaged-it.com');
-    define('DB_PORT', '3306');
-    define('DB_NAME', 'p601229_hotels');
-    define('DB_USER', 'p601229_hotel_admin');
-    define('DB_PASS', '2:p2WpmX[0YTs7');
-    define('DB_CHARSET', 'utf8mb4');
+// Option 1: Check for local config file (for cPanel/production)
+if (file_exists(__DIR__ . '/database.local.php')) {
+    include __DIR__ . '/database.local.php';
 } else {
-    // PRODUCTION SETTINGS (used when running on the live server)
-    define('DB_HOST', 'promanaged-it.com');
-    define('DB_PORT', '3306');
-    define('DB_NAME', 'p601229_hotels');
-    define('DB_USER', 'p601229_hotel_admin');
-    define('DB_PASS', '2:p2WpmX[0YTs7');
-    define('DB_CHARSET', 'utf8mb4');
+    // Option 2: Use environment variables (for development)
+    $db_host = getenv('DB_HOST') ?: 'promanaged-it.com';
+    $db_name = getenv('DB_NAME') ?: 'p601229_hotels';
+    $db_user = getenv('DB_USER') ?: 'p601229_hotel_admin';
+    $db_pass = getenv('DB_PASS') ?: '2:p2WpmX[0YTs7';
+    $db_port = getenv('DB_PORT') ?: '3306';
+    $db_charset = 'utf8mb4';
 }
+
+// Define database constants
+define('DB_HOST', $db_host);
+define('DB_PORT', $db_port);
+define('DB_NAME', $db_name);
+define('DB_USER', $db_user);
+define('DB_PASS', $db_pass);
+define('DB_CHARSET', $db_charset);
 
 // Create PDO connection with performance optimizations
 try {
+    // Diagnostic logging
+    error_log("Database Connection Attempt:");
+    error_log("  Host: " . DB_HOST);
+    error_log("  Port: " . DB_PORT);
+    error_log("  Database: " . DB_NAME);
+    error_log("  User: " . DB_USER);
+    error_log("  Environment Variables Set: " . (getenv('DB_HOST') ? 'YES' : 'NO'));
+    
     $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
     $options = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -64,10 +54,13 @@ try {
     // Set timezone after connection
     $pdo->exec("SET time_zone = '+00:00'");
     
+    error_log("Database Connection Successful!");
+    
 } catch (PDOException $e) {
     // Always show a beautiful custom error page (sleeping bear)
     $errorMsg = htmlspecialchars($e->getMessage());
     error_log("Database Connection Error: " . $e->getMessage());
+    error_log("Error Code: " . $e->getCode());
     include_once __DIR__ . '/../includes/db-error.php';
     exit;
 }
@@ -133,6 +126,74 @@ function getSettingsByGroup($group) {
         error_log("Error fetching settings: " . $e->getMessage());
         return [];
     }
+}
+
+/**
+ * Helper: fetch active page hero by page slug.
+ * Returns associative array or null.
+ */
+function getPageHero(string $page_slug): ?array {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("
+            SELECT *
+            FROM page_heroes
+            WHERE page_slug = ? AND is_active = 1
+            ORDER BY display_order ASC, id ASC
+            LIMIT 1
+        ");
+        $stmt->execute([$page_slug]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    } catch (PDOException $e) {
+        error_log("Error fetching page hero ({$page_slug}): " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Helper: fetch active page hero by exact page URL (e.g. /restaurant.php).
+ * Returns associative array or null.
+ */
+function getPageHeroByUrl(string $page_url): ?array {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("
+            SELECT *
+            FROM page_heroes
+            WHERE page_url = ? AND is_active = 1
+            ORDER BY display_order ASC, id ASC
+            LIMIT 1
+        ");
+        $stmt->execute([$page_url]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    } catch (PDOException $e) {
+        error_log("Error fetching page hero by url ({$page_url}): " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Helper: get hero for the current request without hardcoding per-page slugs.
+ * Strategy:
+ *  1) Try exact match on page_url (SCRIPT_NAME).
+ *  2) Fallback to slug derived from current filename (basename without .php).
+ */
+function getCurrentPageHero(): ?array {
+    $script = $_SERVER['SCRIPT_NAME'] ?? '';
+    if ($script) {
+        $byUrl = getPageHeroByUrl($script);
+        if ($byUrl) return $byUrl;
+    }
+
+    $path = $_SERVER['SCRIPT_FILENAME'] ?? $script;
+    if (!$path) return null;
+
+    $slug = strtolower(pathinfo($path, PATHINFO_FILENAME));
+    $slug = str_replace('_', '-', $slug);
+
+    return getPageHero($slug);
 }
 
 /**

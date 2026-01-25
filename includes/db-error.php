@@ -1,9 +1,17 @@
+<?php
+try {
+    require_once __DIR__ . '/../config/database.php';
+    $siteName = getSetting('site_name');
+} catch (Exception $e) {
+    // DB is down - site name will be empty
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <title>Database Connection Error | Liwonde Sun Hotel</title>
+    <title>Database Connection Error | <?php echo htmlspecialchars($siteName); ?></title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
         body {

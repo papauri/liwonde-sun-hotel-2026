@@ -2,12 +2,21 @@
 require_once 'config/database.php';
 
 // Core settings
-$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
-$site_logo = getSetting('site_logo', 'images/logo/logo.png');
-$site_tagline = getSetting('site_tagline', 'Where Luxury Meets Nature');
-$currency_symbol = getSetting('currency_symbol', 'K');
-$email_reservations = getSetting('email_reservations', 'book@liwondesunhotel.com');
-$phone_main = getSetting('phone_main', '+265 123 456 789');
+$site_name = getSetting('site_name');
+$site_logo = getSetting('site_logo');
+$site_tagline = getSetting('site_tagline');
+$currency_symbol = getSetting('currency_symbol');
+$email_reservations = getSetting('email_reservations');
+$phone_main = getSetting('phone_main');
+
+// Fetch page hero (DB-driven)
+$pageHero = getCurrentPageHero();
+$roomsHero = [
+    'hero_title' => $pageHero['hero_title'],
+    'hero_subtitle' => $pageHero['hero_subtitle'],
+    'hero_description' => $pageHero['hero_description'],
+    'hero_image_path' => $pageHero['hero_image_path'],
+];
 
 // Policies for modals
 $policies = [];
@@ -111,26 +120,20 @@ foreach ($rooms as $room) {
     <?php include 'includes/loader.php'; ?>
     
     <?php include 'includes/header.php'; ?>
-    
+
+    <main>
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" role="presentation"></div>
 
-    <section class="rooms-hero" style="background-image: linear-gradient(135deg, rgba(5, 9, 15, 0.76), rgba(10, 25, 41, 0.75)), url('<?php echo htmlspecialchars($hero_room['image_url']); ?>');">
-        <div class="container">
-            <div class="rooms-hero__content">
-                <div class="pill">Riverfront Luxury</div>
-                <h1><?php echo htmlspecialchars($hero_room['name']); ?></h1>
-                <p><?php echo htmlspecialchars($hero_room['short_description'] ?? $site_tagline); ?></p>
-                <div class="rooms-hero__meta">
-                    <span><i class="fas fa-user-friends"></i> Up to <?php echo htmlspecialchars($hero_room['max_guests'] ?? 2); ?> Guests</span>
-                    <span><i class="fas fa-ruler-combined"></i> <?php echo htmlspecialchars($hero_room['size_sqm'] ?? 40); ?> sqm</span>
-                    <span><i class="fas fa-bed"></i> <?php echo htmlspecialchars($hero_room['bed_type'] ?? 'King Bed'); ?></span>
-                    <span><i class="fas fa-tag"></i> <?php echo htmlspecialchars($currency_symbol); ?><?php echo number_format($hero_room['price_per_night'], 0); ?>/night</span>
-                </div>
-                <div class="rooms-hero__actions">
-                    <a class="btn btn-primary" href="#book" data-room-slug="<?php echo htmlspecialchars($hero_room['slug'] ?? ''); ?>">Book This Room</a>
-                    <a class="btn btn-outline" href="#collection">View All Rooms</a>
-                </div>
+    <section class="page-hero" style="background-image: url('<?php echo htmlspecialchars($roomsHero['hero_image_path']); ?>');">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="hero-subtitle"><?php echo htmlspecialchars($roomsHero['hero_subtitle']); ?></span>
+            <h1 class="hero-title"><?php echo htmlspecialchars($roomsHero['hero_title']); ?></h1>
+            <p class="hero-description"><?php echo htmlspecialchars($roomsHero['hero_description']); ?></p>
+            <div class="rooms-hero__actions" style="justify-content:center;">
+                <a class="btn btn-primary" href="#collection">Explore Rooms</a>
+                <a class="btn btn-outline" href="#book">Quick Booking</a>
             </div>
         </div>
     </section>
@@ -184,7 +187,7 @@ foreach ($rooms as $room) {
                     <div class="spec-item">
                         <i class="fas fa-bed"></i>
                         <div class="spec-label">Bed Type</div>
-                        <div class="spec-value"><?php echo htmlspecialchars($hero_room['bed_type'] ?? 'King'); ?></div>
+                        <div class="spec-value"><?php echo htmlspecialchars($hero_room['bed_type']); ?></div>
                     </div>
                     <div class="spec-item">
                         <i class="fas fa-tag"></i>
@@ -375,6 +378,7 @@ foreach ($rooms as $room) {
         </section>
     </main>
 
+    </main>
     <footer class="footer" id="contact">
         <div class="container">
             <div class="footer-grid">
@@ -412,11 +416,11 @@ foreach ($rooms as $room) {
                         </li>
                         <li>
                             <i class="fas fa-map-marker-alt"></i>
-                            <a href="https://www.google.com/maps/search/<?php echo urlencode(htmlspecialchars($contact['address_line1'] ?? 'Liwonde, Malawi')); ?>" target="_blank"><?php echo htmlspecialchars($contact['address_line1'] ?? 'Liwonde, Malawi'); ?></a>
+                            <a href="https://www.google.com/maps/search/<?php echo urlencode(htmlspecialchars($contact['address_line1'])); ?>" target="_blank"><?php echo htmlspecialchars($contact['address_line1']); ?></a>
                         </li>
                         <li>
                             <i class="fas fa-clock"></i>
-                            <span><?php echo htmlspecialchars($contact['working_hours'] ?? '24/7 Available'); ?></span>
+                            <span><?php echo htmlspecialchars($contact['working_hours']); ?></span>
                         </li>
                     </ul>
                     
@@ -449,7 +453,7 @@ foreach ($rooms as $room) {
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text', '2026 Liwonde Sun Hotel. All rights reserved.')); ?></p>
+                <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text')); ?></p>
             </div>
         </div>
     </footer>

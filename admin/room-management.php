@@ -296,8 +296,9 @@ try {
         }
         .content {
             padding: 32px;
-            max-width: 1600px;
+            max-width: 100%;
             margin: 0 auto;
+            overflow-x: auto;
         }
         .page-header {
             display: flex;
@@ -330,54 +331,85 @@ try {
         }
         .rooms-section {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
+            border-radius: 8px;
+            padding: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
         }
         .room-table {
             width: 100%;
+            min-width: 2200px;
             border-collapse: collapse;
+            border: 1px solid #d0d7de;
         }
         .room-table th {
-            background: #f8f9fa;
-            padding: 12px;
+            background: #f6f8fa;
+            padding: 12px 14px;
             text-align: left;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            color: #666;
+            color: #24292f;
             text-transform: uppercase;
-            border-bottom: 2px solid #dee2e6;
+            border: 1px solid #d0d7de;
+            border-bottom: 2px solid #d0d7de;
+            white-space: nowrap;
         }
         .room-table td {
-            padding: 12px;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 0;
+            border: 1px solid #d0d7de;
             vertical-align: middle;
+            background: white;
         }
         .room-table tbody tr {
             transition: background 0.2s ease;
         }
         .room-table tbody tr:hover {
-            background: #f8f9fa;
+            background: #f6f8fa;
         }
         .room-table tbody tr.edit-mode {
-            background: #fff3cd;
+            background: #fff8c7;
+        }
+        .room-table tbody tr.edit-mode td {
+            background: #fff8c7;
         }
         .room-table input,
         .room-table textarea,
         .room-table select {
             width: 100%;
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 13px;
-            font-family: inherit;
+            height: 100%;
+            min-height: 50px;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 0;
+            font-size: 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: transparent;
+            transition: background 0.2s ease;
+        }
+        .room-table input:focus,
+        .room-table textarea:focus,
+        .room-table select:focus {
+            outline: none;
+            background: #fff8c7;
+            box-shadow: inset 0 0 0 2px var(--gold);
         }
         .room-table textarea {
-            resize: vertical;
-            min-height: 50px;
+            resize: none;
+            min-height: 80px;
+            line-height: 1.5;
+        }
+        .room-table select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 28px;
         }
         .cell-view {
             display: block;
+            padding: 12px 14px;
+            min-height: 50px;
         }
         .cell-view.hidden {
             display: none;
@@ -388,13 +420,21 @@ try {
         .cell-edit.active {
             display: block;
         }
+        .cell-edit.active input,
+        .cell-edit.active textarea,
+        .cell-edit.active select {
+            display: block;
+        }
         .actions-cell {
             white-space: nowrap;
+            min-width: 320px;
+            padding: 8px 12px !important;
         }
         .action-buttons {
             display: flex;
-            gap: 4px;
+            gap: 6px;
             flex-wrap: wrap;
+            align-items: center;
         }
         .badge {
             padding: 4px 10px;
@@ -544,13 +584,20 @@ try {
             gap: 4px;
         }
         .btn-action {
-            padding: 5px 10px;
+            padding: 6px 14px;
             border: none;
-            border-radius: 4px;
-            font-size: 11px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-action i {
+            font-size: 11px;
         }
         .btn-edit {
             background: #17a2b8;
@@ -558,6 +605,8 @@ try {
         }
         .btn-edit:hover {
             background: #138496;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(23, 162, 184, 0.3);
         }
         .btn-save {
             background: #28a745;
@@ -565,6 +614,8 @@ try {
         }
         .btn-save:hover {
             background: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
         }
         .btn-cancel {
             background: #6c757d;
@@ -572,6 +623,8 @@ try {
         }
         .btn-cancel:hover {
             background: #5a6268;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3);
         }
         .btn-toggle {
             background: #ffc107;
@@ -579,6 +632,8 @@ try {
         }
         .btn-toggle:hover {
             background: #e0a800;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
         }
         .btn-featured {
             background: var(--gold);
@@ -586,6 +641,17 @@ try {
         }
         .btn-featured:hover {
             background: #c19b2e;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
+        }
+        .btn-action[style*="#6f42c1"] {
+            background: #6f42c1;
+            color: white;
+        }
+        .btn-action[style*="#6f42c1"]:hover {
+            background: #5a32a3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(111, 66, 193, 0.3);
         }
         @media (max-width: 768px) {
             .content {
@@ -609,21 +675,26 @@ try {
             .room-table input,
             .room-table textarea,
             .room-table select {
-                padding: 4px;
-                font-size: 12px;
+                padding: 8px 10px;
+                font-size: 13px;
             }
             .action-buttons {
                 flex-direction: column;
-                gap: 2px;
+                gap: 4px;
             }
             .btn-action {
-                padding: 4px 8px;
-                font-size: 10px;
+                padding: 6px 12px;
+                font-size: 11px;
                 width: 100%;
                 text-align: center;
+                justify-content: center;
             }
             .rooms-section {
-                padding: 16px;
+                padding: 12px;
+                overflow-x: auto;
+            }
+            .room-table {
+                min-width: 1800px;
             }
         }
         @media (max-width: 480px) {
@@ -635,43 +706,25 @@ try {
             }
             .room-table th,
             .room-table td {
-                padding: 6px;
+                padding: 0;
+            }
+            .cell-view {
+                padding: 8px 10px;
+                min-height: 40px;
             }
             .room-table th {
                 font-size: 10px;
             }
             .btn-action {
-                padding: 3px 6px;
-                font-size: 9px;
+                padding: 5px 10px;
+                font-size: 10px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="admin-header">
-        <h1><i class="fas fa-bed"></i> Room Management</h1>
-        <div class="user-info">
-            <div>
-                <div><?php echo htmlspecialchars($user['full_name']); ?></div>
-                <div style="font-size: 12px; opacity: 0.8;"><?php echo htmlspecialchars($user['role']); ?></div>
-            </div>
-            <a href="logout.php" class="btn-logout">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </div>
-    </div>
 
-    <nav class="admin-nav">
-        <ul>
-            <li><a href="dashboard.php" class="<?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="bookings.php" class="<?php echo $current_page === 'bookings.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
-            <li><a href="room-management.php" class="<?php echo $current_page === 'room-management.php' ? 'active' : ''; ?>"><i class="fas fa-bed"></i> Rooms</a></li>
-            <li><a href="conference-management.php" class="<?php echo $current_page === 'conference-management.php' ? 'active' : ''; ?>"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
-            <li><a href="menu-management.php" class="<?php echo $current_page === 'menu-management.php' ? 'active' : ''; ?>"><i class="fas fa-utensils"></i> Menu</a></li>
-            <li><a href="events-management.php" class="<?php echo $current_page === 'events-management.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
-            <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
-        </ul>
-    </nav>
+    <?php include 'admin-header.php'; ?>
 
     <div class="content">
         <div class="page-header">
@@ -697,18 +750,18 @@ try {
                 <table class="room-table">
                     <thead>
                         <tr>
-                            <th style="width: 7%;">Image</th>
-                            <th style="width: 3%;">Order</th>
-                            <th style="width: 10%;">Room Name</th>
-                            <th style="width: 10%;">Short Desc</th>
-                            <th style="width: 5%;">Price/Night</th>
-                            <th style="width: 3%;">Size</th>
-                            <th style="width: 4%;">Guests</th>
-                            <th style="width: 6%;">Availability</th>
-                            <th style="width: 7%;">Bed Type</th>
-                            <th style="width: 10%;">Amenities</th>
-                            <th style="width: 8%;">Status</th>
-                            <th style="width: 27%;">Actions</th>
+                            <th style="width: 100px;">Image</th>
+                            <th style="width: 80px;">Order</th>
+                            <th style="width: 200px;">Room Name</th>
+                            <th style="width: 250px;">Short Desc</th>
+                            <th style="width: 120px;">Price/Night</th>
+                            <th style="width: 80px;">Size</th>
+                            <th style="width: 80px;">Guests</th>
+                            <th style="width: 140px;">Availability</th>
+                            <th style="width: 150px;">Bed Type</th>
+                            <th style="width: 250px;">Amenities</th>
+                            <th style="width: 120px;">Status</th>
+                            <th style="width: 350px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -740,7 +793,7 @@ try {
                                     <textarea class="cell-edit" data-field="short_description"><?php echo htmlspecialchars($room['short_description']); ?></textarea>
                                 </td>
                                 <td>
-                                    <span class="cell-view">K <?php echo number_format($room['price_per_night'], 0); ?></span>
+                                    <span class="cell-view"><?php echo htmlspecialchars(getSetting('currency_symbol')); ?> <?php echo number_format($room['price_per_night'], 0); ?></span>
                                     <input type="number" class="cell-edit" value="<?php echo $room['price_per_night']; ?>" step="0.01" data-field="price_per_night">
                                 </td>
                                 <td>
@@ -753,10 +806,10 @@ try {
                                 </td>
                                 <td>
                                     <span class="cell-view"><?php echo ($room['rooms_available'] ?? 0) . '/' . ($room['total_rooms'] ?? 0); ?></span>
-                                    <div class="cell-edit" style="display: flex; gap: 4px; align-items: center;">
-                                        <input type="number" min="0" style="width: 45px;" value="<?php echo $room['rooms_available'] ?? 0; ?>" data-field="rooms_available" title="Available">
-                                        <span>/</span>
-                                        <input type="number" min="1" style="width: 45px;" value="<?php echo $room['total_rooms'] ?? 0; ?>" data-field="total_rooms" title="Total">
+                                    <div class="cell-edit" style="display: flex; gap: 10px; align-items: center; height: 100%;">
+                                        <input type="number" min="0" style="width: 80px;" value="<?php echo $room['rooms_available'] ?? 0; ?>" data-field="rooms_available" title="Available">
+                                        <span style="color: #666; font-weight: 500;">/</span>
+                                        <input type="number" min="1" style="width: 80px;" value="<?php echo $room['total_rooms'] ?? 0; ?>" data-field="total_rooms" title="Total">
                                     </div>
                                 </td>
                                 <td>
@@ -803,7 +856,7 @@ try {
                                             <i class="fas fa-star"></i> Featured
                                         </button>
                                         <button class="btn-action" style="background: #6f42c1; color: white;" onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($room['image_url'] ?? '', ENT_QUOTES); ?>')">
-                                            <i class="fas fa-image"></i> Featured
+                                            <i class="fas fa-image"></i> Image
                                         </button>
                                     </div>
                                 </td>
@@ -854,7 +907,7 @@ try {
                         <i class="fas fa-times"></i> Cancel
                     </button>
                     <button type="submit" class="btn-action btn-save">
-                        <i class="fas fa-upload"></i> Upload Image
+                        <i class="fas fa-upload"></i> Upload
                     </button>
                 </div>
             </form>

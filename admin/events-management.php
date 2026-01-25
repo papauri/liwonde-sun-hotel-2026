@@ -254,8 +254,9 @@ try {
         }
         .content {
             padding: 32px;
-            max-width: 1600px;
+            max-width: 100%;
             margin: 0 auto;
+            overflow-x: auto;
         }
         .page-header {
             display: flex;
@@ -305,25 +306,29 @@ try {
             border-radius: 12px;
             padding: 24px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
         }
         .event-table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 2000px;
+            border: 1px solid #d0d7de;
         }
         .event-table th {
-            background: #f8f9fa;
+            background: #f6f8fa;
             padding: 12px;
             text-align: left;
             font-size: 13px;
             font-weight: 600;
             color: #666;
             text-transform: uppercase;
-            border-bottom: 2px solid #dee2e6;
+            border: 1px solid #d0d7de;
         }
         .event-table td {
-            padding: 12px;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 0;
+            border: 1px solid #d0d7de;
             vertical-align: middle;
+            background: white;
         }
         .event-table tbody tr {
             transition: background 0.2s ease;
@@ -371,15 +376,24 @@ try {
         .event-table textarea,
         .event-table select {
             width: 100%;
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 13px;
+            min-height: 50px;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 0;
+            font-size: 14px;
             font-family: inherit;
+            background: transparent;
+        }
+        .event-table input:focus,
+        .event-table textarea:focus,
+        .event-table select:focus {
+            background: #fff8c7;
+            box-shadow: inset 0 0 0 2px var(--gold);
+            outline: none;
         }
         .event-table textarea {
             resize: vertical;
-            min-height: 50px;
+            min-height: 80px;
         }
         .cell-view {
             display: block;
@@ -442,74 +456,74 @@ try {
             gap: 4px;
         }
         .btn-action {
-            width: 32px;
-            height: 32px;
-            padding: 0;
+            padding: 6px 14px;
             border: none;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 12px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            position: relative;
+            gap: 6px;
+            white-space: nowrap;
         }
         .btn-action:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         .btn-action:active {
             transform: translateY(0);
         }
         .btn-edit {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            background: #3498db;
             color: white;
         }
         .btn-edit:hover {
-            background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+            background: #2980b9;
         }
         .btn-save {
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            background: #27ae60;
             color: white;
         }
         .btn-save:hover {
-            background: linear-gradient(135deg, #229954 0%, #1e8449 100%);
+            background: #229954;
         }
         .btn-cancel {
-            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            background: #95a5a6;
             color: white;
         }
         .btn-cancel:hover {
-            background: linear-gradient(135deg, #7f8c8d 0%, #707b7c 100%);
+            background: #7f8c8d;
         }
         .btn-delete {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            background: #e74c3c;
             color: white;
         }
         .btn-delete:hover {
-            background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+            background: #c0392b;
         }
         .btn-toggle {
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            background: #f39c12;
             color: white;
         }
         .btn-toggle:hover {
-            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+            background: #e67e22;
         }
         .btn-featured {
-            background: linear-gradient(135deg, var(--gold) 0%, #c19b2e 100%);
+            background: var(--gold);
             color: var(--deep-navy);
         }
         .btn-featured:hover {
-            background: linear-gradient(135deg, #c19b2e 0%, #a8852a 100%);
+            background: #c19b2e;
         }
         .btn-upload {
-            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            background: #9b59b6;
             color: white;
         }
         .btn-upload:hover {
-            background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
+            background: #8e44ad;
         }
         .image-upload-form {
             display: inline-block;
@@ -706,14 +720,14 @@ try {
                 <table class="event-table">
                     <thead>
                         <tr>
-                            <th style="width: 20%;">Title</th>
-                            <th style="width: 10%;">Date</th>
-                            <th style="width: 10%;">Time</th>
-                            <th style="width: 15%;">Location</th>
-                            <th style="width: 8%;">Price</th>
-                            <th style="width: 7%;">Capacity</th>
-                            <th style="width: 10%;">Status</th>
-                            <th style="width: 20%;">Actions</th>
+                            <th style="width: 250px;">Title</th>
+                            <th style="width: 140px;">Date</th>
+                            <th style="width: 180px;">Time</th>
+                            <th style="width: 200px;">Location</th>
+                            <th style="width: 120px;">Price</th>
+                            <th style="width: 100px;">Capacity</th>
+                            <th style="width: 140px;">Status</th>
+                            <th style="width: 400px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -760,7 +774,7 @@ try {
                                         <?php if ($event['ticket_price'] == 0): ?>
                                             <span class="badge badge-free">Free</span>
                                         <?php else: ?>
-                                            K <?php echo number_format($event['ticket_price'], 0); ?>
+                                            <?php echo htmlspecialchars(getSetting('currency_symbol')); ?> <?php echo number_format($event['ticket_price'], 0); ?>
                                         <?php endif; ?>
                                     </span>
                                     <input type="number" class="cell-edit" value="<?php echo $event['ticket_price']; ?>" step="0.01" data-field="ticket_price">
@@ -792,23 +806,23 @@ try {
                                         <!-- Edit Group -->
                                         <div class="action-group">
                                             <button class="btn-action btn-edit" onclick="enterEditMode(<?php echo $event['id']; ?>)" data-edit-btn title="Edit Event">
-                                                <i class="fas fa-edit"></i>
+                                                <i class="fas fa-edit"></i> Edit
                                             </button>
                                             <button class="btn-action btn-save" style="display: none;" onclick="saveRow(<?php echo $event['id']; ?>)" data-save-btn title="Save Changes">
-                                                <i class="fas fa-check"></i>
+                                                <i class="fas fa-check"></i> Save
                                             </button>
                                             <button class="btn-action btn-cancel" style="display: none;" onclick="cancelEdit(<?php echo $event['id']; ?>)" data-cancel-btn title="Cancel Edit">
-                                                <i class="fas fa-times"></i>
+                                                <i class="fas fa-times"></i> Cancel
                                             </button>
                                         </div>
                                         
                                         <!-- Status Group -->
                                         <div class="action-group">
                                             <button class="btn-action btn-toggle" onclick="toggleActive(<?php echo $event['id']; ?>)" title="Toggle Active/Inactive">
-                                                <i class="fas fa-power-off"></i>
+                                                <i class="fas fa-power-off"></i> Toggle
                                             </button>
                                             <button class="btn-action btn-featured" onclick="toggleFeatured(<?php echo $event['id']; ?>)" title="Toggle Featured">
-                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i> Featured
                                             </button>
                                         </div>
                                         
@@ -818,7 +832,7 @@ try {
                                                 <input type="hidden" name="action" value="update_image">
                                                 <input type="hidden" name="id" value="<?php echo $event['id']; ?>">
                                                 <label class="btn-action btn-upload" style="cursor: pointer; margin: 0;" title="Upload Event Image">
-                                                    <i class="fas fa-image"></i>
+                                                    <i class="fas fa-image"></i> Image
                                                     <input type="file" name="image" accept="image/jpeg,image/png,image/jpg,image/webp" style="display: none;" onchange="if(confirm('Upload and replace event image?')) { this.form.submit(); } else { this.value=''; }">
                                                 </label>
                                             </form>
@@ -827,7 +841,7 @@ try {
                                         <!-- Delete Group -->
                                         <div class="action-group">
                                             <button class="btn-action btn-delete" onclick="if(confirm('Delete this event?')) deleteEvent(<?php echo $event['id']; ?>)" title="Delete Event">
-                                                <i class="fas fa-trash-alt"></i>
+                                                <i class="fas fa-trash-alt"></i> Delete
                                             </button>
                                         </div>
                                     </div>
@@ -888,7 +902,7 @@ try {
                 </div>
                 
                 <div class="form-group">
-                    <label>Ticket Price (K)</label>
+                    <label>Ticket Price (<?php echo htmlspecialchars(getSetting('currency_symbol')); ?>)</label>
                     <input type="number" name="ticket_price" id="eventPrice" step="0.01" value="0">
                     <small style="color: #666;">Enter 0 for free events</small>
                 </div>
@@ -937,7 +951,7 @@ try {
                         <i class="fas fa-times"></i> Cancel
                     </button>
                     <button type="submit" class="btn-action btn-save">
-                        <i class="fas fa-save"></i> Save Event
+                        <i class="fas fa-save"></i> Save
                     </button>
                 </div>
             </form>

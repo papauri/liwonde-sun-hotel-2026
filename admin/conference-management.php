@@ -300,53 +300,94 @@ try {
         }
         .room-list {
             display: grid;
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 24px;
         }
         .room-item {
-            border: 1px solid #ececec;
-            border-radius: 12px;
-            padding: 20px;
-            display: grid;
-            gap: 12px;
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 16px;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .room-item:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+            border-color: var(--gold);
         }
         .room-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-bottom: 1px solid #e8e8e8;
         }
         .room-header h3 {
             margin: 0;
             color: var(--navy);
+            font-size: 18px;
+            font-weight: 700;
         }
         .badge {
-            background: rgba(20, 40, 65, 0.1);
-            color: var(--navy);
-            padding: 4px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-active {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+        }
+        .badge-inactive {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
         }
         .room-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 16px;
             font-size: 13px;
-            color: #555;
+            color: #666;
+            padding: 12px 20px;
+            background: #fafbfc;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        .room-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .room-meta i {
+            color: var(--gold);
+            font-size: 14px;
         }
         .room-image-container {
             width: 100%;
-            height: 140px;
-            border-radius: 8px;
+            height: 180px;
             overflow: hidden;
-            margin-bottom: 16px;
             background: #f8f9fa;
-            border: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e8e8e8;
+            position: relative;
         }
 
         .room-image-preview {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .room-item:hover .room-image-preview {
+            transform: scale(1.05);
         }
 
         .room-image-placeholder {
@@ -355,15 +396,83 @@ try {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #999;
-            font-size: 32px;
-            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+            color: #bbb;
+            font-size: 48px;
+            background: linear-gradient(135deg, #f0f2f5 0%, #e4e6e9 100%);
         }
 
+        .room-form-section {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .room-form-section .form-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .room-form-section label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+        }
+        .room-form-section input,
+        .room-form-section textarea {
+            padding: 8px 12px;
+            font-size: 13px;
+            border: 1px solid #e0e0e0;
+            background: #fafbfc;
+            transition: all 0.2s ease;
+        }
+        .room-form-section input:focus,
+        .room-form-section textarea:focus {
+            border-color: var(--gold);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+        .room-form-section textarea {
+            min-height: 80px;
+        }
         .room-actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+            padding: 16px 20px;
+            background: #fafbfc;
+            border-top: 1px solid #e8e8e8;
+        }
+        .room-actions .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px 16px;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+        .room-actions .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+        .room-actions .btn-secondary:hover {
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+        .room-form-section .checkbox-row {
+            margin-top: 0;
+            padding: 8px 0;
+        }
+        .room-form-section .checkbox-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--gold);
+            cursor: pointer;
+        }
+        .room-form-section .checkbox-row label {
+            font-size: 13px;
+            text-transform: none;
+            letter-spacing: normal;
+            color: var(--navy);
+            cursor: pointer;
         }
     </style>
 </head>
@@ -458,7 +567,9 @@ try {
                     <div class="room-item">
                         <div class="room-header">
                             <h3><?php echo htmlspecialchars($room['name']); ?></h3>
-                            <span class="badge"><?php echo $room['is_active'] ? 'Active' : 'Inactive'; ?></span>
+                            <span class="badge <?php echo $room['is_active'] ? 'badge-active' : 'badge-inactive'; ?>">
+                                <?php echo $room['is_active'] ? '<i class="fas fa-check-circle"></i> Active' : '<i class="fas fa-times-circle"></i> Inactive'; ?>
+                            </span>
                         </div>
                         
                         <!-- Image Display -->
@@ -477,58 +588,61 @@ try {
                         <div class="room-meta">
                             <span><i class="fas fa-users"></i> <?php echo (int) $room['capacity']; ?> Guests</span>
                             <span><i class="fas fa-expand-arrows-alt"></i> <?php echo number_format($room['size_sqm'] ?? 0, 0); ?> sqm</span>
-                            <span><i class="fas fa-coins"></i> <?php echo number_format($room['hourly_rate'], 0); ?>/hr</span>
+                            <span><i class="fas fa-coins"></i> K <?php echo number_format($room['hourly_rate'], 0); ?>/hr</span>
+                            <span><i class="fas fa-calendar-day"></i> K <?php echo number_format($room['daily_rate'], 0); ?>/day</span>
                         </div>
 
                         <form method="POST" enctype="multipart/form-data">
                             <input type="hidden" name="action" value="update">
                             <input type="hidden" name="id" value="<?php echo (int) $room['id']; ?>">
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label>Name *</label>
-                                    <input type="text" name="name" value="<?php echo htmlspecialchars($room['name']); ?>" required>
+                            <div class="room-form-section">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Name *</label>
+                                        <input type="text" name="name" value="<?php echo htmlspecialchars($room['name']); ?>" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Capacity *</label>
+                                        <input type="number" name="capacity" min="1" value="<?php echo htmlspecialchars($room['capacity']); ?>" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Size (sqm)</label>
+                                        <input type="number" step="0.01" name="size_sqm" value="<?php echo htmlspecialchars($room['size_sqm']); ?>">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Hourly Rate *</label>
+                                        <input type="number" step="0.01" name="hourly_rate" value="<?php echo htmlspecialchars($room['hourly_rate']); ?>" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Daily Rate *</label>
+                                        <input type="number" step="0.01" name="daily_rate" value="<?php echo htmlspecialchars($room['daily_rate']); ?>" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Display Order</label>
+                                        <input type="number" name="display_order" value="<?php echo htmlspecialchars($room['display_order']); ?>">
+                                    </div>
                                 </div>
                                 <div class="form-group">
-                                    <label>Capacity *</label>
-                                    <input type="number" name="capacity" min="1" value="<?php echo htmlspecialchars($room['capacity']); ?>" required>
+                                    <label>Description *</label>
+                                    <textarea name="description" required><?php echo htmlspecialchars($room['description']); ?></textarea>
                                 </div>
                                 <div class="form-group">
-                                    <label>Size (sqm)</label>
-                                    <input type="number" step="0.01" name="size_sqm" value="<?php echo htmlspecialchars($room['size_sqm']); ?>">
+                                    <label>Amenities (comma separated)</label>
+                                    <textarea name="amenities"><?php echo htmlspecialchars($room['amenities']); ?></textarea>
                                 </div>
                                 <div class="form-group">
-                                    <label>Hourly Rate *</label>
-                                    <input type="number" step="0.01" name="hourly_rate" value="<?php echo htmlspecialchars($room['hourly_rate']); ?>" required>
+                                    <label>Replace Image</label>
+                                    <input type="file" name="image" accept="image/*">
                                 </div>
-                                <div class="form-group">
-                                    <label>Daily Rate *</label>
-                                    <input type="number" step="0.01" name="daily_rate" value="<?php echo htmlspecialchars($room['daily_rate']); ?>" required>
+                                <div class="checkbox-row">
+                                    <input type="checkbox" name="is_active" id="is_active_<?php echo (int) $room['id']; ?>" <?php echo $room['is_active'] ? 'checked' : ''; ?>>
+                                    <label for="is_active_<?php echo (int) $room['id']; ?>">Active</label>
                                 </div>
-                                <div class="form-group">
-                                    <label>Display Order</label>
-                                    <input type="number" name="display_order" value="<?php echo htmlspecialchars($room['display_order']); ?>">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Description *</label>
-                                <textarea name="description" required><?php echo htmlspecialchars($room['description']); ?></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Amenities (comma separated)</label>
-                                <textarea name="amenities"><?php echo htmlspecialchars($room['amenities']); ?></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Replace Image</label>
-                                <input type="file" name="image" accept="image/*">
-                            </div>
-                            <div class="checkbox-row">
-                                <input type="checkbox" name="is_active" id="is_active_<?php echo (int) $room['id']; ?>" <?php echo $room['is_active'] ? 'checked' : ''; ?>>
-                                <label for="is_active_<?php echo (int) $room['id']; ?>">Active</label>
                             </div>
                             <div class="room-actions">
-                                <button type="submit" class="btn">Save Changes</button>
+                                <button type="submit" class="btn"><i class="fas fa-save"></i> Save Changes</button>
                                 <button type="submit" name="action" value="delete" class="btn btn-secondary" onclick="return confirm('Delete this conference room?');">
-                                    Delete
+                                    <i class="fas fa-trash"></i> Delete
                                 </button>
                             </div>
                         </form>

@@ -5,6 +5,15 @@ ini_set('display_errors', 1);
 
 require_once 'config/database.php';
 
+// Fetch page hero (DB-driven)
+$pageHero = getCurrentPageHero();
+$eventsHero = [
+    'hero_title' => $pageHero['hero_title'],
+    'hero_subtitle' => $pageHero['hero_subtitle'],
+    'hero_description' => $pageHero['hero_description'],
+    'hero_image_path' => $pageHero['hero_image_path'],
+];
+
 // Fetch upcoming events (future and today)
 try {
     $stmt = $pdo->prepare("
@@ -20,9 +29,9 @@ try {
     error_log("Events fetch error: " . $e->getMessage());
 }
 
-$currency_symbol = getSetting('currency_symbol', 'K');
-$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
-$site_logo = getSetting('site_logo', 'images/logo.png');
+$currency_symbol = getSetting('currency_symbol');
+$site_name = getSetting('site_name');
+$site_logo = getSetting('site_logo');
 
 // Fetch contact settings
 try {
@@ -82,33 +91,6 @@ try {
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .events-hero {
-            background: linear-gradient(135deg, rgba(15, 29, 46, 0.95) 0%, rgba(20, 40, 65, 0.9) 100%), 
-                        url('images/hero/slide1.jpg') center/cover;
-            min-height: 400px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: white;
-            padding: 100px 20px 60px;
-            margin-top: 70px;
-        }
-
-        .events-hero h1 {
-            font-size: 48px;
-            font-family: var(--font-serif);
-            margin-bottom: 16px;
-            color: var(--gold);
-        }
-
-        .events-hero p {
-            font-size: 20px;
-            max-width: 700px;
-            margin: 0 auto;
-            color: var(--cream);
-        }
-
         .events-section {
             padding: 80px 0;
             background: var(--cream);
@@ -320,19 +302,6 @@ try {
         }
 
         @media (max-width: 768px) {
-            .events-hero {
-                min-height: 350px;
-                padding: 80px 20px 40px;
-                margin-top: 70px;
-            }
-
-            .events-hero h1 {
-                font-size: 32px;
-            }
-
-            .events-hero p {
-                font-size: 16px;
-            }
 
             .events-section {
                 padding: 50px 0;
@@ -424,18 +393,6 @@ try {
         }
 
         @media (max-width: 480px) {
-            .events-hero {
-                min-height: 300px;
-                padding: 70px 16px 30px;
-            }
-
-            .events-hero h1 {
-                font-size: 26px;
-            }
-
-            .events-hero p {
-                font-size: 14px;
-            }
 
             .event-image-container {
                 height: 180px;
@@ -461,10 +418,12 @@ try {
     <div class="mobile-menu-overlay" role="presentation"></div>
 
     <!-- Hero Section -->
-    <section class="events-hero">
-        <div class="container">
-            <h1>Upcoming Events</h1>
-            <p>Join us for exclusive experiences, celebrations, and special occasions at Liwonde Sun Hotel</p>
+    <section class="page-hero" style="background-image: url('<?php echo htmlspecialchars($eventsHero['hero_image_path']); ?>');">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="hero-subtitle"><?php echo htmlspecialchars($eventsHero['hero_subtitle']); ?></span>
+            <h1 class="hero-title"><?php echo htmlspecialchars($eventsHero['hero_title']); ?></h1>
+            <p class="hero-description"><?php echo htmlspecialchars($eventsHero['hero_description']); ?></p>
         </div>
     </section>
 
@@ -582,19 +541,19 @@ try {
                     <ul class="contact-info">
                         <li>
                             <i class="fas fa-phone"></i>
-                            <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $contact['phone_main'] ?? '+265 123 456 789')); ?>"><?php echo htmlspecialchars($contact['phone_main'] ?? '+265 123 456 789'); ?></a>
+                            <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $contact['phone_main'])); ?>"><?php echo htmlspecialchars($contact['phone_main']); ?></a>
                         </li>
                         <li>
                             <i class="fas fa-envelope"></i>
-                            <a href="mailto:<?php echo htmlspecialchars($contact['email_main'] ?? 'info@liwondesunhotel.com'); ?>"><?php echo htmlspecialchars($contact['email_main'] ?? 'info@liwondesunhotel.com'); ?></a>
+                            <a href="mailto:<?php echo htmlspecialchars($contact['email_main']); ?>"><?php echo htmlspecialchars($contact['email_main']); ?></a>
                         </li>
                         <li>
                             <i class="fas fa-map-marker-alt"></i>
-                            <a href="https://www.google.com/maps/search/<?php echo urlencode(htmlspecialchars($contact['address_line1'] ?? 'Liwonde, Malawi')); ?>" target="_blank"><?php echo htmlspecialchars($contact['address_line1'] ?? 'Liwonde, Malawi'); ?></a>
+                            <a href="https://www.google.com/maps/search/<?php echo urlencode(htmlspecialchars($contact['address_line1'])); ?>" target="_blank"><?php echo htmlspecialchars($contact['address_line1']); ?></a>
                         </li>
                         <li>
                             <i class="fas fa-clock"></i>
-                            <span><?php echo htmlspecialchars($contact['working_hours'] ?? '24/7 Available'); ?></span>
+                            <span><?php echo htmlspecialchars($contact['working_hours']); ?></span>
                         </li>
                     </ul>
                     
@@ -627,7 +586,7 @@ try {
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text', '2026 Liwonde Sun Hotel. All rights reserved.')); ?></p>
+                <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text')); ?></p>
             </div>
         </div>
     </footer>

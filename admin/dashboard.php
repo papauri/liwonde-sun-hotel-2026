@@ -58,8 +58,8 @@ try {
     $error = "Unable to load dashboard data.";
 }
 
-$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
-$currency_symbol = getSetting('currency_symbol', 'K');
+$site_name = getSetting('site_name');
+$currency_symbol = getSetting('currency_symbol');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -324,31 +324,8 @@ $currency_symbol = getSetting('currency_symbol', 'K');
     </style>
 </head>
 <body>
-    <div class="admin-header">
-        <h1><i class="fas fa-hotel"></i> <?php echo htmlspecialchars($site_name); ?></h1>
-        <div class="user-info">
-            <div>
-                <div class="user-name"><?php echo htmlspecialchars($user['full_name']); ?></div>
-                <div class="user-role"><?php echo htmlspecialchars($user['role']); ?></div>
-            </div>
-            <a href="logout.php" class="btn-logout">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </div>
-    </div>
 
-<?php $current_page = basename($_SERVER['PHP_SELF']); ?>
-    <nav class="admin-nav">
-        <ul>
-            <li><a href="dashboard.php" class="<?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="bookings.php" class="<?php echo $current_page === 'bookings.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
-            <li><a href="room-management.php" class="<?php echo $current_page === 'room-management.php' ? 'active' : ''; ?>"><i class="fas fa-bed"></i> Rooms</a></li>
-            <li><a href="conference-management.php" class="<?php echo $current_page === 'conference-management.php' ? 'active' : ''; ?>"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
-            <li><a href="menu-management.php" class="<?php echo $current_page === 'menu-management.php' ? 'active' : ''; ?>"><i class="fas fa-utensils"></i> Menu</a></li>
-            <li><a href="events-management.php" class="<?php echo $current_page === 'events-management.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
-            <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
-        </ul>
-    </nav>
+    <?php include 'admin-header.php'; ?>
 
     <div class="dashboard-content">
         <h2 class="section-title">Dashboard Overview</h2>
@@ -415,6 +392,7 @@ $currency_symbol = getSetting('currency_symbol', 'K');
                             <th>Room</th>
                             <th>Check-out</th>
                             <th>Status</th>
+                            <th>Payment</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -431,14 +409,24 @@ $currency_symbol = getSetting('currency_symbol', 'K');
                                     </span>
                                 </td>
                                 <td>
+                                    <span class="badge" style="background: <?php echo $booking['payment_status'] === 'paid' ? '#d4edda' : ($booking['payment_status'] === 'partial' ? '#fff3cd' : '#f8d7da'); ?>; color: <?php echo $booking['payment_status'] === 'paid' ? '#155724' : ($booking['payment_status'] === 'partial' ? '#856404' : '#721c24'); ?>;">
+                                        <?php echo ucfirst($booking['payment_status']); ?>
+                                    </span>
+                                </td>
+                                <td>
                                     <?php if ($booking['status'] !== 'checked-in'): ?>
-                                        <button onclick="processCheckIn(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars(addslashes($booking['guest_name'])); ?>')" 
+                                        <?php $can_checkin = ($booking['status'] === 'confirmed' && $booking['payment_status'] === 'paid'); ?>
+                                        <button onclick="<?php echo $can_checkin ? "processCheckIn({$booking['id']}, '" . htmlspecialchars(addslashes($booking['guest_name'])) . "')" : "alert('Cannot check in: booking must be CONFIRMED and PAID.')"; ?>" 
                                                 id="checkin-btn-<?php echo $booking['id']; ?>"
-                                                style="background: var(--gold); color: var(--deep-navy); border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
+                                                style="background: <?php echo $can_checkin ? 'var(--gold)' : '#e0e0e0'; ?>; color: <?php echo $can_checkin ? 'var(--deep-navy)' : '#666'; ?>; border: none; padding: 6px 14px; border-radius: 6px; cursor: <?php echo $can_checkin ? 'pointer' : 'not-allowed'; ?>; font-size: 12px; font-weight: 600;">
                                             <i class="fas fa-check"></i> Check In
                                         </button>
                                     <?php else: ?>
-                                        <span style="color: #28a745; font-weight: 600;"><i class="fas fa-check-circle"></i> Checked In</span>
+                                        <button onclick="cancelCheckIn(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars(addslashes($booking['guest_name'])); ?>')"
+                                                id="cancel-checkin-btn-<?php echo $booking['id']; ?>"
+                                                style="background: #6c757d; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
+                                            <i class="fas fa-undo"></i> Cancel Check-in
+                                        </button>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -490,9 +478,13 @@ $currency_symbol = getSetting('currency_symbol', 'K');
                         <td>
                             <div class="quick-actions">
                                 <?php if ($booking['status'] == 'pending'): ?>
-                                <a href="booking-action.php?id=<?php echo $booking['id']; ?>&action=confirm" class="btn btn-success btn-sm">Confirm</a>
+                                <a href="booking-details.php?id=<?php echo $booking['id']; ?>&action=confirm" class="btn btn-success btn-sm">Confirm</a>
                                 <?php elseif ($booking['status'] == 'confirmed'): ?>
-                                <a href="booking-action.php?id=<?php echo $booking['id']; ?>&action=checkin" class="btn btn-primary btn-sm">Check In</a>
+                                <?php if ($booking['payment_status'] === 'paid'): ?>
+                                <a href="booking-details.php?id=<?php echo $booking['id']; ?>&action=checkin" class="btn btn-primary btn-sm">Check In</a>
+                                <?php else: ?>
+                                <a href="booking-details.php?id=<?php echo $booking['id']; ?>" class="btn btn-primary btn-sm" style="opacity:.6; cursor:not-allowed;" onclick="alert('Cannot check in: booking must be PAID first.'); return false;">Check In</a>
+                                <?php endif; ?>
                                 <?php endif; ?>
                                 <a href="booking-details.php?id=<?php echo $booking['id']; ?>" class="btn btn-primary btn-sm">View</a>
                             </div>
@@ -567,7 +559,7 @@ $currency_symbol = getSetting('currency_symbol', 'K');
                     statusBadge.textContent = 'Checked-in';
                     
                     const button = document.getElementById(`checkin-btn-${bookingId}`);
-                    button.outerHTML = '<span style="color: #28a745; font-weight: 600;"><i class="fas fa-check-circle"></i> Checked In</span>';
+                    button.outerHTML = `<button onclick="cancelCheckIn(${bookingId}, '${guestName.replace(/'/g, "\\'")}')" id="cancel-checkin-btn-${bookingId}" style="background: #6c757d; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;"><i class="fas fa-undo"></i> Cancel Check-in</button>`;
                     
                     alert(`${guestName} successfully checked in!`);
                 } else {
@@ -577,6 +569,40 @@ $currency_symbol = getSetting('currency_symbol', 'K');
             .catch(error => {
                 console.error('Error:', error);
                 alert('An error occurred during check-in');
+            });
+        }
+
+        function cancelCheckIn(bookingId, guestName) {
+            if (!confirm(`Cancel check-in for ${guestName}?`)) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'cancel_checkin');
+            formData.append('booking_id', bookingId);
+
+            fetch('process-checkin.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const statusBadge = document.getElementById(`status-${bookingId}`);
+                    statusBadge.className = 'badge badge-confirmed';
+                    statusBadge.textContent = 'Confirmed';
+
+                    const button = document.getElementById(`cancel-checkin-btn-${bookingId}`);
+                    button.outerHTML = `<span style="color: #0c5460; font-weight: 600;">Reverted to confirmed</span>`;
+
+                    alert(`Check-in cancelled for ${guestName}.`);
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to cancel check-in'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while cancelling check-in');
             });
         }
     </script>
