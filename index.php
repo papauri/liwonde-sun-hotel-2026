@@ -106,6 +106,27 @@ $footer_links = [];
 foreach ($footer_links_raw as $link) {
     $footer_links[$link['column_name']][] = $link;
 }
+
+// Fetch About Us content from database
+$about_content = [];
+$about_features = [];
+$about_stats = [];
+try {
+    // Get main about content
+    $stmt = $pdo->query("SELECT * FROM about_us WHERE section_type = 'main' AND is_active = 1 ORDER BY display_order LIMIT 1");
+    $about_content = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    // Get features
+    $stmt = $pdo->query("SELECT * FROM about_us WHERE section_type = 'feature' AND is_active = 1 ORDER BY display_order");
+    $about_features = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get stats
+    $stmt = $pdo->query("SELECT * FROM about_us WHERE section_type = 'stat' AND is_active = 1 ORDER BY display_order");
+    $about_stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Error fetching about us content: " . $e->getMessage());
+    // Fallback to empty arrays
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -239,6 +260,140 @@ foreach ($footer_links_raw as $link) {
             <span class="mobile-separator">|</span>
             <i class="fas fa-sun mobile-icon"></i>
             <span class="mobile-temp" id="heroTempMobile">--°C</span>
+        </div>
+    </section>
+
+    <!-- About Us Section - Luxury Experience -->
+    <section class="about-section" id="about">
+        <div class="container about-container">
+            <div class="about-grid">
+                <div class="about-content">
+                    <?php if (!empty($about_content)): ?>
+                        <span class="about-eyebrow"><?php echo htmlspecialchars($about_content['subtitle'] ?? 'Our Story'); ?></span>
+                        <h2 class="about-title"><?php echo htmlspecialchars($about_content['title'] ?? 'Experience Luxury Redefined'); ?></h2>
+                        <p class="about-description">
+                            <?php echo htmlspecialchars($about_content['content'] ?? 'Nestled in the heart of Malawi, Liwonde Sun Hotel offers an unparalleled luxury experience where timeless elegance meets modern comfort. For over two decades, we\'ve been creating unforgettable memories for discerning travelers from around the world.'); ?>
+                        </p>
+                    <?php else: ?>
+                        <span class="about-eyebrow">Our Story</span>
+                        <h2 class="about-title">Experience Luxury Redefined</h2>
+                        <p class="about-description">
+                            Nestled in the heart of Malawi, Liwonde Sun Hotel offers an unparalleled luxury experience 
+                            where timeless elegance meets modern comfort. For over two decades, we've been creating 
+                            unforgettable memories for discerning travelers from around the world.
+                        </p>
+                    <?php endif; ?>
+                    
+                    <?php if (!empty($about_features)): ?>
+                    <div class="about-features">
+                        <?php foreach ($about_features as $feature): ?>
+                        <div class="about-feature">
+                            <?php if (!empty($feature['icon_class'])): ?>
+                            <div class="feature-icon">
+                                <i class="<?php echo htmlspecialchars($feature['icon_class']); ?>"></i>
+                            </div>
+                            <?php endif; ?>
+                            <div class="feature-content">
+                                <?php if (!empty($feature['title'])): ?>
+                                <h4><?php echo htmlspecialchars($feature['title']); ?></h4>
+                                <?php endif; ?>
+                                <?php if (!empty($feature['content'])): ?>
+                                <p><?php echo htmlspecialchars($feature['content']); ?></p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php else: ?>
+                    <div class="about-features">
+                        <div class="about-feature">
+                            <div class="feature-icon">
+                                <i class="fas fa-award"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h4>Award-Winning Service</h4>
+                                <p>Consistently recognized for exceptional hospitality and guest satisfaction</p>
+                            </div>
+                        </div>
+                        <div class="about-feature">
+                            <div class="feature-icon">
+                                <i class="fas fa-leaf"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h4>Sustainable Luxury</h4>
+                                <p>Committed to eco-friendly practices while maintaining premium standards</p>
+                            </div>
+                        </div>
+                        <div class="about-feature">
+                            <div class="feature-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h4>Personalized Care</h4>
+                                <p>Tailored experiences designed around your unique preferences and needs</p>
+                            </div>
+                        </div>
+                        <div class="about-feature">
+                            <div class="feature-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h4>5-Star Excellence</h4>
+                                <p>Maintaining the highest standards of quality, comfort, and attention to detail</p>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <?php if (!empty($about_stats)): ?>
+                    <div class="about-stats">
+                        <?php foreach ($about_stats as $stat): ?>
+                        <div class="stat-item">
+                            <?php if (!empty($stat['stat_number'])): ?>
+                            <span class="stat-number"><?php echo htmlspecialchars($stat['stat_number']); ?></span>
+                            <?php endif; ?>
+                            <?php if (!empty($stat['stat_label'])): ?>
+                            <span class="stat-label"><?php echo htmlspecialchars($stat['stat_label']); ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php else: ?>
+                    <div class="about-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">25+</span>
+                            <span class="stat-label">Years Excellence</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">98%</span>
+                            <span class="stat-label">Guest Satisfaction</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">50+</span>
+                            <span class="stat-label">Awards Won</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">10k+</span>
+                            <span class="stat-label">Happy Guests</span>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <div class="about-cta">
+                        <a href="#rooms" class="btn btn-primary">Explore Our Rooms</a>
+                        <a href="#contact" class="btn btn-outline">Contact Us</a>
+                    </div>
+                </div>
+                
+                <div class="about-image">
+                    <?php if (!empty($about_content['image_url'])): ?>
+                    <img src="<?php echo htmlspecialchars(resolveImageUrl($about_content['image_url'])); ?>" alt="Liwonde Sun Hotel - Luxury Exterior" loading="lazy">
+                    <?php else: ?>
+                    <img src="images/hotel_gallery/Outside2.png" alt="Liwonde Sun Hotel - Luxury Exterior" loading="lazy">
+                    <?php endif; ?>
+                </div>
+                    </div>
+            </div>
         </div>
     </section>
 

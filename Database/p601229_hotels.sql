@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 25, 2026 at 07:19 PM
+-- Generation Time: Jan 26, 2026 at 01:51 PM
 -- Server version: 8.0.44-cll-lve
 -- PHP Version: 8.4.16
 
@@ -20,6 +20,43 @@ SET time_zone = "+00:00";
 --
 -- Database: `p601229_hotels`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `about_us`
+--
+
+CREATE TABLE `about_us` (
+  `id` int NOT NULL,
+  `section_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'main, feature, stat',
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `subtitle` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci,
+  `image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `icon_class` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `stat_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `stat_label` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `display_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `about_us`
+--
+
+INSERT INTO `about_us` (`id`, `section_type`, `title`, `subtitle`, `content`, `image_url`, `icon_class`, `stat_number`, `stat_label`, `display_order`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'main', 'Experience Luxury Redefined', 'Our Story', 'Nestled in the heart of Malawi, Liwonde Sun Hotel offers an unparalleled luxury experience where timeless elegance meets modern comfort. For over two decades, we\'ve been creating unforgettable memories for discerning travelers from around the world.', 'images/hotel_gallery/Outside2.png', NULL, NULL, NULL, 1, 1, '2026-01-26 11:46:36', '2026-01-26 11:46:36'),
+(2, 'feature', 'Award-Winning Services', NULL, 'Consistently recognized for exceptional hospitality and guest satisfaction', NULL, 'fas fa-award', NULL, NULL, 1, 1, '2026-01-26 11:46:36', '2026-01-26 13:23:23'),
+(3, 'feature', 'Sustainable Luxury', NULL, 'Committed to eco-friendly practices while maintaining premium standards', NULL, 'fas fa-leaf', NULL, NULL, 2, 1, '2026-01-26 11:46:36', '2026-01-26 11:46:36'),
+(4, 'feature', 'Personalized Care', NULL, 'Tailored experiences designed around your unique preferences and needs', NULL, 'fas fa-heart', NULL, NULL, 3, 1, '2026-01-26 11:46:36', '2026-01-26 11:46:36'),
+(5, 'feature', '5-Star Excellence', NULL, 'Maintaining the highest standards of quality, comfort, and attention to detail', NULL, 'fas fa-star', NULL, NULL, 4, 1, '2026-01-26 11:46:36', '2026-01-26 11:46:36'),
+(6, 'stat', NULL, NULL, NULL, NULL, NULL, '25+', 'Years Excellence', 1, 1, '2026-01-26 11:46:36', '2026-01-26 11:46:36'),
+(7, 'stat', NULL, NULL, NULL, NULL, NULL, '98%', 'Guest Satisfaction', 2, 1, '2026-01-26 11:46:36', '2026-01-26 11:46:36'),
+(8, 'stat', NULL, NULL, NULL, NULL, NULL, '50+', 'Awards Won', 3, 0, '2026-01-26 11:46:36', '2026-01-26 13:24:21'),
+(9, 'stat', NULL, NULL, NULL, NULL, NULL, '10k+', 'Happy Guests', 4, 1, '2026-01-26 11:46:36', '2026-01-26 11:46:36');
 
 -- --------------------------------------------------------
 
@@ -300,10 +337,10 @@ CREATE TABLE `facilities` (
 --
 
 INSERT INTO `facilities` (`id`, `name`, `slug`, `description`, `short_description`, `icon_class`, `page_url`, `image_url`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'Fine Dining Restaurant', 'fine-dining', 'Award-winning restaurant serving international and local cuisine. Our Michelin-star chef creates exceptional culinary experiences using the finest ingredients. Open 6am-11pm daily.', 'World-class cuisine with Michelin-star chef', 'fas fa-utensils', 'restaurant.php', NULL, 1, 1, 1, '2026-01-19 20:22:49', '2026-01-20 14:17:17'),
+(1, 'Fine Dining Restaurant', 'fine-dining', 'Award-winning restaurant serving international and local cuisine. Our Michelin-star chef creates exceptional culinary experiences using the finest ingredients. Open 6am-11pm daily.', 'World-class cuisine with Michelin-star chef', 'fas fa-utensils', 'restaurant.php', NULL, 1, 1, 1, '2026-01-19 20:22:49', '2026-01-25 21:25:51'),
 (2, 'Luxury Spa & Wellness', 'spa-wellness', 'Full-service spa offering massages, facials, and wellness treatments. Expert therapists provide personalized experiences using premium organic products. Includes sauna and steam room.', 'Rejuvenating spa treatments and wellness services', 'fas fa-spa', NULL, NULL, 1, 1, 2, '2026-01-19 20:22:49', '2026-01-19 20:22:49'),
 (3, 'Olympic Swimming Pool', 'swimming-pool', 'Olympic-sized outdoor pool with heated water, children\'s pool, waterslide, and poolside bar service. Perfect for relaxation and recreation year-round.', 'Heated Olympic pool with poolside service', 'fas fa-swimming-pool', NULL, NULL, 1, 1, 3, '2026-01-19 20:22:49', '2026-01-19 20:22:49'),
-(4, 'State-of-the-Art Fitness Center', 'fitness-center', 'Modern gym with personal trainers, cardio machines, weights, and dedicated yoga studio. Daily classes available. Open 24/7 for guests.', 'Premium gym with personal training available', 'fas fa-dumbbell', 'gym.php', NULL, 1, 1, 4, '2026-01-19 20:22:49', '2026-01-20 14:17:17'),
+(4, 'State-of-the-Art Fitness Center', 'fitness-center', 'Modern gym with personal trainers, cardio machines, weights, and dedicated yoga studio. Daily classes available. Open 24/7 for guests.', 'Premium gym with personal training available', 'fas fa-dumbbell', 'gym.php', NULL, 1, 1, 4, '2026-01-19 20:22:49', '2026-01-25 21:26:01'),
 (5, 'High-Speed WiFi', 'wifi', 'Ultra-fast fiber internet throughout the hotel. Dedicated business center with meeting facilities and tech support available.', 'Complimentary ultra-fast internet access', 'fas fa-wifi', NULL, NULL, 1, 1, 5, '2026-01-19 20:22:49', '2026-01-19 20:22:49'),
 (6, '24/7 Concierge Service', 'concierge', 'Dedicated concierge team for all your needs. Arrange tours, transportation, dining reservations, and special requests anytime.', 'Personalized service around the clock', 'fas fa-concierge-bell', NULL, NULL, 1, 1, 6, '2026-01-19 20:22:49', '2026-01-19 20:22:49');
 
@@ -381,18 +418,19 @@ CREATE TABLE `footer_links` (
 --
 
 INSERT INTO `footer_links` (`id`, `column_name`, `link_text`, `link_url`, `display_order`, `is_active`) VALUES
-(1, 'About Hotel', 'About Us', '/about', 1, 1),
-(2, 'About Hotel', 'Sustainability', '/sustainability', 2, 1),
-(3, 'About Hotel', 'Awards', '/awards', 3, 1),
-(4, 'About Hotel', 'History', '/history', 4, 1),
-(5, 'Guest Services', 'Rooms & Suites', '/rooms', 1, 1),
-(6, 'Guest Services', 'Facilities', '/facilities', 2, 1),
-(7, 'Guest Services', 'Special Offers', '/offers', 3, 1),
-(8, 'Guest Services', 'Group Bookings', '/groups', 4, 1),
-(9, 'Dining & Entertainment', 'Fine Dining', '/dining', 1, 1),
-(10, 'Dining & Entertainment', 'Spa Services', '/spa', 2, 1),
-(11, 'Dining & Entertainment', 'Events & Conferences', '/events', 3, 1),
-(12, 'Dining & Entertainment', 'Activities', '/activities', 4, 1);
+(1, 'About Hotel', 'About Us', '#about', 1, 1),
+(2, 'About Hotel', 'Sustainability', 'index.php#facilities', 2, 1),
+(3, 'About Hotel', 'Awards', 'index.php#testimonials', 3, 1),
+(4, 'About Hotel', 'History', 'index.php#home', 4, 1),
+(5, 'Guest Services', 'Rooms & Suites', 'index.php#rooms', 1, 1),
+(6, 'Guest Services', 'Facilities', 'index.php#facilities', 2, 1),
+(7, 'Guest Services', 'Special Offers', 'index.php#home', 3, 1),
+(8, 'Guest Services', 'Group Bookings', 'index.php#home', 4, 1),
+(9, 'Dining & Entertainment', 'Fine Dining', 'index.php#facilities', 1, 1),
+(10, 'Dining & Entertainment', 'Spa Services', 'index.php#facilities', 2, 1),
+(11, 'Dining & Entertainment', 'Events & Conferences', 'index.php#facilities', 3, 1),
+(12, 'Dining & Entertainment', 'Activities', 'index.php#facilities', 4, 1),
+(13, 'Quick Links', 'About Us', 'index.php#about', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -652,8 +690,7 @@ INSERT INTO `hotel_gallery` (`id`, `title`, `description`, `image_url`, `categor
 (4, 'Executive Suite', 'Spacious suite with panoramic views', 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80', 'rooms', 1, 4, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
 (5, 'Rooftop Lounge', 'Sunset views from our rooftop bar', 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80', 'facilities', 1, 5, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
 (6, 'Grand Lobby', 'Welcome to luxury and elegance', 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80', 'interior', 1, 6, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
-(7, 'Spa & Wellness', 'Rejuvenate in our world-class spa', 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80', 'facilities', 1, 7, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
-(8, 'Garden Terrace', 'Lush gardens perfect for events', 'https://images.unsplash.com/photo-1519167758481-83f29da8c11f?w=800&q=80', 'exterior', 1, 8, '2026-01-20 17:25:33', '2026-01-20 17:25:33');
+(7, 'Spa & Wellness', 'Rejuvenate in our world-class spa', 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80', 'facilities', 1, 7, '2026-01-20 17:25:33', '2026-01-20 17:25:33');
 
 -- --------------------------------------------------------
 
@@ -720,10 +757,41 @@ CREATE TABLE `page_heroes` (
 --
 
 INSERT INTO `page_heroes` (`id`, `page_slug`, `page_url`, `hero_title`, `hero_subtitle`, `hero_description`, `hero_image_path`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'restaurant', '/restaurant.php', 'Fine Dining Restaurant & Bars', 'Culinary Excellences', 'Savor exceptional cuisine crafted from finest local and international ingredients', 'images/restaurant/hero-bg.jpg', 1, 1, '2026-01-25 18:03:42', '2026-01-25 19:09:20'),
-(2, 'conference', '/conference.php', 'Conference & Meetinxg Facilities', 'Business Excellence', 'Business-ready venues with premium technology, flexibles layouts, and tailored service for every executive gathering.', 'images/hero/slide1.jpg', 1, 2, '2026-01-25 18:03:42', '2026-01-25 19:04:33'),
-(3, 'events', '/events.php', 'Events & Experiences', 'Celebrations & Gatherings', 'From exclusive wine tastings to cultural nights—discover moments worth remembering at Liwonde Sun Hotel.', 'images/events/event_1769125595_5057.png', 1, 3, '2026-01-25 18:03:42', '2026-01-25 18:03:42'),
-(4, 'rooms-showcase', '/rooms-showcase.php', 'Rooms & Suites', 'Riverfront Luxury', 'Explore contemporary rooms and suites with panoramic views of the Shire River, featuring premium amenities and seamless booking integration.', 'images/rooms/room_1_1768949756.png', 1, 4, '2026-01-25 19:08:32', '2026-01-25 19:08:32');
+(1, 'restaurant', '/restaurant.php', 'Fine Dining Restaurant & Bars', 'Culinary Excellences', 'Savor exceptional cuisine crafted from finest local and international ingredients', 'https://media.gettyimages.com/id/662284115/photo/fresh-dish-ready-to-be-served-at-restaurant.jpg?s=612x612&w=0&k=20&c=joJR03nqnpZ_ZBxU8aRHX2Qz657W_xAcftrjknIsc0c=', 1, 1, '2026-01-25 18:03:42', '2026-01-25 19:32:37'),
+(2, 'conference', '/conference.php', 'Conference & Meetings Facilities', 'Business Excellence', 'Businsess-ready venues with premium technology, flexibles layouts, and tailored service for every executive gathering.', 'https://media.gettyimages.com/id/1413260731/photo/a-journalist-team-writing-or-working-on-a-story-together-at-a-media-company-in-a-boardroom.jpg?s=612x612&w=0&k=20&c=EFu8OY0uCLKrtGIGCZ6tHZpUGXJa1gHimC4pf5Iim40=', 1, 2, '2026-01-25 18:03:42', '2026-01-25 19:57:55'),
+(3, 'events', '/events.php', 'Events & Experiences', 'Celebrations & Gathering', 'From exclusive wine tastings to cultural nights—discover moments worth remembering at Liwonde Sun Hotel.', 'https://media.gettyimages.com/id/1434116601/photo/zoom-of-hands-laptop-search-or-business-meeting-for-teamwork-marketing-planning-or-target.jpg?s=612x612&w=0&k=20&c=oIngQBqrLY43jKRMhSlTs9xxtGx1YJdrFHXeXchCssg=', 1, 3, '2026-01-25 18:03:42', '2026-01-25 19:52:02'),
+(4, 'rooms-showcase', '/rooms-showcase.php', 'Rooms & Suites', 'Riverfront Luxury', 'Explore contemporary rooms and suites with panoramic views of the Shire River, featuring premium amenities and seamless booking integration.', 'https://media.gettyimages.com/id/1382975780/photo/businessman-with-cardkey-unlocking-door-in-hotel.jpg?s=612x612&w=0&k=20&c=yltGZmc_7emEGkP1UAPndO25Iih48zGnVJsqVp38Me8=', 1, 4, '2026-01-25 19:08:32', '2026-01-25 19:54:57'),
+(6, 'rooms-gallery', '/rooms-gallery.php', 'Rooms & Suites', 'Riverfront Luxury', 'Explore contemporary rooms and suites with panoramic views of the Shire River, featuring premium amenities and seamless booking integration.', 'https://media.gettyimages.com/id/1382975780/photo/businessman-with-cardkey-unlocking-door-in-hotel.jpg?s=612x612&w=0&k=20&c=yltGZmc_7emEGkP1UAPndO25Iih48zGnVJsqVp38Me8=', 1, 5, '2026-01-25 19:08:32', '2026-01-25 19:54:57'),
+(7, 'gym', '/gym.php', 'Gym', 'Your Wellness Journey begins', 'Comprehensive packages designed for optimal health and relaxation', 'images/gym/fitness-center.jpg', 1, 6, '2026-01-25 19:08:32', '2026-01-25 19:54:57');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `page_loaders`
+--
+
+CREATE TABLE `page_loaders` (
+  `id` int NOT NULL,
+  `page_slug` varchar(255) NOT NULL,
+  `subtext` varchar(255) NOT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `page_loaders`
+--
+
+INSERT INTO `page_loaders` (`id`, `page_slug`, `subtext`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'index', 'Loading Excellence...', 1, '2026-01-26 08:37:51', '2026-01-26 08:37:51'),
+(2, 'restaurant', 'Preparing Culinary Delights...', 1, '2026-01-26 08:37:51', '2026-01-26 08:37:51'),
+(3, 'gym', 'Getting Fit...', 1, '2026-01-26 08:37:51', '2026-01-26 08:37:51'),
+(4, 'conference', 'Setting Up Your Event...', 1, '2026-01-26 08:37:51', '2026-01-26 08:37:51'),
+(5, 'events', 'Loading Exciting Events...', 1, '2026-01-26 08:37:51', '2026-01-26 08:37:51'),
+(6, 'room', 'Finding Your Perfect Room...', 1, '2026-01-26 08:37:51', '2026-01-26 08:37:51'),
+(7, 'booking', 'Processing Your Reservation...', 1, '2026-01-26 08:37:51', '2026-01-26 08:37:51'),
+(8, 'rooms-gallery', 'Finding Your Perfect Room...', 1, '2026-01-26 08:37:51', '2026-01-26 08:37:51');
 
 -- --------------------------------------------------------
 
@@ -773,12 +841,12 @@ CREATE TABLE `restaurant_gallery` (
 --
 
 INSERT INTO `restaurant_gallery` (`id`, `image_path`, `caption`, `category`, `display_order`, `is_active`, `created_at`) VALUES
-(2, 'images/restaurant/dining-area-2.jpg', 'Intimate indoor seating', 'dining-area', 2, 1, '2026-01-20 14:17:17'),
-(3, 'images/restaurant/bar-area.jpg', 'Premium bar with signature cocktails', 'bar', 3, 1, '2026-01-20 14:17:17'),
-(4, 'images/restaurant/food-platter.jpg', 'Fresh seafood platter', 'food', 4, 1, '2026-01-20 14:17:17'),
-(13, 'images/restaurant/dining-area-1.jpg', 'Elegant dining area with panoramic views', 'dining-area', 1, 1, '2026-01-20 15:22:41'),
-(17, 'images/restaurant/fine-dining.jpg', 'Fine dining experience', 'restaurant', 5, 1, '2026-01-20 15:22:41'),
-(18, 'images/restaurant/outdoor-terrace.jpg', 'Alfresco dining terrace', 'dining-area', 6, 1, '2026-01-20 15:22:41');
+(2, 'https://media.gettyimages.com/id/2076075171/photo/abstract-defocused-background-of-restaurant.jpg?s=612x612&w=0&k=20&c=_KsEUAChBiOQDEMP6bumoJPoHkD5WTFmPBh1R1oeTz8=', 'Intimate indoor seating', 'dining-area', 2, 1, '2026-01-20 14:17:17'),
+(3, 'https://media.gettyimages.com/id/1758301432/photo/luxury-cocktails-dark-mood-dark-delicious-cocktails-for-brunch-delight.jpg?s=612x612&w=0&k=20&c=UO2273jUYp1WvoWFbJklxEZDjtHKQwVDcKe8ziDqo5A=', 'Premium bar with signature cocktails', 'bar', 3, 1, '2026-01-20 14:17:17'),
+(4, 'https://media.gettyimages.com/id/2183697442/photo/a-seafood-platter-with-crabs-yabbies-prawns-and-mussels.jpg?s=612x612&w=0&k=20&c=zPMIG91apQkIcQTpUjr_8DH84enJydwO_0SLiCCNMCk=', 'Fresh seafood platter', 'food', 4, 1, '2026-01-20 14:17:17'),
+(13, 'https://media.gettyimages.com/id/1400584557/photo/happy-woman-toasting-with-a-glass-of-wine-during-a-dinner-celebration.jpg?s=612x612&w=0&k=20&c=FXRZHwaTK0iIj3sntl0v5GokMf57dB1jVOn9h7zkUR8=', 'Elegant dining area with panoramic views', 'dining-area', 1, 1, '2026-01-20 15:22:41'),
+(17, 'https://media.gettyimages.com/id/1494508942/photo/chef.jpg?s=612x612&w=0&k=20&c=bQGrV0fE-q-mynbVI1DOunZdwte9cyQ0dBf4_m8TUmQ=', 'Fine dining experience', 'restaurant', 5, 1, '2026-01-20 15:22:41'),
+(18, 'https://media.gettyimages.com/id/1272158224/photo/using-a-bbq-blower-to-stoke-coal-on-a-simple-barbecue-grill.jpg?s=612x612&w=0&k=20&c=BugTQ1FTnUH7nAdJc4PKNM0YJcgVF8a3Y44Zqv50kqs=', 'Alfresco dining terrace', 'dining-area', 6, 1, '2026-01-20 15:22:41');
 
 -- --------------------------------------------------------
 
@@ -814,7 +882,7 @@ CREATE TABLE `rooms` (
 
 INSERT INTO `rooms` (`id`, `name`, `slug`, `description`, `short_description`, `price_per_night`, `size_sqm`, `max_guests`, `rooms_available`, `total_rooms`, `bed_type`, `image_url`, `badge`, `amenities`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
 (1, 'Presidential Suite', 'presidential-suite', 'Ultimate luxury with private terrace and exclusive service', 'Ultimate luxury with private terrace and exclusive service', 50000.00, 110, 4, 0, 0, 'King Bed', 'images/rooms/room_1_1768949756.png', 'Luxury', 'King Bed,Private Terrace,Jacuzzi,Butler Service,Living Area,Dining Area,Full Kitchen,Smart TV,Premium WiFi,Climate Control', 1, 1, 1, '2026-01-19 20:22:49', '2026-01-25 01:55:55'),
-(2, 'Executive Suite', 'executive-suite', 'Designed for discerning business travelers, featuring separate work area, premium furnishings, and personalized butler service. Perfect blend of productivity and comfort.', 'Premium executive suite with work area and butler service', 30050.00, 60, 3, 5, 5, 'King Bed', 'images\\rooms\\Deluxe Room.jpg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-01-20 16:57:11'),
+(2, 'Executive Suite', 'executive-suite', 'Designed for discerning business travelers, featuring separate work area, premium furnishings, and personalized butler service. Perfect blend of productivity and comfort.', 'Premium executive suite with work area and butler service', 30050.00, 60, 3, 5, 5, 'King Bed', 'images\\rooms\\Deluxe Room.jpg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-01-26 10:38:41'),
 (3, 'Family Suite', 'family-suite', 'Spacious two-bedroom suite perfect for families, featuring two king beds, dual bathrooms, and separate living area. Create lasting memories in ultimate comfort.', 'Spacious family accommodation with 2 bedrooms', 30020.00, 55, 6, 5, 5, '2 King Beds', 'images\\rooms\\family_suite.jpg', 'Family', '2 King Beds,2 Bathrooms,Living Area,Kitchenette,Smart TV,Kids Welcome,Free WiFi,Climate Control', 1, 1, 3, '2026-01-19 20:22:49', '2026-01-20 17:01:46'),
 (4, 'Deluxe Suite', 'deluxe-suite', 'Luxurious suite with marble bathroom featuring jacuzzi tub, separate living area, and premium bedding. Experience sophistication and indulgence.', 'Luxury suite with jacuzzi and separate living area', 28000.00, 45, 2, 5, 5, 'King Bed', 'images/rooms/room_4_featured_1769093172.png', 'Popular', 'King Bed,Jacuzzi Tub,Living Area,Marble Bathroom,Premium Bedding,Smart TV,Mini Bar,Free WiFi', 1, 1, 4, '2026-01-19 20:22:49', '2026-01-22 14:46:13'),
 (5, 'Superior Room', 'superior-room', 'Spacious room with premium furnishings, stunning views, and modern amenities. Enjoy comfort and elegance in every detail.', 'Spacious room with premium amenities and views', 21000.00, 35, 2, 5, 5, 'King Bed', 'https://source.unsplash.com/1600x900/?superior,hotel,room,view,interior', NULL, 'King Bed,City View,Balcony,Smart TV,Free WiFi,Coffee Machine,Safe,Climate Control', 0, 0, 5, '2026-01-19 20:22:49', '2026-01-22 23:45:09'),
@@ -885,13 +953,22 @@ CREATE TABLE `testimonials` (
 --
 
 INSERT INTO `testimonials` (`id`, `guest_name`, `guest_location`, `rating`, `testimonial_text`, `stay_date`, `guest_image`, `is_featured`, `is_approved`, `display_order`, `created_at`) VALUES
-(1, 'Sarah Johnson', 'London, UK', 5, 'Absolutely stunning hotel! The service was impeccable, rooms were luxurious, and the restaurant exceeded all expectations. Can\'t wait to return.', '2025-12-15', NULL, 1, 1, 1, '2026-01-19 20:22:49'),
+(1, 'Sarah Johnson', 'London, UK', 4, 'Absolutely stunning hotel! The service was impeccable, rooms were luxurious, and the restaurant exceeded all expectations. Can\'t wait to return.', '2025-12-15', NULL, 1, 1, 1, '2026-01-19 20:22:49'),
 (2, 'Michael Chen', 'Singapore', 5, 'Best hotel experience in Africa. The attention to detail, the spa facilities, and the breathtaking views made our anniversary unforgettable.', '2025-11-20', NULL, 1, 1, 2, '2026-01-19 20:22:49'),
 (3, 'Emma Williams', 'New York, USA', 5, 'Five stars aren\'t enough! From check-in to check-out, everything was perfect. The staff went above and beyond to make our stay special.', '2026-01-05', NULL, 1, 1, 3, '2026-01-19 20:22:49');
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `about_us`
+--
+ALTER TABLE `about_us`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_section_type` (`section_type`),
+  ADD KEY `idx_display_order` (`display_order`),
+  ADD KEY `idx_is_active` (`is_active`);
 
 --
 -- Indexes for table `admin_users`
@@ -1050,6 +1127,13 @@ ALTER TABLE `page_heroes`
   ADD KEY `idx_page_heroes_active_order` (`is_active`,`display_order`);
 
 --
+-- Indexes for table `page_loaders`
+--
+ALTER TABLE `page_loaders`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `page_slug` (`page_slug`);
+
+--
 -- Indexes for table `policies`
 --
 ALTER TABLE `policies`
@@ -1088,6 +1172,12 @@ ALTER TABLE `testimonials`
 --
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `about_us`
+--
+ALTER TABLE `about_us`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `admin_users`
@@ -1147,7 +1237,7 @@ ALTER TABLE `food_menu`
 -- AUTO_INCREMENT for table `footer_links`
 --
 ALTER TABLE `footer_links`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `gallery`
@@ -1213,7 +1303,13 @@ ALTER TABLE `newsletter_subscribers`
 -- AUTO_INCREMENT for table `page_heroes`
 --
 ALTER TABLE `page_heroes`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `page_loaders`
+--
+ALTER TABLE `page_loaders`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `policies`

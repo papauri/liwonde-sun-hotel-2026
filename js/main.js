@@ -13,10 +13,19 @@ window.addEventListener('load', function() {
     }
 });
 
-// Show loader on page navigation
+// Show loader on page navigation (only for actual page changes, not hash links)
 document.addEventListener('click', function(e) {
     const link = e.target.closest('a');
-    if (link && link.href && !link.href.startsWith('#') && !link.target && link.href.startsWith(window.location.origin)) {
+    if (link && link.href && !link.target && link.href.startsWith(window.location.origin)) {
+        // Check if this is a hash link to the same page
+        const url = new URL(link.href);
+        const currentUrl = new URL(window.location.href);
+        
+        // If it's the same page with just a hash change, don't show loader
+        if (url.pathname === currentUrl.pathname && url.hash) {
+            return; // Don't show loader for same-page hash navigation
+        }
+        
         const loader = document.getElementById('page-loader');
         if (loader) {
             loader.classList.remove('hidden');
@@ -114,27 +123,93 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update every minute
     setInterval(updateTimeAndTemp, 60000);
     
-    // Smooth scrolling for navigation links
-    const navLinks = document.querySelectorAll('a[href^="#"]');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
+    // Smooth scrolling for ALL internal links (navigation, footer, CTA buttons, etc.)
+    function initSmoothScrolling() {
+        // Select all links that contain hash fragments
+        const allLinks = document.querySelectorAll('a[href*="#"]');
+        
+        allLinks.forEach(link => {
+            // Remove any existing click listeners to avoid duplicates
+            link.removeEventListener('click', handleSmoothScroll);
+            link.addEventListener('click', handleSmoothScroll);
+        });
+    }
+    
+    function handleSmoothScroll(e) {
+        const href = this.getAttribute('href');
+        
+        // Skip if it's just a hash or empty
+        if (href === '#' || href === '') return;
+        
+        // Extract the hash part from the href
+        let targetId = href;
+        if (href.includes('#')) {
+            targetId = '#' + href.split('#')[1];
+        }
+        
+        // Skip if no hash found
+        if (targetId === '#') return;
+        
+        // Check if target exists on current page
+        const targetSection = document.querySelector(targetId);
+        if (!targetSection) {
+            // If target doesn't exist on this page, let the link work normally
+            return;
+        }
+        
+        // Check if this is a link to the current page (index.php#rooms)
+        const isCurrentPageLink = href.startsWith(window.location.pathname) || 
+                                 href.startsWith('index.php') || 
+                                 (href.includes('#') && !href.includes('http'));
+        
+        if (isCurrentPageLink) {
+            // Prevent default for same-page anchors
             e.preventDefault();
-            const targetId = this.getAttribute('href');
-            if (targetId === '#') return;
             
-            const targetSection = document.querySelector(targetId);
-            if (targetSection) {
-                const headerOffset = 80;
-                const elementPosition = targetSection.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: 'smooth'
-                });
+            // Calculate scroll position with header offset
+            const headerOffset = 80;
+            const elementPosition = targetSection.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+            
+            // Smooth scroll to target
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+            
+            // Update URL hash without page jump
+            if (history.pushState) {
+                history.pushState(null, null, targetId);
+            } else {
+                window.location.hash = targetId;
+            }
+            
+            // Close mobile menu if open
+            const navMenu = document.querySelector('.nav-menu');
+            if (navMenu && navMenu.classList.contains('active')) {
+                navMenu.classList.remove('active');
+                document.querySelector('.mobile-menu-btn')?.classList.remove('active');
+                document.querySelector('.mobile-menu-overlay')?.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        // If it's not a current page link, let it work normally (external link)
+    }
+    
+    // Initialize smooth scrolling on page load
+    initSmoothScrolling();
+    
+    // Re-initialize when new content is added dynamically
+    const smoothScrollObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length) {
+                initSmoothScrolling();
             }
         });
     });
+    
+    // Start observing the document body for added nodes
+    smoothScrollObserver.observe(document.body, { childList: true, subtree: true });
 
     // Debug: capture menu link clicks and defaultPrevented state
     document.addEventListener('click', function(e) {
@@ -198,12 +273,12 @@ document.addEventListener('DOMContentLoaded', function() {
         rootMargin: '0px 0px -50px 0px'
     };
     
-    const observer = new IntersectionObserver(function(entries) {
+    const intersectionObserver = new IntersectionObserver(function(entries) {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.style.opacity = '1';
                 entry.target.style.transform = 'translateY(0)';
-                observer.unobserve(entry.target);
+                intersectionObserver.unobserve(entry.target);
             }
         });
     }, observerOptions);
@@ -214,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
         card.style.opacity = '0';
         card.style.transform = 'translateY(30px)';
         card.style.transition = `all 0.6s ease ${index * 0.1}s`;
-        observer.observe(card);
+        intersectionObserver.observe(card);
     });
 
     // Scroll to Top Button

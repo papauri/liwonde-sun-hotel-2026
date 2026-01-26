@@ -16,7 +16,25 @@
             // Fetch footer links from database
             $footer_links = [];
             try {
-                $stmt = $pdo->query("SELECT column_name, link_text, link_url FROM footer_links WHERE is_active = 1 ORDER BY column_name, display_order ASC");
+                // Determine current page for link selection
+                $request_uri = $_SERVER['REQUEST_URI'];
+                $path = parse_url($request_uri, PHP_URL_PATH);
+                $current_page = basename($path, '.php');
+                if (empty($current_page) || $current_page === '') {
+                    $current_page = 'index';
+                }
+                $is_index_page = ($current_page === 'index');
+                
+                // Select appropriate URL based on page
+                if ($is_index_page) {
+                    // On index page, use link_url (hash only)
+                    $stmt = $pdo->query("SELECT column_name, link_text, link_url FROM footer_links WHERE is_active = 1 ORDER BY column_name, display_order ASC");
+                } else {
+                    // On other pages, use secondary_link_url if available, otherwise link_url
+                    $stmt = $pdo->query("SELECT column_name, link_text, 
+                        COALESCE(NULLIF(secondary_link_url, ''), link_url) as link_url 
+                        FROM footer_links WHERE is_active = 1 ORDER BY column_name, display_order ASC");
+                }
                 $all_links = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 foreach ($all_links as $link) {
                     $footer_links[$link['column_name']][] = $link;
