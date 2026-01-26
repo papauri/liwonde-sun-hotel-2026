@@ -224,127 +224,327 @@ try {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin-styles.css">
     
     <style>
-        :root {
-            --gold: #D4AF37;
-            --navy: #0A1929;
-            --deep-navy: #050D14;
-            --cream: #fbf8f3;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #f5f7fa;
-        }
-        .admin-header {
-            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 100%);
-            color: white;
-            padding: 16px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        .admin-header h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 24px;
-            color: var(--gold);
-        }
-        .admin-header .user-info {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-        .admin-header .user-name {
-            font-size: 14px;
-        }
-        .admin-header .user-role {
-            background: var(--gold);
-            color: var(--deep-navy);
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .btn-logout {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 8px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 13px;
-            transition: all 0.3s ease;
-        }
-        .btn-logout:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        .admin-nav {
+        /* Room management specific styles */
+        .rooms-section {
             background: white;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 0 32px;
-        }
-        .admin-nav ul {
-            list-style: none;
-            display: flex;
-            gap: 32px;
-        }
-        .admin-nav a {
-            display: block;
-            padding: 16px 0;
-            color: #666;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-        .admin-nav a:hover,
-        .admin-nav a.active {
-            color: var(--gold);
-            border-bottom-color: var(--gold);
-        }
-        .content {
-            padding: 32px;
-            max-width: 100%;
-            margin: 0 auto;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             overflow-x: auto;
         }
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
+        .room-table {
+            width: 100%;
+            min-width: 2200px;
+            border-collapse: collapse;
+            border: 1px solid #d0d7de;
         }
-        .page-title {
-            font-family: 'Playfair Display', serif;
+        .room-table th {
+            background: #f6f8fa;
+            padding: 12px 14px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #24292f;
+            text-transform: uppercase;
+            border: 1px solid #d0d7de;
+            border-bottom: 2px solid #d0d7de;
+            white-space: nowrap;
+        }
+        .room-table td {
+            padding: 0;
+            border: 1px solid #d0d7de;
+            vertical-align: middle;
+            background: white;
+        }
+        .room-table td.image-cell {
+            padding: 12px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .room-table tbody tr {
+            transition: background 0.2s ease;
+        }
+        .room-table tbody tr:hover {
+            background: #f6f8fa;
+        }
+        .room-table tbody tr.edit-mode {
+            background: #fff8c7;
+        }
+        .room-table tbody tr.edit-mode td {
+            background: #fff8c7;
+        }
+        .room-table input,
+        .room-table textarea,
+        .room-table select {
+            width: 100%;
+            height: 100%;
+            min-height: 50px;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 0;
+            font-size: 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: transparent;
+            transition: background 0.2s ease;
+        }
+        .room-table input:focus,
+        .room-table textarea:focus,
+        .room-table select:focus {
+            outline: none;
+            background: #fff8c7;
+            box-shadow: inset 0 0 0 2px var(--gold);
+        }
+        .room-table textarea {
+            resize: none;
+            min-height: 80px;
+            line-height: 1.5;
+        }
+        .room-table select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 28px;
+        }
+        .cell-view {
+            display: block;
+            padding: 12px 14px;
+            min-height: 50px;
+        }
+        .cell-view.hidden {
+            display: none;
+        }
+        .cell-edit {
+            display: none;
+        }
+        .cell-edit.active {
+            display: block;
+        }
+        .cell-edit.active input,
+        .cell-edit.active textarea,
+        .cell-edit.active select {
+            display: block;
+        }
+        .actions-cell {
+            white-space: nowrap;
+            min-width: 320px;
+            padding: 8px 12px !important;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .room-image-preview {
+            width: 120px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid #e8e8e8;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .room-image-preview:hover {
+            transform: scale(1.08);
+            border-color: var(--gold);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+        }
+        .no-image {
+            width: 120px;
+            height: 90px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #999;
             font-size: 28px;
-            color: var(--navy);
+            cursor: pointer;
+            border: 3px dashed #ccc;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
-        .alert {
-            padding: 16px;
+        .no-image:hover {
+            background: linear-gradient(135deg, #fff8f0 0%, #ffe8cc 100%);
+            border-color: var(--gold);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+        }
+        .no-image i {
+            margin-bottom: 4px;
+        }
+        .no-image::after {
+            content: 'No Image';
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+        }
+        .current-image {
+            width: 100%;
             border-radius: 8px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
+        }
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        .upload-area:hover {
+            border-color: var(--gold);
+            background: #fff;
+        }
+        .upload-area i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 12px;
+        }
+        .upload-area.dragover {
+            border-color: var(--gold);
+            background: #fffbf0;
+        }
+        .status-badges {
             display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .btn-action {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: inline-flex;
             align-items: center;
-            gap: 12px;
+            gap: 6px;
         }
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .btn-action i {
+            font-size: 11px;
         }
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .btn-edit {
+            background: #17a2b8;
+            color: white;
+        }
+        .btn-edit:hover {
+            background: #138496;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(23, 162, 184, 0.3);
+        }
+        .btn-save {
+            background: #28a745;
+            color: white;
+        }
+        .btn-save:hover {
+            background: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+        }
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3);
+        }
+        .btn-toggle {
+            background: #ffc107;
+            color: #212529;
+        }
+        .btn-toggle:hover {
+            background: #e0a800;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
+        }
+        .btn-featured {
+            background: var(--gold);
+            color: var(--deep-navy);
+        }
+        .btn-featured:hover {
+            background: #c19b2e;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
+        }
+        .btn-action[style*="#6f42c1"] {
+            background: #6f42c1;
+            color: white;
+        }
+        .btn-action[style*="#6f42c1"]:hover {
+            background: #5a32a3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(111, 66, 193, 0.3);
+        }
+        @media (max-width: 768px) {
+            .room-table {
+                font-size: 12px;
+            }
+            .room-table th,
+            .room-table td {
+                padding: 8px;
+            }
+            .room-table th {
+                font-size: 11px;
+            }
+            .room-table input,
+            .room-table textarea,
+            .room-table select {
+                padding: 8px 10px;
+                font-size: 13px;
+            }
+            .action-buttons {
+                flex-direction: column;
+                gap: 4px;
+            }
+            .btn-action {
+                padding: 6px 12px;
+                font-size: 11px;
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+            }
+            .rooms-section {
+                padding: 12px;
+                overflow-x: auto;
+            }
+            .room-table {
+                min-width: 1800px;
+            }
+        }
+        @media (max-width: 480px) {
+            .room-table {
+                font-size: 11px;
+            }
+            .room-table th,
+            .room-table td {
+                padding: 0;
+            }
+            .cell-view {
+                padding: 8px 10px;
+                min-height: 40px;
+            }
+            .room-table th {
+                font-size: 10px;
+            }
+            .btn-action {
+                padding: 5px 10px;
+                font-size: 10px;
+            }
         }
         .rooms-section {
             background: white;

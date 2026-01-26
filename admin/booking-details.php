@@ -135,100 +135,10 @@ $current_page = 'bookings.php';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin-styles.css">
     
     <style>
-        :root {
-            --gold: #D4AF37;
-            --navy: #0A1929;
-            --deep-navy: #050D14;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #f5f7fa;
-        }
-        .admin-header {
-            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 100%);
-            color: white;
-            padding: 16px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        .admin-header h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 24px;
-            color: var(--gold);
-        }
-        .admin-header .user-info {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-        .admin-header .user-name {
-            font-size: 14px;
-        }
-        .admin-header .user-role {
-            background: var(--gold);
-            color: var(--deep-navy);
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .btn-logout {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 8px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 13px;
-            transition: all 0.3s ease;
-        }
-        .btn-logout:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        .admin-nav {
-            background: white;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 0 32px;
-        }
-        .admin-nav ul {
-            list-style: none;
-            display: flex;
-            gap: 32px;
-        }
-        .admin-nav a {
-            display: block;
-            padding: 16px 0;
-            color: #666;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-        .admin-nav a:hover,
-        .admin-nav a.active {
-            color: var(--gold);
-            border-bottom-color: var(--gold);
-        }
-        .btn-back {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 8px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 13px;
-        }
+        /* Booking details specific styles */
         .booking-details-container {
             max-width: 1200px;
             margin: 32px auto;

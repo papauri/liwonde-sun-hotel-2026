@@ -114,100 +114,191 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>All Bookings - Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin-styles.css">
     <style>
-        :root {
-            --gold: #D4AF37;
-            --navy: #0A1929;
-            --deep-navy: #050D14;
-            --cream: #fbf8f3;
+        /* Bookings specific styles */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
         }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--cream);
-            color: #333;
-        }
-        .admin-header {
-            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 100%);
-            color: white;
-            padding: 16px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        .admin-header h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 24px;
-            color: var(--gold);
-        }
-        .admin-header .user-info {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-        .admin-header .user-name {
+        .stat-card h3 {
             font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
         }
-        .admin-header .user-role {
-            background: var(--gold);
-            color: var(--deep-navy);
-            padding: 4px 12px;
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+        .stat-card.pending .number { color: #ffc107; }
+        .stat-card.confirmed .number { color: #28a745; }
+        .stat-card.checked-in .number { color: #17a2b8; }
+        .bookings-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--gold);
+        }
+        .booking-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1800px;
+            border: 1px solid #d0d7de;
+        }
+        .booking-table th {
+            background: #f6f8fa;
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            border: 1px solid #d0d7de;
+        }
+        .booking-table td {
+            padding: 12px;
+            border: 1px solid #d0d7de;
+            vertical-align: middle;
+            background: white;
+        }
+        .booking-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        .badge {
+            padding: 4px 10px;
             border-radius: 12px;
             font-size: 11px;
             font-weight: 600;
-            text-transform: uppercase;
-        }
-        .btn-logout {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 8px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 13px;
-            transition: all 0.3s ease;
-        }
-        .btn-logout:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        .admin-nav {
-            background: white;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 0 32px;
-        }
-        .admin-nav ul {
-            list-style: none;
-            display: flex;
-            gap: 32px;
-        }
-        .admin-nav a {
-            display: block;
-            padding: 16px 0;
-            color: #666;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
             white-space: nowrap;
         }
-        .admin-nav a:hover,
-        .admin-nav a.active {
-            color: var(--gold);
-            border-bottom-color: var(--gold);
+        .badge-pending { background: #ffc107; color: #212529; }
+        .badge-confirmed { background: #28a745; color: white; }
+        .badge-checked-in { background: #17a2b8; color: white; }
+        .badge-checked-out { background: #6c757d; color: white; }
+        .badge-cancelled { background: #dc3545; color: white; }
+        .badge-unpaid { background: #dc3545; color: white; }
+        .badge-partial { background: #ffc107; color: #212529; }
+        .badge-paid { background: #28a745; color: white; }
+        .badge-new { background: #17a2b8; color: white; }
+        .badge-contacted { background: #6c757d; color: white; }
+        .quick-action {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-right: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
         }
-        .content {
-            padding: 32px;
-            max-width: 100%;
-            margin: 0 auto;
-            overflow-x: auto;
+        .quick-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
+        .quick-action.confirm {
+            background: #28a745;
+            color: white;
+        }
+        .quick-action.confirm:hover {
+            background: #229954;
+        }
+        .quick-action.check-in {
+            background: #17a2b8;
+            color: white;
+        }
+        .quick-action.check-in:hover {
+            background: #138496;
+        }
+        .quick-action.undo-checkin {
+            background: #6c757d;
+            color: white;
+        }
+        .quick-action.undo-checkin:hover {
+            background: #5a6268;
+        }
+        .quick-action.disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+        .quick-action.paid {
+            background: var(--gold);
+            color: var(--deep-navy);
+        }
+        .quick-action.paid:hover {
+            background: #c19b2e;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #ddd;
+        }
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            .stat-card {
+                padding: 16px;
+            }
+            .stat-card .number {
+                font-size: 24px;
+            }
+            .booking-table {
+                font-size: 12px;
+            }
+            .booking-table th,
+            .booking-table td {
+                padding: 8px;
+            }
+            .booking-table th {
+                font-size: 11px;
+            }
+        }
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .booking-table {
+                font-size: 11px;
+            }
+            .booking-table th,
+            .booking-table td {
+                padding: 6px;
+            }
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

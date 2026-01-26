@@ -74,254 +74,68 @@ $currency_symbol = getSetting('currency_symbol');
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin-styles.css">
     
     <style>
-        :root {
-            --gold: #D4AF37;
-            --navy: #0A1929;
-            --deep-navy: #050D14;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #f5f7fa;
-        }
-        .admin-header {
-            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 100%);
-            color: white;
-            padding: 16px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        .admin-header h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 24px;
-            color: var(--gold);
-        }
-        .admin-header .user-info {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-        .admin-header .user-name {
-            font-size: 14px;
-        }
-        .admin-header .user-role {
-            background: var(--gold);
-            color: var(--deep-navy);
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .btn-logout {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 8px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 13px;
-            transition: all 0.3s ease;
-        }
-        .btn-logout:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        .admin-nav {
-            background: white;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 0 32px;
-        }
-        .admin-nav ul {
-            list-style: none;
-            display: flex;
-            gap: 32px;
-        }
-        .admin-nav a {
-            display: block;
-            padding: 16px 0;
-            color: #666;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-        .admin-nav a:hover,
-        .admin-nav a.active {
-            color: var(--gold);
-            border-bottom-color: var(--gold);
-        }
-        .dashboard-content {
-            padding: 32px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+        /* Dashboard-specific styles */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 24px;
             margin-bottom: 40px;
         }
-        .stat-card {
-            background: white;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border-left: 4px solid var(--gold);
-        }
-        .stat-card .stat-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, var(--gold) 0%, #c49b2e 100%);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
-        }
-        .stat-card .stat-icon i {
-            font-size: 24px;
-            color: white;
-        }
-        .stat-card .stat-value {
-            font-size: 36px;
-            font-weight: 700;
-            color: var(--navy);
-            margin-bottom: 4px;
-        }
-        .stat-card .stat-label {
-            font-size: 13px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .section-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 24px;
-            color: var(--navy);
-            margin-bottom: 20px;
-        }
-        .bookings-table {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-        }
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .table thead {
-            background: var(--navy);
-            color: white;
-        }
-        .table th {
-            padding: 16px;
-            text-align: left;
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .table td {
-            padding: 16px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .table tbody tr:hover {
-            background: #f8f9fa;
-        }
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .badge-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-        .badge-confirmed {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        .badge-checked-in {
-            background: #d4edda;
-            color: #155724;
-        }
-        .badge-checked-out {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-        .badge-cancelled {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .btn {
-            padding: 6px 16px;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-        }
-        .btn-sm {
-            padding: 4px 12px;
-            font-size: 11px;
-        }
-        .btn-primary {
-            background: var(--gold);
-            color: var(--deep-navy);
-        }
-        .btn-primary:hover {
-            background: #c49b2e;
-        }
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        .btn-success:hover {
-            background: #218838;
-        }
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-        .btn-danger:hover {
-            background: #c82333;
-        }
+        
         .quick-actions {
             display: flex;
             gap: 8px;
         }
-        @media (max-width: 768px) {
-            .dashboard-content {
-                padding: 20px;
-            }
-            .admin-nav ul {
-                overflow-x: auto;
-            }
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            .table {
-                font-size: 13px;
-            }
-            .table th, .table td {
-                padding: 10px;
-            }
+        
+        /* Today's Check-ins section specific styling */
+        .today-checkins-section {
+            background: white;
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            margin-bottom: 32px;
+        }
+        
+        .today-checkins-section h3 {
+            margin-bottom: 20px;
+            color: var(--navy);
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .today-checkins-section h3 i {
+            margin-right: 10px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 12px;
+            color: #ddd;
+        }
+        
+        /* Payment status badges */
+        .badge-paid {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-partial {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-unpaid {
+            background: #f8d7da;
+            color: #721c24;
         }
     </style>
 </head>
@@ -329,7 +143,7 @@ $currency_symbol = getSetting('currency_symbol');
 
     <?php include 'admin-header.php'; ?>
 
-    <div class="dashboard-content">
+    <div class="content">
         <h2 class="section-title">Dashboard Overview</h2>
         
         <div class="stats-grid">
@@ -367,8 +181,8 @@ $currency_symbol = getSetting('currency_symbol');
         </div>
 
         <!-- Today's Check-ins Management -->
-        <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 32px;">
-            <h3 style="margin-bottom: 20px; color: var(--navy); font-size: 20px; font-weight: 700;">
+        <div class="today-checkins-section">
+            <h3>
                 <i class="fas fa-door-open"></i> Today's Check-ins (<?php echo $today_checkins; ?>)
             </h3>
             
@@ -386,65 +200,67 @@ $currency_symbol = getSetting('currency_symbol');
             ?>
             
             <?php if (!empty($checkin_bookings)): ?>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Booking Ref</th>
-                            <th>Guest Name</th>
-                            <th>Room</th>
-                            <th>Check-out</th>
-                            <th>Status</th>
-                            <th>Payment</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($checkin_bookings as $booking): ?>
-                            <tr id="checkin-row-<?php echo $booking['id']; ?>">
-                                <td><strong><?php echo htmlspecialchars($booking['booking_reference']); ?></strong></td>
-                                <td><?php echo htmlspecialchars($booking['guest_name']); ?></td>
-                                <td><?php echo htmlspecialchars($booking['room_name']); ?></td>
-                                <td><?php echo date('M d, Y', strtotime($booking['check_out_date'])); ?></td>
-                                <td>
-                                    <span class="badge badge-<?php echo $booking['status']; ?>" id="status-<?php echo $booking['id']; ?>">
-                                        <?php echo ucfirst($booking['status']); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge" style="background: <?php echo $booking['payment_status'] === 'paid' ? '#d4edda' : ($booking['payment_status'] === 'partial' ? '#fff3cd' : '#f8d7da'); ?>; color: <?php echo $booking['payment_status'] === 'paid' ? '#155724' : ($booking['payment_status'] === 'partial' ? '#856404' : '#721c24'); ?>;">
-                                        <?php echo ucfirst($booking['payment_status']); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php if ($booking['status'] !== 'checked-in'): ?>
-                                        <?php $can_checkin = ($booking['status'] === 'confirmed' && $booking['payment_status'] === 'paid'); ?>
-                                        <button onclick="<?php echo $can_checkin ? "processCheckIn({$booking['id']}, '" . htmlspecialchars(addslashes($booking['guest_name'])) . "')" : "Alert.show('Cannot check in: booking must be CONFIRMED and PAID.', 'error')"; ?>"
-                                                id="checkin-btn-<?php echo $booking['id']; ?>"
-                                                style="background: <?php echo $can_checkin ? 'var(--gold)' : '#e0e0e0'; ?>; color: <?php echo $can_checkin ? 'var(--deep-navy)' : '#666'; ?>; border: none; padding: 6px 14px; border-radius: 6px; cursor: <?php echo $can_checkin ? 'pointer' : 'not-allowed'; ?>; font-size: 12px; font-weight: 600;">
-                                            <i class="fas fa-check"></i> Check In
-                                        </button>
-                                    <?php else: ?>
-                                        <button onclick="cancelCheckIn(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars(addslashes($booking['guest_name'])); ?>')"
-                                                id="cancel-checkin-btn-<?php echo $booking['id']; ?>"
-                                                style="background: #6c757d; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
-                                            <i class="fas fa-undo"></i> Cancel Check-in
-                                        </button>
-                                    <?php endif; ?>
-                                </td>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Booking Ref</th>
+                                <th>Guest Name</th>
+                                <th>Room</th>
+                                <th>Check-out</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Actions</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($checkin_bookings as $booking): ?>
+                                <tr id="checkin-row-<?php echo $booking['id']; ?>">
+                                    <td><strong><?php echo htmlspecialchars($booking['booking_reference']); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($booking['guest_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($booking['room_name']); ?></td>
+                                    <td><?php echo date('M d, Y', strtotime($booking['check_out_date'])); ?></td>
+                                    <td>
+                                        <span class="badge badge-<?php echo $booking['status']; ?>" id="status-<?php echo $booking['id']; ?>">
+                                            <?php echo ucfirst($booking['status']); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-<?php echo $booking['payment_status']; ?>">
+                                            <?php echo ucfirst($booking['payment_status']); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <?php if ($booking['status'] !== 'checked-in'): ?>
+                                            <?php $can_checkin = ($booking['status'] === 'confirmed' && $booking['payment_status'] === 'paid'); ?>
+                                            <button onclick="<?php echo $can_checkin ? "processCheckIn({$booking['id']}, '" . htmlspecialchars(addslashes($booking['guest_name'])) . "')" : "Alert.show('Cannot check in: booking must be CONFIRMED and PAID.', 'error')"; ?>"
+                                                    id="checkin-btn-<?php echo $booking['id']; ?>"
+                                                    class="btn <?php echo $can_checkin ? 'btn-primary' : 'btn-light'; ?>" <?php echo $can_checkin ? '' : 'disabled'; ?>>
+                                                <i class="fas fa-check"></i> Check In
+                                            </button>
+                                        <?php else: ?>
+                                            <button onclick="cancelCheckIn(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars(addslashes($booking['guest_name'])); ?>')"
+                                                    id="cancel-checkin-btn-<?php echo $booking['id']; ?>"
+                                                    class="btn btn-dark">
+                                                <i class="fas fa-undo"></i> Cancel Check-in
+                                            </button>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             <?php else: ?>
-                <div style="text-align: center; padding: 40px; color: #999;">
-                    <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 12px; color: #ddd;"></i>
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
                     <p>No check-ins scheduled for today</p>
                 </div>
             <?php endif; ?>
         </div>
 
         <h3 class="section-title">Upcoming Check-ins (Next 7 Days)</h3>
-        <div class="bookings-table">
+        <div class="table-container">
             <table class="table">
                 <thead>
                     <tr>
@@ -460,8 +276,9 @@ $currency_symbol = getSetting('currency_symbol');
                 <tbody>
                     <?php if (empty($upcoming_checkins)): ?>
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
-                            No upcoming check-ins in the next 7 days
+                        <td colspan="7" class="empty-state">
+                            <i class="fas fa-calendar"></i>
+                            <p>No upcoming check-ins in the next 7 days</p>
                         </td>
                     </tr>
                     <?php else: ?>
@@ -485,7 +302,7 @@ $currency_symbol = getSetting('currency_symbol');
                                 <?php if ($booking['payment_status'] === 'paid'): ?>
                                 <a href="booking-details.php?id=<?php echo $booking['id']; ?>&action=checkin" class="btn btn-primary btn-sm">Check In</a>
                                 <?php else: ?>
-                                <a href="booking-details.php?id=<?php echo $booking['id']; ?>" class="btn btn-primary btn-sm" style="opacity:.6; cursor:not-allowed;" onclick="Alert.show('Cannot check in: booking must be PAID first.', 'error'); return false;">Check In</a>
+                                <a href="booking-details.php?id=<?php echo $booking['id']; ?>" class="btn btn-primary btn-sm disabled" onclick="Alert.show('Cannot check in: booking must be PAID first.', 'error'); return false;">Check In</a>
                                 <?php endif; ?>
                                 <?php endif; ?>
                                 <a href="booking-details.php?id=<?php echo $booking['id']; ?>" class="btn btn-primary btn-sm">View</a>
@@ -498,8 +315,8 @@ $currency_symbol = getSetting('currency_symbol');
             </table>
         </div>
 
-        <h3 class="section-title" style="margin-top: 40px;">Recent Bookings</h3>
-        <div class="bookings-table">
+        <h3 class="section-title mt-4">Recent Bookings</h3>
+        <div class="table-container">
             <table class="table">
                 <thead>
                     <tr>
@@ -561,7 +378,7 @@ $currency_symbol = getSetting('currency_symbol');
                     statusBadge.textContent = 'Checked-in';
                     
                     const button = document.getElementById(`checkin-btn-${bookingId}`);
-                    button.outerHTML = `<button onclick="cancelCheckIn(${bookingId}, '${guestName.replace(/'/g, "\\'")}')" id="cancel-checkin-btn-${bookingId}" style="background: #6c757d; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;"><i class="fas fa-undo"></i> Cancel Check-in</button>`;
+                    button.outerHTML = `<button onclick="cancelCheckIn(${bookingId}, '${guestName.replace(/'/g, "\\'")}')" id="cancel-checkin-btn-${bookingId}" class="btn btn-dark"><i class="fas fa-undo"></i> Cancel Check-in</button>`;
                     
                     Alert.show(`${guestName} successfully checked in!`, 'success');
                 } else {
@@ -595,7 +412,7 @@ $currency_symbol = getSetting('currency_symbol');
                     statusBadge.textContent = 'Confirmed';
 
                     const button = document.getElementById(`cancel-checkin-btn-${bookingId}`);
-                    button.outerHTML = `<span style="color: #0c5460; font-weight: 600;">Reverted to confirmed</span>`;
+                    button.outerHTML = `<span class="badge badge-confirmed">Reverted to confirmed</span>`;
 
                     Alert.show(`Check-in cancelled for ${guestName}.`, 'success');
                 } else {
