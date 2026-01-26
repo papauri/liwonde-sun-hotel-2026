@@ -8,6 +8,8 @@ if (!isset($_SESSION['admin_user'])) {
 }
 
 require_once '../config/database.php';
+require_once '../includes/modal.php';
+require_once '../includes/alert.php';
 
 $user = $_SESSION['admin_user'];
 $message = '';
@@ -766,17 +768,11 @@ try {
         </div>
         
         <?php if ($message): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <?php echo htmlspecialchars($message); ?>
-            </div>
+            <?php showAlert($message, 'success'); ?>
         <?php endif; ?>
-        
+
         <?php if ($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i>
-                <?php echo htmlspecialchars($error); ?>
-            </div>
+            <?php showAlert($error, 'error'); ?>
         <?php endif; ?>
         
         <!-- Menu Type Tabs -->
@@ -1147,12 +1143,12 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error saving item');
+                    Alert.show('Error saving item', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error saving item');
+                Alert.show('Error saving item', 'error');
             });
         }
         
@@ -1171,12 +1167,12 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error toggling availability');
+                    Alert.show('Error toggling availability', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error toggling availability');
+                Alert.show('Error toggling availability', 'error');
             });
         }
         
@@ -1194,12 +1190,12 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error deleting item');
+                    Alert.show('Error deleting item', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error deleting item');
+                Alert.show('Error deleting item', 'error');
             });
         }
     </script>

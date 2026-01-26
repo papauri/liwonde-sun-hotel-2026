@@ -1,5 +1,5 @@
 <?php
-require_once '../config/database.php';
+require_once 'config/database.php';
 
 $room_slug = isset($_GET['room']) ? trim($_GET['room']) : null;
 if (!$room_slug) {
@@ -20,10 +20,7 @@ function resolveImageUrl($path) {
     if (stripos($trimmed, 'http://') === 0 || stripos($trimmed, 'https://') === 0) {
         return $trimmed;
     }
-    // Add ../ prefix for relative paths since we're in /pages/ subdirectory
-    if (stripos($trimmed, 'images/') === 0) {
-        return '../' . $trimmed;
-    }
+    // No prefix needed since file is now in root directory
     return $trimmed;
 }
 
@@ -111,12 +108,12 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="rooms-page">
-    <?php include '../includes/loader.php'; ?>
+    <?php include 'includes/loader.php'; ?>
     
-    <?php include '../includes/header.php'; ?>
+    <?php include 'includes/header.php'; ?>
     
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" role="presentation"></div>
@@ -129,8 +126,8 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
                     <h1><?php echo htmlspecialchars($room['name']); ?></h1>
                     <p><?php echo htmlspecialchars($room['short_description'] ?? $site_tagline); ?></p>
                     <div class="rooms-hero__actions">
-                        <a class="btn btn-primary" href="../booking.php?room_id=<?php echo $room['id']; ?>">Book This Room</a>
-                        <a class="btn btn-outline" href="../index.php#rooms">View All Rooms</a>
+                        <a class="btn btn-primary" href="booking.php?room_id=<?php echo $room['id']; ?>">Book This Room</a>
+                        <a class="btn btn-outline" href="index.php#rooms">View All Rooms</a>
                     </div>
                 </div>
             </div>
@@ -156,7 +153,7 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
             <aside class="room-detail-info room-detail-info--horizontal" aria-label="Room details">
                 <div class="room-detail-header">
                     <h2 class="room-detail-title">About the Room</h2>
-                    <a class="btn btn-primary btn-booking" href="../booking.php?room_id=<?php echo $room['id']; ?>">
+                    <a class="btn btn-primary btn-booking" href="booking.php?room_id=<?php echo $room['id']; ?>">
                         <i class="fas fa-calendar-check"></i> Book Now
                     </a>
                 </div>
@@ -209,78 +206,14 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
                 <div class="booking-cta__row"><span>Nightly Rate</span><strong><?php echo htmlspecialchars($currency_symbol); ?><?php echo number_format($room['price_per_night'], 0); ?></strong></div>
                 <div class="booking-cta__row"><span>Capacity</span><strong><?php echo htmlspecialchars($room['max_guests'] ?? 2); ?> guests</strong></div>
                 <div class="booking-cta__row"><span>Floor Space</span><strong><?php echo htmlspecialchars($room['size_sqm'] ?? 40); ?> sqm</strong></div>
-                <a class="btn btn-primary" href="../booking.php?room_id=<?php echo $room['id']; ?>">Proceed to Booking</a>
+                <a class="btn btn-primary" href="booking.php?room_id=<?php echo $room['id']; ?>">Proceed to Booking</a>
             </div>
         </div>
     </section>
 
-    <footer class="footer" id="contact">
-        <div class="container">
-            <div class="footer-grid">
-                <?php foreach ($footer_links as $column_name => $links): ?>
-                <div class="footer-column">
-                    <h4><?php echo htmlspecialchars($column_name); ?></h4>
-                    <ul class="footer-links">
-                        <?php foreach ($links as $link): ?>
-                        <li><a href="<?php echo htmlspecialchars($link['link_url']); ?>"><?php echo htmlspecialchars($link['link_text']); ?></a></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-                <?php endforeach; ?>
+    <!-- Footer -->
+    <?php include 'includes/footer.php'; ?>
 
-                <div class="footer-column">
-                    <h4>Policies</h4>
-                    <ul class="footer-links">
-                        <li><a href="#" class="policy-link" data-policy="booking-policy">Booking Policy</a></li>
-                        <li><a href="#" class="policy-link" data-policy="cancellation-policy">Cancellation</a></li>
-                        <li><a href="#" class="policy-link" data-policy="dining-policy">Dining Policy</a></li>
-                        <li><a href="#" class="policy-link" data-policy="faqs">FAQs</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-column">
-                    <h4>Contact Information</h4>
-                    <ul class="contact-info">
-                        <li><i class="fas fa-phone"></i><a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $contact['phone_main'] ?? $phone_main)); ?>"><?php echo htmlspecialchars($contact['phone_main'] ?? $phone_main); ?></a></li>
-                        <li><i class="fas fa-envelope"></i><a href="mailto:<?php echo htmlspecialchars($contact['email_main'] ?? $email_reservations); ?>"><?php echo htmlspecialchars($contact['email_main'] ?? $email_reservations); ?></a></li>
-                        <li><i class="fas fa-map-marker-alt"></i><a href="https://www.google.com/maps/search/<?php echo urlencode(htmlspecialchars($contact['address_line1'] ?? getSetting('address_line1'))); ?>" target="_blank"><?php echo htmlspecialchars($contact['address_line1'] ?? getSetting('address_line1')); ?></a></li>
-                        <li><i class="fas fa-clock"></i><span><?php echo htmlspecialchars($contact['working_hours'] ?? getSetting('working_hours')); ?></span></li>
-                    </ul>
-                    <div class="social-links">
-                        <?php if (!empty($social['facebook_url'])): ?><a href="<?php echo htmlspecialchars($social['facebook_url']); ?>" class="social-icon" target="_blank"><i class="fab fa-facebook-f"></i></a><?php endif; ?>
-                        <?php if (!empty($social['instagram_url'])): ?><a href="<?php echo htmlspecialchars($social['instagram_url']); ?>" class="social-icon" target="_blank"><i class="fab fa-instagram"></i></a><?php endif; ?>
-                        <?php if (!empty($social['twitter_url'])): ?><a href="<?php echo htmlspecialchars($social['twitter_url']); ?>" class="social-icon" target="_blank"><i class="fab fa-twitter"></i></a><?php endif; ?>
-                        <?php if (!empty($social['linkedin_url'])): ?><a href="<?php echo htmlspecialchars($social['linkedin_url']); ?>" class="social-icon" target="_blank"><i class="fab fa-linkedin-in"></i></a><?php endif; ?>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text')); ?></p>
-            </div>
-        </div>
-    </footer>
-
-    <?php if (!empty($policies)): ?>
-    <div class="policy-overlay" data-policy-overlay></div>
-    <div class="policy-modals">
-        <?php foreach ($policies as $policy): ?>
-        <div class="policy-modal" data-policy-modal="<?php echo htmlspecialchars($policy['slug']); ?>">
-            <div class="policy-modal__content">
-                <button class="policy-modal__close" aria-label="Close policy modal" data-policy-close>&times;</button>
-                <div class="policy-modal__header">
-                    <span class="policy-pill">Policy</span>
-                    <h3><?php echo htmlspecialchars($policy['title']); ?></h3>
-                    <?php if (!empty($policy['summary'])): ?><p class="policy-summary"><?php echo htmlspecialchars($policy['summary']); ?></p><?php endif; ?>
-                </div>
-                <div class="policy-modal__body">
-                    <p><?php echo nl2br(htmlspecialchars($policy['content'])); ?></p>
-                </div>
-            </div>
-        </div>
-        <?php endforeach; ?>
-    </div>
-    <?php endif; ?>
-
-    <script src="../js/main.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>

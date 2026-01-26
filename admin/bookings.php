@@ -8,6 +8,8 @@ if (!isset($_SESSION['admin_user'])) {
 }
 
 require_once '../config/database.php';
+require_once '../includes/modal.php';
+require_once '../includes/alert.php';
 
 $user = $_SESSION['admin_user'];
 $message = '';
@@ -442,17 +444,11 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
         </div>
 
         <?php if ($message): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <?php echo htmlspecialchars($message); ?>
-            </div>
+            <?php showAlert($message, 'success'); ?>
         <?php endif; ?>
 
         <?php if ($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i>
-                <?php echo htmlspecialchars($error); ?>
-            </div>
+            <?php showAlert($error, 'error'); ?>
         <?php endif; ?>
 
         <!-- Room Bookings -->
@@ -514,7 +510,7 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
                                     <?php if ($booking['status'] === 'confirmed'): ?>
                                         <?php $can_checkin = ($booking['payment_status'] === 'paid'); ?>
                                         <button class="quick-action check-in <?php echo $can_checkin ? '' : 'disabled'; ?>"
-                                                onclick="<?php echo $can_checkin ? "updateStatus({$booking['id']}, 'checked-in')" : "alert('Cannot check in: booking must be PAID first.')"; ?>">
+                                                onclick="<?php echo $can_checkin ? "updateStatus({$booking['id']}, 'checked-in')" : "Alert.show('Cannot check in: booking must be PAID first.', 'error')"; ?>">
                                             <i class="fas fa-sign-in-alt"></i> Check In
                                         </button>
                                     <?php endif; ?>
@@ -611,12 +607,12 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error updating status');
+                    Alert.show('Error updating status', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error updating status');
+                Alert.show('Error updating status', 'error');
             });
         }
 
@@ -634,12 +630,12 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error updating payment');
+                    Alert.show('Error updating payment', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error updating payment');
+                Alert.show('Error updating payment', 'error');
             });
         }
     </script>

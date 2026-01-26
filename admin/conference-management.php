@@ -504,10 +504,10 @@ try {
 
     <div class="content">
         <?php if ($message): ?>
-            <div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div>
+            <?php showAlert($message, 'success'); ?>
         <?php endif; ?>
         <?php if ($error): ?>
-            <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+            <?php showAlert($error, 'error'); ?>
         <?php endif; ?>
 
         <div class="card">

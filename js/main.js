@@ -395,46 +395,43 @@ document.addEventListener('DOMContentLoaded', function() {
     
     images.forEach(img => imageObserver.observe(img));
 
-    // Policy modals
+    // Policy modals - Using new Modal component
     const policyLinks = document.querySelectorAll('.policy-link');
     const policyOverlay = document.querySelector('[data-policy-overlay]');
-    const policyModals = document.querySelectorAll('[data-policy-modal]');
-
-    function closeAllPolicies() {
-        policyModals.forEach(modal => modal.classList.remove('active'));
-        if (policyOverlay) policyOverlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
+    
+    console.log('Policy links found:', policyLinks.length);
+    console.log('Modal available:', typeof Modal);
+    
     function openPolicy(slug) {
-        const target = document.querySelector(`[data-policy-modal="${slug}"]`);
-        if (!target) return;
-        closeAllPolicies();
-        target.classList.add('active');
-        if (policyOverlay) policyOverlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
+        const modalId = 'policy-' + slug;
+        console.log('Opening policy modal:', modalId);
+        const modal = document.getElementById(modalId);
+        console.log('Modal element found:', !!modal);
+        
+        if (typeof Modal !== 'undefined' && Modal.open) {
+            Modal.open(modalId);
+        } else {
+            console.error('Modal component not available');
+        }
     }
-
+    
     policyLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             const slug = this.dataset.policy;
+            console.log('Policy link clicked, slug:', slug);
             openPolicy(slug);
         });
     });
-
+    
     if (policyOverlay) {
-        policyOverlay.addEventListener('click', closeAllPolicies);
+        policyOverlay.addEventListener('click', function() {
+            if (typeof Modal !== 'undefined' && Modal.closeAll) {
+                Modal.closeAll();
+            }
+        });
     }
-
-    document.querySelectorAll('[data-policy-close]').forEach(btn => {
-        btn.addEventListener('click', closeAllPolicies);
-    });
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeAllPolicies();
-    });
 
     // Room Detail Carousel - DISABLED (Using Grid Layout Instead)
     // The carousel functionality has been replaced with a modern grid layout

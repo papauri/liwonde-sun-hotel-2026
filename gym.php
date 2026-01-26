@@ -7,16 +7,6 @@ $site_name = getSetting('site_name');
 $site_logo = getSetting('site_logo');
 $email_main = getSetting('email_main');
 
-// Fetch page hero (DB-driven)
-$pageHero = getPageHero('gym');
-
-$gymHero = [
-    'page_url' => '/gym.php',
-    'hero_title' => $pageHero['hero_title'],
-    'hero_subtitle' => $pageHero['hero_subtitle'],
-    'hero_description' => $pageHero['hero_description'],
-    'hero_image_path' => $pageHero['hero_image_path'],
-];
 
 // Fetch gym content
 $gymContent = [
@@ -241,14 +231,7 @@ try {
     <div class="mobile-menu-overlay" role="presentation"></div>
 
     <!-- Hero Section -->
-    <section class="page-hero" style="background-image: url('<?php echo htmlspecialchars($gymHero['hero_image_path']); ?>');">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <span class="hero-subtitle"><?php echo htmlspecialchars($gymHero['hero_subtitle']); ?></span>
-            <h1 class="hero-title"><?php echo htmlspecialchars($gymHero['hero_title']); ?></h1>
-            <p class="hero-description"><?php echo htmlspecialchars($gymHero['hero_description']); ?></p>
-        </div>
-    </section>
+    <?php include 'includes/hero.php'; ?>
 
     <!-- Wellness Overview -->
     <section class="wellness-intro section-padding">
@@ -648,11 +631,11 @@ try {
         const closeButtons = document.querySelectorAll('[data-close-booking]');
 
         function openModal() {
-            if (bookingModal) bookingModal.classList.add('active');
+            if (bookingModal) Modal.open('bookingModal');
         }
 
         function closeModal() {
-            if (bookingModal) bookingModal.classList.remove('active');
+            if (bookingModal) Modal.close('bookingModal');
         }
 
         openButtons.forEach(btn => btn.addEventListener('click', openModal));

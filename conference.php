@@ -1,14 +1,8 @@
 <?php
 require_once 'config/database.php';
+require_once 'includes/modal.php';
+require_once 'includes/alert.php';
 
-// Fetch page hero (DB-driven)
-$pageHero = getCurrentPageHero();
-$conferenceHero = [
-    'hero_title' => $pageHero['hero_title'],
-    'hero_subtitle' => $pageHero['hero_subtitle'],
-    'hero_description' => $pageHero['hero_description'],
-    'hero_image_path' => $pageHero['hero_image_path'],
-];
 
 // Fetch policies for footer modals
 $policies = [];
@@ -116,7 +110,7 @@ function resolveConferenceImage(?string $imagePath): string
 
     return '';
 }
-$hero_image = resolveConferenceImage($conferenceHero['hero_image_path']);
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -554,14 +548,7 @@ $hero_image = resolveConferenceImage($conferenceHero['hero_image_path']);
     <?php include 'includes/header.php'; ?>
 
     <!-- Hero Section -->
-    <section class="page-hero" style="background-image: url('<?php echo htmlspecialchars($hero_image); ?>');">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <span class="hero-subtitle"><?php echo htmlspecialchars($conferenceHero['hero_subtitle']); ?></span>
-            <h1 class="hero-title"><?php echo htmlspecialchars($conferenceHero['hero_title']); ?></h1>
-            <p class="hero-description"><?php echo htmlspecialchars($conferenceHero['hero_description']); ?></p>
-        </div>
-    </section>
+    <?php include 'includes/hero.php'; ?>
 
     <!-- Conference Rooms Section -->
     <section class="conference-rooms-section">
@@ -647,116 +634,114 @@ $hero_image = resolveConferenceImage($conferenceHero['hero_image_path']);
     </section>
 
     <!-- Inquiry Modal -->
-    <div class="inquiry-modal" id="inquiryModal">
-        <div class="inquiry-form-container">
-            <span class="close-modal" onclick="closeInquiryModal()">&times;</span>
+    <?php
+    $modalContent = '';
+    if ($inquiry_success) {
+        $modalContent = '<div class="success-message" style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); color: #155724; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #c3e6cb;">
+            <i class="fas fa-check-circle"></i>
+            <strong>Inquiry Submitted Successfully!</strong><br>
+            Your reference number is: <strong>' . htmlspecialchars($success_reference) . '</strong><br>
+            We will contact you within 24 hours to confirm your booking.
+        </div>';
+    } elseif ($inquiry_error) {
+        $modalContent = '<div class="error-message" style="background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); color: #721c24; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #f5c6cb;">
+            <i class="fas fa-exclamation-circle"></i>
+            ' . htmlspecialchars($inquiry_error) . '
+        </div>';
+    }
+    
+    $modalContent .= '
+        <form method="POST" action="" id="inquiryForm">
+            <input type="hidden" name="conference_room_id" id="selectedRoomId">
             
-            <h2 style="margin-bottom: 24px; color: var(--navy); font-family: var(--font-serif);">
-                Conference Room Inquiry
-            </h2>
-
-            <?php if ($inquiry_success): ?>
-                <div class="success-message">
-                    <i class="fas fa-check-circle"></i> 
-                    <strong>Inquiry Submitted Successfully!</strong><br>
-                    Your reference number is: <strong><?php echo $success_reference; ?></strong><br>
-                    We will contact you within 24 hours to confirm your booking.
-                </div>
-            <?php endif; ?>
-
-            <?php if ($inquiry_error): ?>
-                <div class="error-message">
-                    <i class="fas fa-exclamation-circle"></i> 
-                    <?php echo htmlspecialchars($inquiry_error); ?>
-                </div>
-            <?php endif; ?>
-
-            <form method="POST" action="">
-                <input type="hidden" name="conference_room_id" id="selectedRoomId">
-                
+            <div class="form-group">
+                <label>Conference Room</label>
+                <input type="text" id="selectedRoomName" disabled style="background: #f5f5f5;">
+            </div>
+ 
+            <div class="form-row">
                 <div class="form-group">
-                    <label>Conference Room</label>
-                    <input type="text" id="selectedRoomName" disabled style="background: #f5f5f5;">
+                    <label>Company Name *</label>
+                    <input type="text" name="company_name" required>
                 </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Company Name *</label>
-                        <input type="text" name="company_name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Contact Person *</label>
-                        <input type="text" name="contact_person" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Email *</label>
-                        <input type="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Phone *</label>
-                        <input type="tel" name="phone" required>
-                    </div>
-                </div>
-
                 <div class="form-group">
-                    <label>Event Date *</label>
-                    <input type="date" name="event_date" min="<?php echo date('Y-m-d'); ?>" required>
+                    <label>Contact Person *</label>
+                    <input type="text" name="contact_person" required>
                 </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Start Time *</label>
-                        <input type="time" name="start_time" required>
-                    </div>
-                    <div class="form-group">
-                        <label>End Time *</label>
-                        <input type="time" name="end_time" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Number of Attendees *</label>
-                        <input type="number" name="number_of_attendees" min="1" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Event Type</label>
-                        <select name="event_type">
-                            <option value="">Select type...</option>
-                            <option value="Meeting">Meeting</option>
-                            <option value="Conference">Conference</option>
-                            <option value="Workshop">Workshop</option>
-                            <option value="Seminar">Seminar</option>
-                            <option value="Training">Training</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                </div>
-
+            </div>
+ 
+            <div class="form-row">
                 <div class="form-group">
-                    <label>AV Equipment Requirements</label>
-                    <input type="text" name="av_equipment" placeholder="e.g., Projector, Microphones, Sound System">
+                    <label>Email *</label>
+                    <input type="email" name="email" required>
                 </div>
-
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" name="catering_required" id="catering">
-                    <label for="catering" style="margin-bottom: 0;">Catering Required</label>
-                </div>
-
                 <div class="form-group">
-                    <label>Special Requirements</label>
-                    <textarea name="special_requirements" rows="4" placeholder="Any additional requests or requirements..."></textarea>
+                    <label>Phone *</label>
+                    <input type="tel" name="phone" required>
                 </div>
-
-                <button type="submit" class="btn-inquire" style="width: 100%;">
-                    <i class="fas fa-paper-plane"></i> Submit Inquiry
-                </button>
-            </form>
-        </div>
-    </div>
+            </div>
+ 
+            <div class="form-group">
+                <label>Event Date *</label>
+                <input type="date" name="event_date" min="' . date('Y-m-d') . '" required>
+            </div>
+ 
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Start Time *</label>
+                    <input type="time" name="start_time" required>
+                </div>
+                <div class="form-group">
+                    <label>End Time *</label>
+                    <input type="time" name="end_time" required>
+                </div>
+            </div>
+ 
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Number of Attendees *</label>
+                    <input type="number" name="number_of_attendees" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Event Type</label>
+                    <select name="event_type">
+                        <option value="">Select type...</option>
+                        <option value="Meeting">Meeting</option>
+                        <option value="Conference">Conference</option>
+                        <option value="Workshop">Workshop</option>
+                        <option value="Seminar">Seminar</option>
+                        <option value="Training">Training</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+ 
+            <div class="form-group">
+                <label>AV Equipment Requirements</label>
+                <input type="text" name="av_equipment" placeholder="e.g., Projector, Microphones, Sound System">
+            </div>
+ 
+            <div class="form-group checkbox-group">
+                <input type="checkbox" name="catering_required" id="catering">
+                <label for="catering" style="margin-bottom: 0;">Catering Required</label>
+            </div>
+ 
+            <div class="form-group">
+                <label>Special Requirements</label>
+                <textarea name="special_requirements" rows="4" placeholder="Any additional requests or requirements..."></textarea>
+            </div>
+        </form>
+    ';
+    
+    renderModal('inquiryModal', 'Conference Room Inquiry', $modalContent, [
+        'size' => 'lg',
+        'footer' => '
+            <button type="submit" form="inquiryForm" class="btn-inquire" style="width: 100%;">
+                <i class="fas fa-paper-plane"></i> Submit Inquiry
+            </button>
+        '
+    ]);
+    ?>
 
     <?php include 'includes/footer.php'; ?>
     <script src="js/main.js"></script>
@@ -764,13 +749,11 @@ $hero_image = resolveConferenceImage($conferenceHero['hero_image_path']);
         function openInquiryModal(roomId, roomName) {
             document.getElementById('selectedRoomId').value = roomId;
             document.getElementById('selectedRoomName').value = roomName;
-            document.getElementById('inquiryModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
+            Modal.open('inquiryModal');
         }
 
         function closeInquiryModal() {
-            document.getElementById('inquiryModal').classList.remove('active');
-            document.body.style.overflow = 'auto';
+            Modal.close('inquiryModal');
         }
 
         <?php if ($inquiry_success): ?>

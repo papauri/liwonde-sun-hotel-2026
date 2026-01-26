@@ -9,14 +9,6 @@ $currency_symbol = getSetting('currency_symbol');
 $email_reservations = getSetting('email_reservations');
 $phone_main = getSetting('phone_main');
 
-// Fetch page hero (DB-driven)
-$pageHero = getCurrentPageHero();
-$roomsHero = [
-    'hero_title' => $pageHero['hero_title'],
-    'hero_subtitle' => $pageHero['hero_subtitle'],
-    'hero_description' => $pageHero['hero_description'],
-    'hero_image_path' => $pageHero['hero_image_path'],
-];
 
 // Policies for modals
 $policies = [];
@@ -125,18 +117,8 @@ foreach ($rooms as $room) {
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" role="presentation"></div>
 
-    <section class="page-hero" style="background-image: url('<?php echo htmlspecialchars($roomsHero['hero_image_path']); ?>');">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <span class="hero-subtitle"><?php echo htmlspecialchars($roomsHero['hero_subtitle']); ?></span>
-            <h1 class="hero-title"><?php echo htmlspecialchars($roomsHero['hero_title']); ?></h1>
-            <p class="hero-description"><?php echo htmlspecialchars($roomsHero['hero_description']); ?></p>
-            <div class="rooms-hero__actions" style="justify-content:center;">
-                <a class="btn btn-primary" href="#collection">Explore Rooms</a>
-                <a class="btn btn-outline" href="#book">Quick Booking</a>
-            </div>
-        </div>
-    </section>
+    <!-- Hero Section -->
+    <?php include 'includes/hero.php'; ?>
 
     <!-- Room Images Grid Section -->
     <section class="section" style="padding-top: 40px; padding-bottom: 40px;">
@@ -379,107 +361,9 @@ foreach ($rooms as $room) {
     </main>
 
     </main>
-    <footer class="footer" id="contact">
-        <div class="container">
-            <div class="footer-grid">
-                <?php foreach ($footer_links as $column_name => $links): ?>
-                <div class="footer-column">
-                    <h4><?php echo htmlspecialchars($column_name); ?></h4>
-                    <ul class="footer-links">
-                        <?php foreach ($links as $link): ?>
-                        <li><a href="<?php echo htmlspecialchars($link['link_url']); ?>"><?php echo htmlspecialchars($link['link_text']); ?></a></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-                <?php endforeach; ?>
-
-                <div class="footer-column">
-                    <h4>Policies</h4>
-                    <ul class="footer-links">
-                        <li><a href="#" class="policy-link" data-policy="booking-policy">Booking Policy</a></li>
-                        <li><a href="#" class="policy-link" data-policy="cancellation-policy">Cancellation</a></li>
-                        <li><a href="#" class="policy-link" data-policy="dining-policy">Dining Policy</a></li>
-                        <li><a href="#" class="policy-link" data-policy="faqs">FAQs</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-column">
-                    <h4>Contact Information</h4>
-                    <ul class="contact-info">
-                        <li>
-                            <i class="fas fa-phone"></i>
-                            <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $contact['phone_main'] ?? $phone_main)); ?>"><?php echo htmlspecialchars($contact['phone_main'] ?? $phone_main); ?></a>
-                        </li>
-                        <li>
-                            <i class="fas fa-envelope"></i>
-                            <a href="mailto:<?php echo htmlspecialchars($contact['email_main'] ?? $email_reservations); ?>"><?php echo htmlspecialchars($contact['email_main'] ?? $email_reservations); ?></a>
-                        </li>
-                        <li>
-                            <i class="fas fa-map-marker-alt"></i>
-                            <a href="https://www.google.com/maps/search/<?php echo urlencode(htmlspecialchars($contact['address_line1'])); ?>" target="_blank"><?php echo htmlspecialchars($contact['address_line1']); ?></a>
-                        </li>
-                        <li>
-                            <i class="fas fa-clock"></i>
-                            <span><?php echo htmlspecialchars($contact['working_hours']); ?></span>
-                        </li>
-                    </ul>
-                    
-                    <div class="social-links">
-                        <?php if (!empty($social['facebook_url'])): ?>
-                        <a href="<?php echo htmlspecialchars($social['facebook_url']); ?>" class="social-icon" target="_blank">
-                            <i class="fab fa-facebook-f"></i>
-                        </a>
-                        <?php endif; ?>
-                        
-                        <?php if (!empty($social['instagram_url'])): ?>
-                        <a href="<?php echo htmlspecialchars($social['instagram_url']); ?>" class="social-icon" target="_blank">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <?php endif; ?>
-                        
-                        <?php if (!empty($social['twitter_url'])): ?>
-                        <a href="<?php echo htmlspecialchars($social['twitter_url']); ?>" class="social-icon" target="_blank">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        <?php endif; ?>
-                        
-                        <?php if (!empty($social['linkedin_url'])): ?>
-                        <a href="<?php echo htmlspecialchars($social['linkedin_url']); ?>" class="social-icon" target="_blank">
-                            <i class="fab fa-linkedin-in"></i>
-                        </a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text')); ?></p>
-            </div>
-        </div>
-    </footer>
-
-    <?php if (!empty($policies)): ?>
-    <div class="policy-overlay" data-policy-overlay></div>
-    <div class="policy-modals">
-        <?php foreach ($policies as $policy): ?>
-        <div class="policy-modal" data-policy-modal="<?php echo htmlspecialchars($policy['slug']); ?>">
-            <div class="policy-modal__content">
-                <button class="policy-modal__close" aria-label="Close policy modal" data-policy-close>&times;</button>
-                <div class="policy-modal__header">
-                    <span class="policy-pill">Policy</span>
-                    <h3><?php echo htmlspecialchars($policy['title']); ?></h3>
-                    <?php if (!empty($policy['summary'])): ?>
-                    <p class="policy-summary"><?php echo htmlspecialchars($policy['summary']); ?></p>
-                    <?php endif; ?>
-                </div>
-                <div class="policy-modal__body">
-                    <p><?php echo nl2br(htmlspecialchars($policy['content'])); ?></p>
-                </div>
-            </div>
-        </div>
-        <?php endforeach; ?>
-    </div>
-    <?php endif; ?>
+    
+    <!-- Footer -->
+    <?php include 'includes/footer.php'; ?>
 
     <script src="js/main.js"></script>
 </body>

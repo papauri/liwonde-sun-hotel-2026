@@ -9,14 +9,6 @@ $currency_symbol = getSetting('currency_symbol');
 $email_reservations = getSetting('email_reservations');
 $phone_main = getSetting('phone_main');
 
-// Fetch page hero (DB-driven)
-$pageHero = getCurrentPageHero();
-$roomsHero = [
-    'hero_title' => $pageHero['hero_title'],
-    'hero_subtitle' => $pageHero['hero_subtitle'],
-    'hero_description' => $pageHero['hero_description'],
-    'hero_image_path' => $pageHero['hero_image_path'],
-];
 
 // Fetch all active rooms
 $rooms = [];
@@ -36,7 +28,6 @@ try {
     $policies = [];
 }
 
-$hero_image = $roomsHero['hero_image_path'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -58,17 +49,8 @@ $hero_image = $roomsHero['hero_image_path'];
     <?php include 'includes/loader.php'; ?>
     <?php include 'includes/header.php'; ?>
 
-    <section class="page-hero" style="background-image: url('<?php echo htmlspecialchars($hero_image); ?>');">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <span class="hero-subtitle"><?php echo htmlspecialchars($roomsHero['hero_subtitle']); ?></span>
-            <h1 class="hero-title"><?php echo htmlspecialchars($roomsHero['hero_title']); ?></h1>
-            <p class="hero-description"><?php echo htmlspecialchars($roomsHero['hero_description']); ?></p>
-            <div class="rooms-hero__actions" style="justify-content:center;">
-                <a class="btn btn-primary" href="#collection">Explore Rooms</a>
-            </div>
-        </div>
-    </section>
+    <!-- Hero Section -->
+    <?php include 'includes/hero.php'; ?>
 
     <main>
         <section class="section" id="collection">
@@ -87,7 +69,7 @@ $hero_image = $roomsHero['hero_image_path'];
                             <article class="room-tile fancy-3d-card" tabindex="0" data-room-id="<?php echo (int)$room['id']; ?>" data-room-slug="<?php echo htmlspecialchars($room['slug']); ?>">
                                 <div class="room-tile__3d-bg"></div>
 
-                                <a class="room-tile__image" href="pages/room.php?room=<?php echo urlencode($room['slug']); ?>" aria-label="Open details for <?php echo htmlspecialchars($room['name']); ?>">
+                                <a class="room-tile__image" href="room.php?room=<?php echo urlencode($room['slug']); ?>" aria-label="Open details for <?php echo htmlspecialchars($room['name']); ?>">
                                     <img src="<?php echo htmlspecialchars($room['image_url']); ?>" alt="<?php echo htmlspecialchars($room['name']); ?>" loading="lazy" style="height: 180px; object-fit: cover;">
                                     <?php if (!empty($room['badge'])): ?>
                                         <span class="room-tile__badge"><?php echo htmlspecialchars($room['badge']); ?></span>
@@ -122,7 +104,7 @@ $hero_image = $roomsHero['hero_image_path'];
                                     <?php endif; ?>
 
                                     <div class="room-tile__actions">
-                                        <a class="btn btn-primary" href="pages/room.php?room=<?php echo urlencode($room['slug']); ?>#book">View & Book</a>
+                                        <a class="btn btn-primary" href="room.php?room=<?php echo urlencode($room['slug']); ?>#book">View & Book</a>
                                     </div>
                                 </div>
                             </article>

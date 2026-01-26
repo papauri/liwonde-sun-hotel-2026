@@ -753,17 +753,11 @@ try {
         </div>
 
         <?php if ($message): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <?php echo htmlspecialchars($message); ?>
-            </div>
+            <?php showAlert($message, 'success'); ?>
         <?php endif; ?>
 
         <?php if ($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i>
-                <?php echo htmlspecialchars($error); ?>
-            </div>
+            <?php showAlert($error, 'error'); ?>
         <?php endif; ?>
 
         <div class="rooms-section">
@@ -1038,12 +1032,12 @@ try {
                     }
                     form.reset();
                 } else {
-                    alert(data && data.message ? data.message : 'Error uploading image');
+                    Alert.show(data && data.message ? data.message : 'Error uploading image', 'error');
                 }
             })
             .catch(err => {
                 console.error('Error uploading featured image:', err);
-                alert('Error uploading image');
+                Alert.show('Error uploading image', 'error');
             });
         }
 
@@ -1149,12 +1143,12 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error saving room');
+                    Alert.show('Error saving room', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error saving room');
+                Alert.show('Error saving room', 'error');
             });
         }
 
@@ -1171,12 +1165,12 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error toggling status');
+                    Alert.show('Error toggling status', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error toggling status');
+                Alert.show('Error toggling status', 'error');
             });
         }
 
@@ -1193,12 +1187,12 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error toggling featured status');
+                    Alert.show('Error toggling featured status', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error toggling featured status');
+                Alert.show('Error toggling featured status', 'error');
             });
         }
     </script>

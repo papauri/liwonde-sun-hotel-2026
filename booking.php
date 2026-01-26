@@ -417,6 +417,7 @@ try {
     <?php include 'includes/loader.php'; ?>
     
     <?php include 'includes/header.php'; ?>
+    <?php include 'includes/alert.php'; ?>
     
     <div class="booking-container">
         <div class="booking-header">
@@ -425,9 +426,7 @@ try {
         </div>
 
         <?php if (isset($error_message)): ?>
-        <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error_message); ?>
-        </div>
+            <?php showAlert($error_message, 'error'); ?>
         <?php endif; ?>
 
         <form method="POST" action="booking.php" class="booking-form-card" id="bookingForm">
@@ -621,27 +620,11 @@ try {
         }
 
         function showAvailabilityMessage(message, isSuccess) {
-            // Remove existing messages
-            const existingMsg = document.querySelector('.availability-message');
-            if (existingMsg) {
-                existingMsg.remove();
-            }
-
-            // Create new message
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `availability-message alert ${isSuccess ? 'alert-success' : 'alert-danger'}`;
-            msgDiv.innerHTML = `<i class="fas fa-${isSuccess ? 'check' : 'exclamation'}-circle"></i> ${message}`;
-
-            // Insert before booking summary
-            const summary = document.getElementById('bookingSummary');
-            summary.parentNode.insertBefore(msgDiv, summary);
-
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                if (msgDiv.parentNode) {
-                    msgDiv.remove();
-                }
-            }, 5000);
+            // Use the new Alert component
+            Alert.show(message, isSuccess ? 'success' : 'error', {
+                timeout: 5000,
+                position: 'top'
+            });
         }
 
         document.getElementById('check_in_date').addEventListener('change', function() {

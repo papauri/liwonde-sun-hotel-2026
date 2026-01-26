@@ -1,8 +1,18 @@
+<?php require_once 'modal.php'; ?>
 <!-- Footer -->
 <footer class="footer" id="contact">
     <div class="container">
         <div class="footer-grid">
-            <?php 
+            <?php
+            // Fetch policies from database
+            $policies = [];
+            try {
+                $stmt = $pdo->query("SELECT slug, title, summary, content FROM policies WHERE is_active = 1 ORDER BY display_order ASC");
+                $policies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                // Fallback if table doesn't exist
+            }
+            
             // Fetch footer links from database
             $footer_links = [];
             try {
@@ -46,10 +56,16 @@
             <div class="footer-column">
                 <h4>Policies</h4>
                 <ul class="footer-links">
-                    <li><a href="#" class="policy-link" data-policy="booking-policy">Booking Policy</a></li>
-                    <li><a href="#" class="policy-link" data-policy="cancellation-policy">Cancellation</a></li>
-                    <li><a href="#" class="policy-link" data-policy="dining-policy">Dining Policy</a></li>
-                    <li><a href="#" class="policy-link" data-policy="faqs">FAQs</a></li>
+                    <?php if (!empty($policies)): ?>
+                        <?php foreach ($policies as $policy): ?>
+                            <li><a href="#" class="policy-link" data-policy="<?php echo htmlspecialchars($policy['slug']); ?>"><?php echo htmlspecialchars($policy['title']); ?></a></li>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <li><a href="#" class="policy-link" data-policy="booking-policy">Booking Policy</a></li>
+                        <li><a href="#" class="policy-link" data-policy="cancellation-policy">Cancellation</a></li>
+                        <li><a href="#" class="policy-link" data-policy="dining-policy">Dining Policy</a></li>
+                        <li><a href="#" class="policy-link" data-policy="faqs">FAQs</a></li>
+                    <?php endif; ?>
                 </ul>
             </div>
             
@@ -112,21 +128,23 @@
 <div class="policy-overlay" data-policy-overlay></div>
 <div class="policy-modals">
     <?php foreach ($policies as $policy): ?>
-    <div class="policy-modal" data-policy-modal="<?php echo htmlspecialchars($policy['slug']); ?>">
-        <div class="policy-modal__content">
-            <button class="policy-modal__close" aria-label="Close policy modal" data-policy-close>&times;</button>
-            <div class="policy-modal__header">
-                <span class="policy-pill">Policy</span>
-                <h3><?php echo htmlspecialchars($policy['title']); ?></h3>
-                <?php if (!empty($policy['summary'])): ?>
-                <p class="policy-summary"><?php echo htmlspecialchars($policy['summary']); ?></p>
-                <?php endif; ?>
-            </div>
-            <div class="policy-modal__body">
-                <p><?php echo nl2br(htmlspecialchars($policy['content'])); ?></p>
-            </div>
-        </div>
-    </div>
+        <?php
+        $policyContent = '';
+        if (!empty($policy['summary'])) {
+            $policyContent = '<p class="policy-summary" style="margin-bottom: 16px; color: #666; font-style: italic;">' . htmlspecialchars($policy['summary']) . '</p>';
+        }
+        $policyContent .= '<p>' . nl2br(htmlspecialchars($policy['content'])) . '</p>';
+        
+        renderModal(
+            'policy-' . htmlspecialchars($policy['slug']),
+            htmlspecialchars($policy['title']),
+            $policyContent,
+            [
+                'size' => 'md',
+                'show_close' => true
+            ]
+        );
+        ?>
     <?php endforeach; ?>
 </div>
 <?php endif; ?>

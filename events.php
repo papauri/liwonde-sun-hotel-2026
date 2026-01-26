@@ -5,14 +5,6 @@ ini_set('display_errors', 1);
 
 require_once 'config/database.php';
 
-// Fetch page hero (DB-driven)
-$pageHero = getCurrentPageHero();
-$eventsHero = [
-    'hero_title' => $pageHero['hero_title'],
-    'hero_subtitle' => $pageHero['hero_subtitle'],
-    'hero_description' => $pageHero['hero_description'],
-    'hero_image_path' => $pageHero['hero_image_path'],
-];
 
 // Fetch upcoming events (future and today)
 try {
@@ -418,14 +410,7 @@ try {
     <div class="mobile-menu-overlay" role="presentation"></div>
 
     <!-- Hero Section -->
-    <section class="page-hero" style="background-image: url('<?php echo htmlspecialchars($eventsHero['hero_image_path']); ?>');">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <span class="hero-subtitle"><?php echo htmlspecialchars($eventsHero['hero_subtitle']); ?></span>
-            <h1 class="hero-title"><?php echo htmlspecialchars($eventsHero['hero_title']); ?></h1>
-            <p class="hero-description"><?php echo htmlspecialchars($eventsHero['hero_description']); ?></p>
-        </div>
-    </section>
+    <?php include 'includes/hero.php'; ?>
 
     <!-- Events Section -->
     <section class="events-section">
@@ -522,74 +507,7 @@ try {
     </section>
 
     <!-- Footer -->
-    <footer class="footer" id="contact">
-        <div class="container">
-            <div class="footer-grid">
-                <?php foreach ($footer_links as $column_name => $links): ?>
-                <div class="footer-column">
-                    <h4><?php echo htmlspecialchars($column_name); ?></h4>
-                    <ul class="footer-links">
-                        <?php foreach ($links as $link): ?>
-                        <li><a href="<?php echo htmlspecialchars($link['link_url']); ?>"><?php echo htmlspecialchars($link['link_text']); ?></a></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-                <?php endforeach; ?>
-
-                <div class="footer-column">
-                    <h4>Contact Information</h4>
-                    <ul class="contact-info">
-                        <li>
-                            <i class="fas fa-phone"></i>
-                            <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $contact['phone_main'])); ?>"><?php echo htmlspecialchars($contact['phone_main']); ?></a>
-                        </li>
-                        <li>
-                            <i class="fas fa-envelope"></i>
-                            <a href="mailto:<?php echo htmlspecialchars($contact['email_main']); ?>"><?php echo htmlspecialchars($contact['email_main']); ?></a>
-                        </li>
-                        <li>
-                            <i class="fas fa-map-marker-alt"></i>
-                            <a href="https://www.google.com/maps/search/<?php echo urlencode(htmlspecialchars($contact['address_line1'])); ?>" target="_blank"><?php echo htmlspecialchars($contact['address_line1']); ?></a>
-                        </li>
-                        <li>
-                            <i class="fas fa-clock"></i>
-                            <span><?php echo htmlspecialchars($contact['working_hours']); ?></span>
-                        </li>
-                    </ul>
-                    
-                    <div class="social-links">
-                        <?php if (!empty($social['facebook_url'])): ?>
-                        <a href="<?php echo htmlspecialchars($social['facebook_url']); ?>" class="social-icon" target="_blank">
-                            <i class="fab fa-facebook-f"></i>
-                        </a>
-                        <?php endif; ?>
-                        
-                        <?php if (!empty($social['instagram_url'])): ?>
-                        <a href="<?php echo htmlspecialchars($social['instagram_url']); ?>" class="social-icon" target="_blank">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <?php endif; ?>
-                        
-                        <?php if (!empty($social['twitter_url'])): ?>
-                        <a href="<?php echo htmlspecialchars($social['twitter_url']); ?>" class="social-icon" target="_blank">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        <?php endif; ?>
-                        
-                        <?php if (!empty($social['linkedin_url'])): ?>
-                        <a href="<?php echo htmlspecialchars($social['linkedin_url']); ?>" class="social-icon" target="_blank">
-                            <i class="fab fa-linkedin-in"></i>
-                        </a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text')); ?></p>
-            </div>
-        </div>
-    </footer>
+    <?php include 'includes/footer.php'; ?>
 
     <script src="js/main.js"></script>
 </body>

@@ -8,6 +8,8 @@ if (!isset($_SESSION['admin_user'])) {
 }
 
 require_once '../config/database.php';
+require_once '../includes/modal.php';
+require_once '../includes/alert.php';
 
 $user = $_SESSION['admin_user'];
 $message = '';
@@ -702,17 +704,11 @@ try {
         </div>
 
         <?php if ($message): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <?php echo htmlspecialchars($message); ?>
-            </div>
+            <?php showAlert($message, 'success'); ?>
         <?php endif; ?>
 
         <?php if ($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i>
-                <?php echo htmlspecialchars($error); ?>
-            </div>
+            <?php showAlert($error, 'error'); ?>
         <?php endif; ?>
 
         <div class="events-section">
@@ -860,14 +856,99 @@ try {
     </div>
 
     <!-- Add Event Modal -->
-    <div class="modal" id="eventModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span id="modalTitle">Add New Event</span>
-                <span class="modal-close" onclick="closeModal()">&times;</span>
+    <?php
+    renderModal('eventModal', 'Add New Event', '
+        <form method="POST" id="eventForm" enctype="multipart/form-data">
+            <input type="hidden" name="action" id="formAction" value="add">
+            <input type="hidden" name="id" id="eventId">
+            
+            <div class="form-group">
+                <label>Event Title *</label>
+                <input type="text" name="title" id="eventTitle" required>
             </div>
             
-            <form method="POST" id="eventForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Description *</label>
+                <textarea name="description" id="eventDescription" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Event Date *</label>
+                <input type="date" name="event_date" id="eventDate" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Start Time</label>
+                <input type="time" name="start_time" id="eventStartTime">
+            </div>
+            
+            <div class="form-group">
+                <label>End Time</label>
+                <input type="time" name="end_time" id="eventEndTime">
+            </div>
+            
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" name="location" id="eventLocation" placeholder="e.g., Grand Conference Hall">
+            </div>
+            
+            <div class="form-group">
+                <label>Ticket Price (' . htmlspecialchars(getSetting('currency_symbol')) . ')</label>
+                <input type="number" name="ticket_price" id="eventPrice" step="0.01" value="0">
+                <small style="color: #666;">Enter 0 for free events</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Capacity</label>
+                <input type="number" name="capacity" id="eventCapacity">
+            </div>
+            
+            <div class="form-group">
+                <label>Display Order</label>
+                <input type="number" name="display_order" id="eventOrder" value="0">
+            </div>
+
+            <div class="form-group">
+                <label>Event Image</label>
+                <div class="image-upload-wrapper">
+                    <div class="image-upload-area" onclick="document.getElementById(\'eventImage\').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <div style="font-weight: 600; margin-bottom: 4px;">Click to Upload Event Image</div>
+                        <div style="font-size: 12px; color: #999;">Recommended: 1200x800px (JPG, PNG, WebP)</div>
+                    </div>
+                    <input type="file" name="image" id="eventImage" accept="image/jpeg,image/png,image/jpg,image/webp" style="display: none;" onchange="previewModalImage(this)">
+                    <div id="imagePreviewContainer" style="margin-top: 16px; display: none;">
+                        <img id="imagePreview" class="current-image-preview" alt="Preview">
+                        <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                            <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                            <span id="imageFileName"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group checkbox-group">
+                <input type="checkbox" name="is_featured" id="eventFeatured">
+                <label for="eventFeatured">Feature this event</label>
+            </div>
+            
+            <div class="form-group checkbox-group">
+                <input type="checkbox" name="is_active" id="eventActive" checked>
+                <label for="eventActive">Active (visible on website)</label>
+            </div>
+        </form>
+    ', [
+        'size' => 'lg',
+        'footer' => '
+            <button type="button" class="btn-action btn-cancel" onclick="Modal.close(\'eventModal\')">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button type="submit" form="eventForm" class="btn-action btn-save">
+                <i class="fas fa-save"></i> Save
+            </button>
+        '
+    ]);
+    ?>
                 <input type="hidden" name="action" id="formAction" value="add">
                 <input type="hidden" name="id" id="eventId">
                 
@@ -966,18 +1047,9 @@ try {
             document.getElementById('formAction').value = 'add';
             document.getElementById('eventForm').reset();
             document.getElementById('eventActive').checked = true;
-            document.getElementById('eventModal').classList.add('active');
+            document.getElementById('imagePreviewContainer').style.display = 'none';
+            Modal.open('eventModal');
         }
-
-        function closeModal() {
-            document.getElementById('eventModal').classList.remove('active');
-        }
-
-        document.getElementById('eventModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
-        });
 
         function enterEditMode(id) {
             if (currentEditingId && currentEditingId !== id) {
@@ -1034,12 +1106,12 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error saving event');
+                    Alert.show('Error saving event', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error saving event');
+                Alert.show('Error saving event', 'error');
             });
         }
 
@@ -1056,12 +1128,12 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error deleting event');
+                    Alert.show('Error deleting event', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error deleting event');
+                Alert.show('Error deleting event', 'error');
             });
         }
 
@@ -1078,12 +1150,12 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error toggling status');
+                    Alert.show('Error toggling status', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error toggling status');
+                Alert.show('Error toggling status', 'error');
             });
         }
 
@@ -1100,12 +1172,12 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error toggling featured status');
+                    Alert.show('Error toggling featured status', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error toggling featured status');
+                Alert.show('Error toggling featured status', 'error');
             });
         }
 
@@ -1123,14 +1195,6 @@ try {
             }
         }
 
-        function openAddModal() {
-            document.getElementById('modalTitle').textContent = 'Add New Event';
-            document.getElementById('formAction').value = 'add';
-            document.getElementById('eventForm').reset();
-            document.getElementById('eventActive').checked = true;
-            document.getElementById('imagePreviewContainer').style.display = 'none';
-            document.getElementById('eventModal').classList.add('active');
-        }
     </script>
 </body>
 </html>

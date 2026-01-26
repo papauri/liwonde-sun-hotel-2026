@@ -8,6 +8,8 @@ if (!isset($_SESSION['admin_user'])) {
 }
 
 require_once '../config/database.php';
+require_once '../includes/modal.php';
+require_once '../includes/alert.php';
 
 $user = $_SESSION['admin_user'];
 $today = date('Y-m-d');
@@ -416,7 +418,7 @@ $currency_symbol = getSetting('currency_symbol');
                                 <td>
                                     <?php if ($booking['status'] !== 'checked-in'): ?>
                                         <?php $can_checkin = ($booking['status'] === 'confirmed' && $booking['payment_status'] === 'paid'); ?>
-                                        <button onclick="<?php echo $can_checkin ? "processCheckIn({$booking['id']}, '" . htmlspecialchars(addslashes($booking['guest_name'])) . "')" : "alert('Cannot check in: booking must be CONFIRMED and PAID.')"; ?>" 
+                                        <button onclick="<?php echo $can_checkin ? "processCheckIn({$booking['id']}, '" . htmlspecialchars(addslashes($booking['guest_name'])) . "')" : "Alert.show('Cannot check in: booking must be CONFIRMED and PAID.', 'error')"; ?>"
                                                 id="checkin-btn-<?php echo $booking['id']; ?>"
                                                 style="background: <?php echo $can_checkin ? 'var(--gold)' : '#e0e0e0'; ?>; color: <?php echo $can_checkin ? 'var(--deep-navy)' : '#666'; ?>; border: none; padding: 6px 14px; border-radius: 6px; cursor: <?php echo $can_checkin ? 'pointer' : 'not-allowed'; ?>; font-size: 12px; font-weight: 600;">
                                             <i class="fas fa-check"></i> Check In
@@ -483,7 +485,7 @@ $currency_symbol = getSetting('currency_symbol');
                                 <?php if ($booking['payment_status'] === 'paid'): ?>
                                 <a href="booking-details.php?id=<?php echo $booking['id']; ?>&action=checkin" class="btn btn-primary btn-sm">Check In</a>
                                 <?php else: ?>
-                                <a href="booking-details.php?id=<?php echo $booking['id']; ?>" class="btn btn-primary btn-sm" style="opacity:.6; cursor:not-allowed;" onclick="alert('Cannot check in: booking must be PAID first.'); return false;">Check In</a>
+                                <a href="booking-details.php?id=<?php echo $booking['id']; ?>" class="btn btn-primary btn-sm" style="opacity:.6; cursor:not-allowed;" onclick="Alert.show('Cannot check in: booking must be PAID first.', 'error'); return false;">Check In</a>
                                 <?php endif; ?>
                                 <?php endif; ?>
                                 <a href="booking-details.php?id=<?php echo $booking['id']; ?>" class="btn btn-primary btn-sm">View</a>
@@ -561,14 +563,14 @@ $currency_symbol = getSetting('currency_symbol');
                     const button = document.getElementById(`checkin-btn-${bookingId}`);
                     button.outerHTML = `<button onclick="cancelCheckIn(${bookingId}, '${guestName.replace(/'/g, "\\'")}')" id="cancel-checkin-btn-${bookingId}" style="background: #6c757d; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;"><i class="fas fa-undo"></i> Cancel Check-in</button>`;
                     
-                    alert(`${guestName} successfully checked in!`);
+                    Alert.show(`${guestName} successfully checked in!`, 'success');
                 } else {
-                    alert('Error: ' + (data.message || 'Failed to check in guest'));
+                    Alert.show('Error: ' + (data.message || 'Failed to check in guest'), 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred during check-in');
+                Alert.show('An error occurred during check-in', 'error');
             });
         }
 
@@ -595,14 +597,14 @@ $currency_symbol = getSetting('currency_symbol');
                     const button = document.getElementById(`cancel-checkin-btn-${bookingId}`);
                     button.outerHTML = `<span style="color: #0c5460; font-weight: 600;">Reverted to confirmed</span>`;
 
-                    alert(`Check-in cancelled for ${guestName}.`);
+                    Alert.show(`Check-in cancelled for ${guestName}.`, 'success');
                 } else {
-                    alert('Error: ' + (data.message || 'Failed to cancel check-in'));
+                    Alert.show('Error: ' + (data.message || 'Failed to cancel check-in'), 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while cancelling check-in');
+                Alert.show('An error occurred while cancelling check-in', 'error');
             });
         }
     </script>

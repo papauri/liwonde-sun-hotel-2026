@@ -217,9 +217,7 @@ $site_name = getSetting('site_name');
             </div>
 
             <?php if ($error_message): ?>
-            <div class="alert-danger">
-                <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error_message); ?>
-            </div>
+                <?php showAlert($error_message, 'error'); ?>
             <?php endif; ?>
 
             <form method="POST" action="login.php">

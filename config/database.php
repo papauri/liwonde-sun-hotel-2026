@@ -197,6 +197,28 @@ function getCurrentPageHero(): ?array {
 }
 
 /**
+ * Helper: fetch active page loader subtext by page slug.
+ * Returns the subtext string if found and active, null otherwise.
+ */
+function getPageLoader(string $page_slug): ?string {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("
+            SELECT subtext
+            FROM page_loaders
+            WHERE page_slug = ? AND is_active = 1
+            LIMIT 1
+        ");
+        $stmt->execute([$page_slug]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? $row['subtext'] : null;
+    } catch (PDOException $e) {
+        error_log("Error fetching page loader ({$page_slug}): " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
  * Helper function to check room availability
  * Returns true if room is available, false if booked
  */

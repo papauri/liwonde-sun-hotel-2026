@@ -116,16 +116,6 @@ try {
     error_log("Error fetching gallery: " . $e->getMessage());
 }
 
-// Fetch page hero (DB-driven)
-$pageHero = getPageHero('restaurant');
-
-$restaurantHero = [
-    'page_url' => '/restaurant.php',
-    'hero_title' => $pageHero['hero_title'],
-    'hero_subtitle' => $pageHero['hero_subtitle'],
-    'hero_description' => $pageHero['hero_description'],
-    'hero_image_path' => $pageHero['hero_image_path'],
-];
 
 // Fetch policies for footer modals
 $policies = [];
@@ -520,14 +510,7 @@ try {
     <div class="mobile-menu-overlay" role="presentation"></div>
 
     <!-- Hero Section -->
-    <section class="page-hero" style="background-image: url('<?php echo htmlspecialchars($restaurantHero['hero_image_path']); ?>');">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <span class="hero-subtitle"><?php echo htmlspecialchars($restaurantHero['hero_subtitle']); ?></span>
-            <h1 class="hero-title"><?php echo htmlspecialchars($restaurantHero['hero_title']); ?></h1>
-            <p class="hero-description"><?php echo htmlspecialchars($restaurantHero['hero_description']); ?></p>
-        </div>
-    </section>
+    <?php include 'includes/hero.php'; ?>
 
     <!-- Restaurant Gallery Grid -->
     <section class="restaurant-gallery section-padding">
