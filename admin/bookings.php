@@ -117,9 +117,9 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --gold: #d4af37;
-            --navy: #142841;
-            --deep-navy: #0f1d2e;
+            --gold: #D4AF37;
+            --navy: #0A1929;
+            --deep-navy: #050D14;
             --cream: #fbf8f3;
         }
         * {
@@ -135,7 +135,7 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
         .admin-header {
             background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 100%);
             color: white;
-            padding: 20px 32px;
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;

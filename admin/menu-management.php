@@ -186,12 +186,17 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menu Management - Admin Panel</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
-            --gold: #d4af37;
-            --navy: #142841;
-            --deep-navy: #0f1d2e;
+            --gold: #D4AF37;
+            --navy: #0A1929;
+            --deep-navy: #050D14;
             --cream: #fbf8f3;
         }
         * {
@@ -200,18 +205,17 @@ try {
             box-sizing: border-box;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--cream);
-            color: #333;
+            font-family: 'Poppins', sans-serif;
+            background: #f5f7fa;
         }
         .admin-header {
             background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 100%);
             color: white;
-            padding: 20px 32px;
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         .admin-header h1 {
             font-family: 'Playfair Display', serif;
@@ -236,17 +240,17 @@ try {
             text-transform: uppercase;
         }
         .btn-logout {
-            background: rgba(255,255,255, 0.1);
+            background: rgba(255, 255, 255, 0.1);
             color: white;
             padding: 8px 20px;
-            border: 1px solid rgba(255,255,255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 6px;
             text-decoration: none;
             font-size: 13px;
             transition: all 0.3s ease;
         }
         .btn-logout:hover {
-            background: rgba(255,255,255, 0.2);
+            background: rgba(255, 255, 255, 0.2);
         }
         .admin-nav {
             background: white;
@@ -267,7 +271,6 @@ try {
             font-weight: 500;
             border-bottom: 2px solid transparent;
             transition: all 0.3s ease;
-            white-space: nowrap;
         }
         .admin-nav a:hover,
         .admin-nav a.active {
@@ -737,30 +740,7 @@ try {
     </style>
 </head>
 <body>
-    <div class="admin-header">
-        <h1><i class="fas fa-utensils"></i> Menu Management</h1>
-        <div class="user-info">
-            <div>
-                <div class="user-name"><?php echo htmlspecialchars($user['full_name']); ?></div>
-                <div class="user-role"><?php echo htmlspecialchars($user['role']); ?></div>
-            </div>
-            <a href="logout.php" class="btn-logout">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </div>
-    </div>
-    
-    <nav class="admin-nav">
-        <ul>
-            <li><a href="dashboard.php" class="<?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="bookings.php" class="<?php echo $current_page === 'bookings.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
-            <li><a href="room-management.php" class="<?php echo $current_page === 'room-management.php' ? 'active' : ''; ?>"><i class="fas fa-bed"></i> Rooms</a></li>
-            <li><a href="conference-management.php" class="<?php echo $current_page === 'conference-management.php' ? 'active' : ''; ?>"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
-            <li><a href="menu-management.php" class="<?php echo $current_page === 'menu-management.php' ? 'active' : ''; ?>"><i class="fas fa-utensils"></i> Menu</a></li>
-            <li><a href="events-management.php" class="<?php echo $current_page === 'events-management.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
-            <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
-        </ul>
-    </nav>
+    <?php include 'admin-header.php'; ?>
     
     <div class="content">
         <div class="page-header">

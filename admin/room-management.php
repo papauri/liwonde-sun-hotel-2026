@@ -16,6 +16,7 @@ if (!isset($_SESSION['admin_user'])) {
 }
 
 require_once '../config/database.php';
+require_once '../includes/alert.php';
 
 // Helpers
 function ini_bytes($val) {
@@ -218,12 +219,17 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Management - Admin Panel</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
-            --gold: #d4af37;
-            --navy: #142841;
-            --deep-navy: #0f1d2e;
+            --gold: #D4AF37;
+            --navy: #0A1929;
+            --deep-navy: #050D14;
             --cream: #fbf8f3;
         }
         * {
@@ -232,14 +238,13 @@ try {
             box-sizing: border-box;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--cream);
-            color: #333;
+            font-family: 'Poppins', sans-serif;
+            background: #f5f7fa;
         }
         .admin-header {
             background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 100%);
             color: white;
-            padding: 20px 32px;
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -254,6 +259,18 @@ try {
             display: flex;
             align-items: center;
             gap: 24px;
+        }
+        .admin-header .user-name {
+            font-size: 14px;
+        }
+        .admin-header .user-role {
+            background: var(--gold);
+            color: var(--deep-navy);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
         .btn-logout {
             background: rgba(255, 255, 255, 0.1);

@@ -214,7 +214,6 @@ $current_page = 'bookings.php';
             font-weight: 500;
             border-bottom: 2px solid transparent;
             transition: all 0.3s ease;
-            white-space: nowrap;
         }
         .admin-nav a:hover,
         .admin-nav a.active {
@@ -396,18 +395,6 @@ $current_page = 'bookings.php';
 </head>
 <body>
 	<?php include 'admin-header.php'; ?>
-
-    <nav class="admin-nav">
-        <ul>
-            <li><a href="dashboard.php" class="<?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="bookings.php" class="<?php echo $current_page === 'bookings.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
-            <li><a href="room-management.php" class="<?php echo $current_page === 'room-management.php' ? 'active' : ''; ?>"><i class="fas fa-bed"></i> Rooms</a></li>
-            <li><a href="conference-management.php" class="<?php echo $current_page === 'conference-management.php' ? 'active' : ''; ?>"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
-            <li><a href="menu-management.php" class="<?php echo $current_page === 'menu-management.php' ? 'active' : ''; ?>"><i class="fas fa-utensils"></i> Menu</a></li>
-            <li><a href="events-management.php" class="<?php echo $current_page === 'events-management.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
-            <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
-        </ul>
-    </nav>
 
     <div class="booking-details-container">
         <div class="details-card">
