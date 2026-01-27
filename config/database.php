@@ -96,6 +96,195 @@ function getSetting($key, $default = '') {
 }
 
 /**
+ * Helper function to get email setting value
+ * Handles encrypted settings like passwords
+ */
+function getEmailSetting($key, $default = '') {
+    global $pdo;
+    
+    try {
+        // Check if email_settings table exists
+        $table_exists = $pdo->query("SHOW TABLES LIKE 'email_settings'")->rowCount() > 0;
+        
+        if (!$table_exists) {
+            // Fallback to site_settings for backward compatibility
+            return getSetting($key, $default);
+        }
+        
+        $stmt = $pdo->prepare("SELECT setting_value, is_encrypted FROM email_settings WHERE setting_key = ?");
+        $stmt->execute([$key]);
+        $result = $stmt->fetch();
+        
+        if (!$result) {
+            return $default;
+        }
+        
+        $value = $result['setting_value'];
+        $is_encrypted = (bool)$result['is_encrypted'];
+        
+        // Handle encrypted values (like passwords)
+        if ($is_encrypted && !empty($value)) {
+            try {
+                // Try to decrypt using database function
+                $stmt = $pdo->prepare("SELECT decrypt_setting(?) as decrypted_value");
+                $stmt->execute([$value]);
+                $decrypted = $stmt->fetch();
+                if ($decrypted && !empty($decrypted['decrypted_value'])) {
+                    return $decrypted['decrypted_value'];
+                }
+            } catch (Exception $e) {
+                error_log("Error decrypting setting {$key}: " . $e->getMessage());
+                // Return empty if decryption fails
+                return '';
+            }
+        }
+        
+        return $value;
+    } catch (PDOException $e) {
+        error_log("Error fetching email setting: " . $e->getMessage());
+        return $default;
+    }
+}
+
+/**
+ * Helper function to get all email settings
+ */
+function getAllEmailSettings() {
+    global $pdo;
+    
+    $settings = [];
+    try {
+        // Check if email_settings table exists
+        $table_exists = $pdo->query("SHOW TABLES LIKE 'email_settings'")->rowCount() > 0;
+        
+        if (!$table_exists) {
+            return $settings;
+        }
+        
+        $stmt = $pdo->query("SELECT setting_key, setting_value, is_encrypted, description FROM email_settings ORDER BY setting_group, setting_key");
+        $results = $stmt->fetchAll();
+        
+        foreach ($results as $row) {
+            $key = $row['setting_key'];
+            $value = $row['setting_value'];
+            $is_encrypted = (bool)$row['is_encrypted'];
+            
+            // Handle encrypted values
+            if ($is_encrypted && !empty($value)) {
+                try {
+                    $stmt2 = $pdo->prepare("SELECT decrypt_setting(?) as decrypted_value");
+                    $stmt2->execute([$value]);
+                    $decrypted = $stmt2->fetch();
+                    if ($decrypted && !empty($decrypted['decrypted_value'])) {
+                        $value = $decrypted['decrypted_value'];
+                    } else {
+                        $value = ''; // Don't expose encrypted data
+                    }
+                } catch (Exception $e) {
+                    $value = ''; // Don't expose encrypted data on error
+                }
+            }
+            
+            $settings[$key] = [
+                'value' => $value,
+                'encrypted' => $is_encrypted,
+                'description' => $row['description']
+            ];
+        }
+        
+        return $settings;
+    } catch (PDOException $e) {
+        error_log("Error fetching all email settings: " . $e->getMessage());
+        return $settings;
+    }
+}
+
+/**
+ * Helper function to update email setting
+ */
+function updateEmailSetting($key, $value, $description = null, $is_encrypted = false) {
+    global $pdo;
+    
+    try {
+        // Check if email_settings table exists
+        $table_exists = $pdo->query("SHOW TABLES LIKE 'email_settings'")->rowCount() > 0;
+        
+        if (!$table_exists) {
+            // Fallback to site_settings for backward compatibility
+            return updateSetting($key, $value);
+        }
+        
+        // Handle encryption if needed
+        $final_value = $value;
+        if ($is_encrypted && !empty($value)) {
+            try {
+                $stmt = $pdo->prepare("SELECT encrypt_setting(?) as encrypted_value");
+                $stmt->execute([$value]);
+                $encrypted = $stmt->fetch();
+                if ($encrypted && !empty($encrypted['encrypted_value'])) {
+                    $final_value = $encrypted['encrypted_value'];
+                }
+            } catch (Exception $e) {
+                error_log("Error encrypting setting {$key}: " . $e->getMessage());
+                return false;
+            }
+        }
+        
+        // Update or insert
+        $sql = "INSERT INTO email_settings (setting_key, setting_value, is_encrypted, description) 
+                VALUES (?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE 
+                setting_value = VALUES(setting_value),
+                is_encrypted = VALUES(is_encrypted),
+                description = VALUES(description),
+                updated_at = CURRENT_TIMESTAMP";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$key, $final_value, $is_encrypted ? 1 : 0, $description]);
+        
+        // Clear cache for this setting
+        global $_SITE_SETTINGS;
+        if (isset($_SITE_SETTINGS[$key])) {
+            unset($_SITE_SETTINGS[$key]);
+        }
+        
+        return true;
+    } catch (PDOException $e) {
+        error_log("Error updating email setting: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Helper function to update setting (for backward compatibility)
+ */
+function updateSetting($key, $value) {
+    global $pdo;
+    
+    try {
+        $sql = "INSERT INTO site_settings (setting_key, setting_value) 
+                VALUES (?, ?)
+                ON DUPLICATE KEY UPDATE 
+                setting_value = VALUES(setting_value),
+                updated_at = CURRENT_TIMESTAMP";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$key, $value]);
+        
+        // Clear cache for this setting
+        global $_SITE_SETTINGS;
+        if (isset($_SITE_SETTINGS[$key])) {
+            unset($_SITE_SETTINGS[$key]);
+        }
+        
+        return true;
+    } catch (PDOException $e) {
+        error_log("Error updating setting: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
  * Preload common settings for better performance
  */
 function preloadCommonSettings() {
@@ -225,6 +414,16 @@ function getPageLoader(string $page_slug): ?string {
 function isRoomAvailable($room_id, $check_in_date, $check_out_date, $exclude_booking_id = null) {
     global $pdo;
     try {
+        // First check if there are any rooms available at all
+        $room_stmt = $pdo->prepare("SELECT rooms_available, total_rooms FROM rooms WHERE id = ?");
+        $room_stmt->execute([$room_id]);
+        $room = $room_stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$room || $room['rooms_available'] <= 0) {
+            return false; // No rooms available
+        }
+        
+        // Then check for overlapping bookings
         $sql = "
             SELECT COUNT(*) as bookings 
             FROM bookings 
@@ -244,7 +443,11 @@ function isRoomAvailable($room_id, $check_in_date, $check_out_date, $exclude_boo
         $stmt->execute($params);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        return $result['bookings'] == 0; // Available if no conflicting bookings
+        // Check if number of overlapping bookings is less than available rooms
+        $overlapping_bookings = $result['bookings'];
+        $rooms_available = $room['rooms_available'];
+        
+        return $overlapping_bookings < $rooms_available;
     } catch (PDOException $e) {
         error_log("Error checking room availability: " . $e->getMessage());
         return false; // Assume unavailable on error
@@ -297,6 +500,13 @@ function checkRoomAvailability($room_id, $check_in_date, $check_out_date, $exclu
             return $result;
         }
         
+        // Check if there are rooms available
+        if ($room['rooms_available'] <= 0) {
+            $result['available'] = false;
+            $result['error'] = 'No rooms of this type are currently available';
+            return $result;
+        }
+        
         // Check for overlapping bookings
         $sql = "
             SELECT 
@@ -323,7 +533,11 @@ function checkRoomAvailability($room_id, $check_in_date, $check_out_date, $exclu
         $stmt->execute($params);
         $conflicts = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        if (!empty($conflicts)) {
+        // Check if number of overlapping bookings exceeds available rooms
+        $overlapping_bookings = count($conflicts);
+        $rooms_available = $room['rooms_available'];
+        
+        if ($overlapping_bookings >= $rooms_available) {
             $result['available'] = false;
             $result['conflicts'] = $conflicts;
             $result['error'] = 'Room is not available for the selected dates';
@@ -425,13 +639,21 @@ function validateBookingData($data) {
                 $errors['check_out_date'] = 'Check-out date must be after check-in date';
             }
             
-            // Maximum stay duration (30 days)
-            $max_stay = new DateTime();
-            $max_stay->modify('+30 days');
-            if ($check_out > $max_stay) {
-                $errors['check_out_date'] = 'Maximum stay duration is 30 days';
-            }
-            
+    // Maximum stay duration (30 days)
+    $max_stay = new DateTime();
+    $max_stay->modify('+30 days');
+    if ($check_out > $max_stay) {
+        $errors['check_out_date'] = 'Maximum stay duration is 30 days';
+    }
+    
+    // Maximum advance booking days (configurable setting)
+    $max_advance_days = (int)getSetting('max_advance_booking_days', 30);
+    $max_advance_date = new DateTime();
+    $max_advance_date->modify('+' . $max_advance_days . ' days');
+    if ($check_in > $max_advance_date) {
+        $errors['check_in_date'] = "Bookings can only be made up to {$max_advance_days} days in advance. Please select an earlier check-in date.";
+    }
+    
         } catch (Exception $e) {
             $errors['dates'] = 'Invalid date format';
         }

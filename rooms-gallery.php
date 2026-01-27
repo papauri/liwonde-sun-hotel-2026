@@ -1,6 +1,7 @@
 <?php
 // Liwonde Sun Hotel - Rooms Gallery (Modern Cards)
 require_once 'config/database.php';
+require_once 'includes/reviews-display.php';
 
 $site_name = getSetting('site_name');
 $site_logo = getSetting('site_logo');
@@ -89,6 +90,13 @@ try {
                                         </div>
                                     </div>
 
+                                    <!-- Compact Rating Display -->
+                                    <div class="room-tile__rating" data-room-id="<?php echo (int)$room['id']; ?>">
+                                        <div class="compact-rating compact-rating--loading">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                        </div>
+                                    </div>
+
                                     <div class="room-tile__meta">
                                         <span><i class="fas fa-user-friends"></i> <?php echo htmlspecialchars($max_guests); ?> guests</span>
                                         <span><i class="fas fa-ruler-combined"></i> <?php echo htmlspecialchars($size_sqm); ?> sqm</span>
@@ -150,6 +158,74 @@ try {
                 card.addEventListener('mouseleave', function() {
                     card.style.transform = '';
                 });
+            });
+        })();
+
+        // Fetch and display room ratings
+        (function() {
+            const ratingContainers = document.querySelectorAll('.room-tile__rating');
+            
+            ratingContainers.forEach(container => {
+                const roomId = container.dataset.roomId;
+                
+                fetch(`admin/api/reviews.php?room_id=${roomId}&status=approved`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.averages) {
+                            const avgRating = data.averages.avg_rating || 0;
+                            const totalCount = data.total_count || 0;
+                            
+                            if (totalCount > 0) {
+                                let starsHtml = '';
+                                const fullStars = Math.floor(avgRating);
+                                const hasHalfStar = (avgRating - fullStars) >= 0.5;
+                                const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+                                for (let i = 0; i < fullStars; i++) {
+                                    starsHtml += '<i class="fas fa-star"></i>';
+                                }
+                                if (hasHalfStar) {
+                                    starsHtml += '<i class="fas fa-star-half-alt"></i>';
+                                }
+                                for (let i = 0; i < emptyStars; i++) {
+                                    starsHtml += '<i class="far fa-star"></i>';
+                                }
+
+                                container.innerHTML = `
+                                    <div class="compact-rating">
+                                        <div class="compact-rating__stars">${starsHtml}</div>
+                                        <div class="compact-rating__info">
+                                            <span class="compact-rating__score">${avgRating.toFixed(1)}</span>
+                                            <span class="compact-rating__count">(${totalCount})</span>
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                container.innerHTML = `
+                                    <div class="compact-rating compact-rating--no-reviews">
+                                        <i class="far fa-star"></i>
+                                        <span>No reviews</span>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            container.innerHTML = `
+                                <div class="compact-rating compact-rating--no-reviews">
+                                    <i class="far fa-star"></i>
+                                    <span>No reviews</span>
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching room rating:', error);
+                        container.innerHTML = `
+                            <div class="compact-rating compact-rating--no-reviews">
+                                <i class="far fa-star"></i>
+                                <span>No reviews</span>
+                            </div>
+                        `;
+                    });
             });
         })();
     </script>

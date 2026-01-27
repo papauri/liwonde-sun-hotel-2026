@@ -1,5 +1,6 @@
 <?php
 require_once 'config/database.php';
+require_once 'includes/reviews-display.php';
 
 // Helper: resolve image URL (supports relative and absolute URLs)
 function resolveImageUrl($path) {
@@ -71,12 +72,25 @@ try {
 
 // Fetch testimonials
 $stmt = $pdo->query("
-    SELECT * FROM testimonials 
-    WHERE is_featured = 1 AND is_approved = 1 
-    ORDER BY display_order ASC 
+    SELECT * FROM testimonials
+    WHERE is_featured = 1 AND is_approved = 1
+    ORDER BY display_order ASC
     LIMIT 3
 ");
 $testimonials = $stmt->fetchAll();
+
+// Fetch hotel-wide reviews
+$hotel_reviews = [];
+$review_averages = [];
+try {
+    $reviews_data = fetchReviews(null, 'approved', 6, 0);
+    $hotel_reviews = $reviews_data['reviews'] ?? [];
+    $review_averages = $reviews_data['averages'] ?? [];
+} catch (Exception $e) {
+    error_log("Error fetching hotel reviews: " . $e->getMessage());
+    $hotel_reviews = [];
+    $review_averages = [];
+}
 
 // Fetch contact settings
 $contact_settings = getSettingsByGroup('contact');
@@ -580,6 +594,123 @@ try {
             </div>
         </div>
     </section>
+
+    <!-- Hotel Reviews Section -->
+    <?php if (!empty($hotel_reviews) || !empty($review_averages)): ?>
+    <section class="section hotel-reviews-section" id="reviews">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-subtitle">Guest Reviews</span>
+                <h2 class="section-title">What Our Guests Say</h2>
+                <p class="section-description">Read authentic reviews from guests who have experienced our hospitality</p>
+            </div>
+            
+            <?php if (!empty($review_averages)): ?>
+            <!-- Rating Summary -->
+            <div class="reviews-summary-wrapper">
+                <div class="reviews-overall-rating">
+                    <div class="overall-rating-score">
+                        <span class="rating-number"><?php echo number_format($review_averages['avg_rating'] ?? 0, 1); ?></span>
+                        <div class="rating-stars">
+                            <?php echo displayStarRating($review_averages['avg_rating'] ?? 0, 24, true); ?>
+                        </div>
+                        <span class="rating-count"><?php echo ($review_averages['total_count'] ?? 0); ?> reviews</span>
+                    </div>
+                </div>
+                
+                <div class="reviews-category-breakdown">
+                    <div class="category-rating-item">
+                        <span class="category-label">Service</span>
+                        <div class="category-rating-bar">
+                            <div class="category-rating-fill" style="width: <?php echo ($review_averages['avg_service'] ?? 0) * 20; ?>%;"></div>
+                        </div>
+                        <span class="category-value"><?php echo number_format($review_averages['avg_service'] ?? 0, 1); ?></span>
+                    </div>
+                    <div class="category-rating-item">
+                        <span class="category-label">Cleanliness</span>
+                        <div class="category-rating-bar">
+                            <div class="category-rating-fill" style="width: <?php echo ($review_averages['avg_cleanliness'] ?? 0) * 20; ?>%;"></div>
+                        </div>
+                        <span class="category-value"><?php echo number_format($review_averages['avg_cleanliness'] ?? 0, 1); ?></span>
+                    </div>
+                    <div class="category-rating-item">
+                        <span class="category-label">Location</span>
+                        <div class="category-rating-bar">
+                            <div class="category-rating-fill" style="width: <?php echo ($review_averages['avg_location'] ?? 0) * 20; ?>%;"></div>
+                        </div>
+                        <span class="category-value"><?php echo number_format($review_averages['avg_location'] ?? 0, 1); ?></span>
+                    </div>
+                    <div class="category-rating-item">
+                        <span class="category-label">Value</span>
+                        <div class="category-rating-bar">
+                            <div class="category-rating-fill" style="width: <?php echo ($review_averages['avg_value'] ?? 0) * 20; ?>%;"></div>
+                        </div>
+                        <span class="category-value"><?php echo number_format($review_averages['avg_value'] ?? 0, 1); ?></span>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($hotel_reviews)): ?>
+            <!-- Reviews List -->
+            <div class="hotel-reviews-list">
+                <?php foreach ($hotel_reviews as $review): ?>
+                <div class="hotel-review-card">
+                    <div class="review-header">
+                        <div class="review-guest-info">
+                            <div class="guest-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="guest-details">
+                                <span class="guest-name"><?php echo htmlspecialchars($review['guest_name']); ?></span>
+                                <span class="review-date"><?php echo date('F j, Y', strtotime($review['created_at'])); ?></span>
+                            </div>
+                        </div>
+                        <div class="review-rating">
+                            <?php echo displayStarRating($review['rating'], 16, true); ?>
+                        </div>
+                    </div>
+                    
+                    <div class="review-content">
+                        <p class="review-text"><?php echo htmlspecialchars($review['comment']); ?></p>
+                    </div>
+                    
+                    <?php if (!empty($review['latest_response'])): ?>
+                    <div class="review-admin-response">
+                        <div class="admin-response-header">
+                            <i class="fas fa-reply"></i>
+                            <span>Response from <?php echo htmlspecialchars($site_name); ?></span>
+                        </div>
+                        <p class="admin-response-text"><?php echo htmlspecialchars($review['latest_response']); ?></p>
+                        <?php if (!empty($review['latest_response_date'])): ?>
+                        <span class="admin-response-date"><?php echo date('F j, Y', strtotime($review['latest_response_date'])); ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            
+            <!-- Reviews Actions -->
+            <div class="reviews-actions">
+                <a href="submit-review.php" class="btn btn-primary">
+                    <i class="fas fa-pen"></i> Write a Review
+                </a>
+                <a href="admin/reviews.php" class="btn btn-outline">
+                    <i class="fas fa-list"></i> View All Reviews
+                </a>
+            </div>
+            <?php else: ?>
+            <!-- No Reviews Message -->
+            <div class="no-reviews-message">
+                <i class="fas fa-star"></i>
+                <p>No reviews yet. Be the first to share your experience!</p>
+                <a href="submit-review.php" class="btn btn-primary">Write a Review</a>
+            </div>
+            <?php endif; ?>
+        </div>
+    </section>
+    <?php endif; ?>
 
     </main>
     

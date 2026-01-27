@@ -37,6 +37,15 @@ try {
         throw new Exception('Check-out date must be after check-in date');
     }
 
+    // Check advance booking restriction
+    $max_advance_days = (int)getSetting('max_advance_booking_days', 30);
+    $max_advance_date = new DateTime();
+    $max_advance_date->modify('+' . $max_advance_days . ' days');
+    
+    if ($check_in_date > $max_advance_date) {
+        throw new Exception("Bookings can only be made up to {$max_advance_days} days in advance. Please select an earlier check-in date.");
+    }
+
     // Check if room exists and is active
     $room_stmt = $pdo->prepare("SELECT id, name, price_per_night, max_guests FROM rooms WHERE id = ? AND is_active = 1");
     $room_stmt->execute([$room_id]);

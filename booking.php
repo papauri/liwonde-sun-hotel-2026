@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'config/database.php';
+require_once 'config/email.php';
 
 // Handle booking submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -90,6 +91,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Commit transaction - booking secured with foreign key constraints!
             $pdo->commit();
 
+            // Send email notifications using working email system
+            $booking_data = [
+                'id' => $pdo->lastInsertId(),
+                'booking_reference' => $booking_reference,
+                'room_id' => $room_id,
+                'guest_name' => $guest_name,
+                'guest_email' => $guest_email,
+                'guest_phone' => $guest_phone,
+                'check_in_date' => $check_in_date,
+                'check_out_date' => $check_out_date,
+                'number_of_nights' => $number_of_nights,
+                'number_of_guests' => $number_of_guests,
+                'total_amount' => $total_amount,
+                'special_requests' => $special_requests,
+                'status' => 'pending'
+            ];
+            
+            // Send booking received email to guest (first email - awaiting confirmation)
+            $email_result = sendBookingReceivedEmail($booking_data);
+            
+            // Log email result for debugging
+            if (!$email_result['success']) {
+                error_log("Failed to send booking received email: " . $email_result['message']);
+            } else {
+                // Log success with preview URL if available
+                $logMsg = "Booking received email processed (PHPMailer)";
+                if (isset($email_result['preview_url'])) {
+                    $logMsg .= " - Preview: " . $email_result['preview_url'];
+                }
+                error_log($logMsg);
+            }
+            
+            // Send notification to admin (simplified PHPMailer)
+            $admin_result = sendAdminNotificationEmail($booking_data);
+            
+            if (!$admin_result['success']) {
+                error_log("Failed to send admin notification: " . $admin_result['message']);
+            } else {
+                // Log success with preview URL if available
+                $logMsg = "Admin notification processed (PHPMailer)";
+                if (isset($admin_result['preview_url'])) {
+                    $logMsg .= " - Preview: " . $admin_result['preview_url'];
+                }
+                error_log($logMsg);
+            }
+
             // Success - redirect to confirmation
             $_SESSION['booking_success'] = [
                 'reference' => $booking_reference,
@@ -98,7 +145,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'check_in' => $check_in_date,
                 'check_out' => $check_out_date,
                 'nights' => $number_of_nights,
-                'total' => $total_amount
+                'total' => $total_amount,
+                'email_sent' => $email_result['success']
             ];
 
             header('Location: booking-confirmation.php?ref=' . $booking_reference);
@@ -129,6 +177,10 @@ $site_logo = getSetting('site_logo');
 $currency_symbol = getSetting('currency_symbol');
 $phone_main = getSetting('phone_main');
 $email_reservations = getSetting('email_reservations');
+
+// Get maximum advance booking days
+$max_advance_days = (int)getSetting('max_advance_booking_days', 30);
+$max_advance_date = date('Y-m-d', strtotime("+{$max_advance_days} days"));
 
 // Fetch policies for footer modals
 $policies = [];
@@ -484,11 +536,18 @@ try {
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="check_in_date" class="required">Check-in Date</label>
-                        <input type="date" id="check_in_date" name="check_in_date" class="form-control" required min="<?php echo date('Y-m-d'); ?>">
+                        <input type="date" id="check_in_date" name="check_in_date" class="form-control" required 
+                               min="<?php echo date('Y-m-d'); ?>" 
+                               max="<?php echo htmlspecialchars($max_advance_date); ?>">
+                        <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
+                            <i class="fas fa-info-circle"></i> Bookings can only be made up to <?php echo $max_advance_days; ?> days in advance
+                        </small>
                     </div>
                     <div class="form-group">
                         <label for="check_out_date" class="required">Check-out Date</label>
-                        <input type="date" id="check_out_date" name="check_out_date" class="form-control" required min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>">
+                        <input type="date" id="check_out_date" name="check_out_date" class="form-control" required 
+                               min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" 
+                               max="<?php echo htmlspecialchars($max_advance_date); ?>">
                     </div>
                     <div class="form-group">
                         <label for="number_of_guests" class="required">Number of Guests</label>

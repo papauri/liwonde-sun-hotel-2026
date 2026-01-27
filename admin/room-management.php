@@ -233,11 +233,10 @@ try {
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            overflow-x: auto;
         }
         .room-table {
             width: 100%;
-            min-width: 2200px;
+            min-width: 1600px;
             border-collapse: collapse;
             border: 1px solid #d0d7de;
         }
@@ -551,11 +550,10 @@ try {
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            overflow-x: auto;
         }
         .room-table {
             width: 100%;
-            min-width: 2200px;
+            min-width: 1600px;
             border-collapse: collapse;
             border: 1px solid #d0d7de;
         }
@@ -932,7 +930,7 @@ try {
                 overflow-x: auto;
             }
             .room-table {
-                min-width: 1800px;
+                min-width: 1400px;
             }
         }
         @media (max-width: 480px) {
@@ -940,7 +938,7 @@ try {
                 padding: 12px;
             }
             .room-table {
-                font-size: 11px;
+                min-width: 1400px;
             }
             .room-table th,
             .room-table td {
@@ -979,7 +977,8 @@ try {
 
         <div class="rooms-section">
             <?php if (!empty($rooms)): ?>
-                <table class="room-table">
+                <div class="table-responsive">
+                    <table class="room-table">
                     <thead>
                         <tr>
                             <th style="width: 150px;">Image</th>
@@ -1000,17 +999,20 @@ try {
                         <?php foreach ($rooms as $room): ?>
                             <tr id="row-<?php echo $room['id']; ?>">
                                 <td class="image-cell">
-                                    <?php if (!empty($room['image_url'])): ?>
-                                        <?php $imgSrc = preg_match('#^https?://#i', $room['image_url']) ? $room['image_url'] : '../' . $room['image_url']; ?>
-                                        <img src="<?php echo htmlspecialchars($imgSrc); ?>" 
-                                         alt="<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>" 
-                                             class="room-image-preview" 
-                                         onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($room['image_url'], ENT_QUOTES); ?>')">
-                                    <?php else: ?>
-                                        <div class="no-image" onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>', '')">
-                                            <i class="fas fa-camera"></i>
-                                        </div>
-                                    <?php endif; ?>
+                                    <div class="room-image-wrapper">
+                                        <?php if (!empty($room['image_url'])): ?>
+                                            <?php $imgSrc = preg_match('#^https?://#i', $room['image_url']) ? $room['image_url'] : '../' . $room['image_url']; ?>
+                                            <img src="<?php echo htmlspecialchars($imgSrc); ?>"
+                                             alt="<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>"
+                                                  class="room-image-preview"
+                                              onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($room['image_url'], ENT_QUOTES); ?>')">
+                                            <span class="featured-badge"><i class="fas fa-star"></i> Featured</span>
+                                        <?php else: ?>
+                                            <div class="no-image" onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>', '')">
+                                                <i class="fas fa-camera"></i>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                                 <td>
                                     <span class="cell-view"><?php echo $room['display_order']; ?></span>
@@ -1090,12 +1092,16 @@ try {
                                         <button class="btn-action" style="background: #6f42c1; color: white;" onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($room['image_url'] ?? '', ENT_QUOTES); ?>')">
                                             <i class="fas fa-image"></i> Image
                                         </button>
+                                        <button class="btn-action btn-info" data-room-id="<?php echo $room['id']; ?>" onclick="openPicturesModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>')">
+                                            <i class="fas fa-images"></i> Pictures
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
-                </table>
+                    </table>
+                </div>
             <?php else: ?>
                 <div class="empty-state" style="text-align: center; padding: 40px; color: #999;">
                     <i class="fas fa-bed" style="font-size: 48px; margin-bottom: 16px; color: #ddd;"></i>
@@ -1146,6 +1152,73 @@ try {
         </div>
     </div>
 
+    <!-- Picture Management Modal -->
+    <div class="modal" id="picturesModal">
+        <div class="modal-content pictures-modal-content">
+            <div class="modal-header">
+                <span id="picturesModalTitle">Manage Pictures</span>
+                <span class="modal-close" onclick="closePicturesModal()">&times;</span>
+            </div>
+            
+            <div class="pictures-modal-body">
+                <!-- Upload Area -->
+                <div class="pictures-upload-area">
+                    <h4><i class="fas fa-cloud-upload-alt"></i> Upload New Picture</h4>
+                    <form method="POST" enctype="multipart/form-data" id="pictureUploadForm">
+                        <input type="hidden" name="action" value="upload_picture">
+                        <input type="hidden" name="room_id" id="pictureRoomId">
+                        
+                        <div class="upload-area" onclick="document.getElementById('pictureFileInput').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p style="margin: 8px 0; color: #666;">Click to select an image or drag and drop</p>
+                            <small style="color: #999;">JPG, PNG, WEBP (Max 5MB)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Select Image File *</label>
+                            <input type="file" name="image" id="pictureFileInput" accept="image/jpeg,image/png,image/webp" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Picture Title</label>
+                            <input type="text" name="picture_title" id="pictureTitle" class="form-control" placeholder="Enter picture title">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea name="picture_description" id="pictureDescription" class="form-control" rows="3" placeholder="Enter picture description"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="set_featured" id="setFeatured"> Set as Featured Image
+                            </label>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" class="btn-action btn-cancel" onclick="closePicturesModal()">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn-action btn-save">
+                                <i class="fas fa-upload"></i> Upload
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Pictures Grid -->
+                <div class="pictures-grid-section">
+                    <h4><i class="fas fa-th"></i> Room Pictures</h4>
+                    <div id="picturesGrid" class="pictures-grid">
+                        <!-- Pictures will be loaded dynamically -->
+                        <div class="pictures-loading">
+                            <i class="fas fa-spinner fa-spin"></i> Loading pictures...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         let currentEditingId = null;
@@ -1249,12 +1322,12 @@ try {
                     }
                     form.reset();
                 } else {
-                    Alert.show(data && data.message ? data.message : 'Error uploading image', 'error');
+                    alert(data && data.message ? data.message : 'Error uploading image');
                 }
             })
             .catch(err => {
                 console.error('Error uploading featured image:', err);
-                Alert.show('Error uploading image', 'error');
+                alert('Error uploading image');
             });
         }
 
@@ -1360,12 +1433,12 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    Alert.show('Error saving room', 'error');
+                    alert('Error saving room');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                Alert.show('Error saving room', 'error');
+                alert('Error saving room');
             });
         }
 
@@ -1382,12 +1455,12 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    Alert.show('Error toggling status', 'error');
+                    alert('Error toggling status');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                Alert.show('Error toggling status', 'error');
+                alert('Error toggling status');
             });
         }
 
@@ -1404,14 +1477,168 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    Alert.show('Error toggling featured status', 'error');
+                    alert('Error toggling featured status');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                Alert.show('Error toggling featured status', 'error');
+                alert('Error toggling featured status');
             });
         }
+
+        // Pictures Modal Functions
+        function openPicturesModal(roomId, roomName) {
+            document.getElementById('picturesModalTitle').textContent = roomName + ' - Manage Pictures';
+            document.getElementById('pictureRoomId').value = roomId;
+            document.getElementById('picturesModal').classList.add('active');
+            loadRoomPictures(roomId);
+        }
+
+        function closePicturesModal() {
+            document.getElementById('picturesModal').classList.remove('active');
+            document.getElementById('pictureUploadForm').reset();
+        }
+
+        function loadRoomPictures(roomId) {
+            const grid = document.getElementById('picturesGrid');
+            grid.innerHTML = '<div class="pictures-loading"><i class="fas fa-spinner fa-spin"></i> Loading pictures...</div>';
+            
+            fetch('api/room-pictures.php?room_id=' + roomId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        renderPicturesGrid(data.data.gallery);
+                    } else {
+                        grid.innerHTML = '<div class="pictures-error"><i class="fas fa-exclamation-circle"></i> ' + (data.message || 'Error loading pictures') + '</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading pictures:', error);
+                    grid.innerHTML = '<div class="pictures-error"><i class="fas fa-exclamation-circle"></i> Error loading pictures</div>';
+                });
+        }
+
+        function renderPicturesGrid(pictures) {
+            const grid = document.getElementById('picturesGrid');
+            
+            if (!pictures || pictures.length === 0) {
+                grid.innerHTML = '<div class="pictures-empty"><i class="fas fa-images"></i> No pictures uploaded yet</div>';
+                return;
+            }
+
+            let html = '';
+            pictures.forEach(picture => {
+                const imgSrc = /^https?:\/\//i.test(picture.image_url) ? picture.image_url : ('../' + picture.image_url);
+                const isFeatured = picture.is_featured ? 'featured' : '';
+                const featuredBadge = picture.is_featured ? '<span class="picture-featured-badge"><i class="fas fa-star"></i> Featured</span>' : '';
+                
+                html += `
+                    <div class="picture-card ${isFeatured}">
+                        <div class="picture-image-wrapper">
+                            <img src="${imgSrc}" alt="${escapeHtml(picture.title || 'Room picture')}" class="picture-thumbnail">
+                            ${featuredBadge}
+                        </div>
+                        <div class="picture-info">
+                            <h5 class="picture-title">${escapeHtml(picture.title || 'Untitled')}</h5>
+                            <p class="picture-description">${escapeHtml(picture.description || '')}</p>
+                        </div>
+                        <div class="picture-actions">
+                            ${!picture.is_featured ? `<button class="btn-action btn-featured btn-sm" onclick="setFeaturedPicture(${picture.id})"><i class="fas fa-star"></i> Set Featured</button>` : ''}
+                            <button class="btn-action btn-danger btn-sm" onclick="deletePicture(${picture.id})"><i class="fas fa-trash"></i> Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        function setFeaturedPicture(pictureId) {
+            if (!confirm('Set this picture as the featured image?')) return;
+            
+            const roomId = document.getElementById('pictureRoomId').value;
+            
+            fetch('api/room-pictures.php?action=set_featured', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    room_id: roomId,
+                    picture_id: pictureId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Picture set as featured!');
+                    loadRoomPictures(roomId);
+                    // Refresh page to update featured image in table
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error setting featured picture: ' + error);
+            });
+        }
+
+        function deletePicture(pictureId) {
+            if (!confirm('Are you sure you want to delete this picture?')) return;
+            
+            const roomId = document.getElementById('pictureRoomId').value;
+            
+            fetch(`api/room-pictures.php?picture_id=${pictureId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Picture deleted successfully!');
+                    loadRoomPictures(roomId);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error deleting picture: ' + error);
+            });
+        }
+
+        // Handle picture upload form submission
+        document.getElementById('pictureUploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('api/room-pictures.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Picture uploaded successfully!');
+                    this.reset();
+                    const roomId = document.getElementById('pictureRoomId').value;
+                    loadRoomPictures(roomId);
+                } else {
+                    alert(data.message || 'Error uploading picture');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error uploading picture');
+            });
+        });
+
+        // Close pictures modal on outside click
+        document.getElementById('picturesModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePicturesModal();
+            }
+        });
     </script>
 </body>
 </html>

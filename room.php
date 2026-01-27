@@ -1,5 +1,6 @@
 <?php
 require_once 'config/database.php';
+require_once 'includes/reviews-display.php';
 
 $room_slug = isset($_GET['room']) ? trim($_GET['room']) : null;
 if (!$room_slug) {
@@ -211,9 +212,348 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
         </div>
     </section>
 
+    <!-- Reviews Section -->
+    <section class="reviews-section" id="reviews" data-room-id="<?php echo $room['id']; ?>">
+        <div class="container">
+            <div class="reviews-section__header">
+                <h2 class="reviews-section__title">Guest Reviews</h2>
+                <a class="btn btn-outline btn-sm" href="submit-review.php?room_id=<?php echo $room['id']; ?>">
+                    <i class="fas fa-pen"></i> Write a Review
+                </a>
+            </div>
+
+            <!-- Rating Summary -->
+            <div class="rating-summary" id="ratingSummary">
+                <div class="rating-summary__loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading reviews...
+                </div>
+            </div>
+
+            <!-- Filter Options -->
+            <div class="reviews-filter" id="reviewsFilter" style="display: none;">
+                <div class="reviews-filter__label">Sort by:</div>
+                <div class="reviews-filter__options">
+                    <button class="reviews-filter__btn reviews-filter__btn--active" data-sort="newest">
+                        <i class="fas fa-clock"></i> Newest First
+                    </button>
+                    <button class="reviews-filter__btn" data-sort="highest">
+                        <i class="fas fa-star"></i> Highest Rated
+                    </button>
+                    <button class="reviews-filter__btn" data-sort="lowest">
+                        <i class="fas fa-star-half-alt"></i> Lowest Rated
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reviews List -->
+            <div class="reviews-list" id="reviewsList">
+                <div class="reviews-list__loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading reviews...
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="reviews-pagination" id="reviewsPagination" style="display: none;">
+                <button class="reviews-pagination__btn reviews-pagination__btn--prev" disabled>
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <div class="reviews-pagination__info">
+                    Page <span id="currentPage">1</span> of <span id="totalPages">1</span>
+                </div>
+                <button class="reviews-pagination__btn reviews-pagination__btn--next" disabled>
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Empty State -->
+            <div class="reviews-empty" id="reviewsEmpty" style="display: none;">
+                <i class="fas fa-comment-slash"></i>
+                <h3>No Reviews Yet</h3>
+                <p>Be the first to share your experience!</p>
+                <a class="btn btn-primary" href="submit-review.php?room_id=<?php echo $room['id']; ?>">
+                    <i class="fas fa-pen"></i> Write a Review
+                </a>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <?php include 'includes/footer.php'; ?>
 
     <script src="js/main.js"></script>
+    <script>
+    // Reviews functionality
+    (function() {
+        const reviewsSection = document.getElementById('reviews');
+        if (!reviewsSection) return;
+
+        const roomId = reviewsSection.dataset.roomId;
+        const ratingSummary = document.getElementById('ratingSummary');
+        const reviewsList = document.getElementById('reviewsList');
+        const reviewsFilter = document.getElementById('reviewsFilter');
+        const reviewsPagination = document.getElementById('reviewsPagination');
+        const reviewsEmpty = document.getElementById('reviewsEmpty');
+        const currentPageSpan = document.getElementById('currentPage');
+        const totalPagesSpan = document.getElementById('totalPages');
+        const prevBtn = document.querySelector('.reviews-pagination__btn--prev');
+        const nextBtn = document.querySelector('.reviews-pagination__btn--next');
+        const filterBtns = document.querySelectorAll('.reviews-filter__btn');
+
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentSort = 'newest';
+        let reviewsPerPage = 5;
+        let allReviews = [];
+
+        // Fetch reviews from API
+        async function fetchReviews() {
+            try {
+                const response = await fetch(`admin/api/reviews.php?room_id=${roomId}&status=approved`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    allReviews = data.reviews || [];
+                    displayRatingSummary(data.averages || {}, data.total_count || 0);
+                    sortAndDisplayReviews();
+                } else {
+                    showError('Failed to load reviews');
+                }
+            } catch (error) {
+                console.error('Error fetching reviews:', error);
+                showError('Failed to load reviews');
+            }
+        }
+
+        // Display rating summary
+        function displayRatingSummary(averages, totalCount) {
+            if (totalCount === 0) {
+                ratingSummary.innerHTML = `
+                    <div class="rating-summary__empty">
+                        <i class="fas fa-star"></i>
+                        <span>No reviews yet</span>
+                    </div>
+                `;
+                reviewsEmpty.style.display = 'block';
+                reviewsList.style.display = 'none';
+                reviewsFilter.style.display = 'none';
+                return;
+            }
+
+            const avgRating = averages.avg_rating || 0;
+            const starsHtml = generateStars(avgRating);
+
+            ratingSummary.innerHTML = `
+                <div class="rating-summary__main">
+                    <div class="rating-summary__score">
+                        <span class="rating-summary__number">${avgRating.toFixed(1)}</span>
+                        <div class="rating-summary__stars">${starsHtml}</div>
+                    </div>
+                    <div class="rating-summary__count">
+                        <strong>${totalCount}</strong> review${totalCount !== 1 ? 's' : ''}
+                    </div>
+                </div>
+                <div class="rating-summary__categories">
+                    ${averages.avg_service ? `<div class="rating-summary__category"><span>Service</span><div class="rating-summary__bar"><div class="rating-summary__bar-fill" style="width: ${(averages.avg_service / 5) * 100}%"></div></div><span>${averages.avg_service.toFixed(1)}</span></div>` : ''}
+                    ${averages.avg_cleanliness ? `<div class="rating-summary__category"><span>Cleanliness</span><div class="rating-summary__bar"><div class="rating-summary__bar-fill" style="width: ${(averages.avg_cleanliness / 5) * 100}%"></div></div><span>${averages.avg_cleanliness.toFixed(1)}</span></div>` : ''}
+                    ${averages.avg_location ? `<div class="rating-summary__category"><span>Location</span><div class="rating-summary__bar"><div class="rating-summary__bar-fill" style="width: ${(averages.avg_location / 5) * 100}%"></div></div><span>${averages.avg_location.toFixed(1)}</span></div>` : ''}
+                    ${averages.avg_value ? `<div class="rating-summary__category"><span>Value</span><div class="rating-summary__bar"><div class="rating-summary__bar-fill" style="width: ${(averages.avg_value / 5) * 100}%"></div></div><span>${averages.avg_value.toFixed(1)}</span></div>` : ''}
+                </div>
+            `;
+
+            reviewsEmpty.style.display = 'none';
+            reviewsList.style.display = 'block';
+            reviewsFilter.style.display = 'flex';
+        }
+
+        // Generate star HTML
+        function generateStars(rating) {
+            let html = '';
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = (rating - fullStars) >= 0.5;
+            const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+            for (let i = 0; i < fullStars; i++) {
+                html += '<i class="fas fa-star"></i>';
+            }
+            if (hasHalfStar) {
+                html += '<i class="fas fa-star-half-alt"></i>';
+            }
+            for (let i = 0; i < emptyStars; i++) {
+                html += '<i class="far fa-star"></i>';
+            }
+            return html;
+        }
+
+        // Sort and display reviews
+        function sortAndDisplayReviews() {
+            let sortedReviews = [...allReviews];
+
+            switch (currentSort) {
+                case 'newest':
+                    sortedReviews.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                    break;
+                case 'highest':
+                    sortedReviews.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+                    break;
+                case 'lowest':
+                    sortedReviews.sort((a, b) => (a.rating || 0) - (b.rating || 0));
+                    break;
+            }
+
+            totalPages = Math.ceil(sortedReviews.length / reviewsPerPage);
+            if (currentPage > totalPages) currentPage = 1;
+
+            displayReviews(sortedReviews);
+            updatePagination();
+        }
+
+        // Display reviews
+        function displayReviews(reviews) {
+            const startIndex = (currentPage - 1) * reviewsPerPage;
+            const endIndex = startIndex + reviewsPerPage;
+            const pageReviews = reviews.slice(startIndex, endIndex);
+
+            if (pageReviews.length === 0) {
+                reviewsList.innerHTML = `
+                    <div class="reviews-list__empty">
+                        <i class="fas fa-comment-slash"></i>
+                        <p>No reviews found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            reviewsList.innerHTML = pageReviews.map(review => {
+                const starsHtml = generateStars(review.rating || 0);
+                const date = new Date(review.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                let categoriesHtml = '';
+                if (review.service_rating || review.cleanliness_rating || review.location_rating || review.value_rating) {
+                    categoriesHtml = `
+                        <div class="review-card__categories">
+                            ${review.service_rating ? `<span><i class="fas fa-concierge-bell"></i> Service: ${review.service_rating}</span>` : ''}
+                            ${review.cleanliness_rating ? `<span><i class="fas fa-broom"></i> Cleanliness: ${review.cleanliness_rating}</span>` : ''}
+                            ${review.location_rating ? `<span><i class="fas fa-map-marker-alt"></i> Location: ${review.location_rating}</span>` : ''}
+                            ${review.value_rating ? `<span><i class="fas fa-tag"></i> Value: ${review.value_rating}</span>` : ''}
+                        </div>
+                    `;
+                }
+
+                let adminResponseHtml = '';
+                if (review.latest_response) {
+                    const responseDate = review.latest_response_date ? new Date(review.latest_response_date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    }) : '';
+                    adminResponseHtml = `
+                        <div class="review-card__admin-response">
+                            <div class="review-card__admin-header">
+                                <i class="fas fa-reply"></i>
+                                <span>Response from <?php echo htmlspecialchars($site_name); ?></span>
+                                ${responseDate ? `<span class="review-card__admin-date">${responseDate}</span>` : ''}
+                            </div>
+                            <p>${escapeHtml(review.latest_response)}</p>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="review-card">
+                        <div class="review-card__header">
+                            <div class="review-card__author">
+                                <div class="review-card__avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="review-card__author-info">
+                                    <div class="review-card__name">${escapeHtml(review.guest_name || 'Anonymous')}</div>
+                                    <div class="review-card__date">${date}</div>
+                                </div>
+                            </div>
+                            <div class="review-card__rating">
+                                ${starsHtml}
+                            </div>
+                        </div>
+                        ${review.title ? `<h4 class="review-card__title">${escapeHtml(review.title)}</h4>` : ''}
+                        <p class="review-card__comment">${escapeHtml(review.comment)}</p>
+                        ${categoriesHtml}
+                        ${adminResponseHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update pagination
+        function updatePagination() {
+            currentPageSpan.textContent = currentPage;
+            totalPagesSpan.textContent = totalPages;
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+
+            if (totalPages > 1) {
+                reviewsPagination.style.display = 'flex';
+            } else {
+                reviewsPagination.style.display = 'none';
+            }
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Show error
+        function showError(message) {
+            ratingSummary.innerHTML = `
+                <div class="rating-summary__error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            reviewsList.innerHTML = `
+                <div class="reviews-list__error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        // Event listeners
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('reviews-filter__btn--active'));
+                btn.classList.add('reviews-filter__btn--active');
+                currentSort = btn.dataset.sort;
+                currentPage = 1;
+                sortAndDisplayReviews();
+            });
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                sortAndDisplayReviews();
+                reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                sortAndDisplayReviews();
+                reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        // Initialize
+        fetchReviews();
+    })();
+    </script>
 </body>
 </html>

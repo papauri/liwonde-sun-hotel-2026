@@ -348,15 +348,38 @@ $whatsapp_number = getSetting('whatsapp_number');
                 </a>
             </div>
 
+            <?php
+            // Check if PHPMailer is installed
+            $phpmailer_installed = file_exists(__DIR__ . '/vendor/autoload.php');
+            ?>
+            
             <div class="next-steps">
                 <h3>What Happens Next?</h3>
                 <ol>
-                    <li>You will receive a confirmation email at <strong><?php echo htmlspecialchars($booking['guest_email']); ?></strong></li>
+                    <?php if ($phpmailer_installed): ?>
+                        <li> <strong>Confirmation email sent</strong> to <?php echo htmlspecialchars($booking['guest_email']); ?></li>
+                    <?php else: ?>
+                        <li>  <strong>Email notification pending</strong> - System will send confirmation once email service is configured</li>
+                    <?php endif; ?>
                     <li>Our reception team will review your booking and may contact you to confirm details</li>
                     <li>Please save your booking reference: <strong><?php echo $booking['booking_reference']; ?></strong></li>
                     <li>Arrive on your check-in date and present your booking reference at reception</li>
                     <li>Payment of <strong><?php echo $currency_symbol; ?><?php echo number_format($booking['total_amount'], 0); ?></strong> will be collected at check-in</li>
                 </ol>
+                
+                <?php if (!$phpmailer_installed): ?>
+                    <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px;">
+                        <h4 style="margin: 0 0 10px 0; color: #856404;">
+                            <i class="fas fa-info-circle"></i> Email Notifications
+                        </h4>
+                        <p style="margin: 0; color: #856404; font-size: 14px;">
+                            Email notifications are currently not configured. To enable automatic email confirmations, 
+                            please install PHPMailer. Contact your website administrator or visit 
+                            <a href="install-phpmailer.php" style="color: #856404; text-decoration: underline;">install-phpmailer.php</a> 
+                            for instructions.
+                        </p>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <p style="text-align: center; margin-top: 32px; color: #999; font-size: 13px;">

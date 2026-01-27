@@ -10,6 +10,7 @@ if (!isset($_SESSION['admin_user'])) {
 }
 
 require_once '../config/database.php';
+require_once '../config/email-simple.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action'])) {
     http_response_code(400);
@@ -33,6 +34,24 @@ try {
         $stmt->execute([$booking_id]);
 
         if ($stmt->rowCount() > 0) {
+            // Get booking details for email notification
+            $booking_stmt = $pdo->prepare("
+                SELECT b.*, r.name as room_name 
+                FROM bookings b 
+                INNER JOIN rooms r ON b.room_id = r.id 
+                WHERE b.id = ?
+            ");
+            $booking_stmt->execute([$booking_id]);
+            $booking = $booking_stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Send status update email
+            if ($booking) {
+                $email_result = sendSimpleStatusUpdateEmail($booking, 'checked-in');
+                if (!$email_result['success']) {
+                    error_log("Failed to send check-in email: " . $email_result['message']);
+                }
+            }
+            
             echo json_encode(['success' => true, 'message' => 'Guest checked in successfully']);
             exit;
         }
@@ -71,6 +90,24 @@ try {
         $stmt->execute([$booking_id]);
 
         if ($stmt->rowCount() > 0) {
+            // Get booking details for email notification
+            $booking_stmt = $pdo->prepare("
+                SELECT b.*, r.name as room_name 
+                FROM bookings b 
+                INNER JOIN rooms r ON b.room_id = r.id 
+                WHERE b.id = ?
+            ");
+            $booking_stmt->execute([$booking_id]);
+            $booking = $booking_stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Send status update email
+            if ($booking) {
+                $email_result = sendSimpleStatusUpdateEmail($booking, 'confirmed');
+                if (!$email_result['success']) {
+                    error_log("Failed to send status update email: " . $email_result['message']);
+                }
+            }
+            
             echo json_encode(['success' => true, 'message' => 'Check-in cancelled (reverted to confirmed)']);
             exit;
         }

@@ -1,250 +1,530 @@
 <?php
 /**
- * Email Configuration & Mailer Class
- * Uses SMTP for reliable email delivery
- * 
- * HOSTINGER SMTP SETTINGS:
- * - Server: mail.liwondesunhotel.com (or your domain SMTP)
- * - Port: 587 (TLS) or 465 (SSL)
- * - Username: your-email@liwondesunhotel.com
- * - Password: Check Hostinger control panel under Email Accounts
- * 
- * To find your SMTP settings in Hostinger:
- * 1. Log in to hPanel
- * 2. Go to Email > Email Accounts
- * 3. Click on your email account
- * 4. Look for "SMTP Server" and "SMTP Port"
+ * Database-Driven Email Configuration for any hotel
+ * All settings stored in database - no hardcoded files
  */
 
-class EmailSender {
-    private $host;
-    private $port;
-    private $username;
-    private $password;
-    private $from_email;
-    private $from_name;
-    private $use_smtp;
-    private $last_error;
+// Require database connection for settings
+require_once __DIR__ . '/database.php';
 
-    public function __construct() {
-        // HOSTINGER SMTP CREDENTIALS (Production Only)
-        // For LOCAL: Leave these empty to use PHP mail() fallback
-        // For PRODUCTION: Set via environment variables or .htaccess
+// Load PHPMailer
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+// Load PHPMailer from local directory
+if (file_exists(__DIR__ . '/../PHPMailer/src/PHPMailer.php')) {
+    require_once __DIR__ . '/../PHPMailer/src/PHPMailer.php';
+    require_once __DIR__ . '/../PHPMailer/src/SMTP.php';
+    require_once __DIR__ . '/../PHPMailer/src/Exception.php';
+} elseif (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    // Fallback to Composer autoloader
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
+
+// Get email settings from database - NO HARCODED DEFAULTS
+$email_from_name = getEmailSetting('email_from_name', '');
+$email_from_email = getEmailSetting('email_from_email', '');
+$email_admin_email = getEmailSetting('email_admin_email', '');
+$email_site_name = getSetting('site_name', '');
+$email_site_url = getSetting('site_url', '');
+
+// SMTP Configuration - From database only
+$smtp_host = getEmailSetting('smtp_host', '');
+$smtp_port = (int)getEmailSetting('smtp_port', 0);
+$smtp_username = getEmailSetting('smtp_username', '');
+$smtp_password = getEmailSetting('smtp_password', '');
+$smtp_secure = getEmailSetting('smtp_secure', '');
+$smtp_timeout = (int)getEmailSetting('smtp_timeout', 30);
+$smtp_debug = (int)getEmailSetting('smtp_debug', 0);
+
+// Email settings
+$email_bcc_admin = (bool)getEmailSetting('email_bcc_admin', 0);
+$email_development_mode = (bool)getEmailSetting('email_development_mode', 0);
+$email_log_enabled = (bool)getEmailSetting('email_log_enabled', 0);
+$email_preview_enabled = (bool)getEmailSetting('email_preview_enabled', 0);
+
+// Check if we're on localhost
+$is_localhost = isset($_SERVER['HTTP_HOST']) && (
+    strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || 
+    strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false ||
+    strpos($_SERVER['HTTP_HOST'], '.local') !== false
+);
+
+// Development mode: show previews on localhost unless explicitly disabled
+$development_mode = $is_localhost && $email_development_mode;
+
+/**
+ * Send email using PHPMailer
+ * 
+ * @param string $to Recipient email
+ * @param string $toName Recipient name
+ * @param string $subject Email subject
+ * @param string $htmlBody HTML email body
+ * @param string $textBody Plain text body (optional)
+ * @return array Result array with success status and message
+ */
+function sendEmail($to, $toName, $subject, $htmlBody, $textBody = '') {
+    global $email_from_name, $email_from_email, $email_admin_email;
+    global $smtp_host, $smtp_port, $smtp_username, $smtp_password, $smtp_secure, $smtp_timeout, $smtp_debug;
+    global $email_bcc_admin, $development_mode, $email_log_enabled, $email_preview_enabled;
+    
+    // If in development mode and no password or preview enabled, show preview
+    if ($development_mode && (empty($smtp_password) || $email_preview_enabled)) {
+        return createEmailPreview($to, $toName, $subject, $htmlBody, $textBody);
+    }
+    
+    try {
+        // Create PHPMailer instance
+        $mail = new PHPMailer(true);
         
-        $this->host = getenv('SMTP_HOST') ?: null;
-        $this->port = getenv('SMTP_PORT') ?: 465;
-        $this->username = getenv('SMTP_USER') ?: null;
-        $this->password = getenv('SMTP_PASS') ?: null;
+        // Server settings
+        $mail->isSMTP();
+        $mail->Host = $smtp_host;
+        $mail->SMTPAuth = true;
+        $mail->Username = $smtp_username;
+        $mail->Password = $smtp_password;
+        $mail->SMTPSecure = $smtp_secure;
+        $mail->Port = $smtp_port;
+        $mail->Timeout = $smtp_timeout;
         
-        $this->from_email = getSetting('email_main');
-        $this->from_name = getSetting('site_name');
+        if ($smtp_debug > 0) {
+            $mail->SMTPDebug = $smtp_debug;
+        }
         
-        // Determine if we should use SMTP
-        $this->use_smtp = !empty($this->host) && !empty($this->username) && !empty($this->password);
-    }
-
-    /**
-     * Send email via SMTP or mail()
-     * 
-     * @param string $to Recipient email address
-     * @param string $subject Email subject
-     * @param string $body Email body (plain text)
-     * @param array $headers Optional additional headers
-     * @return bool True if sent successfully
-     */
-    public function send($to, $subject, $body, $headers = []) {
-        if ($this->use_smtp) {
-            return $this->send_via_smtp($to, $subject, $body, $headers);
-        } else {
-            return $this->send_via_mail($to, $subject, $body, $headers);
-        }
-    }
-
-    /**
-     * Send email via SMTP (more reliable)
-     */
-    private function send_via_smtp($to, $subject, $body, $headers = []) {
-        try {
-            // For port 465: SSL from start (implicit SSL)
-            // For port 587: Plain connection then STARTTLS
-            $protocol = ($this->port === 465) ? 'ssl://' : '';
-            
-            $socket = @fsockopen(
-                $protocol . $this->host,
-                $this->port,
-                $errno,
-                $errstr,
-                30  // Increased timeout
-            );
-
-            if (!$socket) {
-                $this->last_error = "SMTP Connection Failed: $errstr ($errno)";
-                error_log("Email SMTP Error: " . $this->last_error);
-                return false;
-            }
-
-            // Set non-blocking reads
-            stream_set_blocking($socket, true);
-
-            // Read server response
-            $response = fgets($socket, 1024);
-            error_log("SMTP Initial Response: " . trim($response));
-            
-            if (strpos($response, '220') === false) {
-                fclose($socket);
-                $this->last_error = "SMTP Server did not respond correctly: " . trim($response);
-                error_log("Email SMTP Error: " . $this->last_error);
-                return false;
-            }
-
-            // Send EHLO command
-            fputs($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
-            $response = fgets($socket, 1024);
-            error_log("SMTP EHLO Response: " . trim($response));
-
-            // Handle STARTTLS only if port 587
-            if ($this->port === 587) {
-                fputs($socket, "STARTTLS\r\n");
-                $response = fgets($socket, 1024);
-                error_log("SMTP STARTTLS Response: " . trim($response));
-                
-                if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
-                    fclose($socket);
-                    $this->last_error = "STARTTLS failed";
-                    error_log("Email SMTP Error: " . $this->last_error);
-                    return false;
-                }
-
-                // Send EHLO again after TLS
-                fputs($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
-                $response = fgets($socket, 1024);
-                error_log("SMTP EHLO (post-TLS) Response: " . trim($response));
-            }
-
-            // Authenticate with LOGIN method
-            fputs($socket, "AUTH LOGIN\r\n");
-            $response = fgets($socket, 1024);
-            error_log("SMTP AUTH LOGIN Response: " . trim($response));
-
-            // Send username (base64 encoded)
-            fputs($socket, base64_encode($this->username) . "\r\n");
-            $response = fgets($socket, 1024);
-            error_log("SMTP Username Response: " . trim($response));
-
-            // Send password (base64 encoded)
-            fputs($socket, base64_encode($this->password) . "\r\n");
-            $auth_response = fgets($socket, 1024);
-            error_log("SMTP Authentication Response: " . trim($auth_response));
-
-            // Check for successful authentication (235 or 2.7.0)
-            if (strpos($auth_response, '235') === false && strpos($auth_response, '2.7.0') === false) {
-                fclose($socket);
-                $this->last_error = "SMTP Authentication failed: " . trim($auth_response) . 
-                                   "\nUsername: " . $this->username . 
-                                   "\nHost: " . $this->host . ":" . $this->port;
-                error_log("Email SMTP Error: " . $this->last_error);
-                return false;
-            }
-
-            error_log("SMTP Authentication successful");
-
-            // Send email
-            fputs($socket, "MAIL FROM: <" . $this->from_email . ">\r\n");
-            $response = fgets($socket, 1024);
-            error_log("SMTP MAIL FROM Response: " . trim($response));
-
-            fputs($socket, "RCPT TO: <$to>\r\n");
-            $response = fgets($socket, 1024);
-            error_log("SMTP RCPT TO Response: " . trim($response));
-
-            fputs($socket, "DATA\r\n");
-            $response = fgets($socket, 1024);
-            error_log("SMTP DATA Response: " . trim($response));
-
-            // Build email message
-            $message = "From: " . $this->from_name . " <" . $this->from_email . ">\r\n";
-            $message .= "To: $to\r\n";
-            $message .= "Subject: $subject\r\n";
-            $message .= "MIME-Version: 1.0\r\n";
-            $message .= "Content-Type: text/plain; charset=UTF-8\r\n";
-            $message .= "Content-Transfer-Encoding: 8bit\r\n";
-            
-            // Add additional headers
-            foreach ($headers as $header => $value) {
-                if ($header !== 'From' && $header !== 'Subject') {
-                    $message .= "$header: $value\r\n";
-                }
-            }
-
-            $message .= "\r\n" . $body . "\r\n";
-
-            fputs($socket, $message . "\r\n.\r\n");
-            $response = fgets($socket, 1024);
-            error_log("SMTP Message Response: " . trim($response));
-
-            // Quit
-            fputs($socket, "QUIT\r\n");
-            fclose($socket);
-
-            error_log("Email sent via SMTP to: $to | Subject: $subject | Host: " . $this->host . ":" . $this->port);
-            return true;
-
-        } catch (Exception $e) {
-            $this->last_error = $e->getMessage();
-            error_log("Email SMTP Exception: " . $this->last_error);
-            return false;
-        }
-    }
-
-    /**
-     * Send email via PHP mail() (fallback)
-     */
-    private function send_via_mail($to, $subject, $body, $headers = []) {
-        $header_string = "MIME-Version: 1.0\r\n";
-        $header_string .= "Content-Type: text/plain; charset=UTF-8\r\n";
-        $header_string .= "From: " . $this->from_name . " <" . $this->from_email . ">\r\n";
-
-        foreach ($headers as $key => $value) {
-            if ($key !== 'From' && $key !== 'Subject') {
-                $header_string .= "$key: $value\r\n";
-            }
-        }
-
-        $result = @mail($to, $subject, $body, $header_string);
+        // Recipients
+        $mail->setFrom($smtp_username, $email_from_name);
+        $mail->addAddress($to, $toName);
+        $mail->addReplyTo($email_from_email, $email_from_name);
         
-        if (!$result) {
-            $this->last_error = "PHP mail() function failed or is disabled";
-            error_log("Email via mail() failed to: $to | Subject: $subject");
-        } else {
-            error_log("Email sent via mail() to: $to | Subject: $subject");
+        // Add BCC for admin if enabled
+        if ($email_bcc_admin && !empty($email_admin_email)) {
+            $mail->addBCC($email_admin_email);
         }
-
-        return $result;
-    }
-
-    /**
-     * Get the last error message
-     */
-    public function get_last_error() {
-        return $this->last_error;
-    }
-
-    /**
-     * Check if SMTP is configured
-     */
-    public function is_smtp_configured() {
-        return $this->use_smtp;
-    }
-
-    /**
-     * Get current email method (for debugging)
-     */
-    public function get_email_method() {
-        return $this->use_smtp ? 'SMTP' : 'PHP mail()';
+        
+        // Content
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body = $htmlBody;
+        $mail->AltBody = $textBody ?: strip_tags($htmlBody);
+        
+        $mail->send();
+        
+        // Log email if enabled
+        if ($email_log_enabled) {
+            logEmail($to, $toName, $subject, 'sent');
+        }
+        
+        return [
+            'success' => true,
+            'message' => 'Email sent successfully via SMTP'
+        ];
+        
+    } catch (Exception $e) {
+        error_log("PHPMailer Error: " . $e->getMessage());
+        
+        // Log error if enabled
+        if ($email_log_enabled) {
+            logEmail($to, $toName, $subject, 'failed', $e->getMessage());
+        }
+        
+        // If development mode, show preview instead of failing
+        if ($development_mode) {
+            return createEmailPreview($to, $toName, $subject, $htmlBody, $textBody);
+        }
+        
+        return [
+            'success' => false,
+            'message' => 'Failed to send email: ' . $e->getMessage()
+        ];
     }
 }
 
 /**
- * Global email sender instance
+ * Create email preview for development mode
  */
-$emailer = new EmailSender();
+function createEmailPreview($to, $toName, $subject, $htmlBody, $textBody = '') {
+    global $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    global $email_log_enabled;
+    
+    // Log email if enabled
+    if ($email_log_enabled) {
+        logEmail($to, $toName, $subject, 'preview');
+    }
+    
+    // Create email preview file
+    $previewDir = __DIR__ . '/../logs/email-previews';
+    if (!file_exists($previewDir)) {
+        mkdir($previewDir, 0755, true);
+    }
+    
+    $previewFile = $previewDir . '/' . date('Y-m-d-His') . '-' . preg_replace('/[^a-z0-9]/i', '-', strtolower($subject)) . '.html';
+    $previewContent = '<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Email Preview: ' . htmlspecialchars($subject) . '</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+            .email-preview { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .email-info { background: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+            .email-info h3 { margin-top: 0; color: #1565c0; }
+            .email-info p { margin: 5px 0; }
+            .email-content { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
+            .dev-note { background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; margin-top: 20px; border-radius: 5px; }
+        </style>
+    </head>
+    <body>
+        <div class="email-preview">
+            <div class="email-info">
+                <h3>📧 Email Preview (Development Mode)</h3>
+                <p><strong>From:</strong> ' . htmlspecialchars($email_from_name) . ' <' . htmlspecialchars($email_from_email) . '></p>
+                <p><strong>To:</strong> ' . htmlspecialchars($toName) . ' <' . htmlspecialchars($to) . '></p>
+                <p><strong>Subject:</strong> ' . htmlspecialchars($subject) . '</p>
+                <p><strong>Time:</strong> ' . date('Y-m-d H:i:s') . '</p>
+                <p><strong>Status:</strong> Preview only - email would be sent via SMTP in production</p>
+            </div>
+            <div class="email-content">' . $htmlBody . '</div>
+            <div class="dev-note">
+                <p><strong>💡 Development Note:</strong> This is a preview. In production, emails will be sent automatically using SMTP.</p>
+            </div>
+        </div>
+    </body>
+    </html>';
+    
+    file_put_contents($previewFile, $previewContent);
+    
+    return [
+        'success' => true,
+        'message' => 'Email preview created (development mode)',
+        'preview_url' => str_replace(__DIR__ . '/../', '', $previewFile)
+    ];
+}
+
+/**
+ * Log email activity
+ */
+function logEmail($to, $toName, $subject, $status, $error = '') {
+    $logDir = __DIR__ . '/../logs';
+    if (!file_exists($logDir)) {
+        mkdir($logDir, 0755, true);
+    }
+    
+    $logFile = $logDir . '/email-log.txt';
+    $logEntry = "[" . date('Y-m-d H:i:s') . "] [$status] $subject to $to ($toName)";
+    if ($error) {
+        $logEntry .= " - Error: $error";
+    }
+    $logEntry .= "\n";
+    file_put_contents($logFile, $logEntry, FILE_APPEND);
+}
+
+/**
+ * Send booking received email (sent immediately when user submits booking)
+ */
+function sendBookingReceivedEmail($booking) {
+    global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    
+    try {
+        // Get room details
+        $stmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ?");
+        $stmt->execute([$booking['room_id']]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$room) {
+            throw new Exception("Room not found");
+        }
+        
+        // Prepare email content
+        $htmlBody = '
+        <h1 style="color: #0A1929; text-align: center;">Booking Received - Awaiting Confirmation</h1>
+        <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
+        <p>Thank you for your booking request with <strong>' . htmlspecialchars($email_site_name) . '</strong>. We have received your reservation and it is currently being reviewed by our team.</p>
+        
+        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Number of Nights:</span>
+                <span style="color: #333;">' . $booking['number_of_nights'] . ' night' . ($booking['number_of_nights'] != 1 ? 's' : '') . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="color: #333;">' . $booking['number_of_guests'] . ' guest' . ($booking['number_of_guests'] != 1 ? 's' : '') . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">MWK ' . number_format($booking['total_amount'], 0) . '</span>
+            </div>
+        </div>
+        
+        <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #0d6efd; margin-top: 0;">What Happens Next?</h3>
+            <p style="color: #0d6efd; margin: 0;">
+                <strong>Our team will review your booking and contact you within 24 hours to confirm availability.</strong><br>
+                Once confirmed, you will receive a second email with final confirmation.
+            </p>
+        </div>
+        
+        <div style="background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #856404; margin-top: 0;">Payment Information</h3>
+            <p style="color: #856404; margin: 0;">
+                <strong>Payment will be made at the hotel upon arrival.</strong><br>
+                We accept cash payments only. Please bring the total amount of <strong>MWK ' . number_format($booking['total_amount'], 0) . '</strong> with you.
+            </p>
+        </div>';
+        
+        if (!empty($booking['special_requests'])) {
+            $htmlBody .= '
+            <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #0d6efd; margin-top: 0;">Special Requests</h3>
+                <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($booking['special_requests']) . '</p>
+            </div>';
+        }
+        
+        $htmlBody .= '
+        <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call +265 123 456 789.</p>
+        
+        <p>Thank you for choosing ' . htmlspecialchars($email_site_name) . '!</p>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+            <p style="color: #666; font-size: 14px;">
+                <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
+                <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
+            </p>
+        </div>';
+        
+        // Send email
+        return sendEmail(
+            $booking['guest_email'],
+            $booking['guest_name'],
+            'Booking Received - ' . htmlspecialchars($email_site_name) . ' [' . $booking['booking_reference'] . ']',
+            $htmlBody
+        );
+        
+    } catch (Exception $e) {
+        error_log("Send Booking Received Email Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Send booking confirmed email (sent when admin approves booking)
+ */
+function sendBookingConfirmedEmail($booking) {
+    global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    
+    try {
+        // Get room details
+        $stmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ?");
+        $stmt->execute([$booking['room_id']]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$room) {
+            throw new Exception("Room not found");
+        }
+        
+        // Prepare email content
+        $htmlBody = '
+        <h1 style="color: #0A1929; text-align: center;">Booking Confirmed!</h1>
+        <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
+        <p>Great news! Your booking with <strong>' . htmlspecialchars($email_site_name) . '</strong> has been confirmed by our team.</p>
+        
+        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Number of Nights:</span>
+                <span style="color: #333;">' . $booking['number_of_nights'] . ' night' . ($booking['number_of_nights'] != 1 ? 's' : '') . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="color: #333;">' . $booking['number_of_guests'] . ' guest' . ($booking['number_of_guests'] != 1 ? 's' : '') . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">MWK ' . number_format($booking['total_amount'], 0) . '</span>
+            </div>
+        </div>
+        
+        <div style="background: #d4edda; padding: 15px; border-left: 4px solid #28a745; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #155724; margin-top: 0;">✅ Booking Status: Confirmed</h3>
+            <p style="color: #155724; margin: 0;">
+                <strong>Your booking is now confirmed and guaranteed!</strong><br>
+                We look forward to welcoming you to ' . htmlspecialchars($email_site_name) . '.
+            </p>
+        </div>
+        
+        <div style="background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #856404; margin-top: 0;">Payment Information</h3>
+            <p style="color: #856404; margin: 0;">
+                <strong>Payment will be made at the hotel upon arrival.</strong><br>
+                We accept cash payments only. Please bring the total amount of <strong>MWK ' . number_format($booking['total_amount'], 0) . '</strong> with you.
+            </p>
+        </div>
+        
+        <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #0d6efd; margin-top: 0;">Next Steps</h3>
+            <p style="color: #0d6efd; margin: 0;">
+                <strong>Please save your booking reference:</strong> ' . htmlspecialchars($booking['booking_reference']) . '<br>
+                <strong>Check-in time:</strong> 2:00 PM<br>
+                <strong>Check-out time:</strong> 11:00 AM<br>
+                <strong>Contact us:</strong> If you need to make any changes, please contact us at least 48 hours before your arrival.
+            </p>
+        </div>';
+        
+        if (!empty($booking['special_requests'])) {
+            $htmlBody .= '
+            <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #0d6efd; margin-top: 0;">Special Requests</h3>
+                <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($booking['special_requests']) . '</p>
+            </div>';
+        }
+        
+        $htmlBody .= '
+        <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call +265 123 456 789.</p>
+        
+        <p>We look forward to welcoming you to ' . htmlspecialchars($email_site_name) . '!</p>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+            <p style="color: #666; font-size: 14px;">
+                <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
+                <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
+            </p>
+        </div>';
+        
+        // Send email
+        return sendEmail(
+            $booking['guest_email'],
+            $booking['guest_name'],
+            'Booking Confirmed - ' . htmlspecialchars($email_site_name) . ' [' . $booking['booking_reference'] . ']',
+            $htmlBody
+        );
+        
+    } catch (Exception $e) {
+        error_log("Send Booking Confirmed Email Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Send admin notification email
+ */
+function sendAdminNotificationEmail($booking) {
+    global $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    
+    try {
+        $htmlBody = '
+        <h1 style="color: #0A1929; text-align: center;">📋 New Booking Received</h1>
+        <p>A new booking has been made on the website.</p>
+        
+        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+            
+            <div style=\'display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;\'>
+                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="color: #D4AF37; font-weight: bold;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+            </div>
+            
+            <div style=\'display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;\'>
+                <span style="font-weight: bold; color: #0A1929;">Guest Name:</span>
+                <span style="color: #333;">' . htmlspecialchars($booking['guest_name']) . '</span>
+            </div>
+            
+            <div style=\'display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;\'>
+                <span style="font-weight: bold; color: #0A1929;">Guest Email:</span>
+                <span style="color: #333;">' . htmlspecialchars($booking['guest_email']) . '</span>
+            </div>
+            
+            <div style=\'display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;\'>
+                <span style="font-weight: bold; color: #0A1929;">Guest Phone:</span>
+                <span style="color: #333;">' . htmlspecialchars($booking['guest_phone']) . '</span>
+            </div>
+            
+            <div style=\'display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;\'>
+                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
+            </div>
+            
+            <div style=\'display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;\'>
+                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
+            </div>
+            
+            <div style=\'display: flex; justify-content: space-between; padding: 10px 0;\'>
+                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
+                <span style="color: #D4AF37; font-weight: bold;">MWK ' . number_format($booking['total_amount'], 0) . '</span>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="' . htmlspecialchars($email_site_url) . '/admin/bookings.php" style="display: inline-block; background: #D4AF37; color: #0A1929; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+                View Booking in Admin Panel
+            </a>
+        </div>';
+        
+        // Send email
+        return sendEmail(
+            $email_admin_email,
+            'Reservations Team',
+            'New Booking - ' . htmlspecialchars($email_site_name) . ' [' . $booking['booking_reference'] . ']',
+            $htmlBody
+        );
+        
+    } catch (Exception $e) {
+        error_log("Send Admin Notification Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}

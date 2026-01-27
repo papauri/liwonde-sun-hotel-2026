@@ -63,9 +63,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!in_array($new_status, $allowed, true)) {
                     throw new Exception('Invalid status');
                 }
+                
+                // Get current booking status and room_id before updating
+                $check_stmt = $pdo->prepare("SELECT status, room_id FROM bookings WHERE id = ?");
+                $check_stmt->execute([$booking_id]);
+                $current_booking = $check_stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$current_booking) {
+                    throw new Exception('Booking not found');
+                }
+                
+                $current_status = $current_booking['status'];
+                $room_id = $current_booking['room_id'];
+                
+                // Update booking status
                 $stmt = $pdo->prepare("UPDATE bookings SET status = ? WHERE id = ?");
                 $stmt->execute([$new_status, $booking_id]);
                 $message = 'Booking status updated!';
+                
+                // Handle room availability changes
+                if ($current_status === 'pending' && $new_status === 'confirmed') {
+                    // Booking confirmed: decrement rooms_available
+                    $update_room = $pdo->prepare("UPDATE rooms SET rooms_available = rooms_available - 1 WHERE id = ? AND rooms_available > 0");
+                    $update_room->execute([$room_id]);
+                    
+                    if ($update_room->rowCount() === 0) {
+                        // This shouldn't happen if availability checks are working, but handle it
+                        $message .= ' (Warning: Could not update room availability - room may be fully booked)';
+                    } else {
+                        $message .= ' Room availability updated.';
+                    }
+                    
+                    // Send booking confirmed email
+                    $booking_stmt = $pdo->prepare("
+                        SELECT b.*, r.name as room_name 
+                        FROM bookings b
+                        LEFT JOIN rooms r ON b.room_id = r.id
+                        WHERE b.id = ?
+                    ");
+                    $booking_stmt->execute([$booking_id]);
+                    $booking = $booking_stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($booking) {
+                        // Include email functions
+                        require_once '../config/email.php';
+                        
+                        // Send booking confirmed email
+                        $email_result = sendBookingConfirmedEmail($booking);
+                        
+                        if ($email_result['success']) {
+                            $message .= ' Confirmation email sent to guest.';
+                        } else {
+                            $message .= ' (Note: Confirmation email failed: ' . $email_result['message'] . ')';
+                        }
+                    }
+                    
+                } elseif ($current_status === 'confirmed' && $new_status === 'cancelled') {
+                    // Booking cancelled: increment rooms_available
+                    $update_room = $pdo->prepare("UPDATE rooms SET rooms_available = rooms_available + 1 WHERE id = ? AND rooms_available < total_rooms");
+                    $update_room->execute([$room_id]);
+                    
+                    if ($update_room->rowCount() > 0) {
+                        $message .= ' Room availability restored.';
+                    }
+                }
             }
 
         } elseif ($action === 'update_payment') {
@@ -152,7 +213,6 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
             padding: 24px;
             margin-bottom: 24px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            overflow-x: auto;
         }
         .section-title {
             font-size: 20px;
@@ -165,7 +225,7 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
         .booking-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1800px;
+            min-width: 1200px;
             border: 1px solid #d0d7de;
         }
         .booking-table th {
@@ -359,7 +419,6 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
             padding: 24px;
             margin-bottom: 24px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            overflow-x: auto;
         }
         .section-title {
             font-size: 20px;
@@ -372,7 +431,7 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
         .booking-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1800px;
+            min-width: 1200px;
             border: 1px solid #d0d7de;
         }
         .booking-table th {
@@ -472,9 +531,6 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
             color: #ddd;
         }
         @media (max-width: 768px) {
-            .content {
-                padding: 16px;
-            }
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 12px;
@@ -552,7 +608,8 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
             </h3>
 
             <?php if (!empty($bookings)): ?>
-                <table class="booking-table">
+                <div class="table-responsive">
+                    <table class="booking-table">
                     <thead>
                         <tr>
                             <th style="width: 120px;">Ref</th>
@@ -619,7 +676,8 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
-                </table>
+                    </table>
+                </div>
             <?php else: ?>
                 <div class="empty-state">
                     <i class="fas fa-calendar-times"></i>
@@ -638,7 +696,8 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
             </h3>
 
             <?php if (!empty($conference_inquiries)): ?>
-                <table class="booking-table">
+                <div class="table-responsive">
+                    <table class="booking-table">
                     <thead>
                         <tr>
                             <th style="width: 140px;">Date Received</th>
@@ -673,7 +732,8 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
-                </table>
+                    </table>
+                </div>
             <?php else: ?>
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>

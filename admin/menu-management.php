@@ -1022,7 +1022,8 @@ try {
                     </h3>
                     
                     <?php if (isset($grouped_food[$category]) && !empty($grouped_food[$category])): ?>
-                        <table class="menu-table">
+                        <div class="table-responsive">
+                            <table class="menu-table">
                             <thead>
                                 <tr>
                                     <th style="width: 100px;">Order</th>
@@ -1076,7 +1077,8 @@ try {
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
-                        </table>
+                            </table>
+                        </div>
                     <?php else: ?>
                         <div class="empty-state">
                             <i class="fas fa-inbox"></i>
@@ -1119,7 +1121,8 @@ try {
                     </h3>
                     
                     <?php if (isset($grouped_drinks[$category]) && !empty($grouped_drinks[$category])): ?>
-                        <table class="menu-table">
+                        <div class="table-responsive">
+                            <table class="menu-table">
                             <thead>
                                 <tr>
                                     <th style="width: 100px;">Order</th>
@@ -1177,7 +1180,8 @@ try {
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
-                        </table>
+                            </table>
+                        </div>
                     <?php else: ?>
                         <div class="empty-state">
                             <i class="fas fa-inbox"></i>

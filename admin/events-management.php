@@ -194,12 +194,11 @@ try {
             border-radius: 12px;
             padding: 24px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            overflow-x: auto;
         }
         .event-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 2000px;
+            min-width: 1400px;
             border: 1px solid #d0d7de;
         }
         .event-table th {
@@ -558,12 +557,11 @@ try {
             border-radius: 12px;
             padding: 24px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            overflow-x: auto;
         }
         .event-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 2000px;
+            min-width: 1400px;
             border: 1px solid #d0d7de;
         }
         .event-table th {
@@ -891,9 +889,6 @@ try {
             margin-top: 24px;
         }
         @media (max-width: 768px) {
-            .content {
-                padding: 16px;
-            }
             .page-header {
                 flex-direction: column;
                 gap: 16px;
@@ -940,7 +935,8 @@ try {
 
         <div class="events-section">
             <?php if (!empty($events)): ?>
-                <table class="event-table">
+                <div class="table-responsive">
+                    <table class="event-table">
                     <thead>
                         <tr>
                             <th style="width: 250px;">Title</th>
@@ -1072,7 +1068,8 @@ try {
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
-                </table>
+                    </table>
+                </div>
             <?php else: ?>
                 <div style="text-align: center; padding: 60px 20px; color: #999;">
                     <i class="fas fa-calendar-times" style="font-size: 64px; margin-bottom: 16px; color: #ddd;"></i>
