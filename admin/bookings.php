@@ -130,9 +130,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
         } elseif ($action === 'update_payment') {
+            $payment_status = $_POST['payment_status'];
+            $booking_id = $_POST['id'];
+            
+            // Get previous payment status
+            $check = $pdo->prepare("SELECT payment_status FROM bookings WHERE id = ?");
+            $check->execute([$booking_id]);
+            $row = $check->fetch(PDO::FETCH_ASSOC);
+            $previous_status = $row['payment_status'] ?? 'unpaid';
+            
+            // Update payment status
             $stmt = $pdo->prepare("UPDATE bookings SET payment_status = ? WHERE id = ?");
-            $stmt->execute([$_POST['payment_status'], $_POST['id']]);
+            $stmt->execute([$payment_status, $booking_id]);
             $message = 'Payment status updated!';
+            
+            // Send invoice email if payment status changed to 'paid'
+            if ($payment_status === 'paid' && $previous_status !== 'paid') {
+                require_once '../config/invoice.php';
+                $invoice_result = sendPaymentInvoiceEmail($booking_id);
+                
+                if ($invoice_result['success']) {
+                    $message .= ' Invoice sent successfully!';
+                } else {
+                    error_log("Invoice email failed: " . $invoice_result['message']);
+                    $message .= ' (Invoice email failed - check logs)';
+                }
+            }
         }
 
     } catch (Throwable $e) {

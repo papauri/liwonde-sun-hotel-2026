@@ -328,8 +328,8 @@ function displayReviewsSection($roomId, $reviews = [], $averages = []) {
 }
 
 /**
- * Fetch reviews from API
- * 
+ * Fetch reviews from database directly (avoids HTTP request deadlock)
+ *
  * @param int $roomId Room ID (optional)
  * @param string $status Review status filter (default: 'approved')
  * @param int $limit Number of reviews to fetch (default: 10)
@@ -337,38 +337,83 @@ function displayReviewsSection($roomId, $reviews = [], $averages = []) {
  * @return array|false Returns array with reviews and averages, or false on failure
  */
 function fetchReviews($roomId = null, $status = 'approved', $limit = 10, $offset = 0) {
-    $apiUrl = 'admin/api/reviews.php';
-    $params = [
-        'status' => $status,
-        'limit' => $limit,
-        'offset' => $offset
-    ];
+    global $pdo;
     
-    if ($roomId !== null) {
-        $params['room_id'] = $roomId;
-    }
-    
-    $url = $apiUrl . '?' . http_build_query($params);
-    
-    $context = stream_context_create([
-        'http' => [
-            'timeout' => 10,
-            'ignore_errors' => true
-        ]
-    ]);
-    
-    $response = @file_get_contents($url, false, $context);
-    
-    if ($response === false) {
+    try {
+        // Validate status
+        $valid_statuses = ['pending', 'approved', 'rejected'];
+        if (!in_array($status, $valid_statuses)) {
+            return false;
+        }
+        
+        // Build query
+        $sql = "
+            SELECT
+                r.*,
+                (SELECT COUNT(*) FROM review_responses rr WHERE rr.review_id = r.id) as response_count,
+                (SELECT response FROM review_responses rr WHERE rr.review_id = r.id ORDER BY rr.created_at DESC LIMIT 1) as latest_response,
+                (SELECT created_at FROM review_responses rr WHERE rr.review_id = r.id ORDER BY rr.created_at DESC LIMIT 1) as latest_response_date,
+                rm.name as room_name
+            FROM reviews r
+            LEFT JOIN rooms rm ON r.room_id = rm.id
+            WHERE r.status = ?
+        ";
+        $params = [$status];
+        
+        if ($roomId !== null) {
+            $sql .= " AND r.room_id = ?";
+            $params[] = $roomId;
+        }
+        
+        $sql .= " ORDER BY r.created_at DESC LIMIT ? OFFSET ?";
+        $params[] = $limit;
+        $params[] = $offset;
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Hide guest_email for non-admin requests
+        $is_admin = isset($_SESSION['admin_user']);
+        if (!$is_admin) {
+            foreach ($reviews as &$review) {
+                unset($review['guest_email']);
+            }
+        }
+        
+        // Calculate average ratings
+        $avgSql = "
+            SELECT
+                AVG(rating) as avg_rating,
+                AVG(service_rating) as avg_service,
+                AVG(cleanliness_rating) as avg_cleanliness,
+                AVG(location_rating) as avg_location,
+                AVG(value_rating) as avg_value,
+                COUNT(*) as total_count
+            FROM reviews
+            WHERE status = 'approved'
+        ";
+        $avgStmt = $pdo->query($avgSql);
+        $averages = $avgStmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Format averages to 1 decimal place
+        foreach ($averages as $key => $value) {
+            if ($value !== null) {
+                $averages[$key] = round((float)$value, 1);
+            }
+        }
+        
+        return [
+            'success' => true,
+            'data' => [
+                'reviews' => $reviews,
+                'averages' => $averages
+            ]
+        ];
+        
+    } catch (PDOException $e) {
+        error_log("fetchReviews: Database error: " . $e->getMessage());
         return false;
     }
-    
-    $data = json_decode($response, true);
-    
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        return false;
-    }
-    
-    return $data;
 }
 ?>

@@ -161,21 +161,27 @@ try {
             });
         })();
 
-        // Fetch and display room ratings
+        // Fetch and display ALL room ratings in a single request (optimized)
         (function() {
             const ratingContainers = document.querySelectorAll('.room-tile__rating');
             
-            ratingContainers.forEach(container => {
-                const roomId = container.dataset.roomId;
-                
-                fetch(`admin/api/reviews.php?room_id=${roomId}&status=approved`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.averages) {
-                            const avgRating = data.averages.avg_rating || 0;
-                            const totalCount = data.total_count || 0;
+            if (ratingContainers.length === 0) return;
+            
+            // Single batch API call instead of N+1 individual requests
+            fetch('admin/api/all-room-ratings.php')
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success && result.data) {
+                        const ratings = result.data;
+                        
+                        ratingContainers.forEach(container => {
+                            const roomId = parseInt(container.dataset.roomId);
+                            const ratingData = ratings[roomId];
                             
-                            if (totalCount > 0) {
+                            if (ratingData && ratingData.review_count > 0) {
+                                const avgRating = ratingData.avg_rating;
+                                const totalCount = ratingData.review_count;
+                                
                                 let starsHtml = '';
                                 const fullStars = Math.floor(avgRating);
                                 const hasHalfStar = (avgRating - fullStars) >= 0.5;
@@ -208,17 +214,22 @@ try {
                                     </div>
                                 `;
                             }
-                        } else {
+                        });
+                    } else {
+                        // Fallback for error case
+                        ratingContainers.forEach(container => {
                             container.innerHTML = `
                                 <div class="compact-rating compact-rating--no-reviews">
                                     <i class="far fa-star"></i>
                                     <span>No reviews</span>
                                 </div>
                             `;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching room rating:', error);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching room ratings:', error);
+                    ratingContainers.forEach(container => {
                         container.innerHTML = `
                             <div class="compact-rating compact-rating--no-reviews">
                                 <i class="far fa-star"></i>
@@ -226,7 +237,7 @@ try {
                             </div>
                         `;
                     });
-            });
+                });
         })();
     </script>
 </body>

@@ -12,7 +12,7 @@ function resolveImageUrl($path) {
     return $trimmed; // relative path as-is
 }
 
-// Fetch site settings
+// Fetch site settings (cached)
 $hero_title = getSetting('hero_title');
 $hero_subtitle = getSetting('hero_subtitle');
 $site_name = getSetting('site_name');
@@ -20,126 +20,89 @@ $site_logo = getSetting('site_logo');
 $currency_symbol = getSetting('currency_symbol');
 $currency_code = getSetting('currency_code');
 
-// Fetch policies for footer modals
-$policies = [];
-try {
-    $policyStmt = $pdo->query("SELECT slug, title, summary, content FROM policies WHERE is_active = 1 ORDER BY display_order ASC, id ASC");
-    $policies = $policyStmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $policies = [];
-}
+// Fetch cached data for performance
+$policies = getCachedPolicies();
+$hero_slides = getCachedHeroSlides();
+$featured_rooms = getCachedRooms(['is_featured' => true, 'limit' => 6]);
+$facilities = getCachedFacilities(['is_featured' => true, 'limit' => 6]);
+$gallery_images = getCachedGalleryImages();
+$testimonials = getCachedTestimonials(3);
 
-// Fetch hero slides (database-driven carousel)
-try {
-    $stmt = $pdo->query("SELECT title, subtitle, description, primary_cta_text, primary_cta_link, secondary_cta_text, secondary_cta_link, image_path FROM hero_slides WHERE is_active = 1 ORDER BY display_order ASC");
-    $hero_slides = $stmt->fetchAll();
-} catch (PDOException $e) {
-    error_log("Error fetching hero slides: " . $e->getMessage());
-    $hero_slides = [];
-}
+// Fetch cached About Us content
+$about_data = getCachedAboutUs();
+$about_content = $about_data['content'];
+$about_features = $about_data['features'];
+$about_stats = $about_data['stats'];
 
-
-// Fetch featured rooms
-$stmt = $pdo->query("
-    SELECT * FROM rooms 
-    WHERE is_featured = 1 AND is_active = 1 
-    ORDER BY display_order ASC 
-    LIMIT 6
-");
-$featured_rooms = $stmt->fetchAll();
-
-// Fetch featured facilities
-$stmt = $pdo->query("
-    SELECT * FROM facilities 
-    WHERE is_featured = 1 AND is_active = 1 
-    ORDER BY display_order ASC 
-    LIMIT 6
-");
-$facilities = $stmt->fetchAll();
-
-// Fetch hotel gallery images
-try {
-    $stmt = $pdo->query("
-        SELECT * FROM hotel_gallery 
-        WHERE is_active = 1 
-        ORDER BY display_order ASC
-    ");
-    $gallery_images = $stmt->fetchAll();
-} catch (PDOException $e) {
-    error_log("Error fetching hotel gallery: " . $e->getMessage());
-    $gallery_images = [];
-}
-
-// Fetch testimonials
-$stmt = $pdo->query("
-    SELECT * FROM testimonials
-    WHERE is_featured = 1 AND is_approved = 1
-    ORDER BY display_order ASC
-    LIMIT 3
-");
-$testimonials = $stmt->fetchAll();
-
-// Fetch hotel-wide reviews
+// Fetch hotel-wide reviews (with caching)
 $hotel_reviews = [];
 $review_averages = [];
 try {
-    $reviews_data = fetchReviews(null, 'approved', 6, 0);
-    $hotel_reviews = $reviews_data['reviews'] ?? [];
-    $review_averages = $reviews_data['averages'] ?? [];
+    // Try to get from cache first
+    $reviews_cache = getCache('hotel_reviews_6', null);
+    
+    if ($reviews_cache !== null) {
+        $hotel_reviews = $reviews_cache['reviews'];
+        $review_averages = $reviews_cache['averages'];
+    } else {
+        // Fetch from database if not cached
+        $reviews_data = fetchReviews(null, 'approved', 6, 0);
+        
+        if (isset($reviews_data['data'])) {
+            $hotel_reviews = $reviews_data['data']['reviews'] ?? [];
+            $review_averages = $reviews_data['data']['averages'] ?? [];
+        } else {
+            $hotel_reviews = $reviews_data['reviews'] ?? [];
+            $review_averages = $reviews_data['averages'] ?? [];
+        }
+        
+        // Cache for 30 minutes
+        setCache('hotel_reviews_6', [
+            'reviews' => $hotel_reviews,
+            'averages' => $review_averages
+        ], 1800);
+    }
 } catch (Exception $e) {
     error_log("Error fetching hotel reviews: " . $e->getMessage());
     $hotel_reviews = [];
     $review_averages = [];
 }
 
-// Fetch contact settings
+// Fetch contact settings (cached)
 $contact_settings = getSettingsByGroup('contact');
 $contact = [];
 foreach ($contact_settings as $setting) {
     $contact[$setting['setting_key']] = $setting['setting_value'];
 }
 
-// Fetch social media links
+// Fetch social media links (cached)
 $social_settings = getSettingsByGroup('social');
 $social = [];
 foreach ($social_settings as $setting) {
     $social[$setting['setting_key']] = $setting['setting_value'];
 }
 
-// Fetch footer links grouped by column
-$stmt = $pdo->query("
-    SELECT column_name, link_text, link_url 
-    FROM footer_links 
-    WHERE is_active = 1 
-    ORDER BY column_name, display_order
-");
-$footer_links_raw = $stmt->fetchAll();
+// Fetch footer links (cached)
+$footer_links_raw = getCache('footer_links', null);
+if ($footer_links_raw === null) {
+    try {
+        $stmt = $pdo->query("
+            SELECT column_name, link_text, link_url 
+            FROM footer_links 
+            WHERE is_active = 1 
+            ORDER BY column_name, display_order
+        ");
+        $footer_links_raw = $stmt->fetchAll();
+        setCache('footer_links', $footer_links_raw, 3600);
+    } catch (PDOException $e) {
+        $footer_links_raw = [];
+    }
+}
 
 // Group footer links by column
 $footer_links = [];
 foreach ($footer_links_raw as $link) {
     $footer_links[$link['column_name']][] = $link;
-}
-
-// Fetch About Us content from database
-$about_content = [];
-$about_features = [];
-$about_stats = [];
-try {
-    // Get main about content
-    $stmt = $pdo->query("SELECT * FROM about_us WHERE section_type = 'main' AND is_active = 1 ORDER BY display_order LIMIT 1");
-    $about_content = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    // Get features
-    $stmt = $pdo->query("SELECT * FROM about_us WHERE section_type = 'feature' AND is_active = 1 ORDER BY display_order");
-    $about_features = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Get stats
-    $stmt = $pdo->query("SELECT * FROM about_us WHERE section_type = 'stat' AND is_active = 1 ORDER BY display_order");
-    $about_stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    error_log("Error fetching about us content: " . $e->getMessage());
-    // Fallback to empty arrays
 }
 ?>
 <!DOCTYPE html>
@@ -186,6 +149,7 @@ try {
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/footer-fixes.css">
     
     <!-- Structured Data - Local Business -->
     <script type="application/ld+json">
@@ -252,9 +216,9 @@ try {
                 <?php endforeach; ?>
             </div>
             <button class="hero-nav hero-next" aria-label="Next slide"><i class="fas fa-utensils"></i></button>
-        </div>
-
-        <!-- Time and Weather Widget - Desktop -->
+            </div>
+    
+            <!-- Time and Weather Widget - Desktop -->
         <div class="hero-widget hero-widget-desktop">
             <div class="widget-time">
                 <span class="time-display" id="heroTime">--:--</span>
@@ -563,8 +527,11 @@ try {
         </div>
     </section>
 
+    <!-- Hotel Reviews Section -->
+    <?php include 'includes/reviews-section.php'; ?>
+
     <!-- Testimonials Section -->
-    <section class="section" id="testimonials" style="background: #FBF8F3;">
+    <section class="section" id="testimonials">
         <div class="container">
             <div class="section-header">
                 <span class="section-subtitle">Reviews</span>
@@ -594,123 +561,6 @@ try {
             </div>
         </div>
     </section>
-
-    <!-- Hotel Reviews Section -->
-    <?php if (!empty($hotel_reviews) || !empty($review_averages)): ?>
-    <section class="section hotel-reviews-section" id="reviews">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-subtitle">Guest Reviews</span>
-                <h2 class="section-title">What Our Guests Say</h2>
-                <p class="section-description">Read authentic reviews from guests who have experienced our hospitality</p>
-            </div>
-            
-            <?php if (!empty($review_averages)): ?>
-            <!-- Rating Summary -->
-            <div class="reviews-summary-wrapper">
-                <div class="reviews-overall-rating">
-                    <div class="overall-rating-score">
-                        <span class="rating-number"><?php echo number_format($review_averages['avg_rating'] ?? 0, 1); ?></span>
-                        <div class="rating-stars">
-                            <?php echo displayStarRating($review_averages['avg_rating'] ?? 0, 24, true); ?>
-                        </div>
-                        <span class="rating-count"><?php echo ($review_averages['total_count'] ?? 0); ?> reviews</span>
-                    </div>
-                </div>
-                
-                <div class="reviews-category-breakdown">
-                    <div class="category-rating-item">
-                        <span class="category-label">Service</span>
-                        <div class="category-rating-bar">
-                            <div class="category-rating-fill" style="width: <?php echo ($review_averages['avg_service'] ?? 0) * 20; ?>%;"></div>
-                        </div>
-                        <span class="category-value"><?php echo number_format($review_averages['avg_service'] ?? 0, 1); ?></span>
-                    </div>
-                    <div class="category-rating-item">
-                        <span class="category-label">Cleanliness</span>
-                        <div class="category-rating-bar">
-                            <div class="category-rating-fill" style="width: <?php echo ($review_averages['avg_cleanliness'] ?? 0) * 20; ?>%;"></div>
-                        </div>
-                        <span class="category-value"><?php echo number_format($review_averages['avg_cleanliness'] ?? 0, 1); ?></span>
-                    </div>
-                    <div class="category-rating-item">
-                        <span class="category-label">Location</span>
-                        <div class="category-rating-bar">
-                            <div class="category-rating-fill" style="width: <?php echo ($review_averages['avg_location'] ?? 0) * 20; ?>%;"></div>
-                        </div>
-                        <span class="category-value"><?php echo number_format($review_averages['avg_location'] ?? 0, 1); ?></span>
-                    </div>
-                    <div class="category-rating-item">
-                        <span class="category-label">Value</span>
-                        <div class="category-rating-bar">
-                            <div class="category-rating-fill" style="width: <?php echo ($review_averages['avg_value'] ?? 0) * 20; ?>%;"></div>
-                        </div>
-                        <span class="category-value"><?php echo number_format($review_averages['avg_value'] ?? 0, 1); ?></span>
-                    </div>
-                </div>
-            </div>
-            <?php endif; ?>
-            
-            <?php if (!empty($hotel_reviews)): ?>
-            <!-- Reviews List -->
-            <div class="hotel-reviews-list">
-                <?php foreach ($hotel_reviews as $review): ?>
-                <div class="hotel-review-card">
-                    <div class="review-header">
-                        <div class="review-guest-info">
-                            <div class="guest-avatar">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="guest-details">
-                                <span class="guest-name"><?php echo htmlspecialchars($review['guest_name']); ?></span>
-                                <span class="review-date"><?php echo date('F j, Y', strtotime($review['created_at'])); ?></span>
-                            </div>
-                        </div>
-                        <div class="review-rating">
-                            <?php echo displayStarRating($review['rating'], 16, true); ?>
-                        </div>
-                    </div>
-                    
-                    <div class="review-content">
-                        <p class="review-text"><?php echo htmlspecialchars($review['comment']); ?></p>
-                    </div>
-                    
-                    <?php if (!empty($review['latest_response'])): ?>
-                    <div class="review-admin-response">
-                        <div class="admin-response-header">
-                            <i class="fas fa-reply"></i>
-                            <span>Response from <?php echo htmlspecialchars($site_name); ?></span>
-                        </div>
-                        <p class="admin-response-text"><?php echo htmlspecialchars($review['latest_response']); ?></p>
-                        <?php if (!empty($review['latest_response_date'])): ?>
-                        <span class="admin-response-date"><?php echo date('F j, Y', strtotime($review['latest_response_date'])); ?></span>
-                        <?php endif; ?>
-                    </div>
-                    <?php endif; ?>
-                </div>
-                <?php endforeach; ?>
-            </div>
-            
-            <!-- Reviews Actions -->
-            <div class="reviews-actions">
-                <a href="submit-review.php" class="btn btn-primary">
-                    <i class="fas fa-pen"></i> Write a Review
-                </a>
-                <a href="admin/reviews.php" class="btn btn-outline">
-                    <i class="fas fa-list"></i> View All Reviews
-                </a>
-            </div>
-            <?php else: ?>
-            <!-- No Reviews Message -->
-            <div class="no-reviews-message">
-                <i class="fas fa-star"></i>
-                <p>No reviews yet. Be the first to share your experience!</p>
-                <a href="submit-review.php" class="btn btn-primary">Write a Review</a>
-            </div>
-            <?php endif; ?>
-        </div>
-    </section>
-    <?php endif; ?>
 
     </main>
     

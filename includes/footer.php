@@ -1,8 +1,8 @@
 <?php require_once 'modal.php'; ?>
-<!-- Footer -->
-<footer class="footer" id="contact">
+<!-- Footer - Minimalist Professional 2026 -->
+<footer class="minimalist-footer" id="contact">
     <div class="container">
-        <div class="footer-grid">
+        <div class="minimalist-footer-grid">
             <?php
             // Fetch policies from database
             $policies = [];
@@ -12,7 +12,7 @@
             } catch (PDOException $e) {
                 // Fallback if table doesn't exist
             }
-            
+
             // Fetch footer links from database
             $footer_links = [];
             try {
@@ -24,15 +24,15 @@
                     $current_page = 'index';
                 }
                 $is_index_page = ($current_page === 'index');
-                
+
                 // Select appropriate URL based on page
                 if ($is_index_page) {
                     // On index page, use link_url (hash only)
                     $stmt = $pdo->query("SELECT column_name, link_text, link_url FROM footer_links WHERE is_active = 1 ORDER BY column_name, display_order ASC");
                 } else {
                     // On other pages, use secondary_link_url if available, otherwise link_url
-                    $stmt = $pdo->query("SELECT column_name, link_text, 
-                        COALESCE(NULLIF(secondary_link_url, ''), link_url) as link_url 
+                    $stmt = $pdo->query("SELECT column_name, link_text,
+                        COALESCE(NULLIF(secondary_link_url, ''), link_url) as link_url
                         FROM footer_links WHERE is_active = 1 ORDER BY column_name, display_order ASC");
                 }
                 $all_links = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -42,7 +42,7 @@
             } catch (PDOException $e) {
                 // Fallback if table doesn't exist
             }
-            
+
             // Fetch contact settings
             $contact = [
                 'phone_main' => getSetting('phone_main'),
@@ -50,7 +50,7 @@
                 'address_line1' => getSetting('address_line1'),
                 'working_hours' => getSetting('working_hours')
             ];
-            
+
             // Fetch social links
             $social = [
                 'facebook_url' => getSetting('facebook_url'),
@@ -58,12 +58,12 @@
                 'twitter_url' => getSetting('twitter_url'),
                 'linkedin_url' => getSetting('linkedin_url')
             ];
-            
-            foreach ($footer_links as $column_name => $links): 
+
+            foreach ($footer_links as $column_name => $links):
             ?>
-            <div class="footer-column">
+            <div class="minimalist-footer-column">
                 <h4><?php echo htmlspecialchars($column_name); ?></h4>
-                <ul class="footer-links">
+                <ul class="minimalist-footer-links">
                     <?php foreach ($links as $link): ?>
                     <li><a href="<?php echo htmlspecialchars($link['link_url']); ?>"><?php echo htmlspecialchars($link['link_text']); ?></a></li>
                     <?php endforeach; ?>
@@ -71,9 +71,9 @@
             </div>
             <?php endforeach; ?>
 
-            <div class="footer-column">
+            <div class="minimalist-footer-column">
                 <h4>Policies</h4>
-                <ul class="footer-links">
+                <ul class="minimalist-footer-links">
                     <?php if (!empty($policies)): ?>
                         <?php foreach ($policies as $policy): ?>
                             <li><a href="#" class="policy-link" data-policy="<?php echo htmlspecialchars($policy['slug']); ?>"><?php echo htmlspecialchars($policy['title']); ?></a></li>
@@ -86,10 +86,10 @@
                     <?php endif; ?>
                 </ul>
             </div>
-            
-            <div class="footer-column">
+
+            <div class="minimalist-footer-column">
                 <h4>Contact Information</h4>
-                <ul class="contact-info">
+                <ul class="minimalist-contact-info">
                     <li>
                         <i class="fas fa-phone"></i>
                         <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $contact['phone_main'])); ?>"><?php echo htmlspecialchars($contact['phone_main']); ?></a>
@@ -107,37 +107,62 @@
                         <span><?php echo htmlspecialchars($contact['working_hours']); ?></span>
                     </li>
                 </ul>
-                
-                <div class="social-links">
+            </div>
+
+            <div class="minimalist-footer-column">
+                <h4>Connect With Us</h4>
+                <div class="minimalist-social-links">
                     <?php if (!empty($social['facebook_url'])): ?>
-                    <a href="<?php echo htmlspecialchars($social['facebook_url']); ?>" class="social-icon" target="_blank">
+                    <a href="<?php echo htmlspecialchars($social['facebook_url']); ?>" class="minimalist-social-icon" target="_blank" aria-label="Facebook" title="Follow us on Facebook">
                         <i class="fab fa-facebook-f"></i>
                     </a>
                     <?php endif; ?>
-                    
+
                     <?php if (!empty($social['instagram_url'])): ?>
-                    <a href="<?php echo htmlspecialchars($social['instagram_url']); ?>" class="social-icon" target="_blank">
+                    <a href="<?php echo htmlspecialchars($social['instagram_url']); ?>" class="minimalist-social-icon" target="_blank" aria-label="Instagram" title="Follow us on Instagram">
                         <i class="fab fa-instagram"></i>
                     </a>
                     <?php endif; ?>
-                    
+
                     <?php if (!empty($social['twitter_url'])): ?>
-                    <a href="<?php echo htmlspecialchars($social['twitter_url']); ?>" class="social-icon" target="_blank">
+                    <a href="<?php echo htmlspecialchars($social['twitter_url']); ?>" class="minimalist-social-icon" target="_blank" aria-label="Twitter" title="Follow us on Twitter">
                         <i class="fab fa-twitter"></i>
                     </a>
                     <?php endif; ?>
-                    
+
                     <?php if (!empty($social['linkedin_url'])): ?>
-                    <a href="<?php echo htmlspecialchars($social['linkedin_url']); ?>" class="social-icon" target="_blank">
+                    <a href="<?php echo htmlspecialchars($social['linkedin_url']); ?>" class="minimalist-social-icon" target="_blank" aria-label="LinkedIn" title="Connect with us on LinkedIn">
                         <i class="fab fa-linkedin-in"></i>
                     </a>
                     <?php endif; ?>
                 </div>
+
+                <h4 class="share-section-title">Share</h4>
+                <div class="minimalist-share-buttons">
+                    <button class="minimalist-share-btn" onclick="sharePage('facebook')" aria-label="Share on Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </button>
+                    <button class="minimalist-share-btn" onclick="sharePage('twitter')" aria-label="Share on Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </button>
+                    <button class="minimalist-share-btn" onclick="sharePage('whatsapp')" aria-label="Share on WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                    </button>
+                    <button class="minimalist-share-btn" onclick="sharePage('email')" aria-label="Share via Email">
+                        <i class="fas fa-envelope"></i>
+                    </button>
+                </div>
             </div>
         </div>
-        
-        <div class="footer-bottom">
-            <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text')); ?></p>
+
+        <div class="minimalist-footer-bottom">
+            <div class="minimalist-footer-copyright">
+                <p>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars(getSetting('site_name')); ?>. All Rights Reserved.</p>
+            </div>
+
+            <div class="minimalist-footer-credits">
+                <p>Designed with <i class="fas fa-heart"></i> for Luxury Excellence</p>
+            </div>
         </div>
     </div>
 </footer>
@@ -152,7 +177,7 @@
             $policyContent = '<p class="policy-summary" style="margin-bottom: 16px; color: #666; font-style: italic;">' . htmlspecialchars($policy['summary']) . '</p>';
         }
         $policyContent .= '<p>' . nl2br(htmlspecialchars($policy['content'])) . '</p>';
-        
+
         renderModal(
             'policy-' . htmlspecialchars($policy['slug']),
             htmlspecialchars($policy['title']),
@@ -166,3 +191,29 @@
     <?php endforeach; ?>
 </div>
 <?php endif; ?>
+
+<!-- Share Script -->
+<script>
+function sharePage(platform) {
+    const shareData = {
+        title: document.title || 'Liwonde Sun Hotel - Luxury Accommodation in Malawi',
+        url: window.location.href,
+        text: 'Experience unmatched luxury at Liwonde Sun Hotel. Book your stay today!'
+    };
+
+    const shareUrls = {
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}&t=${encodeURIComponent(shareData.title)}`,
+        twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareData.title)}&url=${encodeURIComponent(shareData.url)}`,
+        whatsapp: `https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`
+    };
+
+    if (platform === 'email') {
+        const subject = encodeURIComponent(shareData.title);
+        const body = encodeURIComponent(shareData.text + '\n\n' + shareData.url);
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    } else {
+        const shareUrl = shareUrls[platform];
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+}
+</script>

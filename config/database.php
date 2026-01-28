@@ -5,6 +5,9 @@
  * Supports both LOCAL and PRODUCTION environments
  */
 
+// Include caching system first
+require_once __DIR__ . '/cache.php';
+
 // Database configuration - multiple security options
 // Priority: 1. Local config file, 2. Environment variables, 3. Hardcoded fallback
 
@@ -69,14 +72,22 @@ try {
 $_SITE_SETTINGS = [];
 
 /**
- * Helper function to get setting value with caching
+ * Helper function to get setting value with file-based caching
+ * DRAMATICALLY reduces database queries and remote connection overhead
  */
 function getSetting($key, $default = '') {
     global $pdo, $_SITE_SETTINGS;
     
-    // Check cache first
+    // Check in-memory cache first (fastest)
     if (isset($_SITE_SETTINGS[$key])) {
         return $_SITE_SETTINGS[$key];
+    }
+    
+    // Check file cache (much faster than database query)
+    $cachedValue = getCache("setting_{$key}", null);
+    if ($cachedValue !== null) {
+        $_SITE_SETTINGS[$key] = $cachedValue;
+        return $cachedValue;
     }
     
     try {
@@ -85,8 +96,11 @@ function getSetting($key, $default = '') {
         $result = $stmt->fetch();
         $value = $result ? $result['setting_value'] : $default;
         
-        // Cache the result
+        // Cache in memory
         $_SITE_SETTINGS[$key] = $value;
+        
+        // Cache in file for next request (1 hour TTL)
+        setCache("setting_{$key}", $value, 3600);
         
         return $value;
     } catch (PDOException $e) {
@@ -96,19 +110,29 @@ function getSetting($key, $default = '') {
 }
 
 /**
- * Helper function to get email setting value
+ * Helper function to get email setting value with caching
  * Handles encrypted settings like passwords
  */
 function getEmailSetting($key, $default = '') {
     global $pdo;
     
     try {
-        // Check if email_settings table exists
-        $table_exists = $pdo->query("SHOW TABLES LIKE 'email_settings'")->rowCount() > 0;
+        // Check if email_settings table exists (cached)
+        $table_exists = getCache("table_email_settings", null);
+        if ($table_exists === null) {
+            $table_exists = $pdo->query("SHOW TABLES LIKE 'email_settings'")->rowCount() > 0;
+            setCache("table_email_settings", $table_exists, 86400); // Cache for 24 hours
+        }
         
         if (!$table_exists) {
             // Fallback to site_settings for backward compatibility
             return getSetting($key, $default);
+        }
+        
+        // Try file cache first
+        $cachedValue = getCache("email_setting_{$key}", null);
+        if ($cachedValue !== null) {
+            return $cachedValue;
         }
         
         $stmt = $pdo->prepare("SELECT setting_value, is_encrypted FROM email_settings WHERE setting_key = ?");
@@ -130,14 +154,18 @@ function getEmailSetting($key, $default = '') {
                 $stmt->execute([$value]);
                 $decrypted = $stmt->fetch();
                 if ($decrypted && !empty($decrypted['decrypted_value'])) {
-                    return $decrypted['decrypted_value'];
+                    $value = $decrypted['decrypted_value'];
+                } else {
+                    $value = ''; // Don't expose encrypted data
                 }
             } catch (Exception $e) {
-                error_log("Error decrypting setting {$key}: " . $e->getMessage());
-                // Return empty if decryption fails
-                return '';
+                $value = ''; // Don't expose encrypted data on error
             }
         }
+        
+        // Cache the result (1 hour TTL for encrypted, 6 hours for unencrypted)
+        $ttl = $is_encrypted ? 3600 : 21600;
+        setCache("email_setting_{$key}", $value, $ttl);
         
         return $value;
     } catch (PDOException $e) {
@@ -307,13 +335,304 @@ preloadCommonSettings();
  */
 function getSettingsByGroup($group) {
     global $pdo;
+    
+    // Check cache first
+    $cached = getCache("settings_group_{$group}", null);
+    if ($cached !== null) {
+        return $cached;
+    }
+    
     try {
         $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM site_settings WHERE setting_group = ?");
         $stmt->execute([$group]);
-        return $stmt->fetchAll();
+        $result = $stmt->fetchAll();
+        
+        // Cache for 30 minutes
+        setCache("settings_group_{$group}", $result, 1800);
+        
+        return $result;
     } catch (PDOException $e) {
         error_log("Error fetching settings: " . $e->getMessage());
         return [];
+    }
+}
+
+/**
+ * Helper function to get cached rooms with optional filters
+ * Dramatically reduces database queries for room listings
+ */
+function getCachedRooms($filters = []) {
+    global $pdo;
+    
+    // Create cache key from filters
+    $cacheKey = 'rooms_' . md5(json_encode($filters));
+    $cached = getCache($cacheKey, null);
+    if ($cached !== null) {
+        return $cached;
+    }
+    
+    try {
+        $sql = "SELECT * FROM rooms WHERE is_active = 1";
+        $params = [];
+        
+        if (!empty($filters['is_featured'])) {
+            $sql .= " AND is_featured = 1";
+        }
+        
+        $sql .= " ORDER BY display_order ASC, id ASC";
+        
+        if (!empty($filters['limit'])) {
+            $sql .= " LIMIT ?";
+            $params[] = (int)$filters['limit'];
+        }
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Cache for 15 minutes
+        setCache($cacheKey, $rooms, 900);
+        
+        return $rooms;
+    } catch (PDOException $e) {
+        error_log("Error fetching rooms: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Helper function to get cached facilities
+ */
+function getCachedFacilities($filters = []) {
+    global $pdo;
+    
+    $cacheKey = 'facilities_' . md5(json_encode($filters));
+    $cached = getCache($cacheKey, null);
+    if ($cached !== null) {
+        return $cached;
+    }
+    
+    try {
+        $sql = "SELECT * FROM facilities WHERE is_active = 1";
+        $params = [];
+        
+        if (!empty($filters['is_featured'])) {
+            $sql .= " AND is_featured = 1";
+        }
+        
+        $sql .= " ORDER BY display_order ASC";
+        
+        if (!empty($filters['limit'])) {
+            $sql .= " LIMIT ?";
+            $params[] = (int)$filters['limit'];
+        }
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $facilities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Cache for 30 minutes
+        setCache($cacheKey, $facilities, 1800);
+        
+        return $facilities;
+    } catch (PDOException $e) {
+        error_log("Error fetching facilities: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Helper function to get cached gallery images
+ */
+function getCachedGalleryImages() {
+    global $pdo;
+    
+    $cacheKey = 'gallery_images';
+    $cached = getCache($cacheKey, null);
+    if ($cached !== null) {
+        return $cached;
+    }
+    
+    try {
+        $stmt = $pdo->query("
+            SELECT * FROM hotel_gallery 
+            WHERE is_active = 1 
+            ORDER BY display_order ASC
+        ");
+        $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Cache for 1 hour
+        setCache($cacheKey, $images, 3600);
+        
+        return $images;
+    } catch (PDOException $e) {
+        error_log("Error fetching gallery images: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Helper function to get cached hero slides
+ */
+function getCachedHeroSlides() {
+    global $pdo;
+    
+    $cacheKey = 'hero_slides';
+    $cached = getCache($cacheKey, null);
+    if ($cached !== null) {
+        return $cached;
+    }
+    
+    try {
+        $stmt = $pdo->query("
+            SELECT title, subtitle, description, primary_cta_text, primary_cta_link, 
+                   secondary_cta_text, secondary_cta_link, image_path 
+            FROM hero_slides 
+            WHERE is_active = 1 
+            ORDER BY display_order ASC
+        ");
+        $slides = $stmt->fetchAll();
+        
+        // Cache for 1 hour
+        setCache($cacheKey, $slides, 3600);
+        
+        return $slides;
+    } catch (PDOException $e) {
+        error_log("Error fetching hero slides: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Helper function to get cached testimonials
+ */
+function getCachedTestimonials($limit = 3) {
+    global $pdo;
+    
+    $cacheKey = "testimonials_{$limit}";
+    $cached = getCache($cacheKey, null);
+    if ($cached !== null) {
+        return $cached;
+    }
+    
+    try {
+        $stmt = $pdo->prepare("
+            SELECT * FROM testimonials
+            WHERE is_featured = 1 AND is_approved = 1
+            ORDER BY display_order ASC
+            LIMIT ?
+        ");
+        $stmt->execute([$limit]);
+        $testimonials = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Cache for 30 minutes
+        setCache($cacheKey, $testimonials, 1800);
+        
+        return $testimonials;
+    } catch (PDOException $e) {
+        error_log("Error fetching testimonials: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Helper function to get cached policies
+ */
+function getCachedPolicies() {
+    global $pdo;
+    
+    $cacheKey = 'policies';
+    $cached = getCache($cacheKey, null);
+    if ($cached !== null) {
+        return $cached;
+    }
+    
+    try {
+        $stmt = $pdo->query("
+            SELECT slug, title, summary, content 
+            FROM policies 
+            WHERE is_active = 1 
+            ORDER BY display_order ASC, id ASC
+        ");
+        $policies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Cache for 1 hour
+        setCache($cacheKey, $policies, 3600);
+        
+        return $policies;
+    } catch (PDOException $e) {
+        error_log("Error fetching policies: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Helper function to get cached About Us content
+ */
+function getCachedAboutUs() {
+    global $pdo;
+    
+    $cacheKey = 'about_us';
+    $cached = getCache($cacheKey, null);
+    if ($cached !== null) {
+        return $cached;
+    }
+    
+    try {
+        // Get main about content
+        $stmt = $pdo->prepare("SELECT * FROM about_us WHERE section_type = 'main' AND is_active = 1 ORDER BY display_order LIMIT 1");
+        $stmt->execute();
+        $about_content = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Get features
+        $stmt = $pdo->prepare("SELECT * FROM about_us WHERE section_type = 'feature' AND is_active = 1 ORDER BY display_order");
+        $stmt->execute();
+        $about_features = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Get stats
+        $stmt = $pdo->prepare("SELECT * FROM about_us WHERE section_type = 'stat' AND is_active = 1 ORDER BY display_order");
+        $stmt->execute();
+        $about_stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $result = [
+            'content' => $about_content,
+            'features' => $about_features,
+            'stats' => $about_stats
+        ];
+        
+        // Cache for 1 hour
+        setCache($cacheKey, $result, 3600);
+        
+        return $result;
+    } catch (PDOException $e) {
+        error_log("Error fetching about us content: " . $e->getMessage());
+        return ['content' => null, 'features' => [], 'stats' => []];
+    }
+}
+
+/**
+ * Invalidate all data caches when content changes
+ */
+function invalidateDataCaches() {
+    // Clear all data caches
+    $patterns = [
+        'rooms_*',
+        'facilities_*',
+        'gallery_images',
+        'hero_slides',
+        'testimonials_*',
+        'policies',
+        'about_us',
+        'settings_group_*'
+    ];
+    
+    foreach ($patterns as $pattern) {
+        $files = glob(CACHE_DIR . '/' . md5(str_replace('*', '', $pattern)) . '*');
+        if ($files) {
+            foreach ($files as $file) {
+                @unlink($file);
+            }
+        }
     }
 }
 

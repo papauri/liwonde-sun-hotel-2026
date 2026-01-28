@@ -7,9 +7,21 @@
 window.addEventListener('load', function() {
     const loader = document.getElementById('page-loader');
     if (loader) {
+        // Hide the loader after a short delay to ensure page content is loaded
         setTimeout(() => {
             loader.classList.add('hidden');
         }, 800);
+    }
+});
+
+// Also hide the loader when the page is shown after navigating back
+window.addEventListener('pageshow', function(event) {
+    // If the page was restored from the bfcache (back-forward cache), hide the loader
+    if (event.persisted) {
+        const loader = document.getElementById('page-loader');
+        if (loader) {
+            loader.classList.add('hidden');
+        }
     }
 });
 
@@ -20,15 +32,23 @@ document.addEventListener('click', function(e) {
         // Check if this is a hash link to the same page
         const url = new URL(link.href);
         const currentUrl = new URL(window.location.href);
-        
+
         // If it's the same page with just a hash change, don't show loader
         if (url.pathname === currentUrl.pathname && url.hash) {
             return; // Don't show loader for same-page hash navigation
         }
-        
-        const loader = document.getElementById('page-loader');
-        if (loader) {
-            loader.classList.remove('hidden');
+
+        // Don't show loader if the link is prevented by other handlers (like smooth scroll)
+        if (e.defaultPrevented) {
+            return;
+        }
+
+        // Only show loader for actual page navigation (different path)
+        if (url.pathname !== currentUrl.pathname) {
+            const loader = document.getElementById('page-loader');
+            if (loader) {
+                loader.classList.remove('hidden');
+            }
         }
     }
 });
@@ -137,53 +157,53 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function handleSmoothScroll(e) {
         const href = this.getAttribute('href');
-        
+
         // Skip if it's just a hash or empty
         if (href === '#' || href === '') return;
-        
+
         // Extract the hash part from the href
         let targetId = href;
         if (href.includes('#')) {
             targetId = '#' + href.split('#')[1];
         }
-        
+
         // Skip if no hash found
         if (targetId === '#') return;
-        
+
         // Check if target exists on current page
         const targetSection = document.querySelector(targetId);
         if (!targetSection) {
             // If target doesn't exist on this page, let the link work normally
             return;
         }
-        
+
         // Check if this is a link to the current page (index.php#rooms)
-        const isCurrentPageLink = href.startsWith(window.location.pathname) || 
-                                 href.startsWith('index.php') || 
+        const isCurrentPageLink = href.startsWith(window.location.pathname) ||
+                                 href.startsWith('index.php') ||
                                  (href.includes('#') && !href.includes('http'));
-        
+
         if (isCurrentPageLink) {
             // Prevent default for same-page anchors
             e.preventDefault();
-            
+
             // Calculate scroll position with header offset
             const headerOffset = 80;
             const elementPosition = targetSection.getBoundingClientRect().top;
             const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-            
+
             // Smooth scroll to target
             window.scrollTo({
                 top: offsetPosition,
                 behavior: 'smooth'
             });
-            
+
             // Update URL hash without page jump
             if (history.pushState) {
                 history.pushState(null, null, targetId);
             } else {
                 window.location.hash = targetId;
             }
-            
+
             // Close mobile menu if open
             const navMenu = document.querySelector('.nav-menu');
             if (navMenu && navMenu.classList.contains('active')) {
@@ -195,6 +215,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         // If it's not a current page link, let it work normally (external link)
     }
+
+    // Handle browser back/forward buttons to prevent loader issues
+    window.addEventListener('popstate', function(event) {
+        // Don't show loader when navigating with browser back/forward buttons
+        // Allow normal navigation to occur
+
+        // Optionally, scroll to the section corresponding to the hash in the URL
+        setTimeout(() => {
+            if (window.location.hash) {
+                const targetElement = document.querySelector(window.location.hash);
+                if (targetElement) {
+                    const headerOffset = 80;
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        }, 100); // Small delay to ensure DOM is ready
+    });
     
     // Initialize smooth scrolling on page load
     initSmoothScrolling();

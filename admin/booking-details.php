@@ -108,11 +108,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_note'])) {
 // Handle payment status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
     $payment_status = $_POST['payment_status'];
+    $previous_status = $booking['payment_status'];
     
     try {
         $update_stmt = $pdo->prepare("UPDATE bookings SET payment_status = ?, updated_at = NOW() WHERE id = ?");
         $update_stmt->execute([$payment_status, $booking_id]);
+        
         $_SESSION['success_message'] = 'Payment status updated.';
+        
+        // Send invoice email if payment status changed to 'paid'
+        if ($payment_status === 'paid' && $previous_status !== 'paid') {
+            require_once '../config/invoice.php';
+            $invoice_result = sendPaymentInvoiceEmail($booking_id);
+            
+            if ($invoice_result['success']) {
+                $_SESSION['success_message'] .= ' Invoice sent successfully!';
+            } else {
+                error_log("Invoice email failed: " . $invoice_result['message']);
+                $_SESSION['success_message'] .= ' (Invoice email failed - check logs)';
+            }
+        }
+        
         header("Location: booking-details.php?id=$booking_id");
         exit;
     } catch (PDOException $e) {

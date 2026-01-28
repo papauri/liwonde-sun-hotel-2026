@@ -748,13 +748,17 @@ $pending_count = $pending_stmt->fetch(PDO::FETCH_ASSOC)['count'];
                 return;
             }
             
-            const formData = new FormData();
-            formData.append('review_id', reviewId);
-            formData.append('status', newStatus);
+            const data = {
+                review_id: reviewId,
+                status: newStatus
+            };
             
             fetch('api/reviews.php', {
                 method: 'PUT',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
             })
             .then(response => response.json())
             .then(data => {

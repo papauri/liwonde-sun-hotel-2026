@@ -103,60 +103,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     if (empty($errors)) {
-        // Prepare data for API submission
-        $api_data = [
-            'guest_name' => $guest_name,
-            'guest_email' => $guest_email,
-            'rating' => $overall_rating,
-            'title' => $review_title,
-            'comment' => $review_comment,
-            'review_type' => $review_type ?: 'general',
-            'room_id' => $room_id,
-            'service_rating' => $service_rating,
-            'cleanliness_rating' => $cleanliness_rating,
-            'location_rating' => $location_rating,
-            'value_rating' => $value_rating
-        ];
-        
-        // Call the reviews API endpoint
-        $api_url = 'admin/api/reviews.php';
-        
-        // Use cURL to submit to API
-        $ch = curl_init($api_url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($api_data));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        
-        $response = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        
-        if ($http_code === 200 || $http_code === 201) {
-            $result = json_decode($response, true);
+        // Insert review directly into database
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO reviews (
+                    guest_name,
+                    guest_email,
+                    rating,
+                    title,
+                    comment,
+                    review_type,
+                    room_id,
+                    service_rating,
+                    cleanliness_rating,
+                    location_rating,
+                    value_rating,
+                    status,
+                    created_at
+                ) VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW()
+                )
+            ");
             
-            if (isset($result['success']) && $result['success']) {
-                // Set success message
-                $_SESSION['alert'] = [
-                    'type' => 'success',
-                    'message' => 'Thank you for your review! Your feedback has been submitted successfully.'
-                ];
-                
-                // Redirect to room page or home page
-                if ($room_id > 0) {
-                    header('Location: room.php?id=' . $room_id);
-                } else {
-                    header('Location: index.php');
-                }
-                exit;
+            $stmt->execute([
+                $guest_name,
+                $guest_email,
+                $overall_rating,
+                $review_title,
+                $review_comment,
+                $review_type ?: 'general',
+                $room_id,
+                $service_rating,
+                $cleanliness_rating,
+                $location_rating,
+                $value_rating
+            ]);
+            
+            // Set success message
+            $_SESSION['alert'] = [
+                'type' => 'success',
+                'message' => 'Thank you for your review! Your feedback has been submitted successfully.'
+            ];
+            
+            // Redirect to room page or home page
+            if ($room_id > 0) {
+                header('Location: room.php?id=' . $room_id);
             } else {
-                $error_msg = $result['message'] ?? 'Failed to submit review. Please try again.';
-                $_SESSION['alert'] = [
-                    'type' => 'error',
-                    'message' => $error_msg
-                ];
+                header('Location: index.php');
             }
-        } else {
+            exit;
+            
+        } catch (PDOException $e) {
+            error_log("Error inserting review: " . $e->getMessage());
             $_SESSION['alert'] = [
                 'type' => 'error',
                 'message' => 'An error occurred while submitting your review. Please try again.'
