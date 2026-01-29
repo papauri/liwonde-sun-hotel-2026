@@ -728,7 +728,7 @@ function getPageLoader(string $page_slug): ?string {
 
 /**
  * Helper function to check room availability
- * Returns true if room is available, false if booked
+ * Returns true if room is available, false if booked or blocked
  */
 function isRoomAvailable($room_id, $check_in_date, $check_out_date, $exclude_booking_id = null) {
     global $pdo;
@@ -742,11 +742,26 @@ function isRoomAvailable($room_id, $check_in_date, $check_out_date, $exclude_boo
             return false; // No rooms available
         }
         
+        // Check for blocked dates (both room-specific and global blocks)
+        $blocked_sql = "
+            SELECT COUNT(*) as blocked_dates
+            FROM room_blocked_dates
+            WHERE block_date >= ? AND block_date < ?
+            AND (room_id = ? OR room_id IS NULL)
+        ";
+        $blocked_stmt = $pdo->prepare($blocked_sql);
+        $blocked_stmt->execute([$check_in_date, $check_out_date, $room_id]);
+        $blocked_result = $blocked_stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($blocked_result['blocked_dates'] > 0) {
+            return false; // Date is blocked
+        }
+        
         // Then check for overlapping bookings
         $sql = "
-            SELECT COUNT(*) as bookings 
-            FROM bookings 
-            WHERE room_id = ? 
+            SELECT COUNT(*) as bookings
+            FROM bookings
+            WHERE room_id = ?
             AND status IN ('pending', 'confirmed', 'checked-in')
             AND NOT (check_out_date <= ? OR check_in_date >= ?)
         ";
@@ -783,6 +798,7 @@ function checkRoomAvailability($room_id, $check_in_date, $check_out_date, $exclu
     $result = [
         'available' => true,
         'conflicts' => [],
+        'blocked_dates' => [],
         'room_exists' => false,
         'room' => null
     ];
@@ -826,17 +842,55 @@ function checkRoomAvailability($room_id, $check_in_date, $check_out_date, $exclu
             return $result;
         }
         
+        // Check for blocked dates (both room-specific and global blocks)
+        $blocked_sql = "
+            SELECT
+                id,
+                room_id,
+                block_date,
+                block_type,
+                reason
+            FROM room_blocked_dates
+            WHERE block_date >= ? AND block_date < ?
+            AND (room_id = ? OR room_id IS NULL)
+            ORDER BY block_date ASC
+        ";
+        $blocked_stmt = $pdo->prepare($blocked_sql);
+        $blocked_stmt->execute([$check_in_date, $check_out_date, $room_id]);
+        $blocked_dates = $blocked_stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (!empty($blocked_dates)) {
+            $result['available'] = false;
+            $result['blocked_dates'] = $blocked_dates;
+            $result['error'] = 'Selected dates are not available for booking';
+            
+            // Build blocked dates message
+            $blocked_details = [];
+            foreach ($blocked_dates as $blocked) {
+                $blocked_date = new DateTime($blocked['block_date']);
+                $room_name = $blocked['room_id'] ? $room['name'] : 'All rooms';
+                $blocked_details[] = sprintf(
+                    "%s on %s (%s)",
+                    $room_name,
+                    $blocked_date->format('M j, Y'),
+                    $blocked['block_type']
+                );
+            }
+            $result['blocked_message'] = implode('; ', $blocked_details);
+            return $result;
+        }
+        
         // Check for overlapping bookings
         $sql = "
-            SELECT 
+            SELECT
                 id,
                 booking_reference,
                 check_in_date,
                 check_out_date,
                 status,
                 guest_name
-            FROM bookings 
-            WHERE room_id = ? 
+            FROM bookings
+            WHERE room_id = ?
             AND status IN ('pending', 'confirmed', 'checked-in')
             AND NOT (check_out_date <= ? OR check_in_date >= ?)
         ";
@@ -1036,4 +1090,256 @@ function validateBookingWithAvailability($data, $exclude_booking_id = null) {
         'valid' => true,
         'availability' => $availability
     ];
+}
+
+/**
+ * Get blocked dates for a specific room or all rooms
+ * Returns array of blocked date records
+ */
+function getBlockedDates($room_id = null, $start_date = null, $end_date = null) {
+    global $pdo;
+    
+    try {
+        $sql = "
+            SELECT
+                rbd.id,
+                rbd.room_id,
+                r.name as room_name,
+                rbd.block_date,
+                rbd.block_type,
+                rbd.reason,
+                rbd.created_by,
+                au.username as created_by_name,
+                rbd.created_at
+            FROM room_blocked_dates rbd
+            LEFT JOIN rooms r ON rbd.room_id = r.id
+            LEFT JOIN admin_users au ON rbd.created_by = au.id
+            WHERE 1=1
+        ";
+        $params = [];
+        
+        if ($room_id !== null) {
+            $sql .= " AND (rbd.room_id = ? OR rbd.room_id IS NULL)";
+            $params[] = $room_id;
+        }
+        
+        if ($start_date !== null) {
+            $sql .= " AND rbd.block_date >= ?";
+            $params[] = $start_date;
+        }
+        
+        if ($end_date !== null) {
+            $sql .= " AND rbd.block_date <= ?";
+            $params[] = $end_date;
+        }
+        
+        $sql .= " ORDER BY rbd.block_date ASC, rbd.room_id ASC";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $blocked_dates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        return $blocked_dates;
+    } catch (PDOException $e) {
+        error_log("Error fetching blocked dates: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Get available dates for a specific room within a date range
+ * Returns array of available dates
+ */
+function getAvailableDates($room_id, $start_date, $end_date) {
+    global $pdo;
+    
+    try {
+        $available_dates = [];
+        $current = new DateTime($start_date);
+        $end = new DateTime($end_date);
+        
+        // Get room details
+        $stmt = $pdo->prepare("SELECT rooms_available FROM rooms WHERE id = ?");
+        $stmt->execute([$room_id]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$room || $room['rooms_available'] <= 0) {
+            return [];
+        }
+        
+        $rooms_available = $room['rooms_available'];
+        
+        // Get blocked dates
+        $blocked_sql = "
+            SELECT block_date
+            FROM room_blocked_dates
+            WHERE block_date >= ? AND block_date <= ?
+            AND (room_id = ? OR room_id IS NULL)
+        ";
+        $blocked_stmt = $pdo->prepare($blocked_sql);
+        $blocked_stmt->execute([$start_date, $end_date, $room_id]);
+        $blocked_dates = $blocked_stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        // Get booked dates
+        $booked_sql = "
+            SELECT DISTINCT DATE(check_in_date) as date
+            FROM bookings
+            WHERE room_id = ?
+            AND status IN ('pending', 'confirmed', 'checked-in')
+            AND check_in_date <= ?
+            AND check_out_date > ?
+        ";
+        $booked_stmt = $pdo->prepare($booked_sql);
+        $booked_stmt->execute([$room_id, $end_date, $start_date]);
+        $booked_dates = $booked_stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        // Count bookings per date
+        $booking_counts = [];
+        foreach ($booked_dates as $date) {
+            if (!isset($booking_counts[$date])) {
+                $booking_counts[$date] = 0;
+            }
+            $booking_counts[$date]++;
+        }
+        
+        // Build available dates array
+        while ($current <= $end) {
+            $date_str = $current->format('Y-m-d');
+            
+            // Check if date is blocked
+            if (in_array($date_str, $blocked_dates)) {
+                $current->modify('+1 day');
+                continue;
+            }
+            
+            // Check if date has available rooms
+            $bookings_on_date = isset($booking_counts[$date_str]) ? $booking_counts[$date_str] : 0;
+            
+            if ($bookings_on_date < $rooms_available) {
+                $available_dates[] = [
+                    'date' => $date_str,
+                    'available' => true,
+                    'rooms_left' => $rooms_available - $bookings_on_date
+                ];
+            }
+            
+            $current->modify('+1 day');
+        }
+        
+        return $available_dates;
+    } catch (PDOException $e) {
+        error_log("Error fetching available dates: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Block a specific date for a room or all rooms
+ * Returns true on success, false on failure
+ */
+function blockRoomDate($room_id, $block_date, $block_type = 'manual', $reason = null, $created_by = null) {
+    global $pdo;
+    
+    try {
+        // Validate block type
+        $valid_types = ['maintenance', 'event', 'manual', 'full'];
+        if (!in_array($block_type, $valid_types)) {
+            $block_type = 'manual';
+        }
+        
+        // Check if date is already blocked
+        $check_sql = "
+            SELECT id FROM room_blocked_dates
+            WHERE room_id " . ($room_id === null ? "IS NULL" : "= ?") . "
+            AND block_date = ?
+        ";
+        $check_params = $room_id === null ? [$block_date] : [$room_id, $block_date];
+        
+        $check_stmt = $pdo->prepare($check_sql);
+        $check_stmt->execute($check_params);
+        
+        if ($check_stmt->fetch()) {
+            // Date already blocked, update instead
+            $update_sql = "
+                UPDATE room_blocked_dates
+                SET block_type = ?, reason = ?, created_by = ?
+                WHERE room_id " . ($room_id === null ? "IS NULL" : "= ?") . "
+                AND block_date = ?
+            ";
+            $update_params = [$block_type, $reason, $created_by];
+            if ($room_id !== null) {
+                $update_params[] = $room_id;
+            }
+            $update_params[] = $block_date;
+            
+            $update_stmt = $pdo->prepare($update_sql);
+            return $update_stmt->execute($update_params);
+        }
+        
+        // Insert new blocked date
+        $sql = "
+            INSERT INTO room_blocked_dates (room_id, block_date, block_type, reason, created_by)
+            VALUES (?, ?, ?, ?, ?)
+        ";
+        $stmt = $pdo->prepare($sql);
+        return $stmt->execute([$room_id, $block_date, $block_type, $reason, $created_by]);
+    } catch (PDOException $e) {
+        error_log("Error blocking room date: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Unblock a specific date for a room or all rooms
+ * Returns true on success, false on failure
+ */
+function unblockRoomDate($room_id, $block_date) {
+    global $pdo;
+    
+    try {
+        $sql = "
+            DELETE FROM room_blocked_dates
+            WHERE room_id " . ($room_id === null ? "IS NULL" : "= ?") . "
+            AND block_date = ?
+        ";
+        $params = $room_id === null ? [$block_date] : [$room_id, $block_date];
+        
+        $stmt = $pdo->prepare($sql);
+        return $stmt->execute($params);
+    } catch (PDOException $e) {
+        error_log("Error unblocking room date: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Block multiple dates for a room or all rooms
+ * Returns number of dates blocked
+ */
+function blockRoomDates($room_id, $dates, $block_type = 'manual', $reason = null, $created_by = null) {
+    $blocked_count = 0;
+    
+    foreach ($dates as $date) {
+        if (blockRoomDate($room_id, $date, $block_type, $reason, $created_by)) {
+            $blocked_count++;
+        }
+    }
+    
+    return $blocked_count;
+}
+
+/**
+ * Unblock multiple dates for a room or all rooms
+ * Returns number of dates unblocked
+ */
+function unblockRoomDates($room_id, $dates) {
+    $unblocked_count = 0;
+    
+    foreach ($dates as $date) {
+        if (unblockRoomDate($room_id, $date)) {
+            $unblocked_count++;
+        }
+    }
+    
+    return $unblocked_count;
 }

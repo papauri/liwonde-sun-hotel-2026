@@ -28,11 +28,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Validate guest_email
-        $email_validation = validateEmail($_POST['guest_email'] ?? '');
-        if (!$email_validation['valid']) {
-            $validation_errors['guest_email'] = $email_validation['error'];
+        $guest_email_value = $_POST['guest_email'] ?? '';
+        
+        if (empty($guest_email_value)) {
+            $validation_errors['guest_email'] = 'Guest email is required';
         } else {
-            $sanitized_data['guest_email'] = sanitizeString($email_validation['value'], 254);
+            $guest_email_value = trim($guest_email_value);
+            
+            if (!filter_var($guest_email_value, FILTER_VALIDATE_EMAIL)) {
+                $validation_errors['guest_email'] = 'Please enter a valid email address';
+            } else {
+                $sanitized_data['guest_email'] = sanitizeString($guest_email_value, 254);
+            }
         }
         
         // Validate guest_phone
@@ -255,9 +262,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Get pre-selected room from URL
+$preselected_room_id = isset($_GET['room_id']) ? (int)$_GET['room_id'] : null;
+$preselected_room = null;
+
 // Fetch available rooms for booking form
 $rooms_stmt = $pdo->query("SELECT id, name, price_per_night, max_guests, short_description, image_url FROM rooms WHERE is_active = 1 ORDER BY display_order ASC");
 $available_rooms = $rooms_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get pre-selected room details
+if ($preselected_room_id) {
+    foreach ($available_rooms as $room) {
+        if ($room['id'] == $preselected_room_id) {
+            $preselected_room = $room;
+            break;
+        }
+    }
+}
 
 // Fetch site settings
 $site_name = getSetting('site_name');
@@ -269,6 +290,20 @@ $email_reservations = getSetting('email_reservations');
 // Get maximum advance booking days
 $max_advance_days = (int)getSetting('max_advance_booking_days');
 $max_advance_date = date('Y-m-d', strtotime("+{$max_advance_days} days"));
+
+// Get blocked dates for the pre-selected room (or all rooms)
+$blocked_dates = [];
+if ($preselected_room_id) {
+    $blocked_dates = getBlockedDates($preselected_room_id);
+} else {
+    $blocked_dates = getBlockedDates();
+}
+
+// Format blocked dates for JavaScript
+$blocked_dates_array = [];
+foreach ($blocked_dates as $bd) {
+    $blocked_dates_array[] = $bd['block_date'];
+}
 
 // Get payment policy
 $payment_policy = getSetting('payment_policy');
@@ -298,6 +333,8 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         .booking-page {
             background: #f8f9fa;
@@ -540,6 +577,125 @@ try {
                 transform: translateY(0);
             }
         }
+        
+        /* Calendar Styles */
+        .calendar-wrapper {
+            position: relative;
+            margin-top: 10px;
+        }
+        
+        .flatpickr-calendar {
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border: none;
+        }
+        
+        .flatpickr-day.selected {
+            background: var(--gold) !important;
+            border-color: var(--gold) !important;
+            color: var(--deep-navy) !important;
+        }
+        
+        .flatpickr-day.inRange {
+            background: rgba(212, 175, 55, 0.2) !important;
+            border-color: rgba(212, 175, 55, 0.3) !important;
+        }
+        
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange {
+            background: var(--gold) !important;
+            color: var(--deep-navy) !important;
+        }
+        
+        .flatpickr-day.blocked-date {
+            background: #dc3545 !important;
+            color: white !important;
+            cursor: not-allowed;
+            opacity: 0.7;
+            border-color: #dc3545 !important;
+            position: relative;
+        }
+        
+        .flatpickr-day.blocked-date:hover {
+            background: #c82333 !important;
+        }
+        
+        .flatpickr-day.blocked-date .blocked-indicator {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+        }
+        
+        .flatpickr-day.unavailable-date {
+            background: #6c757d !important;
+            color: white !important;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .flatpickr-day.available-date {
+            background: #28a745 !important;
+            color: white !important;
+        }
+        
+        .flatpickr-day.available-date:hover {
+            background: #218838 !important;
+        }
+        
+        .flatpickr-day.disabled {
+            background: #fee !important;
+            color: #dc3545 !important;
+            border-color: #f8d7da !important;
+        }
+        
+        .flatpickr-day.disabled:not(.blocked-date) {
+            background: #f8f9fa !important;
+            color: #6c757d !important;
+            cursor: not-allowed;
+        }
+        
+        .calendar-legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        
+        .legend-color.available {
+            background: #28a745;
+        }
+        
+        .legend-color.blocked {
+            background: #dc3545;
+        }
+        
+        .legend-color.unavailable {
+            background: #6c757d;
+        }
+        
+        .legend-color.selected {
+            background: var(--gold);
+        }
+        
         @media (max-width: 768px) {
             .booking-page {
                 padding-top: 70px;
@@ -572,13 +728,14 @@ try {
             <?php showAlert($error_message, 'error'); ?>
         <?php endif; ?>
 
-        <form method="POST" action="booking.php" class="booking-form-card" id="bookingForm">
-            <!-- Room Selection -->
+        <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF'] . (isset($_GET['room_id']) ? '?room_id=' . (int)$_GET['room_id'] : '')); ?>" class="booking-form-card" id="bookingForm">
+            <!-- Room Selection (hidden if pre-selected) -->
+            <?php if (!$preselected_room): ?>
             <div class="form-section">
                 <h3 class="form-section-title"><i class="fas fa-bed"></i> Select Your Room</h3>
                 <div class="room-selection">
                     <?php foreach ($available_rooms as $room): ?>
-                    <label class="room-option" onclick="selectRoom(this)">
+                    <label class="room-option" onclick="selectRoom(this)" data-room-id="<?php echo $room['id']; ?>" data-room-name="<?php echo htmlspecialchars($room['name']); ?>" data-room-price="<?php echo $room['price_per_night']; ?>">
                         <input type="radio" name="room_id" value="<?php echo $room['id']; ?>" required>
                         <div class="room-info">
                             <h4><?php echo htmlspecialchars($room['name']); ?></h4>
@@ -593,6 +750,33 @@ try {
                     <?php endforeach; ?>
                 </div>
             </div>
+            <?php endif; ?>
+
+            <!-- Pre-selected Room Info (shown if room is pre-selected) -->
+            <?php if ($preselected_room): ?>
+            <div class="form-section">
+                <h3 class="form-section-title"><i class="fas fa-bed"></i> Selected Room</h3>
+                <div class="room-selection">
+                    <div class="room-option selected" style="border-color: var(--gold); background: rgba(212, 175, 55, 0.1);">
+                        <input type="hidden" name="room_id" value="<?php echo $preselected_room['id']; ?>" id="preselectedRoomId">
+                        <div class="room-info">
+                            <h4><?php echo htmlspecialchars($preselected_room['name']); ?></h4>
+                            <p><?php echo htmlspecialchars($preselected_room['short_description']); ?></p>
+                            <p><i class="fas fa-users"></i> Max <?php echo $preselected_room['max_guests']; ?> guests</p>
+                        </div>
+                        <div class="room-price">
+                            <div class="room-price-amount"><?php echo $currency_symbol; ?><?php echo number_format($preselected_room['price_per_night'], 0); ?></div>
+                            <div class="room-price-period">per night</div>
+                        </div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 14px;">
+                    <a href="booking.php" style="color: var(--gold); text-decoration: none;">
+                        <i class="fas fa-arrow-left"></i> Choose a different room
+                    </a>
+                </p>
+            </div>
+            <?php endif; ?>
 
             <!-- Guest Information -->
             <div class="form-section">
@@ -600,24 +784,24 @@ try {
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="guest_name" class="required">Full Name</label>
-                        <input type="text" id="guest_name" name="guest_name" class="form-control" required>
+                        <input type="text" id="guest_name" name="guest_name" class="form-control" required value="<?php echo isset($_POST['guest_name']) ? htmlspecialchars($_POST['guest_name']) : ''; ?>">
                     </div>
                     <div class="form-group">
                         <label for="guest_email" class="required">Email Address</label>
-                        <input type="email" id="guest_email" name="guest_email" class="form-control" required>
+                        <input type="email" id="guest_email" name="guest_email" class="form-control" required value="<?php echo isset($_POST['guest_email']) ? htmlspecialchars($_POST['guest_email']) : ''; ?>">
                     </div>
                     <div class="form-group">
                         <label for="guest_phone" class="required">Phone Number</label>
-                        <input type="tel" id="guest_phone" name="guest_phone" class="form-control" required>
+                        <input type="tel" id="guest_phone" name="guest_phone" class="form-control" required value="<?php echo isset($_POST['guest_phone']) ? htmlspecialchars($_POST['guest_phone']) : ''; ?>">
                     </div>
                     <div class="form-group">
                         <label for="guest_country">Country</label>
-                        <input type="text" id="guest_country" name="guest_country" class="form-control">
+                        <input type="text" id="guest_country" name="guest_country" class="form-control" value="<?php echo isset($_POST['guest_country']) ? htmlspecialchars($_POST['guest_country']) : ''; ?>">
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="guest_address">Address</label>
-                    <textarea id="guest_address" name="guest_address" class="form-control" rows="2"></textarea>
+                    <textarea id="guest_address" name="guest_address" class="form-control" rows="2"><?php echo isset($_POST['guest_address']) ? htmlspecialchars($_POST['guest_address']) : ''; ?></textarea>
                 </div>
             </div>
 
@@ -627,34 +811,56 @@ try {
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="check_in_date" class="required">Check-in Date</label>
-                        <input type="date" id="check_in_date" name="check_in_date" class="form-control" required 
-                               min="<?php echo date('Y-m-d'); ?>" 
-                               max="<?php echo htmlspecialchars($max_advance_date); ?>">
+                        <div class="calendar-wrapper">
+                            <input type="text" id="check_in_date" name="check_in_date" class="form-control" required
+                                   placeholder="Select check-in date" readonly>
+                        </div>
                         <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
                             <i class="fas fa-info-circle"></i> Bookings can only be made up to <?php echo $max_advance_days; ?> days in advance
                         </small>
                     </div>
                     <div class="form-group">
                         <label for="check_out_date" class="required">Check-out Date</label>
-                        <input type="date" id="check_out_date" name="check_out_date" class="form-control" required 
-                               min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" 
-                               max="<?php echo htmlspecialchars($max_advance_date); ?>">
+                        <div class="calendar-wrapper">
+                            <input type="text" id="check_out_date" name="check_out_date" class="form-control" required
+                                   placeholder="Select check-out date" readonly>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Calendar Legend -->
+                <div class="calendar-legend">
+                    <div class="legend-item">
+                        <div class="legend-color available"></div>
+                        <span>Available</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color blocked"></div>
+                        <span>Blocked</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color unavailable"></div>
+                        <span>Unavailable</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color selected"></div>
+                        <span>Selected</span>
                     </div>
                     <div class="form-group">
                         <label for="number_of_guests" class="required">Number of Guests</label>
                         <select id="number_of_guests" name="number_of_guests" class="form-control" required>
                             <option value="">Select...</option>
-                            <option value="1">1 Guest</option>
-                            <option value="2">2 Guests</option>
-                            <option value="3">3 Guests</option>
-                            <option value="4">4 Guests</option>
-                            <option value="5">5+ Guests</option>
+                            <option value="1" <?php echo (isset($_POST['number_of_guests']) && $_POST['number_of_guests'] == '1') ? 'selected' : ''; ?>>1 Guest</option>
+                            <option value="2" <?php echo (isset($_POST['number_of_guests']) && $_POST['number_of_guests'] == '2') ? 'selected' : ''; ?>>2 Guests</option>
+                            <option value="3" <?php echo (isset($_POST['number_of_guests']) && $_POST['number_of_guests'] == '3') ? 'selected' : ''; ?>>3 Guests</option>
+                            <option value="4" <?php echo (isset($_POST['number_of_guests']) && $_POST['number_of_guests'] == '4') ? 'selected' : ''; ?>>4 Guests</option>
+                            <option value="5" <?php echo (isset($_POST['number_of_guests']) && $_POST['number_of_guests'] == '5') ? 'selected' : ''; ?>>5+ Guests</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="special_requests">Special Requests (Optional)</label>
-                    <textarea id="special_requests" name="special_requests" class="form-control" rows="3" placeholder="E.g., early check-in, airport pickup, dietary requirements..."></textarea>
+                    <textarea id="special_requests" name="special_requests" class="form-control" rows="3" placeholder="E.g., early check-in, airport pickup, dietary requirements..."><?php echo isset($_POST['special_requests']) ? htmlspecialchars($_POST['special_requests']) : ''; ?></textarea>
                 </div>
             </div>
 
@@ -694,63 +900,199 @@ try {
     </div>
 
     <?php include 'includes/footer.php'; ?>
-
+    
     <script src="js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
+        // Blocked dates from server
+        const blockedDates = <?php echo json_encode($blocked_dates_array); ?>;
+        const preselectedRoomId = <?php echo $preselected_room_id ? $preselected_room_id : 'null'; ?>;
+        const preselectedRoomPrice = <?php echo $preselected_room ? $preselected_room['price_per_night'] : 'null'; ?>;
+        const preselectedRoomName = <?php echo $preselected_room ? '"' . addslashes($preselected_room['name']) . '"' : 'null'; ?>;
+        
+        let checkInCalendar = null;
+        let checkOutCalendar = null;
+        let selectedRoomId = preselectedRoomId;
+        let selectedRoomPrice = preselectedRoomPrice;
+        let selectedRoomName = preselectedRoomName;
+        
+        // Initialize calendars
+        function initCalendars() {
+            const today = new Date();
+            const maxDate = new Date();
+            maxDate.setDate(maxDate.getDate() + <?php echo $max_advance_days; ?>);
+            
+            // Check-in calendar
+            checkInCalendar = flatpickr('#check_in_date', {
+                minDate: 'today',
+                maxDate: maxDate,
+                dateFormat: 'Y-m-d',
+                disable: blockedDates,
+                onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    // Add custom class for blocked dates
+                    const dateStr = fp.formatDate(dayElem.dateObj, 'Y-m-d');
+                    if (blockedDates.includes(dateStr)) {
+                        dayElem.classList.add('blocked-date');
+                        dayElem.innerHTML += '<span class="blocked-indicator"></span>';
+                    }
+                },
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (selectedDates.length > 0) {
+                        // Update check-out calendar min date
+                        const nextDay = new Date(selectedDates[0]);
+                        nextDay.setDate(nextDay.getDate() + 1);
+                        
+                        if (checkOutCalendar) {
+                            checkOutCalendar.set('minDate', nextDay);
+                            
+                            // If check-out is before new min date, clear it
+                            const currentCheckOut = checkOutCalendar.selectedDates[0];
+                            if (currentCheckOut && currentCheckOut < nextDay) {
+                                checkOutCalendar.clear();
+                            }
+                        }
+                    }
+                    updateSummary();
+                }
+            });
+            
+            // Check-out calendar
+            checkOutCalendar = flatpickr('#check_out_date', {
+                minDate: 'today',
+                maxDate: maxDate,
+                dateFormat: 'Y-m-d',
+                disable: blockedDates,
+                onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    // Add custom class for blocked dates
+                    const dateStr = fp.formatDate(dayElem.dateObj, 'Y-m-d');
+                    if (blockedDates.includes(dateStr)) {
+                        dayElem.classList.add('blocked-date');
+                        dayElem.innerHTML += '<span class="blocked-indicator"></span>';
+                    }
+                },
+                onChange: function() {
+                    updateSummary();
+                }
+            });
+        }
+        
+        // Initialize calendars on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initCalendars();
+            
+            // If room is pre-selected, initialize with that room
+            if (preselectedRoomId) {
+                selectedRoomId = preselectedRoomId;
+                selectedRoomPrice = preselectedRoomPrice;
+                selectedRoomName = preselectedRoomName;
+            }
+        });
+        
+        function updateSummaryWithDates(selection) {
+            const roomRadio = document.querySelector('input[name="room_id"]:checked');
+            if (!roomRadio) return;
+            
+            const roomOption = roomRadio.closest('.room-option');
+            const roomName = roomOption.querySelector('h4').textContent;
+            const roomPrice = parseFloat(roomOption.querySelector('.room-price-amount').textContent.replace(/[^0-9.]/g, ''));
+            
+            const checkInDate = new Date(selection.checkIn);
+            const checkOutDate = new Date(selection.checkOut);
+            
+            document.getElementById('summaryRoom').textContent = roomName;
+            document.getElementById('summaryCheckIn').textContent = checkInDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            document.getElementById('summaryCheckOut').textContent = checkOutDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            document.getElementById('summaryNights').textContent = selection.nights + (selection.nights === 1 ? ' night' : ' nights');
+            document.getElementById('summaryTotal').textContent = '<?php echo $currency_symbol; ?>' + (roomPrice * selection.nights).toLocaleString();
+            document.getElementById('bookingSummary').style.display = 'block';
+            
+            // Enable submit button
+            const submitBtn = document.querySelector('.btn-submit');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Confirm Booking';
+            submitBtn.style.opacity = '1';
+        }
+        
         function selectRoom(label) {
             document.querySelectorAll('.room-option').forEach(opt => opt.classList.remove('selected'));
             label.classList.add('selected');
-            updateSummary();
+            
+            const roomRadio = label.querySelector('input[type="radio"]');
+            const roomId = parseInt(roomRadio.value);
+            const roomName = label.getAttribute('data-room-name');
+            const roomPrice = parseFloat(label.getAttribute('data-room-price'));
+            
+            selectedRoomId = roomId;
+            selectedRoomName = roomName;
+            selectedRoomPrice = roomPrice;
+            
+            // Reinitialize calendars with new room's blocked dates
+            updateBlockedDatesForRoom(roomId);
         }
-
+        
+        function updateBlockedDatesForRoom(roomId) {
+            // Fetch blocked dates for this room
+            fetch('api/blocked-dates.php?room_id=' + roomId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.data) {
+                        const roomBlockedDates = data.data.map(bd => bd.block_date);
+                        
+                        // Update both calendars
+                        checkInCalendar.set('disable', roomBlockedDates);
+                        checkOutCalendar.set('disable', roomBlockedDates);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to fetch blocked dates:', error);
+                });
+        }
+        
+        function checkRoomAvailability(roomId, checkIn, checkOut, callback) {
+            const url = `check-availability.php?room_id=${roomId}&check_in=${checkIn}&check_out=${checkOut}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(callback)
+                .catch(error => {
+                    console.error('Availability check failed:', error);
+                    callback({ available: false, message: 'Unable to check availability' });
+                });
+        }
+        
+        function showAvailabilityMessage(message, isSuccess) {
+            // Use new Alert component
+            Alert.show(message, isSuccess ? 'success' : 'error', {
+                timeout: 5000,
+                position: 'top'
+            });
+        }
+        
         function updateSummary() {
-            const roomRadio = document.querySelector('input[name="room_id"]:checked');
             const checkIn = document.getElementById('check_in_date').value;
             const checkOut = document.getElementById('check_out_date').value;
 
-            if (roomRadio && checkIn && checkOut) {
-                const roomOption = roomRadio.closest('.room-option');
-                const roomName = roomOption.querySelector('h4').textContent;
-                const roomPrice = parseFloat(roomOption.querySelector('.room-price-amount').textContent.replace(/[^0-9.]/g, ''));
-                const roomId = roomRadio.value;
-
+            if (selectedRoomId && checkIn && checkOut) {
                 const checkInDate = new Date(checkIn);
                 const checkOutDate = new Date(checkOut);
                 const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
 
                 if (nights > 0) {
-                    // Check availability via AJAX
-                    checkRoomAvailability(roomId, checkIn, checkOut, function(response) {
-                        if (response.available) {
-                            const total = response.total;
-                            
-                            document.getElementById('summaryRoom').textContent = roomName;
-                            document.getElementById('summaryCheckIn').textContent = checkInDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                            document.getElementById('summaryCheckOut').textContent = checkOutDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                            document.getElementById('summaryNights').textContent = nights + (nights === 1 ? ' night' : ' nights');
-                            document.getElementById('summaryTotal').textContent = '<?php echo $currency_symbol; ?>' + total.toLocaleString();
-                            
-                            document.getElementById('bookingSummary').style.display = 'block';
-                            
-                            // Enable submit button
-                            const submitBtn = document.querySelector('.btn-submit');
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Confirm Booking';
-                            submitBtn.style.opacity = '1';
-                        } else {
-                            // Room not available
-                            document.getElementById('bookingSummary').style.display = 'none';
-                            
-                            // Disable submit button and show message
-                            const submitBtn = document.querySelector('.btn-submit');
-                            submitBtn.disabled = true;
-                            submitBtn.innerHTML = '<i class="fas fa-times-circle"></i> Room Not Available';
-                            submitBtn.style.opacity = '0.6';
-                            
-                            // Show availability message
-                            showAvailabilityMessage(response.message, false);
-                        }
-                    });
+                    const total = selectedRoomPrice * nights;
+                    
+                    document.getElementById('summaryRoom').textContent = selectedRoomName;
+                    document.getElementById('summaryCheckIn').textContent = checkInDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    document.getElementById('summaryCheckOut').textContent = checkOutDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    document.getElementById('summaryNights').textContent = nights + (nights === 1 ? ' night' : ' nights');
+                    document.getElementById('summaryTotal').textContent = '<?php echo $currency_symbol; ?>' + total.toLocaleString();
+                    
+                    document.getElementById('bookingSummary').style.display = 'block';
+                    
+                    // Enable submit button
+                    const submitBtn = document.querySelector('.btn-submit');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Confirm Booking';
+                    submitBtn.style.opacity = '1';
                 } else {
                     document.getElementById('bookingSummary').style.display = 'none';
                 }
@@ -786,36 +1128,6 @@ try {
         });
 
         document.getElementById('check_out_date').addEventListener('change', updateSummary);
-
-        // Add form submission validation
-        document.querySelector('form').addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent default submission
-            
-            const roomRadio = document.querySelector('input[name="room_id"]:checked');
-            const checkIn = document.getElementById('check_in_date').value;
-            const checkOut = document.getElementById('check_out_date').value;
-            
-            if (roomRadio && checkIn && checkOut) {
-                const submitBtn = document.querySelector('.btn-submit');
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking Availability...';
-                
-                // Final availability check before submission
-                checkRoomAvailability(roomRadio.value, checkIn, checkOut, (response) => {
-                    if (response.available) {
-                        // All good, proceed with form submission
-                        submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Processing Booking...';
-                        this.submit(); // Submit the form
-                    } else {
-                        // Room no longer available
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<i class="fas fa-times-circle"></i> Room No Longer Available';
-                        submitBtn.style.opacity = '0.6';
-                        showAvailabilityMessage('This room is no longer available for the selected dates. Please choose different dates or another room.', false);
-                    }
-                });
-            }
-        });
     </script>
 
     <?php include 'includes/scroll-to-top.php'; ?>

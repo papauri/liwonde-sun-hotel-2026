@@ -46,10 +46,38 @@ if ($nextMonth > 12) {
 
 // Get all rooms
 try {
-    $stmt = $pdo->query("SELECT * FROM rooms WHERE status = 'active' ORDER BY name");
+    $stmt = $pdo->query("SELECT * FROM rooms WHERE is_active = 1 ORDER BY name");
     $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $error = "Error fetching rooms: " . $e->getMessage();
+}
+
+// Get blocked dates for current month
+$blockedDatesByDate = [];
+try {
+    $startDate = sprintf('%04d-%02d-01', $currentYear, $currentMonth);
+    $endDate = sprintf('%04d-%02d-31', $currentYear, $currentMonth);
+    
+    $stmt = $pdo->prepare("
+        SELECT rbd.*, r.name as room_name
+        FROM room_blocked_dates rbd
+        LEFT JOIN rooms r ON rbd.room_id = r.id
+        WHERE rbd.block_date >= ? AND rbd.block_date <= ?
+        ORDER BY rbd.block_date ASC, rbd.room_id ASC
+    ");
+    $stmt->execute(['start_date' => $startDate, 'end_date' => $endDate]);
+    $blockedDates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Group blocked dates by date
+    foreach ($blockedDates as $blocked) {
+        $dateKey = $blocked['block_date'];
+        if (!isset($blockedDatesByDate[$dateKey])) {
+            $blockedDatesByDate[$dateKey] = [];
+        }
+        $blockedDatesByDate[$dateKey][] = $blocked;
+    }
+} catch (PDOException $e) {
+    $error = "Error fetching blocked dates: " . $e->getMessage();
 }
 
 // Get bookings for the current month
@@ -259,6 +287,32 @@ $today = date('Y-m-d');
             background: #17a2b8;
             color: white;
         }
+        .calendar-day.blocked {
+            background: #dc3545 !important;
+            color: white !important;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .calendar-day.blocked:hover {
+            background: #c82333 !important;
+        }
+        .blocked-indicator {
+            background: #dc3545;
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.2s ease;
+        }
+        .blocked-indicator:hover {
+            background: #c82333;
+            transform: scale(1.02);
+        }
         .legend {
             display: flex;
             gap: 20px;
@@ -363,6 +417,10 @@ $today = date('Y-m-d');
                     <div class="legend-color checked-in"></div>
                     <span>Checked In</span>
                 </div>
+                <div class="legend-item">
+                    <div class="legend-color blocked"></div>
+                    <span>Blocked</span>
+                </div>
             </div>
             
             <?php if (!empty($rooms)): ?>
@@ -400,9 +458,30 @@ $today = date('Y-m-d');
                                     ?>
                                     <div class="calendar-day <?php echo $isToday ? 'today' : ''; ?>">
                                         <div class="day-number"><?php echo $day; ?></div>
-                                        
-                                        <?php 
-                                            if (isset($bookingsByDate[$dateKey]) && 
+                                         
+                                        <?php
+                                            // Check if this date is blocked for this room or all rooms
+                                            $isBlocked = false;
+                                            if (isset($blockedDatesByDate[$dateKey])) {
+                                                foreach ($blockedDatesByDate[$dateKey] as $blocked) {
+                                                    // Check if blocked for this specific room or all rooms
+                                                    if ($blocked['room_id'] == $room['id'] || $blocked['room_id'] === null) {
+                                                        $isBlocked = true;
+                                                        $blockType = htmlspecialchars($blocked['block_type']);
+                                                        $blockReason = htmlspecialchars($blocked['reason'] ?? 'No reason provided');
+                                                        ?>
+                                                        <div class="blocked-indicator"
+                                                             title="Blocked: <?php echo $blockType; ?> - <?php echo $blockReason; ?>"
+                                                             onclick="window.location.href='blocked-dates.php'">
+                                                            <?php echo ucfirst($blockType); ?>
+                                                        </div>
+                                                        <?php
+                                                    }
+                                                }
+                                            }
+                                            
+                                            // Show bookings if date is not blocked
+                                            if (!$isBlocked && isset($bookingsByDate[$dateKey]) &&
                                                 isset($bookingsByDate[$dateKey][$room['id']])) {
                                                 $dayBookings = $bookingsByDate[$dateKey][$room['id']];
                                                 foreach ($dayBookings as $booking) {
@@ -410,12 +489,12 @@ $today = date('Y-m-d');
                                                     $guestName = htmlspecialchars($booking['guest_name']);
                                                     $ref = htmlspecialchars($booking['booking_reference']);
                                             ?>
-                                                <div class="booking-indicator <?php echo $statusClass; ?>" 
+                                                <div class="booking-indicator <?php echo $statusClass; ?>"
                                                      title="<?php echo "$guestName ($ref)"; ?>"
                                                      onclick="window.location.href='booking-details.php?id=<?php echo $booking['id']; ?>'">
                                                     <?php echo substr($guestName, 0, 15) . '...'; ?>
                                                 </div>
-                                            <?php 
+                                            <?php
                                                 }
                                             }
                                         ?>
