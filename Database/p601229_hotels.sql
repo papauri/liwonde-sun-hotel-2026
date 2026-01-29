@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 26, 2026 at 01:51 PM
+-- Generation Time: Jan 28, 2026 at 11:17 PM
 -- Server version: 8.0.44-cll-lve
 -- PHP Version: 8.4.16
 
@@ -20,6 +20,16 @@ SET time_zone = "+00:00";
 --
 -- Database: `p601229_hotels`
 --
+
+DELIMITER $$
+--
+-- Functions
+--
+$$
+
+$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -83,7 +93,53 @@ CREATE TABLE `admin_users` (
 
 INSERT INTO `admin_users` (`id`, `username`, `email`, `password_hash`, `full_name`, `role`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
 (1, 'admin', 'admin@liwondesunhotel.com', '$2y$10$kHKXltLQhR3JuVFtHQ7mZ.KhVjTNKJf7tEU0IwD8HKzKdvyG1Cy/W', 'System Administrator', 'admin', 1, NULL, '2026-01-20 19:08:40', '2026-01-20 19:08:40'),
-(2, 'receptionist', 'reception@liwondesunhotel.com', '$2y$10$OFHlFcgoqltOd7X6Z3IqVeg0961Adk9LxyfW8UBBfENSawMRZ3fF6', 'Front Desk', 'receptionist', 1, '2026-01-24 23:24:06', '2026-01-20 19:08:40', '2026-01-24 23:24:06');
+(2, 'receptionist', 'reception@liwondesunhotel.com', '$2y$10$OFHlFcgoqltOd7X6Z3IqVeg0961Adk9LxyfW8UBBfENSawMRZ3fF6', 'Front Desk', 'receptionist', 1, '2026-01-27 22:40:47', '2026-01-20 19:08:40', '2026-01-27 22:40:47');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `api_keys`
+--
+
+CREATE TABLE `api_keys` (
+  `id` int UNSIGNED NOT NULL,
+  `api_key` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Hashed API key',
+  `client_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Name of the client/website using the API',
+  `client_website` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Website URL of the client',
+  `client_email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Contact email for the client',
+  `permissions` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'JSON array of permissions: ["rooms.read", "availability.check", "bookings.create", "bookings.read"]',
+  `rate_limit_per_hour` int NOT NULL DEFAULT '100' COMMENT 'Maximum API calls per hour',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'Whether the API key is active',
+  `last_used_at` timestamp NULL DEFAULT NULL COMMENT 'Last time the API key was used',
+  `usage_count` int UNSIGNED NOT NULL DEFAULT '0' COMMENT 'Total number of API calls made',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='API keys for external booking system access';
+
+--
+-- Dumping data for table `api_keys`
+--
+
+INSERT INTO `api_keys` (`id`, `api_key`, `client_name`, `client_website`, `client_email`, `permissions`, `rate_limit_per_hour`, `is_active`, `last_used_at`, `usage_count`, `created_at`, `updated_at`) VALUES
+(1, '$2y$10$3SV7ph3x7/ttZKUx3rvf8.tVLy6.OaifO3tcYfCeTRV7eSPa3PPX6', 'Test Client', 'http://localhost', 'test@example.com', '[\"rooms.read\", \"availability.check\", \"bookings.create\", \"bookings.read\"]', 1000, 1, NULL, 0, '2026-01-27 13:30:53', '2026-01-28 23:05:09');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `api_usage_logs`
+--
+
+CREATE TABLE `api_usage_logs` (
+  `id` int UNSIGNED NOT NULL,
+  `api_key_id` int UNSIGNED NOT NULL,
+  `endpoint` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'API endpoint called',
+  `method` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'HTTP method',
+  `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Client IP address',
+  `user_agent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'Client user agent',
+  `response_code` int NOT NULL COMMENT 'HTTP response code',
+  `response_time` decimal(10,4) NOT NULL COMMENT 'Response time in seconds',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log of API usage for monitoring and analytics';
 
 -- --------------------------------------------------------
 
@@ -111,16 +167,6 @@ CREATE TABLE `bookings` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `bookings`
---
-
-INSERT INTO `bookings` (`id`, `booking_reference`, `room_id`, `guest_name`, `guest_email`, `guest_phone`, `guest_country`, `guest_address`, `number_of_guests`, `check_in_date`, `check_out_date`, `number_of_nights`, `total_amount`, `special_requests`, `status`, `payment_status`, `created_at`, `updated_at`) VALUES
-(1, 'LSH2026001', 1, 'John Banda', 'john.banda@example.com', '+265 999 123 456', NULL, NULL, 2, '2026-01-25', '2026-01-28', 3, 450000.00, NULL, 'confirmed', 'paid', '2026-01-20 19:08:40', '2026-01-25 00:33:36'),
-(2, 'LSH2026002', 2, 'Sarah Phiri', 'sarah.phiri@example.com', '+265 888 234 567', NULL, NULL, 1, '2026-02-01', '2026-02-03', 2, 280000.00, NULL, 'confirmed', 'unpaid', '2026-01-20 19:08:40', '2026-01-25 00:33:39'),
-(3, 'LSH2026003', 3, 'Michael Chimbwanda', 'michael.c@example.com', '+265 777 345 678', NULL, NULL, 4, '2026-02-05', '2026-02-08', 3, 600000.00, NULL, 'confirmed', 'unpaid', '2026-01-20 19:08:40', '2026-01-24 16:30:42'),
-(4, 'LSH2026004', 1, 'Grace Mwale', 'grace.mwale@example.com', '+265 666 456 789', NULL, NULL, 2, '2026-02-10', '2026-02-12', 2, 300000.00, NULL, 'pending', 'unpaid', '2026-01-20 19:08:40', '2026-01-20 19:08:40');
 
 -- --------------------------------------------------------
 
@@ -273,6 +319,45 @@ INSERT INTO `drink_menu` (`id`, `category`, `item_name`, `description`, `price`,
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `email_settings`
+--
+
+CREATE TABLE `email_settings` (
+  `id` int NOT NULL,
+  `setting_key` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `setting_value` text COLLATE utf8mb4_unicode_ci,
+  `setting_group` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'email',
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `is_encrypted` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `email_settings`
+--
+
+INSERT INTO `email_settings` (`id`, `setting_key`, `setting_value`, `setting_group`, `description`, `is_encrypted`, `created_at`, `updated_at`) VALUES
+(1, 'smtp_password', '2:1c003835715c7a9a:Y72xf7agVITsio1WTOTy+w==', 'smtp', '', 1, '2026-01-27 09:51:05', '2026-01-27 11:30:08'),
+(2, 'email_development_mode', '0', 'general', '', 0, '2026-01-27 09:51:06', '2026-01-27 11:30:08'),
+(3, 'smtp_host', 'mail.promanaged-it.com', 'smtp', '', 0, '2026-01-27 09:51:06', '2026-01-27 11:30:07'),
+(4, 'smtp_port', '465', 'smtp', '', 0, '2026-01-27 09:51:06', '2026-01-27 11:30:07'),
+(5, 'smtp_username', 'info@promanaged-it.com', 'smtp', '', 0, '2026-01-27 09:51:07', '2026-01-27 11:30:08'),
+(6, 'smtp_secure', 'ssl', 'smtp', '', 0, '2026-01-27 09:51:07', '2026-01-27 11:30:08'),
+(7, 'smtp_timeout', '30', 'smtp', 'SMTP connection timeout in seconds', 0, '2026-01-27 09:51:08', '2026-01-27 09:51:08'),
+(8, 'smtp_debug', '0', 'smtp', 'SMTP debug level (0-4)', 0, '2026-01-27 09:51:08', '2026-01-27 09:51:08'),
+(9, 'email_from_name', 'Liwonde Sun Hotel', 'general', '', 0, '2026-01-27 09:51:09', '2026-01-27 11:30:08'),
+(10, 'email_from_email', 'info@liwondesunhotel.com', 'general', '', 0, '2026-01-27 09:51:09', '2026-01-27 11:30:08'),
+(11, 'email_admin_email', 'admin@liwondesunhotel.com', 'general', '', 0, '2026-01-27 09:51:10', '2026-01-27 11:30:08'),
+(12, 'email_bcc_admin', '1', 'general', '', 0, '2026-01-27 09:51:10', '2026-01-27 11:30:08'),
+(13, 'email_log_enabled', '1', 'general', '', 0, '2026-01-27 09:51:11', '2026-01-27 11:30:08'),
+(14, 'email_preview_enabled', '1', 'general', '', 0, '2026-01-27 09:51:11', '2026-01-27 11:30:08'),
+(147, 'invoice_recipients', 'accounts@promanaged-it.com', 'invoicing', 'Comma-separated list of email addresses to receive invoice copies (in addition to SMTP username)', 0, '2026-01-27 16:00:35', '2026-01-27 16:00:35'),
+(148, 'send_invoice_emails', '1', 'invoicing', 'Send invoice emails when payment is marked as paid (1=yes, 0=no)', 0, '2026-01-27 16:00:35', '2026-01-27 16:00:35');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `events`
 --
 
@@ -305,7 +390,7 @@ INSERT INTO `events` (`id`, `title`, `description`, `event_date`, `start_time`, 
 (4, 'Easter Sunday Brunch', 'Celebrate Easter with a lavish buffet brunch featuring international cuisines, live cooking stations, and entertainment for children. Perfect for the whole family.', '2026-04-05', '11:00:00', '15:00:00', 'Restaurant & Terrace', 'images/events/easter-brunch.jpg', 35000.00, 100, 1, 1, 4, '2026-01-20 22:35:58', '2026-01-20 22:35:58'),
 (5, 'Lake Festival Cultural Night', 'Experience traditional Malawian culture with live music, dance performances, and authentic local cuisine. Supporting local artists and community initiatives.', '2026-05-15', '17:00:00', '22:00:00', 'Outdoor Grounds', 'images/events/cultural-night.jpg', 15000.00, 200, 1, 1, 5, '2026-01-20 22:35:58', '2026-01-20 22:35:58'),
 (6, 'New Year Gala Dinner', 'Ring in the New Year with an elegant five-course dinner, live entertainment, and spectacular fireworks display over the lake. Dress code: Black tie.', '2026-12-31', '19:00:00', '01:00:00', 'Grand Conference Hall', 'images/events/gala-dinner.jpg', 50000.00, 150, 1, 1, 1, '2026-01-20 22:36:31', '2026-01-20 22:36:31'),
-(7, 'Wine Tasting Evening', 'Join our sommelier for an exclusive tasting of premium South African wines paired with artisan cheeses and canapés. Learn about wine regions, varietals, and perfect food pairings.', '2026-02-14', '18:00:00', '21:00:00', 'Lakeside Terrace', 'images/events/wine-tasting.jpg', 25000.00, 40, 1, 1, 2, '2026-01-20 22:36:31', '2026-01-20 22:36:31'),
+(7, 'Breakfast Morning', '', '2026-02-14', '18:00:00', '21:00:00', 'Lakeside Terrace', 'images/events/wine-tasting.jpg', 25000.00, 40, 1, 1, 0, '2026-01-20 22:36:31', '2026-01-26 23:24:56'),
 (8, 'Business Networking Breakfast', 'Monthly networking event for local business leaders and entrepreneurs. Complimentary breakfast buffet with opportunities to connect and collaborate.', '2026-02-28', '07:00:00', '09:30:00', 'Executive Boardroom', 'images/events/business-breakfast.jpg', 0.00, 30, 0, 1, 3, '2026-01-20 22:36:31', '2026-01-20 22:36:31'),
 (9, 'Easter Sunday Brunch', 'Celebrate Easter with a lavish buffet brunch featuring international cuisines, live cooking stations, and entertainment for children. Perfect for the whole family.', '2026-04-05', '11:00:00', '15:00:00', 'Restaurant & Terrace', 'images/events/easter-brunch.jpg', 35000.00, 100, 1, 1, 4, '2026-01-20 22:36:31', '2026-01-20 22:36:31'),
 (10, 'Lake Festival Cultural Night', 'Experience traditional Malawian culture with live music, dance performances, and authentic local cuisine. Supporting local artists and community initiatives.', '2026-05-15', '17:00:00', '22:00:00', 'Outdoor Grounds', 'images/events/cultural-night.jpg', 15000.00, 200, 1, 1, 5, '2026-01-20 22:36:31', '2026-01-20 22:36:31');
@@ -409,6 +494,7 @@ CREATE TABLE `footer_links` (
   `column_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `link_text` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `link_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `secondary_link_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `display_order` int DEFAULT '0',
   `is_active` tinyint(1) DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -417,20 +503,19 @@ CREATE TABLE `footer_links` (
 -- Dumping data for table `footer_links`
 --
 
-INSERT INTO `footer_links` (`id`, `column_name`, `link_text`, `link_url`, `display_order`, `is_active`) VALUES
-(1, 'About Hotel', 'About Us', '#about', 1, 1),
-(2, 'About Hotel', 'Sustainability', 'index.php#facilities', 2, 1),
-(3, 'About Hotel', 'Awards', 'index.php#testimonials', 3, 1),
-(4, 'About Hotel', 'History', 'index.php#home', 4, 1),
-(5, 'Guest Services', 'Rooms & Suites', 'index.php#rooms', 1, 1),
-(6, 'Guest Services', 'Facilities', 'index.php#facilities', 2, 1),
-(7, 'Guest Services', 'Special Offers', 'index.php#home', 3, 1),
-(8, 'Guest Services', 'Group Bookings', 'index.php#home', 4, 1),
-(9, 'Dining & Entertainment', 'Fine Dining', 'index.php#facilities', 1, 1),
-(10, 'Dining & Entertainment', 'Spa Services', 'index.php#facilities', 2, 1),
-(11, 'Dining & Entertainment', 'Events & Conferences', 'index.php#facilities', 3, 1),
-(12, 'Dining & Entertainment', 'Activities', 'index.php#facilities', 4, 1),
-(13, 'Quick Links', 'About Us', 'index.php#about', 1, 1);
+INSERT INTO `footer_links` (`id`, `column_name`, `link_text`, `link_url`, `secondary_link_url`, `display_order`, `is_active`) VALUES
+(1, 'About Hotel', 'About Us', '#about', 'index.php#about', 1, 1),
+(2, 'About Hotel', 'Sustainability', '#facilities', 'index.php#facilities', 2, 1),
+(3, 'About Hotel', 'Awards', '#testimonials', 'index.php#testimonials', 3, 1),
+(4, 'About Hotel', 'History', '#home', 'index.php#home', 4, 1),
+(5, 'Guest Services', 'Rooms & Suites', '#rooms', 'index.php#rooms', 1, 1),
+(6, 'Guest Services', 'Facilities', '#facilities', 'index.php#facilities', 2, 1),
+(7, 'Guest Services', 'Special Offers', '#home', 'index.php#home', 3, 1),
+(8, 'Guest Services', 'Group Bookings', '#home', 'index.php#home', 4, 1),
+(9, 'Dining & Entertainment', 'Fine Dining', '#facilities', 'index.php#facilities', 1, 1),
+(10, 'Dining & Entertainment', 'Spa Services', '#facilities', 'index.php#facilities', 2, 1),
+(11, 'Dining & Entertainment', 'Events & Conferences', '#facilities', 'index.php#facilities', 3, 1),
+(12, 'Dining & Entertainment', 'Activities', '#facilities', 'index.php#facilities', 4, 1);
 
 -- --------------------------------------------------------
 
@@ -851,6 +936,54 @@ INSERT INTO `restaurant_gallery` (`id`, `image_path`, `caption`, `category`, `di
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `reviews`
+--
+
+CREATE TABLE `reviews` (
+  `id` int NOT NULL,
+  `booking_id` int UNSIGNED DEFAULT NULL COMMENT 'Link to bookings table if guest stayed',
+  `room_id` int DEFAULT NULL COMMENT 'Link to rooms table',
+  `review_type` enum('general','room','restaurant','spa','conference','gym','service') COLLATE utf8mb4_unicode_ci DEFAULT 'general',
+  `guest_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Name of reviewer',
+  `guest_email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Email of reviewer',
+  `rating` int NOT NULL COMMENT 'Overall rating from 1 to 5 stars',
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Review title',
+  `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Review content',
+  `service_rating` int DEFAULT NULL COMMENT 'Service rating from 1 to 5',
+  `cleanliness_rating` int DEFAULT NULL COMMENT 'Cleanliness rating from 1 to 5',
+  `location_rating` int DEFAULT NULL COMMENT 'Location rating from 1 to 5',
+  `value_rating` int DEFAULT NULL COMMENT 'Value rating from 1 to 5',
+  `status` enum('pending','approved','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' COMMENT 'Moderation status',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Review submission date',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Last update date'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Guest reviews with detailed ratings';
+
+--
+-- Dumping data for table `reviews`
+--
+
+INSERT INTO `reviews` (`id`, `booking_id`, `room_id`, `review_type`, `guest_name`, `guest_email`, `rating`, `title`, `comment`, `service_rating`, `cleanliness_rating`, `location_rating`, `value_rating`, `status`, `created_at`, `updated_at`) VALUES
+(1, NULL, NULL, 'general', 'Test User', 'test@example.com', 5, 'Excellent Stay', 'This was a wonderful experience at the hotel. The service was outstanding and the room was very clean.', NULL, NULL, NULL, NULL, 'approved', '2026-01-27 14:47:18', '2026-01-27 22:45:26'),
+(2, NULL, 1, 'general', 'John Doe', 'john@example.com', 4, 'Great Room', 'The room was spacious and comfortable. Staff was very helpful.', 5, 5, 4, 4, 'approved', '2026-01-27 14:48:28', '2026-01-27 15:29:21'),
+(3, NULL, NULL, 'general', 'Test User', 'test@example.com', 5, 'Great Stay', 'This is a test review submission to verify the form works without cURL', NULL, NULL, NULL, NULL, 'approved', '2026-01-27 16:10:19', '2026-01-27 22:44:47');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `review_responses`
+--
+
+CREATE TABLE `review_responses` (
+  `id` int NOT NULL,
+  `review_id` int NOT NULL COMMENT 'Foreign key to reviews table',
+  `admin_id` int UNSIGNED DEFAULT NULL COMMENT 'Link to admin_users table',
+  `response` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Admin response content',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Response date'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Admin responses to guest reviews';
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `rooms`
 --
 
@@ -882,7 +1015,7 @@ CREATE TABLE `rooms` (
 
 INSERT INTO `rooms` (`id`, `name`, `slug`, `description`, `short_description`, `price_per_night`, `size_sqm`, `max_guests`, `rooms_available`, `total_rooms`, `bed_type`, `image_url`, `badge`, `amenities`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
 (1, 'Presidential Suite', 'presidential-suite', 'Ultimate luxury with private terrace and exclusive service', 'Ultimate luxury with private terrace and exclusive service', 50000.00, 110, 4, 0, 0, 'King Bed', 'images/rooms/room_1_1768949756.png', 'Luxury', 'King Bed,Private Terrace,Jacuzzi,Butler Service,Living Area,Dining Area,Full Kitchen,Smart TV,Premium WiFi,Climate Control', 1, 1, 1, '2026-01-19 20:22:49', '2026-01-25 01:55:55'),
-(2, 'Executive Suite', 'executive-suite', 'Designed for discerning business travelers, featuring separate work area, premium furnishings, and personalized butler service. Perfect blend of productivity and comfort.', 'Premium executive suite with work area and butler service', 30050.00, 60, 3, 5, 5, 'King Bed', 'images\\rooms\\Deluxe Room.jpg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-01-26 10:38:41'),
+(2, 'Executive Suite', 'executive-suite', 'Designed for discerning business travelers, featuring separate work area, premium furnishings, and personalized butler service. Perfect blend of productivity and comfort.', 'Premium executive suite with work area and butler service', 30050.00, 60, 3, 2, 5, 'King Bed', 'images\\rooms\\Deluxe Room.jpg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-01-27 16:15:26'),
 (3, 'Family Suite', 'family-suite', 'Spacious two-bedroom suite perfect for families, featuring two king beds, dual bathrooms, and separate living area. Create lasting memories in ultimate comfort.', 'Spacious family accommodation with 2 bedrooms', 30020.00, 55, 6, 5, 5, '2 King Beds', 'images\\rooms\\family_suite.jpg', 'Family', '2 King Beds,2 Bathrooms,Living Area,Kitchenette,Smart TV,Kids Welcome,Free WiFi,Climate Control', 1, 1, 3, '2026-01-19 20:22:49', '2026-01-20 17:01:46'),
 (4, 'Deluxe Suite', 'deluxe-suite', 'Luxurious suite with marble bathroom featuring jacuzzi tub, separate living area, and premium bedding. Experience sophistication and indulgence.', 'Luxury suite with jacuzzi and separate living area', 28000.00, 45, 2, 5, 5, 'King Bed', 'images/rooms/room_4_featured_1769093172.png', 'Popular', 'King Bed,Jacuzzi Tub,Living Area,Marble Bathroom,Premium Bedding,Smart TV,Mini Bar,Free WiFi', 1, 1, 4, '2026-01-19 20:22:49', '2026-01-22 14:46:13'),
 (5, 'Superior Room', 'superior-room', 'Spacious room with premium furnishings, stunning views, and modern amenities. Enjoy comfort and elegance in every detail.', 'Spacious room with premium amenities and views', 21000.00, 35, 2, 5, 5, 'King Bed', 'https://source.unsplash.com/1600x900/?superior,hotel,room,view,interior', NULL, 'King Bed,City View,Balcony,Smart TV,Free WiFi,Coffee Machine,Safe,Climate Control', 0, 0, 5, '2026-01-19 20:22:49', '2026-01-22 23:45:09'),
@@ -913,8 +1046,6 @@ INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_grou
 (4, 'hero_subtitle', 'Discover the perfect blend of comfort, elegance, and exceptional service at Malawi\'s premier destination', 'hero', '2026-01-19 20:22:49'),
 (5, 'phone_main', '+265 123 456 785', 'contact', '2026-01-20 07:43:44'),
 (6, 'phone_reservations', '+265 987 654 321', 'contact', '2026-01-19 20:22:49'),
-(7, 'email_main', 'info@liwondesunhotel.com', 'contact', '2026-01-19 20:22:49'),
-(8, 'email_reservations', 'book@liwondesunhotel.com', 'contact', '2026-01-19 20:22:49'),
 (9, 'address_line1', 'Liwonde National Park Road', 'contact', '2026-01-19 20:22:49'),
 (10, 'address_line2', 'Liwonde, Southern Region', 'contact', '2026-01-19 20:22:49'),
 (11, 'address_country', 'Malawi', 'contact', '2026-01-19 20:22:49'),
@@ -926,7 +1057,12 @@ INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_grou
 (17, 'copyright_text', '2026 Liwonde Sun Hotel. All rights reserved.', 'general', '2026-01-19 20:22:49'),
 (18, 'currency_symbol', 'MWK', 'general', '2026-01-20 10:16:28'),
 (19, 'currency_code', 'MWK', 'general', '2026-01-20 10:16:13'),
-(20, 'site_logo', '', 'general', '2026-01-21 23:24:01');
+(20, 'site_logo', '', 'general', '2026-01-21 23:24:01'),
+(23, 'site_url', 'http://liwondesunhotel.com', 'general', '2026-01-27 07:20:42'),
+(27, 'check_in_time', '2:00 PM', 'booking', '2026-01-27 12:02:11'),
+(28, 'check_out_time', '11:00 AM', 'booking', '2026-01-27 12:02:11'),
+(29, 'booking_change_policy', 'If you need to make any changes, please contact us at least 48 hours before your arrival.', 'booking', '2026-01-27 12:02:11'),
+(30, 'email_main', 'test@liwondesunhotel.com', 'contact', '2026-01-28 01:12:46');
 
 -- --------------------------------------------------------
 
@@ -979,6 +1115,25 @@ ALTER TABLE `admin_users`
   ADD UNIQUE KEY `email` (`email`);
 
 --
+-- Indexes for table `api_keys`
+--
+ALTER TABLE `api_keys`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `api_key` (`api_key`),
+  ADD KEY `idx_client_name` (`client_name`),
+  ADD KEY `idx_is_active` (`is_active`),
+  ADD KEY `idx_last_used` (`last_used_at`);
+
+--
+-- Indexes for table `api_usage_logs`
+--
+ALTER TABLE `api_usage_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_api_key_id` (`api_key_id`),
+  ADD KEY `idx_endpoint` (`endpoint`),
+  ADD KEY `idx_created_at` (`created_at`);
+
+--
 -- Indexes for table `bookings`
 --
 ALTER TABLE `bookings`
@@ -1021,6 +1176,14 @@ ALTER TABLE `drink_menu`
   ADD KEY `category` (`category`),
   ADD KEY `is_available` (`is_available`),
   ADD KEY `is_featured` (`is_featured`);
+
+--
+-- Indexes for table `email_settings`
+--
+ALTER TABLE `email_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `setting_key` (`setting_key`),
+  ADD KEY `setting_group` (`setting_group`);
 
 --
 -- Indexes for table `events`
@@ -1147,6 +1310,27 @@ ALTER TABLE `restaurant_gallery`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `reviews`
+--
+ALTER TABLE `reviews`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_room_id` (`room_id`),
+  ADD KEY `idx_booking_id` (`booking_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_guest_email` (`guest_email`),
+  ADD KEY `idx_rating` (`rating`),
+  ADD KEY `idx_created_at` (`created_at`);
+
+--
+-- Indexes for table `review_responses`
+--
+ALTER TABLE `review_responses`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_review_id` (`review_id`),
+  ADD KEY `idx_admin_id` (`admin_id`),
+  ADD KEY `idx_created_at` (`created_at`);
+
+--
 -- Indexes for table `rooms`
 --
 ALTER TABLE `rooms`
@@ -1186,10 +1370,22 @@ ALTER TABLE `admin_users`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `api_keys`
+--
+ALTER TABLE `api_keys`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `api_usage_logs`
+--
+ALTER TABLE `api_usage_logs`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `booking_notes`
@@ -1214,6 +1410,12 @@ ALTER TABLE `conference_rooms`
 --
 ALTER TABLE `drink_menu`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+
+--
+-- AUTO_INCREMENT for table `email_settings`
+--
+ALTER TABLE `email_settings`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=149;
 
 --
 -- AUTO_INCREMENT for table `events`
@@ -1324,6 +1526,18 @@ ALTER TABLE `restaurant_gallery`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
+-- AUTO_INCREMENT for table `reviews`
+--
+ALTER TABLE `reviews`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `review_responses`
+--
+ALTER TABLE `review_responses`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `rooms`
 --
 ALTER TABLE `rooms`
@@ -1333,7 +1547,7 @@ ALTER TABLE `rooms`
 -- AUTO_INCREMENT for table `site_settings`
 --
 ALTER TABLE `site_settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `testimonials`
@@ -1346,10 +1560,30 @@ ALTER TABLE `testimonials`
 --
 
 --
+-- Constraints for table `api_usage_logs`
+--
+ALTER TABLE `api_usage_logs`
+  ADD CONSTRAINT `fk_api_usage_logs_api_key_id` FOREIGN KEY (`api_key_id`) REFERENCES `api_keys` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `gallery`
 --
 ALTER TABLE `gallery`
   ADD CONSTRAINT `gallery_ibfk_1` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `reviews`
+--
+ALTER TABLE `reviews`
+  ADD CONSTRAINT `fk_reviews_booking_id` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_reviews_room_id` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `review_responses`
+--
+ALTER TABLE `review_responses`
+  ADD CONSTRAINT `fk_review_responses_admin_id` FOREIGN KEY (`admin_id`) REFERENCES `admin_users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_review_responses_review_id` FOREIGN KEY (`review_id`) REFERENCES `reviews` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

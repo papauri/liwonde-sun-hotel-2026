@@ -33,6 +33,7 @@ $currency_symbol = getSetting('currency_symbol');
 $phone_main = getSetting('phone_main');
 $email_reservations = getSetting('email_reservations');
 $whatsapp_number = getSetting('whatsapp_number');
+$payment_policy = getSetting('payment_policy');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -328,8 +329,7 @@ $whatsapp_number = getSetting('whatsapp_number');
             <div class="payment-info">
                 <h3><i class="fas fa-info-circle"></i> Payment Information</h3>
                 <p>
-                    <strong>Payment will be made at the hotel upon arrival.</strong><br>
-                    We accept cash payments only. Please bring the total amount of <strong><?php echo $currency_symbol; ?><?php echo number_format($booking['total_amount'], 0); ?></strong> with you.
+                    <?php echo getSetting('payment_policy', 'Payment will be made at the hotel upon arrival.<br>We accept cash payments only. Please bring the total amount of <strong>' . $currency_symbol . number_format($booking['total_amount'], 0) . '</strong> with you.'); ?>
                 </p>
             </div>
 
@@ -359,7 +359,7 @@ $whatsapp_number = getSetting('whatsapp_number');
                     <?php if ($phpmailer_installed): ?>
                         <li> <strong>Confirmation email sent</strong> to <?php echo htmlspecialchars($booking['guest_email']); ?></li>
                     <?php else: ?>
-                        <li>  <strong>Email notification pending</strong> - System will send confirmation once email service is configured</li>
+                        <li>ï¿½ <strong>Email notification pending</strong> - System will send confirmation once email service is configured</li>
                     <?php endif; ?>
                     <li>Our reception team will review your booking and may contact you to confirm details</li>
                     <li>Please save your booking reference: <strong><?php echo $booking['booking_reference']; ?></strong></li>
@@ -393,5 +393,7 @@ $whatsapp_number = getSetting('whatsapp_number');
         // Optional: Auto-print confirmation
         // window.print();
     </script>
+
+    <?php include 'includes/scroll-to-top.php'; ?>
 </body>
 </html>

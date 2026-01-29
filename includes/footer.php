@@ -196,9 +196,9 @@
 <script>
 function sharePage(platform) {
     const shareData = {
-        title: document.title || 'Liwonde Sun Hotel - Luxury Accommodation in Malawi',
+        title: document.title || '<?php echo htmlspecialchars(getSetting('site_name', 'Liwonde Sun Hotel')); ?> - Luxury Accommodation in Malawi',
         url: window.location.href,
-        text: 'Experience unmatched luxury at Liwonde Sun Hotel. Book your stay today!'
+        text: 'Experience unmatched luxury at <?php echo htmlspecialchars(getSetting('site_name', 'Liwonde Sun Hotel')); ?>. Book your stay today!'
     };
 
     const shareUrls = {

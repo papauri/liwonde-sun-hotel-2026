@@ -2,13 +2,29 @@
 /**
  * Booking Details API Endpoint
  * GET /api/bookings?id={id}
- * 
+ *
  * Retrieves booking details by ID or reference
  * Requires permission: bookings.read
- * 
+ *
  * Parameters:
  * - id (required): Booking ID or reference
+ *
+ * SECURITY: This file must only be accessed through api/index.php
+ * Direct access is blocked to prevent authentication bypass
  */
+
+// Prevent direct access - must be accessed through api/index.php router
+if (!defined('API_ACCESS_ALLOWED') || !isset($auth) || !isset($client)) {
+    http_response_code(403);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'error' => 'Direct access to this endpoint is not allowed',
+        'code' => 403,
+        'message' => 'Please use the API router at /api/bookings?id={id}'
+    ]);
+    exit;
+}
 
 // Check permission
 if (!$auth->checkPermission($client, 'bookings.read')) {
@@ -109,8 +125,8 @@ try {
             ],
             'pricing' => [
                 'total_amount' => (float)$booking['total_amount'],
-                'currency' => getSetting('currency_symbol', 'MWK'),
-                'currency_code' => getSetting('currency_code', 'MWK')
+                'currency' => getSetting('currency_symbol'),
+                'currency_code' => getSetting('currency_code')
             ],
             'timestamps' => [
                 'created_at' => $booking['created_at'],
@@ -121,14 +137,13 @@ try {
             'can_cancel' => in_array($booking['status'], ['pending', 'confirmed']),
             'can_check_in' => $booking['status'] === 'confirmed',
             'can_check_out' => $booking['status'] === 'checked-in',
-            'cancellation_policy' => 'Cancellations up to 48 hours before arrival are free of charge.'
+            'cancellation_policy' => getSetting('cancellation_policy')
         ],
         'contact' => [
-            'hotel_name' => getSetting('site_name', 'Liwonde Sun Hotel'),
-            'phone' => getSetting('phone_main', '+265 123 456 789'),
-            'email' => getSetting('email_reservations', 'book@liwondesunhotel.com'),
-            'address' => getSetting('address_line1', 'Liwonde National Park Road') . ', ' . 
-                         getSetting('address_country', 'Malawi')
+            'hotel_name' => getSetting('site_name'),
+            'phone' => getSetting('phone_main'),
+            'email' => getSetting('email_reservations'),
+            'address' => getSetting('address_line1') . ', ' . getSetting('address_country')
         ]
     ];
     

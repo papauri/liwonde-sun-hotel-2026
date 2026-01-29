@@ -443,5 +443,7 @@ foreach ($rooms as $room) {
     <?php include 'includes/footer.php'; ?>
 
     <script src="js/main.js"></script>
+
+    <?php include 'includes/scroll-to-top.php'; ?>
 </body>
 </html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liwonde Sun Hotel - Popup Modal Integration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .main-container {
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .hero-section {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+        
+        .hero-section h1 {
+            font-size: 32px;
+            color: #2c5aa0;
+            margin-bottom: 10px;
+        }
+        
+        .hero-section p {
+            color: #6c757d;
+            font-size: 16px;
+            margin-bottom: 25px;
+        }
+        
+        .book-now-btn {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a4480 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 18px 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(44, 90, 160, 0.3);
+        }
+        
+        .book-now-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(44, 90, 160, 0.4);
+        }
+        
+        .book-now-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c5aa0;
+            margin-bottom: 10px;
+        }
+        
+        .feature-desc {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-container {
+            background: white;
+            border-radius: 16px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideUp 0.4s ease;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a4480 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .modal-header h2 {
+            font-size: 24px;
+            margin: 0;
+        }
+        
+        .modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 32px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            padding: 0;
+        }
+        
+        .booking-iframe {
+            width: 100%;
+            height: 700px;
+            border: none;
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 25px;
+            }
+            
+            .hero-section h1 {
+                font-size: 24px;
+            }
+            
+            .book-now-btn {
+                padding: 15px 35px;
+                font-size: 16px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-container {
+                width: 95%;
+                max-height: 95vh;
+            }
+            
+            .booking-iframe {
+                height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="hero-section">
+            <h1 id="hero-title">🏨 Liwonde Sun Hotel</h1>
+            <p id="hero-tagline">Experience unparalleled luxury in the heart of Malawi</p>
+            <button class="book-now-btn" onclick="openBookingModal()">
+                Book Your Stay Now
+            </button>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🏨</div>
+                <h3 class="feature-title">Luxury Rooms</h3>
+                <p class="feature-desc">From Presidential Suites to cozy Standard Rooms</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🍽</div>
+                <h3 class="feature-title">Fine Dining</h3>
+                <p class="feature-desc">Michelin-star cuisine with local flavors</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💆</div>
+                <h3 class="feature-title">Spa & Wellness</h3>
+                <p class="feature-desc">Rejuvenate your body and mind</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏊</div>
+                <h3 class="feature-title">Lake Views</h3>
+                <p class="feature-desc">Breathtaking Shire River scenery</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Booking Modal -->
+    <div class="modal-overlay" id="booking-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="modal-title">Book Your Stay</h2>
+                <button class="modal-close" onclick="closeBookingModal()" title="Close">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <!--
+                    CONFIGURATION:
+                    - Replace YOUR_PARTNER_NAME with your company name
+                    - Replace https://liwondesunhotel.com with the production URL
+                    - Add ?room_id=X to pre-select a room
+                    - Add ?check_in=YYYY-MM-DD to pre-fill check-in date
+                    - Add ?check_out=YYYY-MM-DD to pre-fill check-out date
+                -->
+                <iframe
+                    id="booking-iframe"
+                    class="booking-iframe"
+                    src="https://liwondesunhotel.com/booking.php?partner=YOUR_PARTNER_NAME"
+                    title="Liwonde Sun Hotel Booking"
+                    allow="payment; clipboard-write">
+                </iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION - UPDATE THESE VALUES
+        // ============================================
+        const CONFIG = {
+            // Your API base URL (update with production URL)
+            baseUrl: 'https://liwondesunhotel.com/api/',
+            
+            // Your API key (get from Liwonde Sun Hotel)
+            apiKey: 'YOUR_API_KEY_HERE',
+            
+            // Partner name (for tracking)
+            partnerName: 'YOUR_PARTNER_NAME'
+        };
+
+        // ============================================
+        // SITE SETTINGS (DYNAMIC FROM DATABASE)
+        // ============================================
+        let siteSettings = {
+            hotel: {
+                name: 'Liwonde Sun Hotel',
+                tagline: 'Where Luxury Meets Nature',
+                url: 'https://liwondesunhotel.com'
+            }
+        };
+
+        // ============================================
+        // FETCH SITE SETTINGS
+        // ============================================
+        async function fetchSiteSettings() {
+            try {
+                const response = await fetch(`${CONFIG.baseUrl}site-settings`, {
+                    method: 'GET',
+                    headers: {
+                        'X-API-Key': CONFIG.apiKey,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    siteSettings = result.data;
+                    updateUIWithSettings();
+                    console.log('Site settings loaded:', siteSettings);
+                } else {
+                    console.warn('Failed to load site settings, using defaults:', result.error);
+                }
+            } catch (error) {
+                console.warn('Error fetching site settings, using defaults:', error);
+            }
+        }
+
+        // ============================================
+        // UPDATE UI WITH SETTINGS
+        // ============================================
+        function updateUIWithSettings() {
+            // Update hero title
+            const heroTitleEl = document.getElementById('hero-title');
+            if (heroTitleEl && siteSettings.hotel?.name) {
+                heroTitleEl.textContent = '🏨 ' + siteSettings.hotel.name;
+            }
+
+            // Update hero tagline
+            const heroTaglineEl = document.getElementById('hero-tagline');
+            if (heroTaglineEl && siteSettings.hotel?.tagline) {
+                heroTaglineEl.textContent = siteSettings.hotel.tagline;
+            }
+
+            // Update modal title
+            const modalTitleEl = document.getElementById('modal-title');
+            if (modalTitleEl && siteSettings.hotel?.name) {
+                modalTitleEl.textContent = 'Book Your Stay at ' + siteSettings.hotel.name;
+            }
+
+            // Update iframe src with partner name
+            const iframeEl = document.getElementById('booking-iframe');
+            if (iframeEl && siteSettings.hotel?.url) {
+                const baseUrl = siteSettings.hotel.url.replace(/\/$/, '');
+                iframeEl.src = `${baseUrl}/booking.php?partner=${encodeURIComponent(CONFIG.partnerName)}`;
+            }
+
+            // Update page title
+            document.title = (siteSettings.hotel?.name || 'Liwonde Sun Hotel') + ' - Booking';
+        }
+
+        // ============================================
+        // MODAL FUNCTIONS
+        // ============================================
+        function openBookingModal() {
+            const modal = document.getElementById('booking-modal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+        
+        function closeBookingModal() {
+            const modal = document.getElementById('booking-modal');
+            modal.classList.remove('active');
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('booking-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeBookingModal();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeBookingModal();
+            }
+        });
+        
+        // Close modal when iframe sends message (optional - for advanced integration)
+        window.addEventListener('message', function(event) {
+            // Check if message is from your booking page
+            const hotelUrl = siteSettings.hotel?.url || 'https://liwondesunhotel.com';
+            const origin = new URL(hotelUrl).origin;
+            
+            if (event.origin === origin) {
+                if (event.data === 'booking-complete') {
+                    closeBookingModal();
+                    // Optionally show confirmation
+                    alert('Booking completed successfully!');
+                }
+            }
+        });
+
+        // ============================================
+        // INITIALIZE
+        // ============================================
+        window.onload = async function() {
+            await fetchSiteSettings();
+        };
+    </script>
+</body>
+</html>

@@ -275,7 +275,7 @@ function sendBookingReceivedEmail($booking) {
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0;">
                 <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">MWK ' . number_format($booking['total_amount'], 0) . '</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
             </div>
         </div>
         
@@ -290,8 +290,7 @@ function sendBookingReceivedEmail($booking) {
         <div style="background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; border-radius: 5px; margin: 20px 0;">
             <h3 style="color: #856404; margin-top: 0;">Payment Information</h3>
             <p style="color: #856404; margin: 0;">
-                <strong>Payment will be made at the hotel upon arrival.</strong><br>
-                We accept cash payments only. Please bring the total amount of <strong>MWK ' . number_format($booking['total_amount'], 0) . '</strong> with you.
+                ' . getSetting('payment_policy', 'Payment will be made at the hotel upon arrival.<br>We accept cash payments only. Please bring the total amount of <strong>' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</strong> with you.') . '
             </p>
         </div>';
         
@@ -304,7 +303,7 @@ function sendBookingReceivedEmail($booking) {
         }
         
         $htmlBody .= '
-        <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call +265 123 456 789.</p>
+        <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
         
         <p>Thank you for choosing ' . htmlspecialchars($email_site_name) . '!</p>
         
@@ -389,7 +388,7 @@ function sendBookingConfirmedEmail($booking) {
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0;">
                 <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">MWK ' . number_format($booking['total_amount'], 0) . '</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
             </div>
         </div>
         
@@ -404,8 +403,7 @@ function sendBookingConfirmedEmail($booking) {
         <div style="background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; border-radius: 5px; margin: 20px 0;">
             <h3 style="color: #856404; margin-top: 0;">Payment Information</h3>
             <p style="color: #856404; margin: 0;">
-                <strong>Payment will be made at the hotel upon arrival.</strong><br>
-                We accept cash payments only. Please bring the total amount of <strong>MWK ' . number_format($booking['total_amount'], 0) . '</strong> with you.
+                ' . getSetting('payment_policy', 'Payment will be made at the hotel upon arrival.<br>We accept cash payments only. Please bring the total amount of <strong>' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</strong> with you.') . '
             </p>
         </div>
         
@@ -413,9 +411,9 @@ function sendBookingConfirmedEmail($booking) {
             <h3 style="color: #0d6efd; margin-top: 0;">Next Steps</h3>
             <p style="color: #0d6efd; margin: 0;">
                 <strong>Please save your booking reference:</strong> ' . htmlspecialchars($booking['booking_reference']) . '<br>
-                <strong>Check-in time:</strong> 2:00 PM<br>
-                <strong>Check-out time:</strong> 11:00 AM<br>
-                <strong>Contact us:</strong> If you need to make any changes, please contact us at least 48 hours before your arrival.
+                <strong>Check-in time:</strong> ' . getSetting('check_in_time', '2:00 PM') . '<br>
+                <strong>Check-out time:</strong> ' . getSetting('check_out_time', '11:00 AM') . '<br>
+                <strong>Contact us:</strong> If you need to make any changes, please contact us at least ' . getSetting('booking_change_policy', '48 hours') . ' before your arrival.
             </p>
         </div>';
         
@@ -428,7 +426,7 @@ function sendBookingConfirmedEmail($booking) {
         }
         
         $htmlBody .= '
-        <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call +265 123 456 789.</p>
+        <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
         
         <p>We look forward to welcoming you to ' . htmlspecialchars($email_site_name) . '!</p>
         
@@ -502,7 +500,7 @@ function sendAdminNotificationEmail($booking) {
             
             <div style=\'display: flex; justify-content: space-between; padding: 10px 0;\'>
                 <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold;">MWK ' . number_format($booking['total_amount'], 0) . '</span>
+                <span style="color: #D4AF37; font-weight: bold;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
             </div>
         </div>
         
@@ -526,5 +524,222 @@ function sendAdminNotificationEmail($booking) {
             'success' => false,
             'message' => $e->getMessage()
         ];
+    }
+    
+    /**
+     * Send conference enquiry confirmed email
+     */
+    function sendConferenceConfirmedEmail($enquiry) {
+        global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+        
+        try {
+            // Get conference room details
+            $stmt = $pdo->prepare("SELECT * FROM conference_rooms WHERE id = ?");
+            $stmt->execute([$enquiry['conference_room_id']]);
+            $room = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$room) {
+                throw new Exception("Conference room not found");
+            }
+            
+            $currency_symbol = getSetting('currency_symbol');
+            $total_amount = $enquiry['total_amount'] ? number_format($enquiry['total_amount'], 0) : 'To be determined';
+            
+            // Prepare email content
+            $htmlBody = '
+            <h1 style="color: #0A1929; text-align: center;">Conference Booking Confirmed!</h1>
+            <p>Dear ' . htmlspecialchars($enquiry['contact_person']) . ',</p>
+            <p>Great news! Your conference booking with <strong>' . htmlspecialchars($email_site_name) . '</strong> has been confirmed by our team.</p>
+            
+            <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+                <h2 style="color: #0A1929; margin-top: 0;">Conference Details</h2>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Reference:</span>
+                    <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($enquiry['inquiry_reference']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Company:</span>
+                    <span style="color: #333;">' . htmlspecialchars($enquiry['company_name']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Conference Room:</span>
+                    <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Event Date:</span>
+                    <span style="color: #333;">' . date('F j, Y', strtotime($enquiry['event_date'])) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Event Time:</span>
+                    <span style="color: #333;">' . date('H:i', strtotime($enquiry['start_time'])) . ' - ' . date('H:i', strtotime($enquiry['end_time'])) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Number of Attendees:</span>
+                    <span style="color: #333;">' . (int) $enquiry['number_of_attendees'] . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                    <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
+                    <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . $currency_symbol . ' ' . $total_amount . '</span>
+                </div>
+            </div>
+            
+            <div style="background: #d4edda; padding: 15px; border-left: 4px solid #28a745; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #155724; margin-top: 0;">✅ Booking Status: Confirmed</h3>
+                <p style="color: #155724; margin: 0;">
+                    <strong>Your conference booking is now confirmed!</strong><br>
+                    We look forward to hosting your event at ' . htmlspecialchars($email_site_name) . '.
+                </p>
+            </div>';
+            
+            if ($enquiry['catering_required']) {
+                $htmlBody .= '
+                <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                    <h3 style="color: #0d6efd; margin-top: 0;">Catering</h3>
+                    <p style="color: #0d6efd; margin: 0;">Catering services have been requested for your event.</p>
+                </div>';
+            }
+            
+            if (!empty($enquiry['av_equipment'])) {
+                $htmlBody .= '
+                <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                    <h3 style="color: #0d6efd; margin-top: 0;">AV Equipment</h3>
+                    <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($enquiry['av_equipment']) . '</p>
+                </div>';
+            }
+            
+            if (!empty($enquiry['special_requirements'])) {
+                $htmlBody .= '
+                <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                    <h3 style="color: #0d6efd; margin-top: 0;">Special Requirements</h3>
+                    <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($enquiry['special_requirements']) . '</p>
+                </div>';
+            }
+            
+            $htmlBody .= '
+            <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #0d6efd; margin-top: 0;">Next Steps</h3>
+                <p style="color: #0d6efd; margin: 0;">
+                    <strong>Please save your booking reference:</strong> ' . htmlspecialchars($enquiry['inquiry_reference']) . '<br>
+                    <strong>Arrival:</strong> Please arrive at least 30 minutes before your event start time<br>
+                    <strong>Contact us:</strong> If you need to make any changes, please contact us at least ' . getSetting('booking_change_policy', '48 hours') . ' before your event.
+                </p>
+            </div>
+            
+            <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
+            
+            <p>We look forward to hosting your event at ' . htmlspecialchars($email_site_name) . '!</p>
+            
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+                <p style="color: #666; font-size: 14px;">
+                    <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
+                    <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
+                </p>
+            </div>';
+            
+            // Send email
+            return sendEmail(
+                $enquiry['email'],
+                $enquiry['contact_person'],
+                'Conference Confirmed - ' . htmlspecialchars($email_site_name) . ' [' . $enquiry['inquiry_reference'] . ']',
+                $htmlBody
+            );
+            
+        } catch (Exception $e) {
+            error_log("Send Conference Confirmed Email Error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Send conference cancelled email
+     */
+    function sendConferenceCancelledEmail($enquiry) {
+        global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+        
+        try {
+            // Get conference room details
+            $stmt = $pdo->prepare("SELECT * FROM conference_rooms WHERE id = ?");
+            $stmt->execute([$enquiry['conference_room_id']]);
+            $room = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Prepare email content
+            $htmlBody = '
+            <h1 style="color: #dc3545; text-align: center;">Conference Booking Cancelled</h1>
+            <p>Dear ' . htmlspecialchars($enquiry['contact_person']) . ',</p>
+            <p>We regret to inform you that your conference booking with <strong>' . htmlspecialchars($email_site_name) . '</strong> has been cancelled.</p>
+            
+            <div style="background: #f8f9fa; border: 2px solid #dc3545; padding: 20px; margin: 20px 0; border-radius: 10px;">
+                <h2 style="color: #dc3545; margin-top: 0;">Cancelled Booking Details</h2>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Reference:</span>
+                    <span style="color: #dc3545; font-weight: bold; font-size: 18px;">' . htmlspecialchars($enquiry['inquiry_reference']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Company:</span>
+                    <span style="color: #333;">' . htmlspecialchars($enquiry['company_name']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Conference Room:</span>
+                    <span style="color: #333;">' . htmlspecialchars($room['name'] ?? 'N/A') . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Event Date:</span>
+                    <span style="color: #333;">' . date('F j, Y', strtotime($enquiry['event_date'])) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                    <span style="font-weight: bold; color: #0A1929;">Event Time:</span>
+                    <span style="color: #333;">' . date('H:i', strtotime($enquiry['start_time'])) . ' - ' . date('H:i', strtotime($enquiry['end_time'])) . '</span>
+                </div>
+            </div>
+            
+            <div style="background: #f8d7da; padding: 15px; border-left: 4px solid #dc3545; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #721c24; margin-top: 0;">❌ Booking Status: Cancelled</h3>
+                <p style="color: #721c24; margin: 0;">
+                    <strong>This booking has been cancelled.</strong><br>
+                    If you believe this is an error, please contact us immediately.
+                </p>
+            </div>
+            
+            <p>If you have any questions or would like to reschedule, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
+            
+            <p>We hope to have the opportunity to serve you in the future.</p>
+            
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+                <p style="color: #666; font-size: 14px;">
+                    <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
+                    <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
+                </p>
+            </div>';
+            
+            // Send email
+            return sendEmail(
+                $enquiry['email'],
+                $enquiry['contact_person'],
+                'Conference Cancelled - ' . htmlspecialchars($email_site_name) . ' [' . $enquiry['inquiry_reference'] . ']',
+                $htmlBody
+            );
+            
+        } catch (Exception $e) {
+            error_log("Send Conference Cancelled Email Error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
     }
 }

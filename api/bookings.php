@@ -2,10 +2,10 @@
 /**
  * Bookings API Endpoint
  * POST /api/bookings
- * 
+ *
  * Creates a new booking
  * Requires permission: bookings.create
- * 
+ *
  * Request body (JSON):
  * {
  *   "room_id": 1,
@@ -19,7 +19,23 @@
  *   "check_out_date": "2026-02-03",
  *   "special_requests": "Early check-in please"
  * }
+ *
+ * SECURITY: This file must only be accessed through api/index.php
+ * Direct access is blocked to prevent authentication bypass
  */
+
+// Prevent direct access - must be accessed through api/index.php router
+if (!defined('API_ACCESS_ALLOWED') || !isset($auth) || !isset($client)) {
+    http_response_code(403);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'error' => 'Direct access to this endpoint is not allowed',
+        'code' => 403,
+        'message' => 'Please use the API router at /api/bookings'
+    ]);
+    exit;
+}
 
 // Check permission
 if (!$auth->checkPermission($client, 'bookings.create')) {
@@ -90,7 +106,7 @@ try {
     }
     
     // Check advance booking restriction
-    $maxAdvanceDays = (int)getSetting('max_advance_booking_days', 30);
+    $maxAdvanceDays = (int)getSetting('max_advance_booking_days');
     $maxAdvanceDate = new DateTime();
     $maxAdvanceDate->modify('+' . $maxAdvanceDays . ' days');
     
@@ -116,9 +132,8 @@ try {
         ApiResponse::error("This room can accommodate maximum {$room['max_guests']} guests", 400);
     }
     
-    // Check availability using existing function
-    require_once __DIR__ . '/../includes/functions.php';
-    
+    // Check availability using existing function from config/database.php
+    // isRoomAvailable() is already loaded via config/database.php
     $available = isRoomAvailable($bookingData['room_id'], $bookingData['check_in_date'], $bookingData['check_out_date']);
     
     if (!$available) {
@@ -234,8 +249,8 @@ try {
                 ],
                 'pricing' => [
                     'total_amount' => (float)$booking['total_amount'],
-                    'currency' => getSetting('currency_symbol', 'MWK'),
-                    'currency_code' => getSetting('currency_code', 'MWK')
+                    'currency' => getSetting('currency_symbol'),
+                    'currency_code' => getSetting('currency_code')
                 ],
                 'special_requests' => $booking['special_requests'],
                 'created_at' => $booking['created_at']
@@ -248,12 +263,12 @@ try {
             ],
             'next_steps' => [
                 'booking_status' => 'Your booking has been created successfully and is now in the system.',
-                'email_notification' => $emailResult['success'] 
-                    ? 'A confirmation email has been sent to ' . $booking['guest_email'] 
+                'email_notification' => $emailResult['success']
+                    ? 'A confirmation email has been sent to ' . $booking['guest_email']
                     : 'Email notification pending - System will send confirmation once email service is configured',
-                'payment' => 'Payment will be made at the hotel upon arrival. We accept cash only.',
+                'payment' => getSetting('payment_policy'),
                 'confirmation' => 'Your booking reference is ' . $bookingReference . '. Keep this reference for check-in.',
-                'contact' => 'If you have any questions, please contact us at ' . getSetting('email_reservations', 'book@liwondesunhotel.com')
+                'contact' => 'If you have any questions, please contact us at ' . getSetting('email_reservations')
             ]
         ];
         

@@ -7,6 +7,8 @@ if (!isset($_SESSION['admin_user'])) {
 }
 
 require_once '../config/database.php';
+require_once '../config/email.php';
+require_once '../config/invoice.php';
 require_once '../includes/alert.php';
 
 $user = $_SESSION['admin_user'];
@@ -129,6 +131,95 @@ try {
     $conference_rooms = [];
     $error = 'Error fetching conference rooms: ' . $e->getMessage();
 }
+
+// Handle enquiry status updates
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enquiry_action'])) {
+    try {
+        $enquiry_id = $_POST['enquiry_id'] ?? 0;
+        $action = $_POST['enquiry_action'];
+        
+        // Fetch enquiry data for email functions
+        $stmt = $pdo->prepare("SELECT * FROM conference_inquiries WHERE id = ?");
+        $stmt->execute([$enquiry_id]);
+        $enquiry = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($action === 'confirm') {
+            $stmt = $pdo->prepare("UPDATE conference_inquiries SET status = 'confirmed' WHERE id = ?");
+            $stmt->execute([$enquiry_id]);
+            
+            // Send confirmation email
+            if ($enquiry) {
+                $email_result = sendConferenceConfirmedEmail($enquiry);
+                if ($email_result['success']) {
+                    $message = 'Conference enquiry confirmed successfully! Confirmation email sent.';
+                } else {
+                    $message = 'Conference enquiry confirmed successfully! (Email not sent: ' . $email_result['message'] . ')';
+                }
+            } else {
+                $message = 'Conference enquiry confirmed successfully!';
+            }
+        } elseif ($action === 'cancel') {
+            $stmt = $pdo->prepare("UPDATE conference_inquiries SET status = 'cancelled' WHERE id = ?");
+            $stmt->execute([$enquiry_id]);
+            
+            // Send cancellation email
+            if ($enquiry) {
+                $email_result = sendConferenceCancelledEmail($enquiry);
+                if ($email_result['success']) {
+                    $message = 'Conference enquiry cancelled successfully! Cancellation email sent.';
+                } else {
+                    $message = 'Conference enquiry cancelled successfully! (Email not sent: ' . $email_result['message'] . ')';
+                }
+            } else {
+                $message = 'Conference enquiry cancelled successfully!';
+            }
+        } elseif ($action === 'complete') {
+            $stmt = $pdo->prepare("UPDATE conference_inquiries SET status = 'completed' WHERE id = ?");
+            $stmt->execute([$enquiry_id]);
+            $message = 'Conference marked as completed!';
+        } elseif ($action === 'send_invoice') {
+            // Send invoice email for paid conference
+            if ($enquiry) {
+                $invoice_result = sendConferenceInvoiceEmail($enquiry_id);
+                if ($invoice_result['success']) {
+                    $message = 'Invoice sent successfully to ' . htmlspecialchars($enquiry['email']);
+                } else {
+                    $error = 'Failed to send invoice: ' . $invoice_result['message'];
+                }
+            } else {
+                $error = 'Enquiry not found!';
+            }
+        } elseif ($action === 'update_amount') {
+            $amount = $_POST['total_amount'] ?? 0;
+            $stmt = $pdo->prepare("UPDATE conference_inquiries SET total_amount = ? WHERE id = ?");
+            $stmt->execute([$amount, $enquiry_id]);
+            $message = 'Total amount updated successfully!';
+        } elseif ($action === 'update_notes') {
+            $notes = $_POST['notes'] ?? '';
+            $stmt = $pdo->prepare("UPDATE conference_inquiries SET notes = ? WHERE id = ?");
+            $stmt->execute([$notes, $enquiry_id]);
+            $message = 'Notes updated successfully!';
+        }
+    } catch (PDOException $e) {
+        $error = 'Error updating enquiry: ' . $e->getMessage();
+    } catch (Exception $e) {
+        $error = 'Error: ' . $e->getMessage();
+    }
+}
+
+// Fetch conference enquiries
+try {
+    $enquiries_stmt = $pdo->query("
+        SELECT ci.*, cr.name as room_name
+        FROM conference_inquiries ci
+        LEFT JOIN conference_rooms cr ON ci.conference_room_id = cr.id
+        ORDER BY ci.event_date DESC, ci.created_at DESC
+    ");
+    $conference_enquiries = $enquiries_stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $conference_enquiries = [];
+    $error = 'Error fetching conference enquiries: ' . $e->getMessage();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -141,6 +232,7 @@ try {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="css/admin-styles.css">
     
     <style>
@@ -200,6 +292,13 @@ try {
         .btn-secondary {
             background: #6c757d;
             color: white;
+        }
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        .btn-info:hover {
+            background: #138496;
         }
         .room-list {
             display: grid;
@@ -455,6 +554,110 @@ try {
         </div>
 
         <div class="card">
+            <h2>Conference Enquiries Management</h2>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Reference</th>
+                            <th>Company</th>
+                            <th>Contact</th>
+                            <th>Event Date</th>
+                            <th>Time</th>
+                            <th>Room</th>
+                            <th>Attendees</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($conference_enquiries)): ?>
+                        <tr>
+                            <td colspan="10" class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>No conference enquiries found</p>
+                            </td>
+                        </tr>
+                        <?php else: ?>
+                        <?php foreach ($conference_enquiries as $enquiry): ?>
+                        <tr>
+                            <td><strong><?php echo htmlspecialchars($enquiry['inquiry_reference']); ?></strong></td>
+                            <td><?php echo htmlspecialchars($enquiry['company_name']); ?></td>
+                            <td>
+                                <?php echo htmlspecialchars($enquiry['contact_person']); ?><br>
+                                <small><?php echo htmlspecialchars($enquiry['email']); ?></small><br>
+                                <small><?php echo htmlspecialchars($enquiry['phone']); ?></small>
+                            </td>
+                            <td><?php echo date('M j, Y', strtotime($enquiry['event_date'])); ?></td>
+                            <td>
+                                <?php echo date('H:i', strtotime($enquiry['start_time'])); ?> -
+                                <?php echo date('H:i', strtotime($enquiry['end_time'])); ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($enquiry['room_name'] ?? 'N/A'); ?></td>
+                            <td><?php echo (int) $enquiry['number_of_attendees']; ?></td>
+                            <td>
+                                <span class="badge badge-<?php echo $enquiry['status']; ?>">
+                                    <?php echo ucfirst($enquiry['status']); ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php if ($enquiry['total_amount']): ?>
+                                    K <?php echo number_format($enquiry['total_amount'], 0); ?>
+                                <?php else: ?>
+                                    <em>Pending</em>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <div class="quick-actions">
+                                    <?php if ($enquiry['status'] === 'pending'): ?>
+                                        <form method="POST" style="display:inline;">
+                                            <input type="hidden" name="enquiry_action" value="confirm">
+                                            <input type="hidden" name="enquiry_id" value="<?php echo $enquiry['id']; ?>">
+                                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Confirm this conference enquiry?');">
+                                                <i class="fas fa-check"></i> Confirm
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                    <?php if ($enquiry['status'] === 'confirmed'): ?>
+                                        <form method="POST" style="display:inline;">
+                                            <input type="hidden" name="enquiry_action" value="complete">
+                                            <input type="hidden" name="enquiry_id" value="<?php echo $enquiry['id']; ?>">
+                                            <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Mark this conference as completed?');">
+                                                <i class="fas fa-check-circle"></i> Complete
+                                            </button>
+                                        </form>
+                                        <form method="POST" style="display:inline;">
+                                            <input type="hidden" name="enquiry_action" value="send_invoice">
+                                            <input type="hidden" name="enquiry_id" value="<?php echo $enquiry['id']; ?>">
+                                            <button type="submit" class="btn btn-info btn-sm" onclick="return confirm('Generate and send invoice for this conference?');">
+                                                <i class="fas fa-file-invoice-dollar"></i> Paid
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                    <?php if (in_array($enquiry['status'], ['pending', 'confirmed'])): ?>
+                                        <form method="POST" style="display:inline;">
+                                            <input type="hidden" name="enquiry_action" value="cancel">
+                                            <input type="hidden" name="enquiry_id" value="<?php echo $enquiry['id']; ?>">
+                                            <button type="submit" class="btn btn-secondary btn-sm" onclick="return confirm('Cancel this conference enquiry?');">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="showEnquiryDetails(<?php echo htmlspecialchars(json_encode($enquiry)); ?>)">
+                                        <i class="fas fa-eye"></i> Details
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
             <h2>Manage Conference Rooms</h2>
             <div class="room-list">
                 <?php foreach ($conference_rooms as $room): ?>
@@ -545,5 +748,195 @@ try {
             </div>
         </div>
     </div>
+
+    <!-- Enquiry Details Modal -->
+    <div id="enquiryModal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>Conference Enquiry Details</h3>
+                <span class="close" onclick="closeEnquiryModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="enquiryModalBody">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showEnquiryDetails(enquiry) {
+            const modal = document.getElementById('enquiryModal');
+            const body = document.getElementById('enquiryModalBody');
+            
+            body.innerHTML = `
+                <div class="enquiry-details">
+                    <div class="detail-row">
+                        <strong>Reference:</strong>
+                        <span>${enquiry.inquiry_reference}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Company:</strong>
+                        <span>${enquiry.company_name}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Contact Person:</strong>
+                        <span>${enquiry.contact_person}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Email:</strong>
+                        <span>${enquiry.email}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Phone:</strong>
+                        <span>${enquiry.phone}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Event Date:</strong>
+                        <span>${new Date(enquiry.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Time:</strong>
+                        <span>${new Date('1970-01-01T' + enquiry.start_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} -
+                              ${new Date('1970-01-01T' + enquiry.end_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Conference Room:</strong>
+                        <span>${enquiry.room_name || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Number of Attendees:</strong>
+                        <span>${enquiry.number_of_attendees}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Event Type:</strong>
+                        <span>${enquiry.event_type || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Status:</strong>
+                        <span class="badge badge-${enquiry.status}">${enquiry.status.charAt(0).toUpperCase() + enquiry.status.slice(1)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Catering Required:</strong>
+                        <span>${enquiry.catering_required ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>AV Equipment:</strong>
+                        <span>${enquiry.av_equipment || 'None'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Special Requirements:</strong>
+                        <span>${enquiry.special_requirements || 'None'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Total Amount:</strong>
+                        <span>${enquiry.total_amount ? 'K ' + Number(enquiry.total_amount).toLocaleString() : 'Pending'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Notes:</strong>
+                        <span>${enquiry.notes || 'None'}</span>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <form method="POST" style="display:inline;">
+                            <input type="hidden" name="enquiry_action" value="update_amount">
+                            <input type="hidden" name="enquiry_id" value="${enquiry.id}">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label>Update Total Amount (<?php echo getSetting('currency_symbol', 'MWK'); ?>):</label>
+                                <input type="number" name="total_amount" step="0.01" value="${enquiry.total_amount || ''}" style="width: 150px;">
+                            </div>
+                            <button type="submit" class="btn">Update Amount</button>
+                        </form>
+                        <form method="POST" style="display:inline;">
+                            <input type="hidden" name="enquiry_action" value="update_notes">
+                            <input type="hidden" name="enquiry_id" value="${enquiry.id}">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label>Update Notes:</label>
+                                <textarea name="notes" rows="3" style="width: 100%; max-width: 400px;">${enquiry.notes || ''}</textarea>
+                            </div>
+                            <button type="submit" class="btn">Update Notes</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        function closeEnquiryModal() {
+            document.getElementById('enquiryModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('enquiryModal');
+            if (event.target == modal) {
+                closeEnquiryModal();
+            }
+        }
+    </script>
+
+    <style>
+        .enquiry-details {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .detail-row strong {
+            min-width: 180px;
+            color: var(--navy);
+        }
+        
+        .detail-row span {
+            flex: 1;
+            text-align: right;
+        }
+        
+        .modal-actions {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .modal-actions .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .modal-actions label {
+            font-weight: 600;
+            color: var(--navy);
+        }
+        
+        .badge-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-confirmed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-completed {
+            background: #cce5ff;
+            color: #004085;
+        }
+    </style>
 </body>
 </html>

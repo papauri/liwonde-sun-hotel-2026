@@ -2,16 +2,32 @@
 /**
  * Availability API Endpoint
  * GET /api/availability
- * 
+ *
  * Checks room availability for given dates
  * Requires permission: availability.check
- * 
+ *
  * Parameters:
  * - room_id (required): Room ID to check
  * - check_in (required): Check-in date (YYYY-MM-DD)
  * - check_out (required): Check-out date (YYYY-MM-DD)
  * - number_of_guests (optional): Number of guests
+ *
+ * SECURITY: This file must only be accessed through api/index.php
+ * Direct access is blocked to prevent authentication bypass
  */
+
+// Prevent direct access - must be accessed through api/index.php router
+if (!defined('API_ACCESS_ALLOWED') || !isset($auth) || !isset($client)) {
+    http_response_code(403);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'error' => 'Direct access to this endpoint is not allowed',
+        'code' => 403,
+        'message' => 'Please use the API router at /api/availability'
+    ]);
+    exit;
+}
 
 // Check permission
 if (!$auth->checkPermission($client, 'availability.check')) {
@@ -74,9 +90,8 @@ try {
         ApiResponse::error("This room can accommodate maximum {$room['max_guests']} guests", 400);
     }
     
-    // Check availability using existing function
-    require_once __DIR__ . '/../includes/functions.php';
-    
+    // Check availability using existing function from config/database.php
+    // isRoomAvailable() is already loaded via config/database.php
     $available = isRoomAvailable($roomId, $checkIn, $checkOut);
     
     if ($available) {

@@ -2,6 +2,7 @@
 require_once 'config/database.php';
 require_once 'includes/modal.php';
 require_once 'includes/alert.php';
+require_once 'includes/validation.php';
 
 
 // Fetch policies for footer modals
@@ -29,24 +30,140 @@ $inquiry_error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $room_id = filter_input(INPUT_POST, 'conference_room_id', FILTER_VALIDATE_INT);
-        $company_name = trim($_POST['company_name'] ?? '');
-        $contact_person = trim($_POST['contact_person'] ?? '');
-        $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
-        $phone = trim($_POST['phone'] ?? '');
-        $event_date = $_POST['event_date'] ?? '';
-        $start_time = $_POST['start_time'] ?? '';
-        $end_time = $_POST['end_time'] ?? '';
-        $attendees = filter_input(INPUT_POST, 'number_of_attendees', FILTER_VALIDATE_INT);
-        $event_type = trim($_POST['event_type'] ?? '');
-        $special_requirements = trim($_POST['special_requirements'] ?? '');
-        $catering = isset($_POST['catering_required']) ? 1 : 0;
-        $av_equipment = trim($_POST['av_equipment'] ?? '');
-
-        // Validation
-        if (!$room_id || !$company_name || !$contact_person || !$email || !$phone || !$event_date || !$start_time || !$end_time || !$attendees) {
-            throw new Exception('Please fill in all required fields.');
+        // Initialize validation errors array
+        $validation_errors = [];
+        $sanitized_data = [];
+        
+        // Validate conference_room_id
+        $room_validation = validateConferenceRoomId($_POST['conference_room_id'] ?? '');
+        if (!$room_validation['valid']) {
+            $validation_errors['conference_room_id'] = $room_validation['error'];
+        } else {
+            $sanitized_data['conference_room_id'] = $room_validation['room']['id'];
         }
+        
+        // Validate company_name
+        $company_validation = validateText($_POST['company_name'] ?? '', 2, 200, true);
+        if (!$company_validation['valid']) {
+            $validation_errors['company_name'] = $company_validation['error'];
+        } else {
+            $sanitized_data['company_name'] = sanitizeString($company_validation['value'], 200);
+        }
+        
+        // Validate contact_person
+        $contact_validation = validateName($_POST['contact_person'] ?? '', 2, true);
+        if (!$contact_validation['valid']) {
+            $validation_errors['contact_person'] = $contact_validation['error'];
+        } else {
+            $sanitized_data['contact_person'] = sanitizeString($contact_validation['value'], 100);
+        }
+        
+        // Validate email
+        $email_validation = validateEmail($_POST['email'] ?? '');
+        if (!$email_validation['valid']) {
+            $validation_errors['email'] = $email_validation['error'];
+        } else {
+            $sanitized_data['email'] = sanitizeString($email_validation['value'], 254);
+        }
+        
+        // Validate phone
+        $phone_validation = validatePhone($_POST['phone'] ?? '');
+        if (!$phone_validation['valid']) {
+            $validation_errors['phone'] = $phone_validation['error'];
+        } else {
+            $sanitized_data['phone'] = $phone_validation['sanitized'];
+        }
+        
+        // Validate event_date
+        $date_validation = validateDate($_POST['event_date'] ?? '', false, true);
+        if (!$date_validation['valid']) {
+            $validation_errors['event_date'] = $date_validation['error'];
+        } else {
+            $sanitized_data['event_date'] = $date_validation['date']->format('Y-m-d');
+        }
+        
+        // Validate start_time
+        $start_time_validation = validateTime($_POST['start_time'] ?? '');
+        if (!$start_time_validation['valid']) {
+            $validation_errors['start_time'] = $start_time_validation['error'];
+        } else {
+            $sanitized_data['start_time'] = $start_time_validation['time'];
+        }
+        
+        // Validate end_time
+        $end_time_validation = validateTime($_POST['end_time'] ?? '');
+        if (!$end_time_validation['valid']) {
+            $validation_errors['end_time'] = $end_time_validation['error'];
+        } else {
+            $sanitized_data['end_time'] = $end_time_validation['time'];
+        }
+        
+        // Validate time range
+        if (empty($validation_errors['start_time']) && empty($validation_errors['end_time'])) {
+            $time_range_validation = validateTimeRange($sanitized_data['start_time'], $sanitized_data['end_time']);
+            if (!$time_range_validation['valid']) {
+                $validation_errors['time_range'] = $time_range_validation['error'];
+            }
+        }
+        
+        // Validate number_of_attendees
+        $attendees_validation = validateNumber($_POST['number_of_attendees'] ?? '', 1, 500, true);
+        if (!$attendees_validation['valid']) {
+            $validation_errors['number_of_attendees'] = $attendees_validation['error'];
+        } else {
+            $sanitized_data['number_of_attendees'] = $attendees_validation['value'];
+        }
+        
+        // Validate event_type (optional)
+        $allowed_event_types = ['', 'Meeting', 'Conference', 'Workshop', 'Seminar', 'Training', 'Other'];
+        $type_validation = validateSelectOption($_POST['event_type'] ?? '', $allowed_event_types, false);
+        if (!$type_validation['valid']) {
+            $validation_errors['event_type'] = $type_validation['error'];
+        } else {
+            $sanitized_data['event_type'] = $type_validation['value'];
+        }
+        
+        // Validate special_requirements (optional)
+        $requirements_validation = validateText($_POST['special_requirements'] ?? '', 0, 1000, false);
+        if (!$requirements_validation['valid']) {
+            $validation_errors['special_requirements'] = $requirements_validation['error'];
+        } else {
+            $sanitized_data['special_requirements'] = sanitizeString($requirements_validation['value'], 1000);
+        }
+        
+        // Validate av_equipment (optional)
+        $av_validation = validateText($_POST['av_equipment'] ?? '', 0, 500, false);
+        if (!$av_validation['valid']) {
+            $validation_errors['av_equipment'] = $av_validation['error'];
+        } else {
+            $sanitized_data['av_equipment'] = sanitizeString($av_validation['value'], 500);
+        }
+        
+        // Validate catering_required (optional)
+        $sanitized_data['catering_required'] = isset($_POST['catering_required']) ? 1 : 0;
+        
+        // Check for validation errors
+        if (!empty($validation_errors)) {
+            $error_messages = [];
+            foreach ($validation_errors as $field => $message) {
+                $error_messages[] = ucfirst(str_replace('_', ' ', $field)) . ': ' . $message;
+            }
+            throw new Exception(implode('; ', $error_messages));
+        }
+        
+        $room_id = $sanitized_data['conference_room_id'];
+        $company_name = $sanitized_data['company_name'];
+        $contact_person = $sanitized_data['contact_person'];
+        $email = $sanitized_data['email'];
+        $phone = $sanitized_data['phone'];
+        $event_date = $sanitized_data['event_date'];
+        $start_time = $sanitized_data['start_time'];
+        $end_time = $sanitized_data['end_time'];
+        $attendees = $sanitized_data['number_of_attendees'];
+        $event_type = $sanitized_data['event_type'];
+        $special_requirements = $sanitized_data['special_requirements'];
+        $catering = $sanitized_data['catering_required'];
+        $av_equipment = $sanitized_data['av_equipment'];
 
         // Get room details for pricing
         $room_stmt = $pdo->prepare("SELECT * FROM conference_rooms WHERE id = ? AND is_active = 1");
@@ -760,5 +877,7 @@ function resolveConferenceImage(?string $imagePath): string
             openInquiryModal(0, '');
         <?php endif; ?>
     </script>
+
+    <?php include 'includes/scroll-to-top.php'; ?>
 </body>
 </html>

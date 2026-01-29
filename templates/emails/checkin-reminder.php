@@ -224,19 +224,19 @@
             <div class="check-in-info">
                 <h3>🏨 Check-in Information</h3>
                 <ul>
-                    <li><strong>Check-in Time:</strong> 2:00 PM onwards</li>
-                    <li><strong>Check-out Time:</strong> 11:00 AM</li>
+                    <li><strong>Check-in Time:</strong> <?php echo $check_in_time ?? getSetting('check_in_time', '2:00 PM'); ?> onwards</li>
+                    <li><strong>Check-out Time:</strong> <?php echo $check_out_time ?? getSetting('check_out_time', '11:00 AM'); ?></li>
                     <li><strong>ID Required:</strong> Please bring a valid ID for registration</li>
-                    <li><strong>Payment:</strong> Cash payment to be made at check-in</li>
+                    <li><strong>Payment:</strong> <?php echo $payment_method ?? getSetting('payment_method', 'Cash payment to be made at check-in'); ?></li>
                     <li><strong>Early Check-in:</strong> Available upon request (subject to availability)</li>
                 </ul>
             </div>
             
             <div class="payment-box">
                 <h3>💳 Payment Details</h3>
-                <p style="margin: 0;">Payment will be collected at the hotel reception upon check-in.</p>
+                <p style="margin: 0;"><?php echo $payment_info ?? getSetting('payment_info', 'Payment will be collected at the hotel reception upon check-in.'); ?></p>
                 <p style="margin: 10px 0 0 0;"><strong>Total amount to pay:</strong> <strong style="font-size: 20px; color: #0A1929;"><?php echo $total_amount; ?></strong></p>
-                <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">We accept cash payments only.</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;"><?php echo $payment_method_note ?? getSetting('payment_method_note', 'We accept cash payments only.'); ?></p>
             </div>
             
             <div class="contact-box">
@@ -258,7 +258,7 @@
             
             <p style="margin-top: 30px; font-size: 14px; color: #666; line-height: 1.8;">
                 Please have your booking reference <strong><?php echo $booking_reference; ?></strong> ready for quick check-in.<br>
-                If you need to modify or cancel your reservation, please contact us at least 48 hours before your check-in date.<br>
+                If you need to modify or cancel your reservation, please contact us at least <?php echo $cancellation_policy ?? getSetting('booking_change_policy', '48 hours'); ?> before your check-in date.<br>
                 We look forward to making your stay memorable!
             </p>
         </div>

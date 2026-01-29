@@ -34,6 +34,15 @@ try {
     $current_stmt = $pdo->query("SELECT COUNT(*) as count FROM bookings WHERE status = 'checked-in'");
     $current_guests = $current_stmt->fetch(PDO::FETCH_ASSOC)['count'];
 
+    // Pending conference enquiries
+    $pending_conf_stmt = $pdo->query("SELECT COUNT(*) as count FROM conference_inquiries WHERE status = 'pending'");
+    $pending_conference = $pending_conf_stmt->fetch(PDO::FETCH_ASSOC)['count'];
+
+    // Today's conference events
+    $today_conf_stmt = $pdo->prepare("SELECT COUNT(*) as count FROM conference_inquiries WHERE event_date = ? AND status IN ('confirmed', 'pending')");
+    $today_conf_stmt->execute([$today]);
+    $today_conferences = $today_conf_stmt->fetch(PDO::FETCH_ASSOC)['count'];
+
     // Recent bookings (last 10)
     $recent_stmt = $pdo->query("
         SELECT b.*, r.name as room_name 
@@ -56,6 +65,40 @@ try {
     $upcoming_stmt->execute([$today, $today]);
     $upcoming_checkins = $upcoming_stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Recent conference enquiries (last 10)
+    $recent_conf_stmt = $pdo->query("
+        SELECT ci.*, cr.name as room_name
+        FROM conference_inquiries ci
+        LEFT JOIN conference_rooms cr ON ci.conference_room_id = cr.id
+        ORDER BY ci.created_at DESC
+        LIMIT 10
+    ");
+    $recent_conferences = $recent_conf_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Today's conference events
+    $today_conf_events_stmt = $pdo->prepare("
+        SELECT ci.*, cr.name as room_name
+        FROM conference_inquiries ci
+        LEFT JOIN conference_rooms cr ON ci.conference_room_id = cr.id
+        WHERE ci.event_date = ?
+        AND ci.status IN ('confirmed', 'pending')
+        ORDER BY ci.start_time ASC
+    ");
+    $today_conf_events_stmt->execute([$today]);
+    $today_conference_events = $today_conf_events_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Upcoming conference events (next 7 days)
+    $upcoming_conf_stmt = $pdo->prepare("
+        SELECT ci.*, cr.name as room_name
+        FROM conference_inquiries ci
+        LEFT JOIN conference_rooms cr ON ci.conference_room_id = cr.id
+        WHERE ci.event_date BETWEEN ? AND DATE_ADD(?, INTERVAL 7 DAY)
+        AND ci.status IN ('pending', 'confirmed')
+        ORDER BY ci.event_date ASC, ci.start_time ASC
+    ");
+    $upcoming_conf_stmt->execute([$today, $today]);
+    $upcoming_conferences = $upcoming_conf_stmt->fetchAll(PDO::FETCH_ASSOC);
+
 } catch (PDOException $e) {
     $error = "Unable to load dashboard data.";
 }
@@ -74,6 +117,7 @@ $currency_symbol = getSetting('currency_symbol');
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="css/admin-styles.css">
     
     <style>
@@ -177,8 +221,24 @@ $currency_symbol = getSetting('currency_symbol');
                 </div>
                 <div class="stat-value"><?php echo $current_guests; ?></div>
                 <div class="stat-label">Current Guests</div>
+                </div>
+    
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users-cog"></i>
+                    </div>
+                    <div class="stat-value"><?php echo $pending_conference; ?></div>
+                    <div class="stat-label">Pending Conference Enquiries</div>
+                </div>
+    
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="stat-value"><?php echo $today_conferences; ?></div>
+                    <div class="stat-label">Today's Conference Events</div>
+                </div>
             </div>
-        </div>
 
         <!-- Today's Check-ins Management -->
         <div class="today-checkins-section">
@@ -255,6 +315,60 @@ $currency_symbol = getSetting('currency_symbol');
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <p>No check-ins scheduled for today</p>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Today's Conference Events -->
+        <div class="today-checkins-section">
+            <h3>
+                <i class="fas fa-calendar-check"></i> Today's Conference Events (<?php echo $today_conferences; ?>)
+            </h3>
+            
+            <?php if (!empty($today_conference_events)): ?>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Company</th>
+                                <th>Contact</th>
+                                <th>Room</th>
+                                <th>Time</th>
+                                <th>Attendees</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($today_conference_events as $conf): ?>
+                                <tr>
+                                    <td><strong><?php echo htmlspecialchars($conf['inquiry_reference']); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($conf['company_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($conf['contact_person']); ?></td>
+                                    <td><?php echo htmlspecialchars($conf['room_name'] ?? 'N/A'); ?></td>
+                                    <td>
+                                        <?php echo date('H:i', strtotime($conf['start_time'])); ?> -
+                                        <?php echo date('H:i', strtotime($conf['end_time'])); ?>
+                                    </td>
+                                    <td><?php echo (int) $conf['number_of_attendees']; ?></td>
+                                    <td>
+                                        <span class="badge badge-<?php echo $conf['status']; ?>">
+                                            <?php echo ucfirst($conf['status']); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="conference-management.php" class="btn btn-primary btn-sm">Manage</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>No conference events scheduled for today</p>
                 </div>
             <?php endif; ?>
         </div>
@@ -347,6 +461,92 @@ $currency_symbol = getSetting('currency_symbol');
                         </td>
                         <td>
                             <a href="booking-details.php?id=<?php echo $booking['id']; ?>" class="btn btn-primary btn-sm">View</a>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="section-title mt-4">Upcoming Conference Events (Next 7 Days)</h3>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Company</th>
+                        <th>Contact</th>
+                        <th>Event Date</th>
+                        <th>Time</th>
+                        <th>Attendees</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($upcoming_conferences)): ?>
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <i class="fas fa-calendar"></i>
+                            <p>No upcoming conference events in the next 7 days</p>
+                        </td>
+                    </tr>
+                    <?php else: ?>
+                    <?php foreach ($upcoming_conferences as $conf): ?>
+                    <tr>
+                        <td><strong><?php echo htmlspecialchars($conf['inquiry_reference']); ?></strong></td>
+                        <td><?php echo htmlspecialchars($conf['company_name']); ?></td>
+                        <td><?php echo htmlspecialchars($conf['contact_person']); ?></td>
+                        <td><?php echo date('M j, Y', strtotime($conf['event_date'])); ?></td>
+                        <td>
+                            <?php echo date('H:i', strtotime($conf['start_time'])); ?> -
+                            <?php echo date('H:i', strtotime($conf['end_time'])); ?>
+                        </td>
+                        <td><?php echo (int) $conf['number_of_attendees']; ?></td>
+                        <td>
+                            <span class="badge badge-<?php echo $conf['status']; ?>">
+                                <?php echo ucfirst($conf['status']); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <a href="conference-management.php" class="btn btn-primary btn-sm">Manage</a>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="section-title mt-4">Recent Conference Enquiries</h3>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Company</th>
+                        <th>Contact</th>
+                        <th>Event Date</th>
+                        <th>Attendees</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($recent_conferences as $conf): ?>
+                    <tr>
+                        <td><strong><?php echo htmlspecialchars($conf['inquiry_reference']); ?></strong></td>
+                        <td><?php echo htmlspecialchars($conf['company_name']); ?></td>
+                        <td><?php echo htmlspecialchars($conf['contact_person']); ?></td>
+                        <td><?php echo date('M j, Y', strtotime($conf['event_date'])); ?></td>
+                        <td><?php echo (int) $conf['number_of_attendees']; ?></td>
+                        <td>
+                            <span class="badge badge-<?php echo $conf['status']; ?>">
+                                <?php echo ucfirst($conf['status']); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <a href="conference-management.php" class="btn btn-primary btn-sm">View</a>
                         </td>
                     </tr>
                     <?php endforeach; ?>

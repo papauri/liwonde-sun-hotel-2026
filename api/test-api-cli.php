@@ -56,14 +56,22 @@ function apiRequest($endpoint, $method = 'GET', $data = null) {
             throw new Exception("API file not found: $apiFile");
         }
         
-        // Simulate routing
-        $path = str_replace('/api/', '', $path);
+        // Simulate routing - remove /api/ prefix if present
+        if (strpos($path, '/api/') === 0) {
+            $path = substr($path, 5);
+        }
+        // Handle root endpoint
+        if ($path === '/') {
+            $path = '';
+        }
         
         // Load authentication
         require_once __DIR__ . '/../config/database.php';
         
-        class ApiAuth {
-            private $pdo;
+        // Only define classes once
+        if (!class_exists('ApiAuth', false)) {
+            class ApiAuth {
+                private $pdo;
             
             public function __construct($pdo) {
                 $this->pdo = $pdo;
@@ -83,6 +91,16 @@ function apiRequest($endpoint, $method = 'GET', $data = null) {
                 }
                 
                 return $client;
+            }
+            
+            // Make sendError throw exception for CLI testing
+            private function sendError($message, $code = 400) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => $message,
+                    'code' => $code
+                ]);
+                throw new Exception('API_RESPONSE_ERROR');
             }
             
             private function getApiKey() {
@@ -117,18 +135,10 @@ function apiRequest($endpoint, $method = 'GET', $data = null) {
             public function checkPermission($client, $permission) {
                 return in_array($permission, $client['permissions']);
             }
-            
-            private function sendError($message, $code = 400) {
-                echo json_encode([
-                    'success' => false,
-                    'error' => $message,
-                    'code' => $code
-                ]);
-                exit;
-            }
         }
         
-        class ApiResponse {
+        if (!class_exists('ApiResponse', false)) {
+            class ApiResponse {
             public static function success($data = null, $message = 'Success', $code = 200) {
                 echo json_encode([
                     'success' => true,
@@ -136,7 +146,8 @@ function apiRequest($endpoint, $method = 'GET', $data = null) {
                     'data' => $data,
                     'timestamp' => date('c')
                 ]);
-                exit;
+                // Use return instead of exit for CLI testing
+                throw new Exception('API_RESPONSE_SUCCESS');
             }
             
             public static function error($message, $code = 400, $details = null) {
@@ -147,17 +158,27 @@ function apiRequest($endpoint, $method = 'GET', $data = null) {
                     'code' => $code,
                     'timestamp' => date('c')
                 ]);
-                exit;
+                // Use return instead of exit for CLI testing
+                throw new Exception('API_RESPONSE_ERROR');
             }
             
             public static function validationError($errors) {
                 self::error('Validation failed', 422, $errors);
             }
         }
+        }
         
-        // Initialize authentication
+        // Make $pdo globally available for endpoint files
+        $GLOBALS['pdo'] = $pdo;
+        
+        // Initialize authentication and make globally available
         $auth = new ApiAuth($pdo);
         $client = $auth->authenticate();
+        $GLOBALS['auth'] = $auth;
+        $GLOBALS['client'] = $client;
+        
+        // Define constant to allow access to endpoint files
+        define('API_ACCESS_ALLOWED', true);
         
         // Route the request
         switch ($path) {
@@ -192,6 +213,7 @@ function apiRequest($endpoint, $method = 'GET', $data = null) {
                 break;
             default:
                 ApiResponse::error('Endpoint not found', 404);
+        }
         }
         
     } catch (Exception $e) {
@@ -264,8 +286,9 @@ if ($result['success'] ?? false) {
     $available = $result['data']['available'] ?? false;
     if ($available) {
         echo "✓ PASSED: Room is available\n";
-        echo "  Price per night: MWK " . number_format($result['data']['pricing']['price_per_night'] ?? 0) . "\n";
-        echo "  Total price: MWK " . number_format($result['data']['pricing']['total'] ?? 0) . "\n";
+        $currencySymbol = getSetting('currency_symbol', 'MWK');
+        echo " Price per night: $currencySymbol " . number_format($result['data']['pricing']['price_per_night'] ?? 0) . "\n";
+        echo "  Total price: $currencySymbol " . number_format($result['data']['pricing']['total'] ?? 0) . "\n";
     } else {
         echo "⚠ WARNING: Room not available (this is valid if room is booked)\n";
     }
@@ -298,7 +321,7 @@ if ($result['success'] ?? false) {
     echo "✓ PASSED: Booking created successfully\n";
     echo "  Booking Reference: " . ($result['data']['booking']['booking_reference'] ?? 'N/A') . "\n";
     echo "  Status: " . ($result['data']['booking']['status'] ?? 'N/A') . "\n";
-    echo "  Total Amount: MWK " . number_format($result['data']['booking']['pricing']['total_amount'] ?? 0) . "\n";
+    echo "  Total Amount: $currencySymbol " . number_format($result['data']['booking']['pricing']['total_amount'] ?? 0) . "\n";
     $bookingRef = $result['data']['booking']['booking_reference'] ?? null;
     $testsPassed++;
 } else {

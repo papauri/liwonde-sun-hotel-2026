@@ -2,26 +2,114 @@
 session_start();
 require_once 'config/database.php';
 require_once 'config/email.php';
+require_once 'includes/validation.php';
 
 // Handle booking submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        // Collect booking data
-        $booking_data = [
-            'room_id' => filter_var($_POST['room_id'], FILTER_VALIDATE_INT),
-            'guest_name' => trim($_POST['guest_name']),
-            'guest_email' => trim($_POST['guest_email']),
-            'guest_phone' => trim($_POST['guest_phone']),
-            'guest_country' => trim($_POST['guest_country'] ?? ''),
-            'guest_address' => trim($_POST['guest_address'] ?? ''),
-            'number_of_guests' => filter_var($_POST['number_of_guests'], FILTER_VALIDATE_INT),
-            'check_in_date' => $_POST['check_in_date'],
-            'check_out_date' => $_POST['check_out_date'],
-            'special_requests' => trim($_POST['special_requests'] ?? '')
-        ];
-
+        // Initialize validation errors array
+        $validation_errors = [];
+        $sanitized_data = [];
+        
+        // Validate room_id
+        $room_validation = validateRoomId($_POST['room_id'] ?? '');
+        if (!$room_validation['valid']) {
+            $validation_errors['room_id'] = $room_validation['error'];
+        } else {
+            $sanitized_data['room_id'] = $room_validation['room']['id'];
+        }
+        
+        // Validate guest_name
+        $name_validation = validateName($_POST['guest_name'] ?? '', 2, true);
+        if (!$name_validation['valid']) {
+            $validation_errors['guest_name'] = $name_validation['error'];
+        } else {
+            $sanitized_data['guest_name'] = sanitizeString($name_validation['value'], 100);
+        }
+        
+        // Validate guest_email
+        $email_validation = validateEmail($_POST['guest_email'] ?? '');
+        if (!$email_validation['valid']) {
+            $validation_errors['guest_email'] = $email_validation['error'];
+        } else {
+            $sanitized_data['guest_email'] = sanitizeString($email_validation['value'], 254);
+        }
+        
+        // Validate guest_phone
+        $phone_validation = validatePhone($_POST['guest_phone'] ?? '');
+        if (!$phone_validation['valid']) {
+            $validation_errors['guest_phone'] = $phone_validation['error'];
+        } else {
+            $sanitized_data['guest_phone'] = $phone_validation['sanitized'];
+        }
+        
+        // Validate guest_country (optional)
+        $country_validation = validateText($_POST['guest_country'] ?? '', 0, 100, false);
+        if (!$country_validation['valid']) {
+            $validation_errors['guest_country'] = $country_validation['error'];
+        } else {
+            $sanitized_data['guest_country'] = sanitizeString($country_validation['value'], 100);
+        }
+        
+        // Validate guest_address (optional)
+        $address_validation = validateText($_POST['guest_address'] ?? '', 0, 500, false);
+        if (!$address_validation['valid']) {
+            $validation_errors['guest_address'] = $address_validation['error'];
+        } else {
+            $sanitized_data['guest_address'] = sanitizeString($address_validation['value'], 500);
+        }
+        
+        // Validate number_of_guests
+        $guests_validation = validateNumber($_POST['number_of_guests'] ?? '', 1, 20, true);
+        if (!$guests_validation['valid']) {
+            $validation_errors['number_of_guests'] = $guests_validation['error'];
+        } else {
+            $sanitized_data['number_of_guests'] = $guests_validation['value'];
+        }
+        
+        // Validate check_in_date
+        $check_in_validation = validateDate($_POST['check_in_date'] ?? '', false, true);
+        if (!$check_in_validation['valid']) {
+            $validation_errors['check_in_date'] = $check_in_validation['error'];
+        } else {
+            $sanitized_data['check_in_date'] = $check_in_validation['date']->format('Y-m-d');
+        }
+        
+        // Validate check_out_date
+        $check_out_validation = validateDate($_POST['check_out_date'] ?? '', false, true);
+        if (!$check_out_validation['valid']) {
+            $validation_errors['check_out_date'] = $check_out_validation['error'];
+        } else {
+            $sanitized_data['check_out_date'] = $check_out_validation['date']->format('Y-m-d');
+        }
+        
+        // Validate date range
+        if (empty($validation_errors['check_in_date']) && empty($validation_errors['check_out_date'])) {
+            $date_range_validation = validateDateRange($sanitized_data['check_in_date'], $sanitized_data['check_out_date'], 30);
+            if (!$date_range_validation['valid']) {
+                $validation_errors['dates'] = $date_range_validation['error'];
+            }
+        }
+        
+        // Validate special_requests (optional)
+        $requests_validation = validateText($_POST['special_requests'] ?? '', 0, 1000, false);
+        if (!$requests_validation['valid']) {
+            $validation_errors['special_requests'] = $requests_validation['error'];
+        } else {
+            $sanitized_data['special_requests'] = sanitizeString($requests_validation['value'], 1000);
+        }
+        
+        // Check for validation errors
+        if (!empty($validation_errors)) {
+            $error_messages = [];
+            foreach ($validation_errors as $field => $message) {
+                $error_messages[] = ucfirst(str_replace('_', ' ', $field)) . ': ' . $message;
+            }
+            throw new Exception(implode('; ', $error_messages));
+        }
+        
         // Use enhanced validation with availability check
-        $validation_result = validateBookingWithAvailability($booking_data);
+        $validation_result = validateBookingWithAvailability($sanitized_data);
 
         if (!$validation_result['valid']) {
             // Handle validation errors
@@ -46,16 +134,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // All validations passed - proceed with booking
-        $room_id = $booking_data['room_id'];
-        $guest_name = $booking_data['guest_name'];
-        $guest_email = $booking_data['guest_email'];
-        $guest_phone = $booking_data['guest_phone'];
-        $guest_country = $booking_data['guest_country'];
-        $guest_address = $booking_data['guest_address'];
-        $number_of_guests = $booking_data['number_of_guests'];
-        $check_in_date = $booking_data['check_in_date'];
-        $check_out_date = $booking_data['check_out_date'];
-        $special_requests = $booking_data['special_requests'];
+        $room_id = $sanitized_data['room_id'];
+        $guest_name = $sanitized_data['guest_name'];
+        $guest_email = $sanitized_data['guest_email'];
+        $guest_phone = $sanitized_data['guest_phone'];
+        $guest_country = $sanitized_data['guest_country'];
+        $guest_address = $sanitized_data['guest_address'];
+        $number_of_guests = $sanitized_data['number_of_guests'];
+        $check_in_date = $sanitized_data['check_in_date'];
+        $check_out_date = $sanitized_data['check_out_date'];
+        $special_requests = $sanitized_data['special_requests'];
 
         // Get room details for pricing
         $room = $validation_result['availability']['room'];
@@ -179,8 +267,11 @@ $phone_main = getSetting('phone_main');
 $email_reservations = getSetting('email_reservations');
 
 // Get maximum advance booking days
-$max_advance_days = (int)getSetting('max_advance_booking_days', 30);
+$max_advance_days = (int)getSetting('max_advance_booking_days');
 $max_advance_date = date('Y-m-d', strtotime("+{$max_advance_days} days"));
+
+// Get payment policy
+$payment_policy = getSetting('payment_policy');
 
 // Fetch policies for footer modals
 $policies = [];
@@ -597,7 +688,7 @@ try {
             </button>
 
             <p style="text-align: center; margin-top: 20px; color: #666; font-size: 13px;">
-                <i class="fas fa-info-circle"></i> Payment will be made at the hotel upon arrival. We accept cash only.
+                <i class="fas fa-info-circle"></i> <?php echo htmlspecialchars($payment_policy); ?>
             </p>
         </form>
     </div>
@@ -726,5 +817,7 @@ try {
             }
         });
     </script>
+
+    <?php include 'includes/scroll-to-top.php'; ?>
 </body>
 </html>

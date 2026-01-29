@@ -204,6 +204,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.hash = targetId;
             }
 
+            // Special handling for contact link - highlight the contact information
+            if (targetId === '#contact') {
+                // Add temporary highlight effect to contact information specifically
+                const contactInfo = targetSection.querySelector('.minimalist-contact-info') ||
+                                  targetSection.querySelector('.contact-info') ||
+                                  targetSection.querySelector('ul') ||
+                                  targetSection;
+                contactInfo.classList.add('contact-highlighted');
+                setTimeout(() => {
+                    contactInfo.classList.remove('contact-highlighted');
+                }, 2000); // Remove highlight after 2 seconds
+            }
+
             // Close mobile menu if open
             const navMenu = document.querySelector('.nav-menu');
             if (navMenu && navMenu.classList.contains('active')) {

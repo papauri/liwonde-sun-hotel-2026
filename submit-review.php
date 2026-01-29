@@ -13,6 +13,9 @@ require_once 'config/database.php';
 // Include alert system
 require_once 'includes/alert.php';
 
+// Include validation library
+require_once 'includes/validation.php';
+
 // Initialize variables
 $rooms = [];
 $selected_room_id = isset($_GET['room_id']) ? (int)$_GET['room_id'] : 0;
@@ -39,67 +42,119 @@ try {
 
 // Handle form submission via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Sanitize and validate input
-    $guest_name = trim($_POST['guest_name'] ?? '');
-    $guest_email = trim($_POST['guest_email'] ?? '');
-    $overall_rating = (int)($_POST['overall_rating'] ?? 0);
-    $review_title = trim($_POST['review_title'] ?? '');
-    $review_comment = trim($_POST['review_comment'] ?? '');
-    $review_type = trim($_POST['review_type'] ?? '');
-    $room_id = !empty($_POST['room_id']) ? (int)$_POST['room_id'] : null;
+    // Initialize validation errors array
+    $validation_errors = [];
+    $sanitized_data = [];
     
-    // Only set room_id if review_type is 'room' and room_id is provided
-    if ($review_type !== 'room') {
-        $room_id = null;
-    }
-    $service_rating = !empty($_POST['service_rating']) ? (int)$_POST['service_rating'] : null;
-    $cleanliness_rating = !empty($_POST['cleanliness_rating']) ? (int)$_POST['cleanliness_rating'] : null;
-    $location_rating = !empty($_POST['location_rating']) ? (int)$_POST['location_rating'] : null;
-    $value_rating = !empty($_POST['value_rating']) ? (int)$_POST['value_rating'] : null;
-    
-    // Server-side validation
-    $errors = [];
-    
-    if (empty($guest_name)) {
-        $errors[] = 'Guest name is required.';
-    } elseif (strlen($guest_name) < 2) {
-        $errors[] = 'Guest name must be at least 2 characters.';
+    // Validate guest_name
+    $name_validation = validateName($_POST['guest_name'] ?? '', 2, true);
+    if (!$name_validation['valid']) {
+        $validation_errors['guest_name'] = $name_validation['error'];
+    } else {
+        $sanitized_data['guest_name'] = sanitizeString($name_validation['value'], 100);
     }
     
-    if (empty($guest_email)) {
-        $errors[] = 'Guest email is required.';
-    } elseif (!filter_var($guest_email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Please enter a valid email address.';
+    // Validate guest_email
+    $email_validation = validateEmail($_POST['guest_email'] ?? '');
+    if (!$email_validation['valid']) {
+        $validation_errors['guest_email'] = $email_validation['error'];
+    } else {
+        $sanitized_data['guest_email'] = sanitizeString($email_validation['value'], 254);
     }
     
-    if ($overall_rating < 1 || $overall_rating > 5) {
-        $errors[] = 'Overall rating must be between 1 and 5 stars.';
+    // Validate overall_rating
+    $rating_validation = validateRating($_POST['overall_rating'] ?? '', true);
+    if (!$rating_validation['valid']) {
+        $validation_errors['overall_rating'] = $rating_validation['error'];
+    } else {
+        $sanitized_data['overall_rating'] = $rating_validation['value'];
     }
     
-    if (empty($review_title)) {
-        $errors[] = 'Review title is required.';
-    } elseif (strlen($review_title) < 5) {
-        $errors[] = 'Review title must be at least 5 characters.';
+    // Validate review_title
+    $title_validation = validateText($_POST['review_title'] ?? '', 5, 200, true);
+    if (!$title_validation['valid']) {
+        $validation_errors['review_title'] = $title_validation['error'];
+    } else {
+        $sanitized_data['review_title'] = sanitizeString($title_validation['value'], 200);
     }
     
-    if (empty($review_comment)) {
-        $errors[] = 'Review comment is required.';
-    } elseif (strlen($review_comment) < 20) {
-        $errors[] = 'Review comment must be at least 20 characters.';
+    // Validate review_comment
+    $comment_validation = validateText($_POST['review_comment'] ?? '', 20, 2000, true);
+    if (!$comment_validation['valid']) {
+        $validation_errors['review_comment'] = $comment_validation['error'];
+    } else {
+        $sanitized_data['review_comment'] = sanitizeString($comment_validation['value'], 2000);
     }
     
-    // Validate optional ratings if provided
-    if ($service_rating !== null && ($service_rating < 1 || $service_rating > 5)) {
-        $errors[] = 'Service rating must be between 1 and 5 stars.';
+    // Validate review_type (optional)
+    $allowed_review_types = ['', 'room', 'restaurant', 'spa', 'conference', 'gym', 'service'];
+    $type_validation = validateSelectOption($_POST['review_type'] ?? '', $allowed_review_types, false);
+    if (!$type_validation['valid']) {
+        $validation_errors['review_type'] = $type_validation['error'];
+    } else {
+        $sanitized_data['review_type'] = $type_validation['value'] ?: 'general';
     }
-    if ($cleanliness_rating !== null && ($cleanliness_rating < 1 || $cleanliness_rating > 5)) {
-        $errors[] = 'Cleanliness rating must be between 1 and 5 stars.';
+    
+    // Validate room_id (optional, only if review_type is 'room')
+    $room_id = null;
+    if ($sanitized_data['review_type'] === 'room' && !empty($_POST['room_id'])) {
+        $room_validation = validateRoomId($_POST['room_id']);
+        if (!$room_validation['valid']) {
+            $validation_errors['room_id'] = $room_validation['error'];
+        } else {
+            $room_id = $room_validation['room']['id'];
+        }
     }
-    if ($location_rating !== null && ($location_rating < 1 || $location_rating > 5)) {
-        $errors[] = 'Location rating must be between 1 and 5 stars.';
+    
+    // Validate optional ratings
+    $sanitized_data['service_rating'] = null;
+    if (!empty($_POST['service_rating'])) {
+        $service_validation = validateRating($_POST['service_rating'], false);
+        if (!$service_validation['valid']) {
+            $validation_errors['service_rating'] = $service_validation['error'];
+        } else {
+            $sanitized_data['service_rating'] = $service_validation['value'];
+        }
     }
-    if ($value_rating !== null && ($value_rating < 1 || $value_rating > 5)) {
-        $errors[] = 'Value rating must be between 1 and 5 stars.';
+    
+    $sanitized_data['cleanliness_rating'] = null;
+    if (!empty($_POST['cleanliness_rating'])) {
+        $cleanliness_validation = validateRating($_POST['cleanliness_rating'], false);
+        if (!$cleanliness_validation['valid']) {
+            $validation_errors['cleanliness_rating'] = $cleanliness_validation['error'];
+        } else {
+            $sanitized_data['cleanliness_rating'] = $cleanliness_validation['value'];
+        }
+    }
+    
+    $sanitized_data['location_rating'] = null;
+    if (!empty($_POST['location_rating'])) {
+        $location_validation = validateRating($_POST['location_rating'], false);
+        if (!$location_validation['valid']) {
+            $validation_errors['location_rating'] = $location_validation['error'];
+        } else {
+            $sanitized_data['location_rating'] = $location_validation['value'];
+        }
+    }
+    
+    $sanitized_data['value_rating'] = null;
+    if (!empty($_POST['value_rating'])) {
+        $value_validation = validateRating($_POST['value_rating'], false);
+        if (!$value_validation['valid']) {
+            $validation_errors['value_rating'] = $value_validation['error'];
+        } else {
+            $sanitized_data['value_rating'] = $value_validation['value'];
+        }
+    }
+    
+    // Check for validation errors
+    if (!empty($validation_errors)) {
+        $errors = [];
+        foreach ($validation_errors as $field => $message) {
+            $errors[] = ucfirst(str_replace('_', ' ', $field)) . ': ' . $message;
+        }
+    } else {
+        $errors = [];
     }
     
     if (empty($errors)) {
@@ -126,17 +181,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ");
             
             $stmt->execute([
-                $guest_name,
-                $guest_email,
-                $overall_rating,
-                $review_title,
-                $review_comment,
-                $review_type ?: 'general',
+                $sanitized_data['guest_name'],
+                $sanitized_data['guest_email'],
+                $sanitized_data['overall_rating'],
+                $sanitized_data['review_title'],
+                $sanitized_data['review_comment'],
+                $sanitized_data['review_type'],
                 $room_id,
-                $service_rating,
-                $cleanliness_rating,
-                $location_rating,
-                $value_rating
+                $sanitized_data['service_rating'],
+                $sanitized_data['cleanliness_rating'],
+                $sanitized_data['location_rating'],
+                $sanitized_data['value_rating']
             ]);
             
             // Set success message
@@ -174,8 +229,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit a Review | Liwonde Sun Hotel</title>
-    <meta name="description" content="Share your experience at Liwonde Sun Hotel. Submit your review and help us improve our services.">
+    <title>Submit a Review | <?php echo htmlspecialchars(getSetting('site_name', 'Liwonde Sun Hotel')); ?></title>
+    <meta name="description" content="Share your experience at <?php echo htmlspecialchars(getSetting('site_name', 'Liwonde Sun Hotel')); ?>. Submit your review and help us improve our services.">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

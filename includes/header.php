@@ -65,7 +65,7 @@
                     <li class="nav-item"><a href="/restaurant.php" class="nav-link <?php echo is_nav_active('/restaurant.php', $current_page) ? 'active' : ''; ?>"><span class="link-text">Restaurant</span></a></li>
                     <li class="nav-item"><a href="/conference.php" class="nav-link <?php echo is_nav_active('/conference.php', $current_page) ? 'active' : ''; ?>"><span class="link-text">Conference</span></a></li>
                     <li class="nav-item"><a href="/events.php" class="nav-link <?php echo is_nav_active('/events.php', $current_page) ? 'active' : ''; ?>"><span class="link-text">Events</span></a></li>
-                    <li class="nav-item"><a href="/index.php#contact" class="nav-link"><span class="link-text">Contact</span></a></li>
+                    <li class="nav-item"><a href="#contact" class="nav-link contact-link"><span class="link-text">Contact</span></a></li>
                     <li class="nav-item nav-item-cta"><a href="/booking.php" class="nav-cta"><i class="fas fa-calendar-check"></i> Book Now</a></li>
                 </ul>
                 
@@ -82,85 +82,3 @@
 
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" role="presentation"></div>
-
-     <style>
-     @media (max-width: 1190px) {
-         /* Ensure the header (and toggle button) stays above the full-screen menu */
-         .header { overflow: visible !important; padding: 10px 16px !important; }
-         /* Use flex so nav items stay visible; logo is absolutely centered */
-         .navbar { position: relative !important; display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 0 12px !important; }
-         /* Reduce inactive nav-menu stacking so header remains visible; when active, menu will be above header */
-         .nav-menu { z-index: 900 !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; }
-         .nav-menu.active { z-index: 10002 !important; }
-         .mobile-menu-overlay { z-index: 10001 !important; }
-
-         /* Mobile logo: keep the full brand (image + text + icon) centered and easy to tap */
-         .logo {
-             position: absolute !important;
-             left: 50% !important;
-             transform: translateX(-50%) !important;
-             z-index: 10003 !important;
-             display: flex !important;
-             align-items: center !important;
-             justify-content: center !important;
-             gap: 8px !important;
-             padding: 8px 10px !important;
-             border-radius: 12px !important;
-             font-size: 16px !important;
-             letter-spacing: 0.5px !important;
-             max-width: calc(100% - 132px) !important; /* leave space for menu button */
-             pointer-events: auto !important;
-         }
-
-         .logo-image {
-             height: 26px !important;
-             width: auto !important;
-             max-width: 92px !important;
-             object-fit: contain !important;
-             flex: 0 0 auto !important;
-         }
-
-         .logo-text {
-             position: relative !important;
-             z-index: 1 !important;
-             font-size: 16px !important;
-             letter-spacing: 2px !important;
-             line-height: 1.1 !important;
-             white-space: nowrap !important;
-             overflow: hidden !important;
-             text-overflow: ellipsis !important;
-             text-shadow: 0 2px 12px rgba(0,0,0,0.55) !important;
-         }
-
-         .logo-hotel-icon {
-             position: relative !important;
-             left: auto !important;
-             top: auto !important;
-             transform: none !important;
-             margin-left: 0 !important;
-             z-index: 1 !important;
-             flex: 0 0 auto !important;
-             filter: drop-shadow(0 2px 10px rgba(0,0,0,0.45)) !important;
-         }
-
-         @media (max-width: 420px) {
-             .logo-text { font-size: 14px !important; }
-             .logo-hotel-icon { display: none !important; }
-         }
-
-         /* Ensure container keeps space for button and doesn't collapse */
-         .header .container { padding-left: 12px !important; padding-right: 12px !important; }
-
-         /* Move mobile menu button to the right */
-         .mobile-menu-btn { 
-             position: relative !important; 
-             z-index: 10004 !important;
-             margin-left: auto !important; /* Push to the right */
-         }
-
-         /* Tablet horizontal menu removed.
-            Requirement: keep hamburger/mobile menu until 1190px, then desktop at 1191px+. */
-
-         /* When menu is closed it's translated off-screen; active class handles visible menu */
-     }
-     </style>

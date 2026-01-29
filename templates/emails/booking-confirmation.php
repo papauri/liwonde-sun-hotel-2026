@@ -206,7 +206,7 @@
             
             <div class="payment-info">
                 <h3>💳 Payment Information</h3>
-                <p style="margin: 0;">Payment will be collected at the hotel upon arrival. We accept cash payments only.</p>
+                <p style="margin: 0;"><?php echo getSetting('payment_policy', 'Payment will be collected at the hotel upon arrival. We accept cash payments only.'); ?></p>
                 <p style="margin: 10px 0 0 0; font-weight: 600;">Total to pay: <?php echo $total_amount; ?></p>
             </div>
             

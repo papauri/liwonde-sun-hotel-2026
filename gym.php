@@ -1,6 +1,7 @@
 <?php
 require_once 'config/database.php';
 require_once 'config/email.php';
+require_once 'includes/validation.php';
 
 // Fetch site settings
 $site_name = getSetting('site_name');
@@ -67,23 +68,89 @@ try {
 $bookingSuccess = false;
 $bookingError = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gym_booking_form'])) {
-    $fullName = trim($_POST['full_name'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $phone = trim($_POST['phone'] ?? '');
-    $date = trim($_POST['preferred_date'] ?? '');
-    $time = trim($_POST['preferred_time'] ?? '');
-    $packageChoice = trim($_POST['package_choice'] ?? '');
-    $goals = trim($_POST['goals'] ?? '');
-    $guests = trim($_POST['guests'] ?? '');
+    // Initialize validation errors array
+    $validation_errors = [];
+    $sanitized_data = [];
+    
+    // Validate full_name
+    $name_validation = validateName($_POST['full_name'] ?? '', 2, true);
+    if (!$name_validation['valid']) {
+        $validation_errors['full_name'] = $name_validation['error'];
+    } else {
+        $sanitized_data['full_name'] = sanitizeString($name_validation['value'], 100);
+    }
+    
+    // Validate email
+    $email_validation = validateEmail($_POST['email'] ?? '');
+    if (!$email_validation['valid']) {
+        $validation_errors['email'] = $email_validation['error'];
+    } else {
+        $sanitized_data['email'] = sanitizeString($email_validation['value'], 254);
+    }
+    
+    // Validate phone
+    $phone_validation = validatePhone($_POST['phone'] ?? '');
+    if (!$phone_validation['valid']) {
+        $validation_errors['phone'] = $phone_validation['error'];
+    } else {
+        $sanitized_data['phone'] = $phone_validation['sanitized'];
+    }
+    
+    // Validate preferred_date
+    $date_validation = validateDate($_POST['preferred_date'] ?? '', false, true);
+    if (!$date_validation['valid']) {
+        $validation_errors['preferred_date'] = $date_validation['error'];
+    } else {
+        $sanitized_data['preferred_date'] = $date_validation['date']->format('Y-m-d');
+    }
+    
+    // Validate preferred_time
+    $time_validation = validateTime($_POST['preferred_time'] ?? '');
+    if (!$time_validation['valid']) {
+        $validation_errors['preferred_time'] = $time_validation['error'];
+    } else {
+        $sanitized_data['preferred_time'] = $time_validation['time'];
+    }
+    
+    // Validate package_choice
+    $package_validation = validateText($_POST['package_choice'] ?? '', 1, 100, true);
+    if (!$package_validation['valid']) {
+        $validation_errors['package_choice'] = $package_validation['error'];
+    } else {
+        $sanitized_data['package_choice'] = sanitizeString($package_validation['value'], 100);
+    }
+    
+    // Validate goals (optional)
+    $goals_validation = validateText($_POST['goals'] ?? '', 0, 1000, false);
+    if (!$goals_validation['valid']) {
+        $validation_errors['goals'] = $goals_validation['error'];
+    } else {
+        $sanitized_data['goals'] = sanitizeString($goals_validation['value'], 1000);
+    }
+    
+    // Validate guests (optional)
+    $guests_validation = validateNumber($_POST['guests'] ?? '', 1, 10, false);
+    if (!$guests_validation['valid']) {
+        $validation_errors['guests'] = $guests_validation['error'];
+    } else {
+        $sanitized_data['guests'] = $guests_validation['value'] ?? 1;
+    }
+    
+    // Validate consent checkbox
     $consent = isset($_POST['consent']);
-
-    // Validation
-    if ($fullName === '' || $email === '' || $phone === '' || $date === '' || $time === '' || !$consent) {
-        $bookingError = 'Please complete all required fields and accept the consent.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $bookingError = 'Please enter a valid email address.';
+    if (!$consent) {
+        $validation_errors['consent'] = 'You must accept consent to proceed.';
+    }
+    
+    // Check for validation errors
+    if (!empty($validation_errors)) {
+        $error_messages = [];
+        foreach ($validation_errors as $field => $message) {
+            $error_messages[] = ucfirst(str_replace('_', ' ', $field)) . ': ' . $message;
+        }
+        $bookingError = implode('; ', $error_messages);
     } elseif (!filter_var($email_main, FILTER_VALIDATE_EMAIL)) {
-        $bookingError = 'Configuration error: Hotel email not properly set. Please contact the front desk.';
+        $bookingError = 'Configuration error: Hotel email not properly set. Please contact front desk.';
         error_log("Gym Booking Error: email_main is invalid: $email_main");
     } else {
         // Email to hotel admin
@@ -91,42 +158,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gym_booking_form'])) 
         $subject = 'New Gym Booking Request - ' . htmlspecialchars($site_name);
         
         $body = "A new gym booking request has been submitted:\n\n" .
-                "Name: " . htmlspecialchars($fullName) . "\n" .
-                "Email: " . htmlspecialchars($email) . "\n" .
-                "Phone: " . htmlspecialchars($phone) . "\n" .
-                "Preferred Date: " . htmlspecialchars($date) . "\n" .
-                "Preferred Time: " . htmlspecialchars($time) . "\n" .
-                "Package: " . htmlspecialchars($packageChoice) . "\n" .
-                "Number of Guests: " . htmlspecialchars($guests) . "\n" .
-                "Goals/Notes:\n" . htmlspecialchars($goals) . "\n\n" .
+                "Name: " . htmlspecialchars($sanitized_data['full_name']) . "\n" .
+                "Email: " . htmlspecialchars($sanitized_data['email']) . "\n" .
+                "Phone: " . htmlspecialchars($sanitized_data['phone']) . "\n" .
+                "Preferred Date: " . htmlspecialchars($sanitized_data['preferred_date']) . "\n" .
+                "Preferred Time: " . htmlspecialchars($sanitized_data['preferred_time']) . "\n" .
+                "Package: " . htmlspecialchars($sanitized_data['package_choice']) . "\n" .
+                "Number of Guests: " . htmlspecialchars($sanitized_data['guests'] ?? 1) . "\n" .
+                "Goals/Notes:\n" . htmlspecialchars($sanitized_data['goals'] ?? '') . "\n\n" .
                 "---\n" .
                 "This booking request was submitted from: " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\n" .
-                "Reply-To: " . htmlspecialchars($email) . "\n";
+                "Reply-To: " . htmlspecialchars($sanitized_data['email']) . "\n";
 
         $headers = [
-            'Reply-To' => htmlspecialchars($email)
+            'Reply-To' => htmlspecialchars($sanitized_data['email'])
         ];
 
         // Send email using SMTP (or mail() as fallback)
         if ($emailer->send($to, $subject, $body, $headers)) {
             $bookingSuccess = true;
-            error_log("Gym booking submitted successfully from: $email | Method: " . $emailer->get_email_method());
+            error_log("Gym booking submitted successfully from: " . $sanitized_data['email'] . " | Method: " . $emailer->get_email_method());
             
             // Send confirmation email to customer
             $customer_subject = 'Booking Request Received - ' . htmlspecialchars($site_name);
-            $customer_body = "Hi " . htmlspecialchars($fullName) . ",\n\n" .
+            $customer_body = "Hi " . htmlspecialchars($sanitized_data['full_name']) . ",\n\n" .
                            "Thank you for your gym booking request. We have received your submission and will confirm shortly.\n\n" .
                            "Details:\n" .
-                           "Package: " . htmlspecialchars($packageChoice) . "\n" .
-                           "Preferred Date: " . htmlspecialchars($date) . "\n" .
-                           "Preferred Time: " . htmlspecialchars($time) . "\n\n" .
-                           "We will contact you at: " . htmlspecialchars($phone) . "\n\n" .
+                           "Package: " . htmlspecialchars($sanitized_data['package_choice']) . "\n" .
+                           "Preferred Date: " . htmlspecialchars($sanitized_data['preferred_date']) . "\n" .
+                           "Preferred Time: " . htmlspecialchars($sanitized_data['preferred_time']) . "\n\n" .
+                           "We will contact you at: " . htmlspecialchars($sanitized_data['phone']) . "\n\n" .
                            "Best regards,\n" . htmlspecialchars($site_name) . " Team";
             
-            $emailer->send($email, $customer_subject, $customer_body);
+            $emailer->send($sanitized_data['email'], $customer_subject, $customer_body);
         } else {
-            $bookingError = 'Unable to send your request. Please try again or contact the front desk directly.';
-            error_log("Gym booking email failed. To: $to | From: $email | Subject: $subject | Error: " . $emailer->get_last_error());
+            $bookingError = 'Unable to send your request. Please try again or contact front desk directly.';
+            error_log("Gym booking email failed. To: $to | From: " . $sanitized_data['email'] . " | Subject: $subject | Error: " . $emailer->get_last_error());
         }
     }
 }
@@ -551,7 +618,7 @@ try {
             <div class="booking-modal__header">
                 <span class="booking-pill">Gym Booking</span>
                 <h3>Request a Session</h3>
-                <p>Complete the form and our team will confirm your booking via email.</p>
+                <p>Complete form and our team will confirm your booking via email.</p>
             </div>
             <form method="POST" class="booking-form" novalidate>
                 <input type="hidden" name="gym_booking_form" value="1">
@@ -644,5 +711,7 @@ try {
             if (e.key === 'Escape') closeModal();
         });
     </script>
+
+    <?php include 'includes/scroll-to-top.php'; ?>
 </body>
 </html>

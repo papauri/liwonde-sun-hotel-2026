@@ -1,57 +1,10 @@
 /* Admin Shared Styles - Liwonde Sun Hotel Admin Panel */
+/* This file contains ONLY admin-specific styles.
+   Common styles are inherited from css/style.css */
 
-/* CSS Variables */
-:root {
-    --gold: #D4AF37;
-    --navy: #0A1929;
-    --deep-navy: #050D14;
-    --cream: #fbf8f3;
-    --success: #28a745;
-    --danger: #dc3545;
-    --warning: #ffc107;
-    --info: #17a2b8;
-    --light: #f8f9fa;
-    --dark: #343a40;
-    --gray: #6c757d;
-    --gray-light: #e9ecef;
-    --border-color: #dee2e6;
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.15);
-    --radius: 8px;
-    --radius-sm: 6px;
-    --radius-lg: 12px;
-}
-
-/* Base Reset */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Poppins', sans-serif;
-    background: #f5f7fa;
-    color: #333;
-    line-height: 1.6;
-}
-
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
-    color: var(--navy);
-    margin-bottom: 1rem;
-}
-
-h1 { font-size: 2.5rem; }
-h2 { font-size: 2rem; }
-h3 { font-size: 1.75rem; }
-h4 { font-size: 1.5rem; }
-h5 { font-size: 1.25rem; }
-h6 { font-size: 1rem; }
-
-/* Header Styles */
+/* ============================================
+   ADMIN HEADER STYLES
+   ============================================ */
 .admin-header {
     background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 100%);
     color: white;
@@ -109,7 +62,9 @@ h6 { font-size: 1rem; }
     transform: translateY(-1px);
 }
 
-/* Navigation Styles */
+/* ============================================
+   ADMIN NAVIGATION STYLES
+   ============================================ */
 .admin-nav {
     background: white;
     border-bottom: 1px solid var(--border-color);
@@ -142,7 +97,9 @@ h6 { font-size: 1rem; }
     border-bottom-color: var(--gold);
 }
 
-/* Content Area - Consistent across all admin pages */
+/* ============================================
+   ADMIN CONTENT AREA
+   ============================================ */
 .content {
     padding: 32px;
     max-width: 1800px;
@@ -150,18 +107,9 @@ h6 { font-size: 1rem; }
     width: 100%;
 }
 
-/* Better table responsiveness */
-.table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin-bottom: 24px;
-}
-
-.table-responsive table {
-    min-width: 100%;
-}
-
-/* Page Header */
+/* ============================================
+   ADMIN PAGE HEADER
+   ============================================ */
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -185,7 +133,9 @@ h6 { font-size: 1rem; }
     margin-bottom: 20px;
 }
 
-/* Cards */
+/* ============================================
+   ADMIN CARDS
+   ============================================ */
 .card {
     background: white;
     border-radius: var(--radius-lg);
@@ -233,7 +183,9 @@ h6 { font-size: 1rem; }
     letter-spacing: 0.5px;
 }
 
-/* Tables */
+/* ============================================
+   ADMIN TABLES
+   ============================================ */
 .table-container {
     background: white;
     border-radius: var(--radius-lg);
@@ -275,109 +227,9 @@ h6 { font-size: 1rem; }
     background: var(--light);
 }
 
-/* Buttons */
-.btn {
-    padding: 10px 24px;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-}
-
-.btn-sm {
-    padding: 6px 16px;
-    font-size: 12px;
-}
-
-.btn-lg {
-    padding: 14px 32px;
-    font-size: 16px;
-}
-
-.btn-primary {
-    background: var(--gold);
-    color: var(--deep-navy);
-}
-
-.btn-primary:hover {
-    background: #c49b2e;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
-}
-
-.btn-success {
-    background: var(--success);
-    color: white;
-}
-
-.btn-success:hover {
-    background: #218838;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-}
-
-.btn-danger {
-    background: var(--danger);
-    color: white;
-}
-
-.btn-danger:hover {
-    background: #c82333;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-}
-
-.btn-warning {
-    background: var(--warning);
-    color: var(--dark);
-}
-
-.btn-warning:hover {
-    background: #e0a800;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
-}
-
-.btn-info {
-    background: var(--info);
-    color: white;
-}
-
-.btn-info:hover {
-    background: #138496;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
-}
-
-.btn-light {
-    background: var(--light);
-    color: var(--dark);
-}
-
-.btn-light:hover {
-    background: #e2e6ea;
-    transform: translateY(-2px);
-}
-
-.btn-dark {
-    background: var(--dark);
-    color: white;
-}
-
-.btn-dark:hover {
-    background: #23272b;
-    transform: translateY(-2px);
-}
-
-/* Badges */
+/* ============================================
+   ADMIN BADGES
+   ============================================ */
 .badge {
     display: inline-block;
     padding: 4px 12px;
@@ -443,7 +295,9 @@ h6 { font-size: 1rem; }
     color: var(--deep-navy);
 }
 
-/* Alerts */
+/* ============================================
+   ADMIN ALERTS
+   ============================================ */
 .alert {
     padding: 16px;
     border-radius: var(--radius);
@@ -478,7 +332,9 @@ h6 { font-size: 1rem; }
     border-color: #bee5eb;
 }
 
-/* Forms */
+/* ============================================
+   ADMIN FORMS
+   ============================================ */
 .form-group {
     margin-bottom: 20px;
 }
@@ -519,7 +375,9 @@ select.form-control {
     padding-right: 36px;
 }
 
-/* Modals */
+/* ============================================
+   ADMIN MODALS
+   ============================================ */
 .modal {
     display: none;
     position: fixed;
@@ -569,7 +427,9 @@ select.form-control {
     color: var(--dark);
 }
 
-/* Grid System */
+/* ============================================
+   ADMIN GRID SYSTEM
+   ============================================ */
 .grid {
     display: grid;
     gap: 24px;
@@ -579,7 +439,9 @@ select.form-control {
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
 .grid-4 { grid-template-columns: repeat(4, 1fr); }
 
-/* Utility Classes */
+/* ============================================
+   ADMIN UTILITY CLASSES
+   ============================================ */
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 .text-left { text-align: left; }
@@ -617,7 +479,9 @@ select.form-control {
 .gap-3 { gap: 1.5rem; }
 .gap-4 { gap: 2rem; }
 
-/* Responsive Design */
+/* ============================================
+   ADMIN RESPONSIVE DESIGN
+   ============================================ */
 @media (max-width: 768px) {
     .content {
         padding: 20px;
@@ -729,7 +593,9 @@ select.form-control {
     }
 }
 
-/* Room Picture Management Styles */
+/* ============================================
+   ROOM PICTURE MANAGEMENT STYLES
+   ============================================ */
 .room-image-wrapper {
     position: relative;
     display: inline-block;

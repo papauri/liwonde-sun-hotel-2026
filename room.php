@@ -555,5 +555,7 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
         fetchReviews();
     })();
     </script>
+
+    <?php include 'includes/scroll-to-top.php'; ?>
 </body>
 </html>

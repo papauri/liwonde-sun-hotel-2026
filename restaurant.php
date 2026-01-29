@@ -835,5 +835,7 @@ try {
             }
         });
     </script>
+
+    <?php include 'includes/scroll-to-top.php'; ?>
 </body>
 </html>

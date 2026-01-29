@@ -139,9 +139,13 @@ foreach ($footer_links_raw as $link) {
     <link rel="preload" href="css/style.css" as="style">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" as="style">
     
+    <!-- Session Handler -->
+    <script src="js/session-handler.js" defer></script>
+    
+    <!-- JavaScript -->
+    <script src="js/main.js" defer></script>
+    
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     
     <!-- Font Awesome -->
@@ -250,14 +254,14 @@ foreach ($footer_links_raw as $link) {
                         <span class="about-eyebrow"><?php echo htmlspecialchars($about_content['subtitle'] ?? 'Our Story'); ?></span>
                         <h2 class="about-title"><?php echo htmlspecialchars($about_content['title'] ?? 'Experience Luxury Redefined'); ?></h2>
                         <p class="about-description">
-                            <?php echo htmlspecialchars($about_content['content'] ?? 'Nestled in the heart of Malawi, Liwonde Sun Hotel offers an unparalleled luxury experience where timeless elegance meets modern comfort. For over two decades, we\'ve been creating unforgettable memories for discerning travelers from around the world.'); ?>
+                            <?php echo htmlspecialchars($about_content['content'] ?? 'Nestled in the heart of Malawi, ' . htmlspecialchars($site_name) . ' offers an unparalleled luxury experience where timeless elegance meets modern comfort. For over two decades, we\'ve been creating unforgettable memories for discerning travelers from around the world.'); ?>
                         </p>
                     <?php else: ?>
                         <span class="about-eyebrow">Our Story</span>
                         <h2 class="about-title">Experience Luxury Redefined</h2>
                         <p class="about-description">
-                            Nestled in the heart of Malawi, Liwonde Sun Hotel offers an unparalleled luxury experience 
-                            where timeless elegance meets modern comfort. For over two decades, we've been creating 
+                            Nestled in the heart of Malawi, <?php echo htmlspecialchars($site_name); ?> offers an unparalleled luxury experience
+                            where timeless elegance meets modern comfort. For over two decades, we've been creating
                             unforgettable memories for discerning travelers from around the world.
                         </p>
                     <?php endif; ?>
@@ -365,9 +369,9 @@ foreach ($footer_links_raw as $link) {
                 
                 <div class="about-image">
                     <?php if (!empty($about_content['image_url'])): ?>
-                    <img src="<?php echo htmlspecialchars(resolveImageUrl($about_content['image_url'])); ?>" alt="Liwonde Sun Hotel - Luxury Exterior" loading="lazy">
+                    <img src="<?php echo htmlspecialchars(resolveImageUrl($about_content['image_url'])); ?>" alt="<?php echo htmlspecialchars($site_name); ?> - Luxury Exterior" loading="lazy">
                     <?php else: ?>
-                    <img src="images/hotel_gallery/Outside2.png" alt="Liwonde Sun Hotel - Luxury Exterior" loading="lazy">
+                    <img src="images/hotel_gallery/Outside2.png" alt="<?php echo htmlspecialchars($site_name); ?> - Luxury Exterior" loading="lazy">
                     <?php endif; ?>
                 </div>
                     </div>
@@ -431,7 +435,7 @@ foreach ($footer_links_raw as $link) {
                         </div>
                         <?php endif; ?>
                         
-                        <div class="btn btn-primary room-cta">View &amp; Book</div>
+                        <div class="btn btn-primary room-cta">View & Book</div>
                     </div>
                 </a>
                 <?php endforeach; ?>
@@ -479,7 +483,7 @@ foreach ($footer_links_raw as $link) {
             <div class="section-header">
                 <span class="section-subtitle">Visual Journey</span>
                 <h2 class="section-title">Explore Our Hotel</h2>
-                <p class="section-description">Immerse yourself in the beauty and luxury of Liwonde Sun Hotel</p>
+                <p class="section-description">Immerse yourself in the beauty and luxury of <?php echo htmlspecialchars($site_name); ?></p>
             </div>
             
             <div class="gallery-carousel-wrapper">
@@ -567,12 +571,7 @@ foreach ($footer_links_raw as $link) {
     <!-- Footer -->
     <?php include 'includes/footer.php'; ?>
 
-    <!-- JavaScript -->
-    <script src="js/main.js" defer></script>
-    
     <!-- Scroll to Top Button -->
-    <button id="scrollToTop" class="scroll-to-top" aria-label="Scroll to top">
-        <img src="images/logo/logo.jpg" alt="<?php echo htmlspecialchars($site_name); ?> Logo" class="scroll-to-top-logo">
-    </button>
+    <?php include 'includes/scroll-to-top.php'; ?>
 </body>
 </html>

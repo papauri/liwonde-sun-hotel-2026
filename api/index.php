@@ -266,6 +266,9 @@ try {
     $auth = new ApiAuth($pdo);
     $client = $auth->authenticate();
     
+    // Define constant to allow access to endpoint files
+    define('API_ACCESS_ALLOWED', true);
+    
     // Route the request
     switch ($endpoint) {
         case 'rooms':
@@ -294,6 +297,15 @@ try {
             }
             break;
             
+        case 'site-settings':
+            // Dynamic site settings from database
+            if ($method === 'GET') {
+                require_once __DIR__ . '/site-settings.php';
+            } else {
+                ApiResponse::error('Method not allowed', 405);
+            }
+            break;
+            
         case '':
             // API documentation/info
             ApiResponse::success([
@@ -303,7 +315,8 @@ try {
                     'GET /api/rooms' => 'List available rooms',
                     'GET /api/availability' => 'Check room availability',
                     'POST /api/bookings' => 'Create a new booking',
-                    'GET /api/bookings?id={id}' => 'Get booking status'
+                    'GET /api/bookings?id={id}' => 'Get booking status',
+                    'GET /api/site-settings' => 'Get dynamic site settings'
                 ],
                 'authentication' => 'API Key required in X-API-Key header',
                 'documentation' => 'Contact admin for full API documentation'

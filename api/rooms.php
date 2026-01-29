@@ -2,10 +2,26 @@
 /**
  * Rooms API Endpoint
  * GET /api/rooms
- * 
+ *
  * Returns list of available rooms with details
  * Requires permission: rooms.read
+ *
+ * SECURITY: This file must only be accessed through api/index.php
+ * Direct access is blocked to prevent authentication bypass
  */
+
+// Prevent direct access - must be accessed through api/index.php router
+if (!defined('API_ACCESS_ALLOWED') || !isset($auth) || !isset($client)) {
+    http_response_code(403);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'error' => 'Direct access to this endpoint is not allowed',
+        'code' => 403,
+        'message' => 'Please use the API router at /api/rooms'
+    ]);
+    exit;
+}
 
 // Check permission
 if (!$auth->checkPermission($client, 'rooms.read')) {
@@ -69,10 +85,8 @@ try {
         }
         
         // Format price
-        $room['price_per_night_formatted'] = 'MWK ' . number_format($room['price_per_night'], 0);
-        
-        // Get site settings for currency
-        $currencySymbol = getSetting('currency_symbol', 'MWK');
+        $currencySymbol = getSetting('currency_symbol');
+        $room['price_per_night_formatted'] = $currencySymbol . ' ' . number_format($room['price_per_night'], 0);
         $room['currency'] = $currencySymbol;
         
         // Get gallery images for each room
@@ -101,9 +115,9 @@ try {
             'has_more' => $limit !== null ? ($offset + count($rooms) < $totalCount) : false
         ],
         'metadata' => [
-            'currency' => getSetting('currency_symbol', 'MWK'),
-            'currency_code' => getSetting('currency_code', 'MWK'),
-            'site_name' => getSetting('site_name', 'Liwonde Sun Hotel')
+            'currency' => getSetting('currency_symbol'),
+            'currency_code' => getSetting('currency_code'),
+            'site_name' => getSetting('site_name')
         ]
     ];
     
