@@ -912,7 +912,7 @@ button {
 @media (min-width: 769px) and (max-width: 1024px) {
     .hero-content {
         position: absolute;
-        top: 48%; /* Move hero-content lower on tablet */
+        top: 30%; /* Position higher to prevent overlap with controls */
         left: 0;
         right: 0;
         transform: translateY(-50%);
