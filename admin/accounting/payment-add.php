@@ -1,0 +1,800 @@
+<?php
+session_start();
+
+// Check authentication
+if (!isset($_SESSION['admin_user'])) {
+    header('Location: login.php');
+    exit;
+}
+
+require_once '../../config/database.php';
+require_once '../../config/email.php';
+require_once '../../config/invoice.php';
+require_once '../../includes/modal.php';
+require_once '../../includes/alert.php';
+
+$user = $_SESSION['admin_user'];
+$site_name = getSetting('site_name');
+$currency_symbol = getSetting('currency_symbol');
+
+// Get VAT settings
+$vatEnabled = getSetting('vat_enabled') === '1';
+$vatRate = $vatEnabled ? (float)getSetting('vat_rate') : 0;
+
+// Check if editing existing payment
+$editId = isset($_GET['edit']) ? (int)$_GET['edit'] : 0;
+$payment = null;
+
+if ($editId) {
+    $stmt = $pdo->prepare("SELECT * FROM payments WHERE id = ? AND deleted_at IS NULL");
+    $stmt->execute([$editId]);
+    $payment = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$payment) {
+        $_SESSION['alert'] = ['type' => 'error', 'message' => 'Payment not found'];
+        header('Location: payments.php');
+        exit;
+    }
+}
+
+// Get booking type and ID from query params for new payment
+$bookingType = isset($_GET['booking_type']) ? $_GET['booking_type'] : '';
+$bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+
+// Pre-fill from existing payment or query params
+if ($payment) {
+    $bookingType = $payment['booking_type'];
+    $bookingId = $payment['booking_id'];
+}
+
+// Get booking details
+$bookingDetails = null;
+$outstandingAmount = 0;
+
+if ($bookingType && $bookingId) {
+    if ($bookingType === 'room') {
+        $stmt = $pdo->prepare("
+            SELECT 
+                b.id,
+                b.booking_reference,
+                b.guest_name,
+                b.guest_email,
+                b.total_amount,
+                b.amount_paid,
+                b.amount_due,
+                b.vat_rate,
+                b.check_in_date,
+                b.check_out_date,
+                r.name as room_name
+            FROM bookings b
+            LEFT JOIN rooms r ON b.room_id = r.id
+            WHERE b.id = ?
+        ");
+        $stmt->execute([$bookingId]);
+        $bookingDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+        $outstandingAmount = $bookingDetails['amount_due'] ?? 0;
+    } elseif ($bookingType === 'conference') {
+        $stmt = $pdo->prepare("
+            SELECT 
+                ci.id,
+                ci.enquiry_reference,
+                ci.organization_name,
+                ci.contact_name,
+                ci.contact_email,
+                ci.total_amount,
+                ci.amount_paid,
+                ci.amount_due,
+                ci.vat_rate,
+                ci.start_date,
+                ci.end_date,
+                ci.deposit_required,
+                ci.deposit_paid
+            FROM conference_inquiries ci
+            WHERE ci.id = ?
+        ");
+        $stmt->execute([$bookingId]);
+        $bookingDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+        $outstandingAmount = $bookingDetails['amount_due'] ?? 0;
+    }
+}
+
+// Process form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $bookingType = $_POST['booking_type'] ?? '';
+    $bookingId = (int)($_POST['booking_id'] ?? 0);
+    $paymentAmount = (float)($_POST['payment_amount'] ?? 0);
+    $paymentDate = $_POST['payment_date'] ?? date('Y-m-d');
+    $paymentMethod = $_POST['payment_method'] ?? '';
+    $paymentStatus = $_POST['payment_status'] ?? 'pending';
+    $transactionReference = $_POST['transaction_reference'] ?? '';
+    $notes = $_POST['notes'] ?? '';
+    $processedBy = $user;
+    
+    // Validate
+    if (!$bookingType || !$bookingId || !$paymentAmount || !$paymentMethod) {
+        $_SESSION['alert'] = ['type' => 'error', 'message' => 'Please fill in all required fields'];
+    } else {
+        try {
+            if ($editId) {
+                // Update existing payment
+                $updateFields = [
+                    'payment_date = ?',
+                    'payment_amount = ?',
+                    'payment_method = ?',
+                    'payment_status = ?',
+                    'transaction_reference = ?',
+                    'notes = ?',
+                    'processed_by = ?'
+                ];
+                
+                $params = [
+                    $paymentDate,
+                    $paymentAmount,
+                    $paymentMethod,
+                    $paymentStatus,
+                    $transactionReference ?: null,
+                    $notes ?: null,
+                    $processedBy
+                ];
+                
+                // Recalculate VAT
+                $paymentVatRate = $vatRate;
+                $paymentVatAmount = $paymentAmount * ($paymentVatRate / 100);
+                $totalAmount = $paymentAmount + $paymentVatAmount;
+                
+                $updateFields[] = 'vat_rate = ?';
+                $updateFields[] = 'vat_amount = ?';
+                $updateFields[] = 'total_amount = ?';
+                $params[] = $paymentVatRate;
+                $params[] = $paymentVatAmount;
+                $params[] = $totalAmount;
+                
+                // Generate receipt number if status changed to completed
+                if ($paymentStatus === 'completed' && $payment['payment_status'] !== 'completed' && !$payment['receipt_number']) {
+                    do {
+                        $receiptNumber = 'RCP' . date('Y') . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
+                        $receiptCheck = $pdo->prepare("SELECT COUNT(*) as count FROM payments WHERE receipt_number = ?");
+                        $receiptCheck->execute([$receiptNumber]);
+                        $receiptExists = $receiptCheck->fetch(PDO::FETCH_ASSOC)['count'] > 0;
+                    } while ($receiptExists);
+                    
+                    $updateFields[] = 'receipt_number = ?';
+                    $params[] = $receiptNumber;
+                }
+                
+                $params[] = $editId;
+                
+                $pdo->beginTransaction();
+                
+                $sql = "UPDATE payments SET " . implode(', ', $updateFields) . ", updated_at = NOW() WHERE id = ?";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                
+                // Update booking totals
+                if ($bookingType === 'room') {
+                    updateRoomBookingPayments($pdo, $bookingId);
+                } else {
+                    updateConferenceEnquiryPayments($pdo, $bookingId);
+                }
+                
+                $pdo->commit();
+                
+                $_SESSION['alert'] = ['type' => 'success', 'message' => 'Payment updated successfully'];
+                header('Location: payment-details.php?id=' . $editId);
+                exit;
+                
+            } else {
+                // Create new payment
+                $paymentVatRate = $vatRate;
+                $paymentVatAmount = $paymentAmount * ($paymentVatRate / 100);
+                $totalAmount = $paymentAmount + $paymentVatAmount;
+                
+                // Generate payment reference
+                do {
+                    $paymentRef = 'PAY' . date('Ym') . strtoupper(substr(uniqid(), -6));
+                    $refCheck = $pdo->prepare("SELECT COUNT(*) as count FROM payments WHERE payment_reference = ?");
+                    $refCheck->execute([$paymentRef]);
+                    $refExists = $refCheck->fetch(PDO::FETCH_ASSOC)['count'] > 0;
+                } while ($refExists);
+                
+                // Generate receipt number if completed
+                $receiptNumber = null;
+                if ($paymentStatus === 'completed') {
+                    do {
+                        $receiptNumber = 'RCP' . date('Y') . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
+                        $receiptCheck = $pdo->prepare("SELECT COUNT(*) as count FROM payments WHERE receipt_number = ?");
+                        $receiptCheck->execute([$receiptNumber]);
+                        $receiptExists = $receiptCheck->fetch(PDO::FETCH_ASSOC)['count'] > 0;
+                    } while ($receiptExists);
+                }
+                
+                $pdo->beginTransaction();
+                
+                // Get booking reference for the payment record
+                $bookingReference = '';
+                if ($bookingType === 'room') {
+                    $refStmt = $pdo->prepare("SELECT booking_reference FROM bookings WHERE id = ?");
+                    $refStmt->execute([$bookingId]);
+                    $refData = $refStmt->fetch(PDO::FETCH_ASSOC);
+                    $bookingReference = $refData['booking_reference'] ?? '';
+                } elseif ($bookingType === 'conference') {
+                    $refStmt = $pdo->prepare("SELECT enquiry_reference FROM conference_inquiries WHERE id = ?");
+                    $refStmt->execute([$bookingId]);
+                    $refData = $refStmt->fetch(PDO::FETCH_ASSOC);
+                    $bookingReference = $refData['enquiry_reference'] ?? '';
+                }
+                
+                $stmt = $pdo->prepare("
+                    INSERT INTO payments (
+                        payment_reference, booking_type, booking_id, booking_reference, payment_date,
+                        payment_amount, vat_rate, vat_amount, total_amount,
+                        payment_method, payment_status, transaction_reference,
+                        receipt_number, processed_by, notes
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                
+                $stmt->execute([
+                    $paymentRef,
+                    $bookingType,
+                    $bookingId,
+                    $bookingReference,
+                    $paymentDate,
+                    $paymentAmount,
+                    $paymentVatRate,
+                    $paymentVatAmount,
+                    $totalAmount,
+                    $paymentMethod,
+                    $paymentStatus,
+                    $transactionReference ?: null,
+                    $receiptNumber,
+                    $processedBy,
+                    $notes ?: null
+                ]);
+                
+                $newPaymentId = $pdo->lastInsertId();
+                
+                // Update booking totals
+                if ($bookingType === 'room') {
+                    updateRoomBookingPayments($pdo, $bookingId);
+                } else {
+                    updateConferenceEnquiryPayments($pdo, $bookingId);
+                }
+                
+                $pdo->commit();
+                
+                // Send payment confirmation email for room bookings
+                if ($bookingType === 'room' && $paymentStatus === 'completed') {
+                    try {
+                        $email_result = sendPaymentInvoiceEmail($bookingId);
+                        if (!$email_result['success']) {
+                            error_log("Failed to send room payment invoice email: " . $email_result['message']);
+                        } else {
+                            $logMsg = "Room payment invoice email sent successfully";
+                            if (isset($email_result['preview_url'])) {
+                                $logMsg .= " - Preview: " . $email_result['preview_url'];
+                            }
+                            error_log($logMsg);
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error sending room payment invoice email: " . $e->getMessage());
+                    }
+                }
+                
+                // Send payment confirmation email for conference bookings
+                if ($bookingType === 'conference' && $paymentStatus === 'completed') {
+                    try {
+                        // Fetch conference enquiry details
+                        $enquiryStmt = $pdo->prepare("
+                            SELECT ci.*, cr.name as room_name
+                            FROM conference_inquiries ci
+                            LEFT JOIN conference_rooms cr ON ci.conference_room_id = cr.id
+                            WHERE ci.id = ?
+                        ");
+                        $enquiryStmt->execute([$bookingId]);
+                        $enquiry = $enquiryStmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        if ($enquiry) {
+                            $payment_data = [
+                                'id' => $enquiry['id'],
+                                'inquiry_reference' => $enquiry['inquiry_reference'],
+                                'conference_room_id' => $enquiry['conference_room_id'],
+                                'company_name' => $enquiry['company_name'],
+                                'contact_person' => $enquiry['contact_person'],
+                                'email' => $enquiry['email'],
+                                'phone' => $enquiry['phone'],
+                                'event_date' => $enquiry['event_date'],
+                                'start_time' => $enquiry['start_time'],
+                                'end_time' => $enquiry['end_time'],
+                                'number_of_attendees' => $enquiry['number_of_attendees'],
+                                'event_type' => $enquiry['event_type'],
+                                'special_requirements' => $enquiry['special_requirements'],
+                                'catering_required' => $enquiry['catering_required'],
+                                'av_equipment' => $enquiry['av_equipment'],
+                                'total_amount' => $enquiry['total_amount'],
+                                'payment_amount' => $paymentAmount,
+                                'payment_date' => $paymentDate,
+                                'payment_method' => $paymentMethod,
+                                'payment_reference' => $paymentRef
+                            ];
+                            
+                            $email_result = sendConferencePaymentEmail($payment_data);
+                            if (!$email_result['success']) {
+                                error_log("Failed to send conference payment email: " . $email_result['message']);
+                            } else {
+                                $logMsg = "Conference payment email processed";
+                                if (isset($email_result['preview_url'])) {
+                                    $logMsg .= " - Preview: " . $email_result['preview_url'];
+                                }
+                                error_log($logMsg);
+                            }
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error sending conference payment email: " . $e->getMessage());
+                    }
+                }
+                
+                $_SESSION['alert'] = ['type' => 'success', 'message' => 'Payment recorded successfully'];
+                header('Location: payment-details.php?id=' . $newPaymentId);
+                exit;
+            }
+            
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $_SESSION['alert'] = ['type' => 'error', 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+}
+
+// Helper functions
+function updateRoomBookingPayments($pdo, $bookingId) {
+    $bookingStmt = $pdo->prepare("SELECT total_amount FROM bookings WHERE id = ?");
+    $bookingStmt->execute([$bookingId]);
+    $booking = $bookingStmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$booking) return;
+    
+    $totalAmount = (float)$booking['total_amount'];
+    
+    $paidStmt = $pdo->prepare("
+        SELECT 
+            SUM(CASE WHEN payment_status = 'completed' THEN total_amount ELSE 0 END) as paid,
+            SUM(CASE WHEN payment_status = 'completed' THEN vat_amount ELSE 0 END) as vat_paid
+        FROM payments
+        WHERE booking_type = 'room' 
+        AND booking_id = ? 
+        AND deleted_at IS NULL
+    ");
+    $paidStmt->execute([$bookingId]);
+    $paid = $paidStmt->fetch(PDO::FETCH_ASSOC);
+    
+    $amountPaid = (float)($paid['paid'] ?? 0);
+    $vatPaid = (float)($paid['vat_paid'] ?? 0);
+    $amountDue = max(0, $totalAmount - $amountPaid);
+    
+    $lastPaymentStmt = $pdo->prepare("
+        SELECT MAX(payment_date) as last_payment_date
+        FROM payments
+        WHERE booking_type = 'room' 
+        AND booking_id = ? 
+        AND payment_status = 'completed'
+        AND deleted_at IS NULL
+    ");
+    $lastPaymentStmt->execute([$bookingId]);
+    $lastPayment = $lastPaymentStmt->fetch(PDO::FETCH_ASSOC);
+    
+    $vatEnabled = getSetting('vat_enabled') === '1';
+    $vatRate = $vatEnabled ? (float)getSetting('vat_rate') : 0;
+    $vatAmount = $totalAmount * ($vatRate / 100);
+    $totalWithVat = $totalAmount + $vatAmount;
+    
+    $updateStmt = $pdo->prepare("
+        UPDATE bookings 
+        SET amount_paid = ?, 
+            amount_due = ?,
+            vat_rate = ?,
+            vat_amount = ?,
+            total_with_vat = ?,
+            last_payment_date = ?
+        WHERE id = ?
+    ");
+    $updateStmt->execute([
+        $amountPaid,
+        $amountDue,
+        $vatRate,
+        $vatAmount,
+        $totalWithVat,
+        $lastPayment['last_payment_date'],
+        $bookingId
+    ]);
+}
+
+function updateConferenceEnquiryPayments($pdo, $enquiryId) {
+    $enquiryStmt = $pdo->prepare("SELECT total_amount, deposit_required FROM conference_inquiries WHERE id = ?");
+    $enquiryStmt->execute([$enquiryId]);
+    $enquiry = $enquiryStmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$enquiry) return;
+    
+    $totalAmount = (float)$enquiry['total_amount'];
+    $depositRequired = (float)$enquiry['deposit_required'];
+    
+    $paidStmt = $pdo->prepare("
+        SELECT 
+            SUM(CASE WHEN payment_status = 'completed' THEN total_amount ELSE 0 END) as paid,
+            SUM(CASE WHEN payment_status = 'completed' THEN vat_amount ELSE 0 END) as vat_paid
+        FROM payments
+        WHERE booking_type = 'conference' 
+        AND booking_id = ? 
+        AND deleted_at IS NULL
+    ");
+    $paidStmt->execute([$enquiryId]);
+    $paid = $paidStmt->fetch(PDO::FETCH_ASSOC);
+    
+    $amountPaid = (float)($paid['paid'] ?? 0);
+    $vatPaid = (float)($paid['vat_paid'] ?? 0);
+    $amountDue = max(0, $totalAmount - $amountPaid);
+    $depositPaid = min($amountPaid, $depositRequired);
+    
+    $lastPaymentStmt = $pdo->prepare("
+        SELECT MAX(payment_date) as last_payment_date
+        FROM payments
+        WHERE booking_type = 'conference' 
+        AND booking_id = ? 
+        AND payment_status = 'completed'
+        AND deleted_at IS NULL
+    ");
+    $lastPaymentStmt->execute([$enquiryId]);
+    $lastPayment = $lastPaymentStmt->fetch(PDO::FETCH_ASSOC);
+    
+    $vatEnabled = getSetting('vat_enabled') === '1';
+    $vatRate = $vatEnabled ? (float)getSetting('vat_rate') : 0;
+    $vatAmount = $totalAmount * ($vatRate / 100);
+    $totalWithVat = $totalAmount + $vatAmount;
+    
+    $updateStmt = $pdo->prepare("
+        UPDATE conference_inquiries 
+        SET amount_paid = ?, 
+            amount_due = ?,
+            vat_rate = ?,
+            vat_amount = ?,
+            total_with_vat = ?,
+            deposit_paid = ?,
+            last_payment_date = ?
+        WHERE id = ?
+    ");
+    $updateStmt->execute([
+        $amountPaid,
+        $amountDue,
+        $vatRate,
+        $vatAmount,
+        $totalWithVat,
+        $depositPaid,
+        $lastPayment['last_payment_date'],
+        $enquiryId
+    ]);
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $editId ? 'Edit Payment' : 'Record Payment'; ?> | <?php echo htmlspecialchars($site_name); ?> Admin</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../css/admin-styles.css">
+    
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .form-section {
+            background: white;
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+        
+        .form-section h3 {
+            margin-bottom: 20px;
+            color: var(--navy);
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--navy);
+        }
+        
+        .form-group label .required {
+            color: #dc3545;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: var(--radius);
+            font-family: inherit;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--navy);
+            box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.1);
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .booking-info {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+        }
+        
+        .booking-info h4 {
+            margin-bottom: 12px;
+            color: var(--navy);
+        }
+        
+        .booking-info p {
+            margin: 6px 0;
+            font-size: 14px;
+        }
+        
+        .booking-info strong {
+            color: var(--navy);
+        }
+        
+        .calculation-preview {
+            background: #e7f3ff;
+            padding: 16px;
+            border-radius: var(--radius);
+            margin-top: 16px;
+        }
+        
+        .calculation-preview h4 {
+            margin-bottom: 12px;
+            color: var(--navy);
+        }
+        
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(13, 71, 161, 0.1);
+        }
+        
+        .calc-row:last-child {
+            border-bottom: none;
+        }
+        
+        .calc-row.total {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--navy);
+            padding-top: 12px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <?php include '../admin-header.php'; ?>
+
+    <div class="content">
+        <div class="form-container">
+            <h2 class="section-title"><?php echo $editId ? 'Edit Payment' : 'Record New Payment'; ?></h2>
+            
+            <form method="POST">
+                <!-- Booking Selection -->
+                <div class="form-section">
+                    <h3><i class="fas fa-calendar-check"></i> Booking Information</h3>
+                    
+                    <?php if ($bookingDetails): ?>
+                        <div class="booking-info">
+                            <h4><?php echo ucfirst($bookingType); ?> Booking Details</h4>
+                            <?php if ($bookingType === 'room'): ?>
+                                <p><strong>Reference:</strong> <?php echo htmlspecialchars($bookingDetails['booking_reference']); ?></p>
+                                <p><strong>Guest:</strong> <?php echo htmlspecialchars($bookingDetails['guest_name']); ?></p>
+                                <p><strong>Email:</strong> <?php echo htmlspecialchars($bookingDetails['guest_email']); ?></p>
+                                <p><strong>Room:</strong> <?php echo htmlspecialchars($bookingDetails['room_name']); ?></p>
+                                <p><strong>Dates:</strong> <?php echo date('M j, Y', strtotime($bookingDetails['check_in_date'])); ?> - <?php echo date('M j, Y', strtotime($bookingDetails['check_out_date'])); ?></p>
+                                <p><strong>Total Amount:</strong> <?php echo $currency_symbol; ?><?php echo number_format($bookingDetails['total_amount'], 0); ?></p>
+                                <p><strong>Amount Paid:</strong> <?php echo $currency_symbol; ?><?php echo number_format($bookingDetails['amount_paid'], 0); ?></p>
+                                <p><strong>Amount Due:</strong> <span style="color: <?php echo $bookingDetails['amount_due'] > 0 ? '#dc3545' : '#28a745'; ?>; font-weight: 600;"><?php echo $currency_symbol; ?><?php echo number_format($bookingDetails['amount_due'], 0); ?></span></p>
+                            <?php else: ?>
+                                <p><strong>Reference:</strong> <?php echo htmlspecialchars($bookingDetails['enquiry_reference']); ?></p>
+                                <p><strong>Organization:</strong> <?php echo htmlspecialchars($bookingDetails['organization_name']); ?></p>
+                                <p><strong>Contact:</strong> <?php echo htmlspecialchars($bookingDetails['contact_name']); ?></p>
+                                <p><strong>Email:</strong> <?php echo htmlspecialchars($bookingDetails['contact_email']); ?></p>
+                                <p><strong>Dates:</strong> <?php echo date('M j, Y', strtotime($bookingDetails['start_date'])); ?> - <?php echo date('M j, Y', strtotime($bookingDetails['end_date'])); ?></p>
+                                <p><strong>Total Amount:</strong> <?php echo $currency_symbol; ?><?php echo number_format($bookingDetails['total_amount'], 0); ?></p>
+                                <p><strong>Amount Paid:</strong> <?php echo $currency_symbol; ?><?php echo number_format($bookingDetails['amount_paid'], 0); ?></p>
+                                <p><strong>Amount Due:</strong> <span style="color: <?php echo $bookingDetails['amount_due'] > 0 ? '#dc3545' : '#28a745'; ?>; font-weight: 600;"><?php echo $currency_symbol; ?><?php echo number_format($bookingDetails['amount_due'], 0); ?></span></p>
+                                <?php if ($bookingDetails['deposit_required'] > 0): ?>
+                                    <p><strong>Deposit Required:</strong> <?php echo $currency_symbol; ?><?php echo number_format($bookingDetails['deposit_required'], 0); ?> (Paid: <?php echo $currency_symbol; ?><?php echo number_format($bookingDetails['deposit_paid'], 0); ?>)</p>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <input type="hidden" name="booking_type" value="<?php echo htmlspecialchars($bookingType); ?>">
+                        <input type="hidden" name="booking_id" value="<?php echo $bookingId; ?>">
+                    <?php else: ?>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Booking Type <span class="required">*</span></label>
+                                <select name="booking_type" id="booking_type" required>
+                                    <option value="">Select type...</option>
+                                    <option value="room" <?php echo $bookingType === 'room' ? 'selected' : ''; ?>>Room Booking</option>
+                                    <option value="conference" <?php echo $bookingType === 'conference' ? 'selected' : ''; ?>>Conference Booking</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Booking ID <span class="required">*</span></label>
+                                <input type="number" name="booking_id" id="booking_id" value="<?php echo $bookingId; ?>" required>
+                                <div class="help-text">Enter the booking ID from the bookings or conference management page</div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Payment Details -->
+                <div class="form-section">
+                    <h3><i class="fas fa-money-bill-wave"></i> Payment Details</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Payment Amount <span class="required">*</span></label>
+                            <input type="number" name="payment_amount" id="payment_amount" step="0.01" min="0" value="<?php echo htmlspecialchars($payment['payment_amount'] ?? ''); ?>" required>
+                            <div class="help-text">Amount before VAT</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Payment Date <span class="required">*</span></label>
+                            <input type="date" name="payment_date" value="<?php echo htmlspecialchars($payment['payment_date'] ?? date('Y-m-d')); ?>" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Payment Method <span class="required">*</span></label>
+                            <select name="payment_method" required>
+                                <option value="">Select method...</option>
+                                <option value="cash" <?php echo ($payment['payment_method'] ?? '') === 'cash' ? 'selected' : ''; ?>>Cash</option>
+                                <option value="bank_transfer" <?php echo ($payment['payment_method'] ?? '') === 'bank_transfer' ? 'selected' : ''; ?>>Bank Transfer</option>
+                                <option value="credit_card" <?php echo ($payment['payment_method'] ?? '') === 'credit_card' ? 'selected' : ''; ?>>Credit Card</option>
+                                <option value="debit_card" <?php echo ($payment['payment_method'] ?? '') === 'debit_card' ? 'selected' : ''; ?>>Debit Card</option>
+                                <option value="mobile_money" <?php echo ($payment['payment_method'] ?? '') === 'mobile_money' ? 'selected' : ''; ?>>Mobile Money</option>
+                                <option value="cheque" <?php echo ($payment['payment_method'] ?? '') === 'cheque' ? 'selected' : ''; ?>>Cheque</option>
+                                <option value="other" <?php echo ($payment['payment_method'] ?? '') === 'other' ? 'selected' : ''; ?>>Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Payment Status <span class="required">*</span></label>
+                            <select name="payment_status" required>
+                                <option value="pending" <?php echo ($payment['payment_status'] ?? '') === 'pending' ? 'selected' : ''; ?>>Pending</option>
+                                <option value="completed" <?php echo ($payment['payment_status'] ?? '') === 'completed' ? 'selected' : ''; ?>>Completed</option>
+                                <option value="failed" <?php echo ($payment['payment_status'] ?? '') === 'failed' ? 'selected' : ''; ?>>Failed</option>
+                                <option value="refunded" <?php echo ($payment['payment_status'] ?? '') === 'refunded' ? 'selected' : ''; ?>>Refunded</option>
+                                <option value="partially_refunded" <?php echo ($payment['payment_status'] ?? '') === 'partially_refunded' ? 'selected' : ''; ?>>Partially Refunded</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Transaction Reference</label>
+                        <input type="text" name="transaction_reference" value="<?php echo htmlspecialchars($payment['transaction_reference'] ?? ''); ?>" placeholder="Bank reference, cheque number, etc.">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea name="notes" placeholder="Any additional notes about this payment..."><?php echo htmlspecialchars($payment['notes'] ?? ''); ?></textarea>
+                    </div>
+                    
+                    <!-- Calculation Preview -->
+                    <div class="calculation-preview" id="calculation-preview">
+                        <h4>Payment Calculation</h4>
+                        <div class="calc-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotal-display"><?php echo $currency_symbol; ?>0.00</span>
+                        </div>
+                        <?php if ($vatEnabled): ?>
+                            <div class="calc-row">
+                                <span>VAT (<?php echo $vatRate; ?>%):</span>
+                                <span id="vat-display"><?php echo $currency_symbol; ?>0.00</span>
+                            </div>
+                        <?php endif; ?>
+                        <div class="calc-row total">
+                            <span>Total:</span>
+                            <span id="total-display"><?php echo $currency_symbol; ?>0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <a href="payments.php" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> <?php echo $editId ? 'Update Payment' : 'Record Payment'; ?>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const paymentAmount = document.getElementById('payment_amount');
+        const subtotalDisplay = document.getElementById('subtotal-display');
+        const vatDisplay = document.getElementById('vat-display');
+        const totalDisplay = document.getElementById('total-display');
+        const vatRate = <?php echo $vatRate; ?>;
+        const currencySymbol = '<?php echo $currency_symbol; ?>';
+        const vatEnabled = <?php echo $vatEnabled ? 'true' : 'false'; ?>;
+
+        function updateCalculation() {
+            const amount = parseFloat(paymentAmount.value) || 0;
+            const vatAmount = vatEnabled ? amount * (vatRate / 100) : 0;
+            const total = amount + vatAmount;
+
+            subtotalDisplay.textContent = currencySymbol + amount.toFixed(2);
+            if (vatEnabled) {
+                vatDisplay.textContent = currencySymbol + vatAmount.toFixed(2);
+            }
+            totalDisplay.textContent = currencySymbol + total.toFixed(2);
+        }
+
+        paymentAmount.addEventListener('input', updateCalculation);
+        
+        // Initial calculation
+        if (paymentAmount.value) {
+            updateCalculation();
+        }
+    </script>
+
+</body>
+</html>

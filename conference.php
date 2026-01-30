@@ -1,5 +1,6 @@
 <?php
 require_once 'config/database.php';
+require_once 'config/email.php';
 require_once 'includes/modal.php';
 require_once 'includes/alert.php';
 require_once 'includes/validation.php';
@@ -204,6 +205,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $inquiry_success = true;
         $success_reference = $inquiry_reference;
+
+        // Send email notifications
+        $enquiry_data = [
+            'id' => $pdo->lastInsertId(),
+            'inquiry_reference' => $inquiry_reference,
+            'conference_room_id' => $room_id,
+            'company_name' => $company_name,
+            'contact_person' => $contact_person,
+            'email' => $email,
+            'phone' => $phone,
+            'event_date' => $event_date,
+            'start_time' => $start_time,
+            'end_time' => $end_time,
+            'number_of_attendees' => $attendees,
+            'event_type' => $event_type,
+            'special_requirements' => $special_requirements,
+            'catering_required' => $catering,
+            'av_equipment' => $av_equipment,
+            'total_amount' => $total_amount
+        ];
+
+        // Send enquiry confirmation email to customer
+        $email_result = sendConferenceEnquiryEmail($enquiry_data);
+        if (!$email_result['success']) {
+            error_log("Failed to send conference enquiry email: " . $email_result['message']);
+        } else {
+            $logMsg = "Conference enquiry email processed";
+            if (isset($email_result['preview_url'])) {
+                $logMsg .= " - Preview: " . $email_result['preview_url'];
+            }
+            error_log($logMsg);
+        }
+
+        // Send notification email to admin
+        $admin_result = sendConferenceAdminNotificationEmail($enquiry_data);
+        if (!$admin_result['success']) {
+            error_log("Failed to send conference admin notification: " . $admin_result['message']);
+        } else {
+            $logMsg = "Conference admin notification processed";
+            if (isset($admin_result['preview_url'])) {
+                $logMsg .= " - Preview: " . $admin_result['preview_url'];
+            }
+            error_log($logMsg);
+        }
 
     } catch (Exception $e) {
         $inquiry_error = $e->getMessage();

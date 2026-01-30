@@ -170,9 +170,65 @@ function generateInvoicePDF($booking_id) {
  * Build HTML content for invoice
  */
 function buildInvoiceHTML($booking, $invoice_number, $site_name, $email_address, $phone_number, $address, $currency_symbol) {
+    global $pdo;
+    
     $check_in = date('F j, Y', strtotime($booking['check_in_date']));
     $check_out = date('F j, Y', strtotime($booking['check_out_date']));
-    $total_amount = number_format($booking['total_amount'], 0);
+    
+    // Get VAT settings
+    $vatEnabled = getSetting('vat_enabled') === '1';
+    $vatRate = $vatEnabled ? (float)getSetting('vat_rate') : 0;
+    $vatNumber = getSetting('vat_number');
+    
+    // Get payment details for this booking
+    $paymentsStmt = $pdo->prepare("
+        SELECT * FROM payments
+        WHERE booking_type = 'room' AND booking_id = ?
+        AND payment_status = 'completed' AND deleted_at IS NULL
+        ORDER BY payment_date ASC
+    ");
+    $paymentsStmt->execute([$booking['id']]);
+    $payments = $paymentsStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Calculate totals
+    $subtotal = (float)$booking['total_amount'];
+    $vatAmount = $vatEnabled ? ($subtotal * ($vatRate / 100)) : 0;
+    $totalWithVat = $subtotal + $vatAmount;
+    
+    // Build payment details HTML
+    $paymentDetailsHTML = '';
+    if (!empty($payments)) {
+        $paymentDetailsHTML = '<div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                    <h4 style="color: #0A1929; margin-top: 0;">Payment History</h4>';
+        
+        foreach ($payments as $payment) {
+            $paymentDetailsHTML .= '<div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
+                        <span>' . date('M j, Y', strtotime($payment['payment_date'])) . ' (' . ucfirst(str_replace('_', ' ', $payment['payment_method'])) . ')</span>
+                        <span>' . $currency_symbol . ' ' . number_format($payment['total_amount'], 2) . '</span>
+                    </div>';
+        }
+        
+        $paymentDetailsHTML .= '</div>';
+    }
+    
+    // Build VAT section HTML
+    $vatSectionHTML = '';
+    if ($vatEnabled && $vatAmount > 0) {
+        $vatSectionHTML = '<div class="invoice-row">
+                    <span class="invoice-label">Subtotal (excl. VAT):</span>
+                    <span class="invoice-value">' . $currency_symbol . ' ' . number_format($subtotal, 2) . '</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">VAT (' . number_format($vatRate, 2) . '%):</span>
+                    <span class="invoice-value">' . $currency_symbol . ' ' . number_format($vatAmount, 2) . '</span>
+                </div>';
+        if ($vatNumber) {
+            $vatSectionHTML .= '<div class="invoice-row">
+                    <span class="invoice-label">VAT Number:</span>
+                    <span class="invoice-value">' . htmlspecialchars($vatNumber) . '</span>
+                </div>';
+        }
+    }
     
     return '
     <div class="invoice-container">
@@ -231,17 +287,23 @@ function buildInvoiceHTML($booking, $invoice_number, $site_name, $email_address,
             </div>
             
             <div class="total-section">
+                ' . $vatSectionHTML . '
                 <div class="total-row">
-                    <span>Total Amount Paid:</span>
-                    <span>' . $currency_symbol . ' ' . $total_amount . '</span>
+                    <span>Total Amount' . ($vatEnabled ? ' (incl. VAT)' : '') . ':</span>
+                    <span>' . $currency_symbol . ' ' . number_format($totalWithVat, 2) . '</span>
                 </div>
                 <p style="margin: 15px 0 0 0; color: #666; font-size: 14px;">
                     <strong>Payment Status:</strong> <span style="color: #28a745; font-weight: bold;">PAID</span>
                 </p>
                 <p style="margin: 5px 0; color: #666; font-size: 14px;">
-                    <strong>Payment Method:</strong> Cash (Paid at Hotel)
+                    <strong>Amount Paid:</strong> ' . $currency_symbol . ' ' . number_format($booking['amount_paid'] ?? $totalWithVat, 2) . '
                 </p>
+                ' . ($booking['amount_due'] > 0 ? '<p style="margin: 5px 0; color: #dc3545; font-size: 14px;">
+                    <strong>Balance Due:</strong> ' . $currency_symbol . ' ' . number_format($booking['amount_due'], 2) . '
+                </p>' : '') . '
             </div>
+            
+            ' . $paymentDetailsHTML . '
         </div>
         
         <div class="footer">
@@ -702,8 +764,77 @@ function generateConferenceInvoicePDF($enquiry_id) {
  * Build HTML content for conference invoice
  */
 function buildConferenceInvoiceHTML($enquiry, $invoice_number, $site_name, $email_address, $phone_number, $address, $currency_symbol) {
+    global $pdo;
+    
     $event_date = date('F j, Y', strtotime($enquiry['event_date']));
-    $total_amount = number_format($enquiry['total_amount'], 0);
+    
+    // Get VAT settings
+    $vatEnabled = getSetting('vat_enabled') === '1';
+    $vatRate = $vatEnabled ? (float)getSetting('vat_rate') : 0;
+    $vatNumber = getSetting('vat_number');
+    
+    // Get payment details for this conference enquiry
+    $paymentsStmt = $pdo->prepare("
+        SELECT * FROM payments
+        WHERE booking_type = 'conference' AND booking_id = ?
+        AND payment_status = 'completed' AND deleted_at IS NULL
+        ORDER BY payment_date ASC
+    ");
+    $paymentsStmt->execute([$enquiry['id']]);
+    $payments = $paymentsStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Calculate totals
+    $subtotal = (float)$enquiry['total_amount'];
+    $vatAmount = $vatEnabled ? ($subtotal * ($vatRate / 100)) : 0;
+    $totalWithVat = $subtotal + $vatAmount;
+    
+    // Build payment details HTML
+    $paymentDetailsHTML = '';
+    if (!empty($payments)) {
+        $paymentDetailsHTML = '<div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                    <h4 style="color: #0A1929; margin-top: 0;">Payment History</h4>';
+        
+        foreach ($payments as $payment) {
+            $paymentDetailsHTML .= '<div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
+                        <span>' . date('M j, Y', strtotime($payment['payment_date'])) . ' (' . ucfirst(str_replace('_', ' ', $payment['payment_method'])) . ')</span>
+                        <span>' . $currency_symbol . ' ' . number_format($payment['total_amount'], 2) . '</span>
+                    </div>';
+        }
+        
+        $paymentDetailsHTML .= '</div>';
+    }
+    
+    // Build deposit section HTML
+    $depositSectionHTML = '';
+    if (!empty($enquiry['deposit_required']) && $enquiry['deposit_required'] > 0) {
+        $depositSectionHTML = '<div class="invoice-row">
+                    <span class="invoice-label">Deposit Required:</span>
+                    <span class="invoice-value">' . $currency_symbol . ' ' . number_format($enquiry['deposit_amount'], 2) . '</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">Deposit Paid:</span>
+                    <span class="invoice-value" style="color: ' . ($enquiry['deposit_paid'] >= $enquiry['deposit_amount'] ? '#28a745' : '#dc3545') . '; font-weight: bold;">' . $currency_symbol . ' ' . number_format($enquiry['deposit_paid'] ?? 0, 2) . '</span>
+                </div>';
+    }
+    
+    // Build VAT section HTML
+    $vatSectionHTML = '';
+    if ($vatEnabled && $vatAmount > 0) {
+        $vatSectionHTML = '<div class="invoice-row">
+                    <span class="invoice-label">Subtotal (excl. VAT):</span>
+                    <span class="invoice-value">' . $currency_symbol . ' ' . number_format($subtotal, 2) . '</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">VAT (' . number_format($vatRate, 2) . '%):</span>
+                    <span class="invoice-value">' . $currency_symbol . ' ' . number_format($vatAmount, 2) . '</span>
+                </div>';
+        if ($vatNumber) {
+            $vatSectionHTML .= '<div class="invoice-row">
+                    <span class="invoice-label">VAT Number:</span>
+                    <span class="invoice-value">' . htmlspecialchars($vatNumber) . '</span>
+                </div>';
+        }
+    }
     
     return '
     <div class="invoice-container">
@@ -779,17 +910,24 @@ function buildConferenceInvoiceHTML($enquiry, $invoice_number, $site_name, $emai
             </div>
             
             <div class="total-section">
+                ' . $depositSectionHTML . '
+                ' . $vatSectionHTML . '
                 <div class="total-row">
-                    <span>Total Amount:</span>
-                    <span>' . $currency_symbol . ' ' . $total_amount . '</span>
+                    <span>Total Amount' . ($vatEnabled ? ' (incl. VAT)' : '') . ':</span>
+                    <span>' . $currency_symbol . ' ' . number_format($totalWithVat, 2) . '</span>
                 </div>
                 <p style="margin: 15px 0 0 0; color: #666; font-size: 14px;">
                     <strong>Payment Status:</strong> <span style="color: #28a745; font-weight: bold;">PAID</span>
                 </p>
                 <p style="margin: 5px 0; color: #666; font-size: 14px;">
-                    <strong>Payment Method:</strong> Cash / Bank Transfer
+                    <strong>Amount Paid:</strong> ' . $currency_symbol . ' ' . number_format($enquiry['amount_paid'] ?? $totalWithVat, 2) . '
                 </p>
+                ' . ($enquiry['amount_due'] > 0 ? '<p style="margin: 5px 0; color: #dc3545; font-size: 14px;">
+                    <strong>Balance Due:</strong> ' . $currency_symbol . ' ' . number_format($enquiry['amount_due'], 2) . '
+                </p>' : '') . '
             </div>
+            
+            ' . $paymentDetailsHTML . '
         </div>
         
         <div class="footer">

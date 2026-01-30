@@ -675,7 +675,7 @@ button {
     .hero-widget-mobile {
         display: flex;
         position: absolute;
-        top: calc(78px + env(safe-area-inset-top));
+        top: calc(100px + env(safe-area-inset-top));
         right: 14px;
         z-index: 120;
         pointer-events: auto;
@@ -734,7 +734,7 @@ button {
     width: 90%;
     margin: 0 auto;
     padding: 0;
-    padding-top: 14%;
+    padding-top: 10%;
 }
 
 .hero-subtitle {
@@ -871,7 +871,7 @@ button {
         font-size: 13px;
         color: var(--cream);
         background: rgba(10, 25, 41, 0.68);
-        padding: 8px 14px;
+        padding: 8px 4px;
         border-radius: 12px;
         border: 1px solid rgba(212, 175, 55, 0.28);
         backdrop-filter: blur(10px);
@@ -905,6 +905,23 @@ button {
     .mobile-temp {
         font-size: 9px;
         font-weight: 600;
+    }
+}
+
+/* Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .hero-content {
+        position: absolute;
+        top: 48%; /* Move hero-content lower on tablet */
+        left: 0;
+        right: 0;
+        transform: translateY(-50%);
+        z-index: 5;
+        width: 86%;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 0 14px;
+        text-align: center;
     }
 }
 

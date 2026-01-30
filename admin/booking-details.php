@@ -111,28 +111,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
     $previous_status = $booking['payment_status'];
     
     try {
+        // Get VAT settings
+        $vatEnabled = getSetting('vat_enabled') === '1';
+        $vatRate = $vatEnabled ? (float)getSetting('vat_rate') : 0;
+        
+        // Calculate amounts
+        $totalAmount = (float)$booking['total_amount'];
+        $vatAmount = $vatEnabled ? ($totalAmount * ($vatRate / 100)) : 0;
+        $totalWithVat = $totalAmount + $vatAmount;
+        
+        // Update booking payment status
         $update_stmt = $pdo->prepare("UPDATE bookings SET payment_status = ?, updated_at = NOW() WHERE id = ?");
         $update_stmt->execute([$payment_status, $booking_id]);
         
-        $_SESSION['success_message'] = 'Payment status updated.';
-        
-        // Send invoice email if payment status changed to 'paid'
+        // If marking as paid, insert into payments table and update booking amounts
         if ($payment_status === 'paid' && $previous_status !== 'paid') {
+            // Generate payment reference
+            $payment_reference = 'PAY-' . date('Y') . '-' . str_pad($booking_id, 6, '0', STR_PAD_LEFT);
+            
+            // Insert into payments table
+            $insert_payment = $pdo->prepare("
+                INSERT INTO payments (
+                    payment_reference, booking_type, booking_id, booking_reference,
+                    payment_date, payment_amount, vat_rate, vat_amount, total_amount,
+                    payment_method, payment_type, payment_status, invoice_generated,
+                    status, recorded_by
+                ) VALUES (?, 'room', ?, ?, CURDATE(), ?, ?, ?, ?, 'cash', 'full_payment', 'fully_paid', 1, 'completed', ?)
+            ");
+            $insert_payment->execute([
+                $payment_reference,
+                $booking_id,
+                $booking['booking_reference'],
+                $totalAmount,
+                $vatRate,
+                $vatAmount,
+                $totalWithVat,
+                $user['id']
+            ]);
+            
+            // Update booking payment tracking columns
+            $update_amounts = $pdo->prepare("
+                UPDATE bookings
+                SET amount_paid = ?, amount_due = 0, vat_rate = ?, vat_amount = ?,
+                    total_with_vat = ?, last_payment_date = CURDATE()
+                WHERE id = ?
+            ");
+            $update_amounts->execute([$totalWithVat, $vatRate, $vatAmount, $totalWithVat, $booking_id]);
+            
+            // Send invoice email
             require_once '../config/invoice.php';
             $invoice_result = sendPaymentInvoiceEmail($booking_id);
             
             if ($invoice_result['success']) {
-                $_SESSION['success_message'] .= ' Invoice sent successfully!';
+                $_SESSION['success_message'] = 'Payment status updated. Payment recorded. Invoice sent successfully!';
             } else {
                 error_log("Invoice email failed: " . $invoice_result['message']);
-                $_SESSION['success_message'] .= ' (Invoice email failed - check logs)';
+                $_SESSION['success_message'] = 'Payment status updated. Payment recorded. (Invoice email failed - check logs)';
             }
+        } else {
+            $_SESSION['success_message'] = 'Payment status updated.';
         }
         
         header("Location: booking-details.php?id=$booking_id");
         exit;
     } catch (PDOException $e) {
-        $error_message = 'Failed to update payment status.';
+        $error_message = 'Failed to update payment status: ' . $e->getMessage();
+        error_log("Payment update error: " . $e->getMessage());
     }
 }
 

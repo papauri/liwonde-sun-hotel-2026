@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 29, 2026 at 01:49 PM
+-- Generation Time: Jan 30, 2026 at 12:27 AM
 -- Server version: 8.0.44-cll-lve
 -- PHP Version: 8.4.16
 
@@ -161,12 +161,27 @@ CREATE TABLE `bookings` (
   `check_out_date` date NOT NULL,
   `number_of_nights` int NOT NULL,
   `total_amount` decimal(10,2) NOT NULL,
+  `amount_paid` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT 'Total amount paid so far',
+  `amount_due` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT 'Remaining amount to be paid',
+  `vat_rate` decimal(5,2) NOT NULL DEFAULT '0.00' COMMENT 'VAT rate applied',
+  `vat_amount` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT 'VAT amount',
+  `total_with_vat` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT 'Total amount including VAT',
+  `last_payment_date` date DEFAULT NULL COMMENT 'Date of last payment',
   `special_requests` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `status` enum('pending','confirmed','checked-in','checked-out','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
   `payment_status` enum('unpaid','partial','paid') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'unpaid',
+  `payment_amount` decimal(10,2) DEFAULT '0.00',
+  `payment_date` date DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `bookings`
+--
+
+INSERT INTO `bookings` (`id`, `booking_reference`, `room_id`, `guest_name`, `guest_email`, `guest_phone`, `guest_country`, `guest_address`, `number_of_guests`, `check_in_date`, `check_out_date`, `number_of_nights`, `total_amount`, `amount_paid`, `amount_due`, `vat_rate`, `vat_amount`, `total_with_vat`, `last_payment_date`, `special_requests`, `status`, `payment_status`, `payment_amount`, `payment_date`, `created_at`, `updated_at`) VALUES
+(15, 'LSH20262970', 1, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-01-30', '2026-01-31', 1, 50000.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, '', 'confirmed', 'paid', 0.00, NULL, '2026-01-29 15:32:35', '2026-01-30 00:14:26');
 
 -- --------------------------------------------------------
 
@@ -206,6 +221,17 @@ CREATE TABLE `conference_inquiries` (
   `av_equipment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `status` enum('pending','confirmed','cancelled','completed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
   `total_amount` decimal(10,2) DEFAULT NULL,
+  `amount_paid` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT 'Total amount paid so far',
+  `amount_due` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT 'Remaining amount to be paid',
+  `vat_rate` decimal(5,2) NOT NULL DEFAULT '0.00' COMMENT 'VAT rate applied',
+  `vat_amount` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT 'VAT amount',
+  `total_with_vat` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT 'Total amount including VAT',
+  `last_payment_date` date DEFAULT NULL COMMENT 'Date of last payment',
+  `deposit_required` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether deposit is required',
+  `deposit_amount` decimal(10,2) DEFAULT NULL COMMENT 'Required deposit amount',
+  `deposit_paid` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether deposit has been paid',
+  `payment_status` enum('pending','deposit_paid','full_paid','refunded') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `total_paid` decimal(10,2) DEFAULT '0.00',
   `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -215,8 +241,8 @@ CREATE TABLE `conference_inquiries` (
 -- Dumping data for table `conference_inquiries`
 --
 
-INSERT INTO `conference_inquiries` (`id`, `inquiry_reference`, `conference_room_id`, `company_name`, `contact_person`, `email`, `phone`, `event_date`, `start_time`, `end_time`, `number_of_attendees`, `event_type`, `special_requirements`, `catering_required`, `av_equipment`, `status`, `total_amount`, `notes`, `created_at`, `updated_at`) VALUES
-(1, 'CONF-2026-48238', 4, 'ProManaged', 'John', 'johnpaulchirwa@gmail.com', '0860081635', '2026-01-30', '23:27:00', '03:31:00', 12, 'Meeting', '', 1, 'TV', 'pending', 299000.00, NULL, '2026-01-25 11:27:17', '2026-01-25 11:27:17');
+INSERT INTO `conference_inquiries` (`id`, `inquiry_reference`, `conference_room_id`, `company_name`, `contact_person`, `email`, `phone`, `event_date`, `start_time`, `end_time`, `number_of_attendees`, `event_type`, `special_requirements`, `catering_required`, `av_equipment`, `status`, `total_amount`, `amount_paid`, `amount_due`, `vat_rate`, `vat_amount`, `total_with_vat`, `last_payment_date`, `deposit_required`, `deposit_amount`, `deposit_paid`, `payment_status`, `total_paid`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 'CONF-2026-48238', 4, 'ProManaged', 'John', 'johnpaulchirwa@gmail.com', '0860081635', '2026-01-30', '23:27:00', '03:31:00', 12, 'Meeting', '', 1, 'TV', 'confirmed', 299000.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, 0, NULL, 0, 'pending', 0.00, NULL, '2026-01-25 11:27:17', '2026-01-29 23:11:37');
 
 -- --------------------------------------------------------
 
@@ -806,6 +832,27 @@ INSERT INTO `menu_categories` (`id`, `name`, `slug`, `description`, `display_ord
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `migration_log`
+--
+
+CREATE TABLE `migration_log` (
+  `migration_id` int UNSIGNED NOT NULL,
+  `migration_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Unique name of the migration',
+  `migration_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When the migration was run',
+  `status` enum('pending','in_progress','completed','failed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' COMMENT 'Migration status',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log of database migrations';
+
+--
+-- Dumping data for table `migration_log`
+--
+
+INSERT INTO `migration_log` (`migration_id`, `migration_name`, `migration_date`, `status`, `created_at`) VALUES
+(1, 'payments_accounting_system', '2026-01-30 00:12:22', 'completed', '2026-01-30 00:12:22');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `newsletter_subscribers`
 --
 
@@ -877,6 +924,40 @@ INSERT INTO `page_loaders` (`id`, `page_slug`, `subtext`, `is_active`, `created_
 (6, 'room', 'Finding Your Perfect Room...', 1, '2026-01-26 08:37:51', '2026-01-26 08:37:51'),
 (7, 'booking', 'Processing Your Reservation...', 1, '2026-01-26 08:37:51', '2026-01-26 08:37:51'),
 (8, 'rooms-gallery', 'Finding Your Perfect Room...', 1, '2026-01-26 08:37:51', '2026-01-26 08:37:51');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payments`
+--
+
+CREATE TABLE `payments` (
+  `id` int UNSIGNED NOT NULL,
+  `payment_reference` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Unique payment reference like PAY-2026-000001',
+  `booking_type` enum('room','conference') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Type of booking',
+  `booking_id` int UNSIGNED NOT NULL COMMENT 'ID from bookings or conference_inquiries table',
+  `conference_id` int UNSIGNED DEFAULT NULL COMMENT 'Optional link to conference_inquiries table for conference-specific payments',
+  `booking_reference` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Reference from booking (LSH2026xxxx or CONF-2026-xxxx)',
+  `payment_date` date NOT NULL,
+  `payment_amount` decimal(10,2) NOT NULL COMMENT 'Amount paid before VAT',
+  `vat_rate` decimal(5,2) NOT NULL DEFAULT '0.00' COMMENT 'VAT percentage (e.g., 16.50 for 16.5%)',
+  `vat_amount` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT 'Calculated VAT amount',
+  `total_amount` decimal(10,2) NOT NULL COMMENT 'Total including VAT',
+  `payment_method` enum('cash','bank_transfer','mobile_money','credit_card','debit_card','cheque','other') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'cash',
+  `payment_type` enum('deposit','full_payment','partial_payment','refund','adjustment') COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Type of payment transaction',
+  `payment_reference_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Transaction ID, receipt number, or cheque number',
+  `payment_status` enum('pending','partial','fully_paid','overdue','refunded') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `invoice_generated` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether invoice has been generated',
+  `invoice_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Invoice number (e.g., INV-2026-000001)',
+  `amount` decimal(10,2) DEFAULT '0.00' COMMENT 'Additional payment amount field - coexists with payment_amount',
+  `status` enum('pending','completed','failed','refunded') COLLATE utf8mb4_unicode_ci DEFAULT 'pending' COMMENT 'Additional payment status field - coexists with payment_status',
+  `transaction_id` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Additional transaction reference field - coexists with payment_reference_number',
+  `invoice_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Path to generated invoice file',
+  `notes` text COLLATE utf8mb4_unicode_ci COMMENT 'Additional payment notes',
+  `recorded_by` int UNSIGNED DEFAULT NULL COMMENT 'Admin user who recorded the payment',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='All payment transactions for room and conference bookings';
 
 -- --------------------------------------------------------
 
@@ -1014,7 +1095,7 @@ CREATE TABLE `rooms` (
 --
 
 INSERT INTO `rooms` (`id`, `name`, `slug`, `description`, `short_description`, `price_per_night`, `size_sqm`, `max_guests`, `rooms_available`, `total_rooms`, `bed_type`, `image_url`, `badge`, `amenities`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'Presidential Suite', 'presidential-suite', 'Ultimate luxury with private terrace and exclusive service', 'Ultimate luxury with private terrace and exclusive service', 50000.00, 110, 4, 2, 2, 'King Bed', 'images/rooms/room_1_1768949756.png', 'Luxury', 'King Bed,Private Terrace,Jacuzzi,Butler Service,Living Area,Dining Area,Full Kitchen,Smart TV,Premium WiFi,Climate Control', 1, 1, 1, '2026-01-19 20:22:49', '2026-01-29 12:28:37'),
+(1, 'Presidential Suite', 'presidential-suite', 'Ultimate luxury with private terrace and exclusive service', 'Ultimate luxury with private terrace and exclusive service', 50000.00, 110, 4, 1, 2, 'King Bed', 'images/rooms/room_1_1768949756.png', 'Luxury', 'King Bed,Private Terrace,Jacuzzi,Butler Service,Living Area,Dining Area,Full Kitchen,Smart TV,Premium WiFi,Climate Control', 1, 1, 1, '2026-01-19 20:22:49', '2026-01-30 00:14:26'),
 (2, 'Executive Suite', 'executive-suite', 'Designed for discerning business travelers, featuring separate work area, premium furnishings, and personalized butler service. Perfect blend of productivity and comfort.', 'Premium executive suite with work area and butler service', 30050.00, 60, 3, 2, 5, 'King Bed', 'images\\rooms\\Deluxe Room.jpg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-01-27 16:15:26'),
 (3, 'Family Suite', 'family-suite', 'Spacious two-bedroom suite perfect for families, featuring two king beds, dual bathrooms, and separate living area. Create lasting memories in ultimate comfort.', 'Spacious family accommodation with 2 bedrooms', 30020.00, 55, 6, 5, 5, '2 King Beds', 'images\\rooms\\family_suite.jpg', 'Family', '2 King Beds,2 Bathrooms,Living Area,Kitchenette,Smart TV,Kids Welcome,Free WiFi,Climate Control', 1, 1, 3, '2026-01-19 20:22:49', '2026-01-20 17:01:46'),
 (4, 'Deluxe Suite', 'deluxe-suite', 'Luxurious suite with marble bathroom featuring jacuzzi tub, separate living area, and premium bedding. Experience sophistication and indulgence.', 'Luxury suite with jacuzzi and separate living area', 28000.00, 45, 2, 5, 5, 'King Bed', 'images/rooms/room_4_featured_1769093172.png', 'Popular', 'King Bed,Jacuzzi Tub,Living Area,Marble Bathroom,Premium Bedding,Smart TV,Mini Bar,Free WiFi', 1, 1, 4, '2026-01-19 20:22:49', '2026-01-22 14:46:13'),
@@ -1036,6 +1117,21 @@ CREATE TABLE `room_blocked_dates` (
   `created_by` int UNSIGNED DEFAULT NULL COMMENT 'Admin user who created this block',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When the block was created'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Manually blocked dates for rooms - prevents bookings on specified dates';
+
+--
+-- Dumping data for table `room_blocked_dates`
+--
+
+INSERT INTO `room_blocked_dates` (`id`, `room_id`, `block_date`, `block_type`, `reason`, `created_by`, `created_at`) VALUES
+(9, 3, '2026-01-30', 'manual', '', 2, '2026-01-29 14:18:02'),
+(10, 3, '2026-01-31', 'manual', '', 2, '2026-01-29 14:18:02'),
+(11, 3, '2026-02-01', 'manual', '', 2, '2026-01-29 14:18:03'),
+(12, 3, '2026-02-02', 'manual', '', 2, '2026-01-29 14:18:03'),
+(13, 3, '2026-02-03', 'manual', '', 2, '2026-01-29 14:18:03'),
+(14, 3, '2026-02-04', 'manual', '', 2, '2026-01-29 14:18:03'),
+(15, 3, '2026-02-05', 'manual', '', 2, '2026-01-29 14:18:03'),
+(16, 3, '2026-02-06', 'manual', '', 2, '2026-01-29 14:18:03'),
+(17, 3, '2026-02-07', 'manual', '', 2, '2026-01-29 14:18:03');
 
 -- --------------------------------------------------------
 
@@ -1078,7 +1174,13 @@ INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_grou
 (27, 'check_in_time', '2:00 PM', 'booking', '2026-01-27 12:02:11'),
 (28, 'check_out_time', '11:00 AM', 'booking', '2026-01-27 12:02:11'),
 (29, 'booking_change_policy', 'If you need to make any changes, please contact us at least 48 hours before your arrival.', 'booking', '2026-01-27 12:02:11'),
-(30, 'email_main', 'test@liwondesunhotel.com', 'contact', '2026-01-28 01:12:46');
+(30, 'email_main', 'test@liwondesunhotel.com', 'contact', '2026-01-28 01:12:46'),
+(32, 'vat_enabled', '1', 'accounting', '2026-01-30 00:09:59'),
+(33, 'vat_rate', '16.5', 'accounting', '2026-01-30 00:09:59'),
+(34, 'vat_number', 'MW123456789', 'accounting', '2026-01-30 00:09:59'),
+(35, 'payment_terms', 'Payment due upon check-in', 'accounting', '2026-01-30 00:09:59'),
+(36, 'invoice_prefix', 'INV', 'accounting', '2026-01-30 00:09:59'),
+(37, 'invoice_start_number', '1001', 'accounting', '2026-01-30 00:09:59');
 
 -- --------------------------------------------------------
 
@@ -1159,7 +1261,8 @@ ALTER TABLE `bookings`
   ADD KEY `idx_room_id` (`room_id`),
   ADD KEY `idx_guest_email` (`guest_email`),
   ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_dates` (`check_in_date`,`check_out_date`);
+  ADD KEY `idx_dates` (`check_in_date`,`check_out_date`),
+  ADD KEY `idx_payment_status` (`payment_status`);
 
 --
 -- Indexes for table `booking_notes`
@@ -1290,6 +1393,15 @@ ALTER TABLE `menu_categories`
   ADD UNIQUE KEY `slug` (`slug`);
 
 --
+-- Indexes for table `migration_log`
+--
+ALTER TABLE `migration_log`
+  ADD PRIMARY KEY (`migration_id`),
+  ADD UNIQUE KEY `idx_migration_name` (`migration_name`),
+  ADD KEY `idx_migration_date` (`migration_date`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `newsletter_subscribers`
 --
 ALTER TABLE `newsletter_subscribers`
@@ -1311,6 +1423,18 @@ ALTER TABLE `page_heroes`
 ALTER TABLE `page_loaders`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `page_slug` (`page_slug`);
+
+--
+-- Indexes for table `payments`
+--
+ALTER TABLE `payments`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `payment_reference` (`payment_reference`),
+  ADD KEY `idx_booking_type_id` (`booking_type`,`booking_id`),
+  ADD KEY `idx_payment_date` (`payment_date`),
+  ADD KEY `idx_payment_status` (`payment_status`),
+  ADD KEY `idx_recorded_by` (`recorded_by`),
+  ADD KEY `idx_conference_id` (`conference_id`);
 
 --
 -- Indexes for table `policies`
@@ -1412,7 +1536,7 @@ ALTER TABLE `api_usage_logs`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `booking_notes`
@@ -1523,6 +1647,12 @@ ALTER TABLE `menu_categories`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
+-- AUTO_INCREMENT for table `migration_log`
+--
+ALTER TABLE `migration_log`
+  MODIFY `migration_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `newsletter_subscribers`
 --
 ALTER TABLE `newsletter_subscribers`
@@ -1539,6 +1669,12 @@ ALTER TABLE `page_heroes`
 --
 ALTER TABLE `page_loaders`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `payments`
+--
+ALTER TABLE `payments`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `policies`
@@ -1574,13 +1710,13 @@ ALTER TABLE `rooms`
 -- AUTO_INCREMENT for table `room_blocked_dates`
 --
 ALTER TABLE `room_blocked_dates`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `site_settings`
 --
 ALTER TABLE `site_settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT for table `testimonials`
@@ -1603,6 +1739,12 @@ ALTER TABLE `api_usage_logs`
 --
 ALTER TABLE `gallery`
   ADD CONSTRAINT `gallery_ibfk_1` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `payments`
+--
+ALTER TABLE `payments`
+  ADD CONSTRAINT `fk_payments_admin` FOREIGN KEY (`recorded_by`) REFERENCES `admin_users` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `reviews`

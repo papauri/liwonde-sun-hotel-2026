@@ -297,6 +297,11 @@ try {
             }
             break;
             
+        case 'payments':
+        case strpos($endpoint, 'payments/') === 0:
+            require_once __DIR__ . '/payments.php';
+            break;
+            
         case 'site-settings':
             // Dynamic site settings from database
             if ($method === 'GET') {
@@ -316,6 +321,11 @@ try {
                     'GET /api/availability' => 'Check room availability',
                     'POST /api/bookings' => 'Create a new booking',
                     'GET /api/bookings?id={id}' => 'Get booking status',
+                    'GET /api/payments' => 'List all payments (with filters)',
+                    'POST /api/payments' => 'Create a new payment',
+                    'GET /api/payments/{id}' => 'Get payment details',
+                    'PUT /api/payments/{id}' => 'Update payment',
+                    'DELETE /api/payments/{id}' => 'Delete payment (soft delete)',
                     'GET /api/site-settings' => 'Get dynamic site settings'
                 ],
                 'authentication' => 'API Key required in X-API-Key header',

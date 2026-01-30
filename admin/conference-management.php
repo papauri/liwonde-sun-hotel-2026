@@ -178,13 +178,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enquiry_action'])) {
             $stmt->execute([$enquiry_id]);
             $message = 'Conference marked as completed!';
         } elseif ($action === 'send_invoice') {
-            // Send invoice email for paid conference
+            // Mark conference as paid and send invoice
             if ($enquiry) {
-                $invoice_result = sendConferenceInvoiceEmail($enquiry_id);
-                if ($invoice_result['success']) {
-                    $message = 'Invoice sent successfully to ' . htmlspecialchars($enquiry['email']);
-                } else {
-                    $error = 'Failed to send invoice: ' . $invoice_result['message'];
+                try {
+                    // Get VAT settings
+                    $vatEnabled = getSetting('vat_enabled') === '1';
+                    $vatRate = $vatEnabled ? (float)getSetting('vat_rate') : 0;
+                    
+                    // Calculate amounts
+                    $totalAmount = (float)$enquiry['total_amount'];
+                    $vatAmount = $vatEnabled ? ($totalAmount * ($vatRate / 100)) : 0;
+                    $totalWithVat = $totalAmount + $vatAmount;
+                    
+                    // Generate payment reference
+                    $payment_reference = 'PAY-' . date('Y') . '-' . str_pad($enquiry_id, 6, '0', STR_PAD_LEFT);
+                    
+                    // Insert into payments table
+                    $insert_payment = $pdo->prepare("
+                        INSERT INTO payments (
+                            payment_reference, booking_type, booking_id, booking_reference,
+                            payment_date, payment_amount, vat_rate, vat_amount, total_amount,
+                            payment_method, payment_type, payment_status, invoice_generated,
+                            status, recorded_by
+                        ) VALUES (?, 'conference', ?, ?, CURDATE(), ?, ?, ?, ?, 'cash', 'full_payment', 'fully_paid', 1, 'completed', ?)
+                    ");
+                    $insert_payment->execute([
+                        $payment_reference,
+                        $enquiry_id,
+                        $enquiry['inquiry_reference'],
+                        $totalAmount,
+                        $vatRate,
+                        $vatAmount,
+                        $totalWithVat,
+                        $user['id']
+                    ]);
+                    
+                    // Update conference enquiry payment tracking columns
+                    $update_amounts = $pdo->prepare("
+                        UPDATE conference_inquiries
+                        SET amount_paid = ?, amount_due = 0, vat_rate = ?, vat_amount = ?,
+                            total_with_vat = ?, last_payment_date = CURDATE(), payment_status = 'full_paid'
+                        WHERE id = ?
+                    ");
+                    $update_amounts->execute([$totalWithVat, $vatRate, $vatAmount, $totalWithVat, $enquiry_id]);
+                    
+                    // Send invoice email
+                    $invoice_result = sendConferenceInvoiceEmail($enquiry_id);
+                    if ($invoice_result['success']) {
+                        $message = 'Payment recorded successfully! Invoice sent to ' . htmlspecialchars($enquiry['email']);
+                    } else {
+                        $message = 'Payment recorded successfully! (Invoice email failed: ' . $invoice_result['message'] . ')';
+                    }
+                } catch (PDOException $e) {
+                    $error = 'Failed to record payment: ' . $e->getMessage();
+                    error_log("Conference payment error: " . $e->getMessage());
                 }
             } else {
                 $error = 'Enquiry not found!';

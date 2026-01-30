@@ -36,11 +36,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("UPDATE site_settings SET setting_value = ?, updated_at = NOW() WHERE setting_key = 'max_advance_booking_days'");
             $stmt->execute([$max_advance_days]);
             
-            // Clear the setting cache
+            // Clear the setting cache (both in-memory and file cache)
             global $_SITE_SETTINGS;
             if (isset($_SITE_SETTINGS['max_advance_booking_days'])) {
                 unset($_SITE_SETTINGS['max_advance_booking_days']);
             }
+            // Clear the file cache
+            deleteCache("setting_max_advance_booking_days");
             
             $message = "Maximum advance booking days updated to {$max_advance_days} days successfully!";
             

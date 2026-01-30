@@ -8,7 +8,7 @@
 session_start();
 
 // Check if user is logged in
-if (!isset($_SESSION['admin_logged_in'])) {
+if (!isset($_SESSION['admin_user'])) {
     header('Location: login.php');
     exit();
 }
@@ -62,7 +62,7 @@ try {
         SELECT rbd.*, r.name as room_name
         FROM room_blocked_dates rbd
         LEFT JOIN rooms r ON rbd.room_id = r.id
-        WHERE rbd.block_date >= ? AND rbd.block_date <= ?
+        WHERE rbd.block_date >= :start_date AND rbd.block_date <= :end_date
         ORDER BY rbd.block_date ASC, rbd.room_id ASC
     ");
     $stmt->execute(['start_date' => $startDate, 'end_date' => $endDate]);

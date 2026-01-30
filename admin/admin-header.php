@@ -33,6 +33,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <li><a href="menu-management.php" class="<?php echo $current_page === 'menu-management.php' ? 'active' : ''; ?>"><i class="fas fa-utensils"></i> Menu</a></li>
         <li><a href="events-management.php" class="<?php echo $current_page === 'events-management.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
         <li><a href="reviews.php" class="<?php echo $current_page === 'reviews.php' ? 'active' : ''; ?>"><i class="fas fa-star"></i> Reviews</a></li>
+        <li><a href="accounting/dashboard.php" class="<?php echo $current_page === 'dashboard.php' && strpos($_SERVER['PHP_SELF'], 'accounting') !== false ? 'active' : ''; ?>"><i class="fas fa-calculator"></i> Accounting</a></li>
+        <li><a href="accounting/payments.php" class="<?php echo $current_page === 'payments.php' ? 'active' : ''; ?>"><i class="fas fa-money-bill-wave"></i> Payments</a></li>
+        <li><a href="accounting/payment-add.php" class="<?php echo $current_page === 'payment-add.php' ? 'active' : ''; ?>"><i class="fas fa-plus-circle"></i> Add Payment</a></li>
+        <li><a href="accounting/reports.php" class="<?php echo $current_page === 'reports.php' ? 'active' : ''; ?>"><i class="fas fa-chart-bar"></i> Reports</a></li>
         <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
         <li><a href="booking-settings.php" class="<?php echo $current_page === 'booking-settings.php' ? 'active' : ''; ?>"><i class="fas fa-cog"></i> Booking Settings</a></li>
     </ul>
