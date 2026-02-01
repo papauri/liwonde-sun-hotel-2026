@@ -500,9 +500,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         <select name="filter_status">
                             <option value="all" <?php echo $filter_status === 'all' ? 'selected' : ''; ?>>All Statuses</option>
                             <option value="pending" <?php echo $filter_status === 'pending' ? 'selected' : ''; ?>>Pending</option>
-                            <option value="partial" <?php echo $filter_status === 'partial' ? 'selected' : ''; ?>>Partial</option>
-                            <option value="fully_paid" <?php echo $filter_status === 'fully_paid' ? 'selected' : ''; ?>>Fully Paid</option>
-                            <option value="overdue" <?php echo $filter_status === 'overdue' ? 'selected' : ''; ?>>Overdue</option>
+                            <option value="pending" <?php echo $filter_status === 'pending' ? 'selected' : ''; ?>>Pending</option>
+                            <option value="completed" <?php echo $filter_status === 'completed' ? 'selected' : ''; ?>>Completed</option>
+                            <option value="failed" <?php echo $filter_status === 'failed' ? 'selected' : ''; ?>>Failed</option>
+                            <option value="refunded" <?php echo $filter_status === 'refunded' ? 'selected' : ''; ?>>Refunded</option>
+                            <option value="partially_refunded" <?php echo $filter_status === 'partially_refunded' ? 'selected' : ''; ?>>Partially Refunded</option>
                         </select>
                     </div>
                     <div class="filter-group">

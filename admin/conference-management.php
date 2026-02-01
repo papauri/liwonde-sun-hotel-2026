@@ -226,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enquiry_action'])) {
                             payment_date, payment_amount, vat_rate, vat_amount, total_amount,
                             payment_method, payment_type, payment_status, invoice_generated,
                             status, recorded_by
-                        ) VALUES (?, 'conference', ?, ?, CURDATE(), ?, ?, ?, ?, 'cash', 'full_payment', 'fully_paid', 1, 'completed', ?)
+                        ) VALUES (?, 'conference', ?, ?, CURDATE(), ?, ?, ?, ?, 'cash', 'full_payment', 'completed', 1, 'completed', ?)
                     ");
                     $insert_payment->execute([
                         $payment_reference,

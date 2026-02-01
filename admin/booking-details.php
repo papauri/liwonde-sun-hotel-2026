@@ -150,12 +150,22 @@ if ($action && $_SERVER['REQUEST_METHOD'] === 'GET') {
     exit;
 }
 
-// Fetch booking details
+// Fetch booking details with payment status from payments table
 try {
     $stmt = $pdo->prepare("
-        SELECT b.*, r.name as room_name, r.price_per_night
+        SELECT b.*,
+               r.name as room_name,
+               r.price_per_night,
+               COALESCE(p.payment_status, b.payment_status) as actual_payment_status,
+               p.payment_reference,
+               p.payment_date as last_payment_date,
+               p.payment_amount,
+               p.vat_rate,
+               p.vat_amount,
+               p.total_amount as payment_total_with_vat
         FROM bookings b
         JOIN rooms r ON b.room_id = r.id
+        LEFT JOIN payments p ON b.id = p.booking_id AND p.booking_type = 'room' AND p.status = 'completed'
         WHERE b.id = ?
     ");
     $stmt->execute([$booking_id]);
@@ -207,8 +217,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
     $previous_status = $booking['payment_status'];
     
     try {
-        // Get VAT settings
-        $vatEnabled = getSetting('vat_enabled') === '1';
+        // Get VAT settings - more flexible check
+        $vatEnabled = in_array(getSetting('vat_enabled'), ['1', 1, true, 'true', 'on'], true);
         $vatRate = $vatEnabled ? (float)getSetting('vat_rate') : 0;
         
         // Calculate amounts
@@ -232,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
                     payment_date, payment_amount, vat_rate, vat_amount, total_amount,
                     payment_method, payment_type, payment_status, invoice_generated,
                     status, recorded_by
-                ) VALUES (?, 'room', ?, ?, CURDATE(), ?, ?, ?, ?, 'cash', 'full_payment', 'fully_paid', 1, 'completed', ?)
+                ) VALUES (?, 'room', ?, ?, CURDATE(), ?, ?, ?, ?, 'cash', 'full_payment', 'completed', 1, 'completed', ?)
             ");
             $insert_payment->execute([
                 $payment_reference,
@@ -379,6 +389,28 @@ $current_page = 'bookings.php';
             color: var(--navy);
             font-weight: 600;
         }
+        
+        /* Payment status badges from payments table */
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-payment-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status-refunded {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        .status-partially_refunded {
+            background: #e2e3e5;
+            color: #383d41;
+        }
         .tentative-info {
             background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
             border-left: 4px solid var(--gold);
@@ -501,6 +533,34 @@ $current_page = 'bookings.php';
 
     <div class="booking-details-container">
         <div class="details-card">
+            <div class="card-header">
+                <div>
+                    <h2>Booking Details</h2>
+                    <div class="booking-ref"><?php echo htmlspecialchars($booking['booking_reference']); ?></div>
+                </div>
+                <div style="text-align: right;">
+                    <small style="color: #666; font-size: 12px;">
+                        <i class="fas fa-clock"></i> Created: <?php echo date('M j, Y \a\t g:i A', strtotime($booking['created_at'])); ?>
+                    </small>
+                    <?php if ($booking['updated_at'] && $booking['updated_at'] != $booking['created_at']): ?>
+                        <br><small style="color: #999; font-size: 11px;">
+                            <i class="fas fa-edit"></i> Updated: <?php echo date('M j, Y \a\t g:i A', strtotime($booking['updated_at'])); ?>
+                        </small>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <label>Guest Name</label>
+                    <div class="value"><?php echo htmlspecialchars($booking['guest_name']); ?></div>
+                </div>
+                <div class="detail-item">
+                    <label>Email</label>
+                    <div class="value"><?php echo htmlspecialchars($booking['guest_email']); ?></div>
+                </div>
+                <div class="detail-item">
+                    <label>Phone</label>
                     <div class="value"><?php echo htmlspecialchars($booking['guest_phone']); ?></div>
                 </div>
                 <div class="detail-item">
@@ -544,16 +604,47 @@ $current_page = 'bookings.php';
                 <div class="detail-item">
                     <label>Payment Status</label>
                     <div class="value">
+                        <span class="status-badge status-<?php echo $booking['actual_payment_status']; ?>">
+                            <?php
+                                $status = $booking['actual_payment_status'];
+                                $status_labels = [
+                                    'paid' => 'Paid',
+                                    'unpaid' => 'Unpaid',
+                                    'partial' => 'Partial',
+                                    'completed' => 'Paid',
+                                    'pending' => 'Pending',
+                                    'failed' => 'Failed',
+                                    'refunded' => 'Refunded',
+                                    'partially_refunded' => 'Partial Refund'
+                                ];
+                                echo $status_labels[$status] ?? ucfirst($status);
+                            ?>
+                        </span>
+                        <?php if ($booking['payment_reference']): ?>
+                            <br><small style="color: #666; font-size: 11px; margin-top: 4px; display: block;">
+                                <i class="fas fa-receipt"></i> <?php echo htmlspecialchars($booking['payment_reference']); ?>
+                                <?php if ($booking['last_payment_date']): ?>
+                                    <br><i class="fas fa-calendar"></i> <?php echo date('M j, Y \a\t g:i A', strtotime($booking['last_payment_date'] . ' 12:00:00')); ?>
+                                <?php endif; ?>
+                            </small>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <?php if ($booking['payment_status'] !== 'paid'): ?>
+                <div class="detail-item">
+                    <label>Update Payment</label>
+                    <div class="value">
                         <form method="POST" style="display: inline;">
                             <select name="payment_status" class="form-control" onchange="this.form.submit()">
-                                <option value="unpaid" <?php echo $booking['payment_status'] == 'unpaid' ? 'selected' : ''; ?>>Unpaid</option>
-                                <option value="partial" <?php echo $booking['payment_status'] == 'partial' ? 'selected' : ''; ?>>Partial</option>
-                                <option value="paid" <?php echo $booking['payment_status'] == 'paid' ? 'selected' : ''; ?>>Paid</option>
+                                <option value="">Mark as Paid...</option>
+                                <option value="paid">Mark Paid</option>
                             </select>
                             <input type="hidden" name="update_payment" value="1">
                         </form>
                     </div>
                 </div>
+                <?php endif; ?>
             </div>
 
             <?php

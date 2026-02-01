@@ -194,8 +194,8 @@ function buildInvoiceHTML($booking, $invoice_number, $site_name, $email_address,
     $check_in = date('F j, Y', strtotime($booking['check_in_date']));
     $check_out = date('F j, Y', strtotime($booking['check_out_date']));
     
-    // Get VAT settings
-    $vatEnabled = getSetting('vat_enabled') === '1';
+    // Get VAT settings - more flexible check
+    $vatEnabled = in_array(getSetting('vat_enabled'), ['1', 1, true, 'true', 'on'], true);
     $vatRate = $vatEnabled ? (float)getSetting('vat_rate') : 0;
     $vatNumber = getSetting('vat_number');
     
@@ -887,8 +887,8 @@ function buildConferenceInvoiceHTML($enquiry, $invoice_number, $site_name, $emai
     
     $event_date = date('F j, Y', strtotime($enquiry['event_date']));
     
-    // Get VAT settings
-    $vatEnabled = getSetting('vat_enabled') === '1';
+    // Get VAT settings - more flexible check
+    $vatEnabled = in_array(getSetting('vat_enabled'), ['1', 1, true, 'true', 'on'], true);
     $vatRate = $vatEnabled ? (float)getSetting('vat_rate') : 0;
     $vatNumber = getSetting('vat_number');
     

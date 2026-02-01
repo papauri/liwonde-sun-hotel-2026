@@ -224,14 +224,19 @@ $totalPages = ceil($total / $limit);
             color: #004085;
         }
         
-        .badge-fully_paid {
+        .badge-completed {
             background: #d4edda;
             color: #155724;
         }
         
-        .badge-overdue {
+        .badge-failed {
             background: #f8d7da;
             color: #721c24;
+        }
+        
+        .badge-partially_refunded {
+            background: #e2e3e5;
+            color: #383d41;
         }
         
         .badge-refunded {
@@ -332,9 +337,9 @@ $totalPages = ceil($total / $limit);
         $summaryStmt = $pdo->prepare("
             SELECT
                 COUNT(*) as total_payments,
-                SUM(CASE WHEN payment_status = 'fully_paid' THEN total_amount ELSE 0 END) as total_collected,
-                SUM(CASE WHEN payment_status = 'pending' THEN total_amount ELSE 0 END) as total_pending,
-                SUM(CASE WHEN payment_status = 'refunded' THEN total_amount ELSE 0 END) as total_refunded
+                COALESCE(SUM(CASE WHEN payment_status = 'completed' THEN total_amount ELSE 0 END), 0) as total_collected,
+                COALESCE(SUM(CASE WHEN payment_status = 'pending' THEN total_amount ELSE 0 END), 0) as total_pending,
+                COALESCE(SUM(CASE WHEN payment_status = 'refunded' THEN total_amount ELSE 0 END), 0) as total_refunded
             FROM payments
         ");
         $summaryStmt->execute();
@@ -382,10 +387,10 @@ $totalPages = ceil($total / $limit);
                     <select name="status">
                         <option value="">All Statuses</option>
                         <option value="pending" <?php echo $status === 'pending' ? 'selected' : ''; ?>>Pending</option>
-                        <option value="partial" <?php echo $status === 'partial' ? 'selected' : ''; ?>>Partial</option>
-                        <option value="fully_paid" <?php echo $status === 'fully_paid' ? 'selected' : ''; ?>>Fully Paid</option>
-                        <option value="overdue" <?php echo $status === 'overdue' ? 'selected' : ''; ?>>Overdue</option>
+                        <option value="completed" <?php echo $status === 'completed' ? 'selected' : ''; ?>>Completed</option>
+                        <option value="failed" <?php echo $status === 'failed' ? 'selected' : ''; ?>>Failed</option>
                         <option value="refunded" <?php echo $status === 'refunded' ? 'selected' : ''; ?>>Refunded</option>
+                        <option value="partially_refunded" <?php echo $status === 'partially_refunded' ? 'selected' : ''; ?>>Partially Refunded</option>
                     </select>
                 </div>
                 
@@ -430,10 +435,11 @@ $totalPages = ceil($total / $limit);
                         <th>Reference</th>
                         <th>Booking</th>
                         <th>Type</th>
-                        <th>Date</th>
+                        <th>Payment Date</th>
                         <th>Amount</th>
                         <th>Method</th>
                         <th>Status</th>
+                        <th>Created</th>
                         <th>Receipt</th>
                         <th>Actions</th>
                     </tr>
@@ -454,7 +460,14 @@ $totalPages = ceil($total / $limit);
                                         <?php echo ucfirst($payment['booking_type']); ?>
                                     </span>
                                 </td>
-                                <td><?php echo date('M j, Y', strtotime($payment['payment_date'])); ?></td>
+                                <td>
+                                    <?php echo date('M j, Y', strtotime($payment['payment_date'])); ?>
+                                    <?php if ($payment['payment_date'] != $payment['created_at']): ?>
+                                        <br><small style="color: #666; font-size: 11px;">
+                                            <i class="fas fa-clock"></i> <?php echo date('H:i', strtotime($payment['payment_date'])); ?>
+                                        </small>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
                                     <strong><?php echo $currency_symbol; ?><?php echo number_format($payment['total_amount'], 0); ?></strong>
                                     <?php if ($payment['vat_amount'] > 0): ?>
@@ -468,6 +481,16 @@ $totalPages = ceil($total / $limit);
                                     </span>
                                 </td>
                                 <td>
+                                    <small style="color: #666; font-size: 11px;">
+                                        <i class="fas fa-clock"></i> <?php echo date('M j, H:i', strtotime($payment['created_at'])); ?>
+                                    </small>
+                                    <?php if ($payment['updated_at'] && $payment['updated_at'] != $payment['created_at']): ?>
+                                        <br><small style="color: #999; font-size: 10px;">
+                                            <i class="fas fa-edit"></i> <?php echo date('M j, H:i', strtotime($payment['updated_at'])); ?>
+                                        </small>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
                                     <?php if (!empty($payment['payment_reference_number'])): ?>
                                         <span style="color: #28a745;"><i class="fas fa-check"></i> <?php echo htmlspecialchars($payment['payment_reference_number']); ?></span>
                                     <?php else: ?>
@@ -479,7 +502,7 @@ $totalPages = ceil($total / $limit);
                                         <a href="payment-details.php?id=<?php echo $payment['id']; ?>" class="btn btn-primary btn-sm">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <?php if ($payment['payment_status'] !== 'fully_paid'): ?>
+                                        <?php if ($payment['payment_status'] !== 'completed'): ?>
                                             <a href="payment-add.php?edit=<?php echo $payment['id']; ?>" class="btn btn-warning btn-sm">
                                                 <i class="fas fa-edit"></i>
                                             </a>
@@ -490,7 +513,7 @@ $totalPages = ceil($total / $limit);
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="9" class="empty-state">
+                            <td colspan="10" class="empty-state">
                                 <i class="fas fa-inbox"></i>
                                 <p>No payments found</p>
                             </td>

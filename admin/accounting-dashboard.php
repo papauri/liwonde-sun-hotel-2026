@@ -7,20 +7,21 @@ if (!isset($_SESSION['admin_user'])) {
     exit;
 }
 
-// Include admin-header first to get database connection and settings
-include 'admin-header.php';
-
+require_once '../config/database.php';
 require_once '../includes/modal.php';
 require_once '../includes/alert.php';
 
 $user = $_SESSION['admin_user'];
+$site_name = getSetting('site_name');
+$currency_symbol = getSetting('currency_symbol', 'K');
 $today = date('Y-m-d');
 $thisMonth = date('Y-m');
 $thisYear = date('Y');
 
-// Get date filters
-$startDate = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
-$endDate = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-t');
+// Get date filters - support "all" for no date filtering
+$showAll = isset($_GET['show_all']) && $_GET['show_all'] === '1';
+$startDate = isset($_GET['start_date']) ? $_GET['start_date'] : ($showAll ? '2000-01-01' : date('Y-m-01'));
+$endDate = isset($_GET['end_date']) ? $_GET['end_date'] : ($showAll ? '2099-12-31' : date('Y-m-t'));
 
 // Fetch accounting statistics
 try {
@@ -28,12 +29,12 @@ try {
     $financialStmt = $pdo->prepare("
         SELECT
             COUNT(*) as total_payments,
-            SUM(CASE WHEN payment_status = 'completed' THEN total_amount ELSE 0 END) as total_collected,
-            SUM(CASE WHEN payment_status = 'completed' THEN payment_amount ELSE 0 END) as total_collected_excl_vat,
-            SUM(CASE WHEN payment_status = 'completed' THEN vat_amount ELSE 0 END) as total_vat_collected,
-            SUM(CASE WHEN payment_status = 'pending' THEN total_amount ELSE 0 END) as total_pending,
-            SUM(CASE WHEN payment_status = 'refunded' THEN total_amount ELSE 0 END) as total_refunded,
-            SUM(CASE WHEN payment_status = 'partially_refunded' THEN total_amount ELSE 0 END) as total_partially_refunded
+            COALESCE(SUM(CASE WHEN payment_status = 'completed' THEN total_amount ELSE 0 END), 0) as total_collected,
+            COALESCE(SUM(CASE WHEN payment_status = 'completed' THEN payment_amount ELSE 0 END), 0) as total_collected_excl_vat,
+            COALESCE(SUM(CASE WHEN payment_status = 'completed' THEN vat_amount ELSE 0 END), 0) as total_vat_collected,
+            COALESCE(SUM(CASE WHEN payment_status = 'pending' THEN total_amount ELSE 0 END), 0) as total_pending,
+            COALESCE(SUM(CASE WHEN payment_status = 'refunded' THEN total_amount ELSE 0 END), 0) as total_refunded,
+            COALESCE(SUM(CASE WHEN payment_status = 'partially_refunded' THEN total_amount ELSE 0 END), 0) as total_partially_refunded
         FROM payments
         WHERE payment_date BETWEEN ? AND ?
     ");
@@ -44,9 +45,9 @@ try {
     $roomStmt = $pdo->prepare("
         SELECT
             COUNT(DISTINCT p.booking_id) as total_bookings_with_payments,
-            SUM(CASE WHEN p.payment_status = 'completed' THEN p.total_amount ELSE 0 END) as room_collected,
-            SUM(CASE WHEN p.payment_status = 'completed' THEN p.vat_amount ELSE 0 END) as room_vat_collected,
-            SUM(b.amount_due) as total_room_outstanding
+            COALESCE(SUM(CASE WHEN p.payment_status = 'completed' THEN p.total_amount ELSE 0 END), 0) as room_collected,
+            COALESCE(SUM(CASE WHEN p.payment_status = 'completed' THEN p.vat_amount ELSE 0 END), 0) as room_vat_collected,
+            COALESCE(SUM(b.amount_due), 0) as total_room_outstanding
         FROM payments p
         LEFT JOIN bookings b ON p.booking_type = 'room' AND p.booking_id = b.id
         WHERE p.booking_type = 'room'
@@ -59,9 +60,9 @@ try {
     $confStmt = $pdo->prepare("
         SELECT
             COUNT(DISTINCT p.booking_id) as total_conferences_with_payments,
-            SUM(CASE WHEN p.payment_status = 'completed' THEN p.total_amount ELSE 0 END) as conf_collected,
-            SUM(CASE WHEN p.payment_status = 'completed' THEN p.vat_amount ELSE 0 END) as conf_vat_collected,
-            SUM(ci.amount_due) as total_conf_outstanding
+            COALESCE(SUM(CASE WHEN p.payment_status = 'completed' THEN p.total_amount ELSE 0 END), 0) as conf_collected,
+            COALESCE(SUM(CASE WHEN p.payment_status = 'completed' THEN p.vat_amount ELSE 0 END), 0) as conf_vat_collected,
+            COALESCE(SUM(ci.amount_due), 0) as total_conf_outstanding
         FROM payments p
         LEFT JOIN conference_inquiries ci ON p.booking_type = 'conference' AND p.booking_id = ci.id
         WHERE p.booking_type = 'conference'
@@ -75,7 +76,7 @@ try {
         SELECT
             payment_method,
             COUNT(*) as count,
-            SUM(CASE WHEN payment_status = 'completed' THEN total_amount ELSE 0 END) as total
+            COALESCE(SUM(CASE WHEN payment_status = 'completed' THEN total_amount ELSE 0 END), 0) as total
         FROM payments
         WHERE payment_date BETWEEN ? AND ?
         GROUP BY payment_method
@@ -120,8 +121,8 @@ try {
     ");
     $outstandingSummary = $outstandingStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // VAT settings
-    $vatEnabled = getSetting('vat_enabled') === '1';
+    // VAT settings - more flexible check
+    $vatEnabled = in_array(getSetting('vat_enabled'), ['1', 1, true, 'true', 'on'], true);
     $vatRate = getSetting('vat_rate');
     $vatNumber = getSetting('vat_number');
 
@@ -202,28 +203,39 @@ try {
         }
         
         .stat-card.primary {
-            background: linear-gradient(135deg, var(--navy) 0%, #1a3a5c 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
         }
         
         .stat-card.success {
-            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             color: white;
+            box-shadow: 0 8px 20px rgba(17, 153, 142, 0.3);
         }
         
         .stat-card.warning {
-            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-            color: #333;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(245, 87, 108, 0.3);
         }
         
         .stat-card.danger {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            color: white;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: #333;
+            box-shadow: 0 8px 20px rgba(250, 112, 154, 0.3);
         }
         
         .stat-card.info {
-            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             color: white;
+            box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);
+        }
+        
+        .stat-card.gold {
+            background: linear-gradient(135deg, var(--gold) 0%, #c49b2e 100%);
+            color: var(--deep-navy);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
         }
         
         .stat-label {
@@ -415,6 +427,8 @@ try {
 </head>
 <body>
 
+    <?php include 'admin-header.php'; ?>
+
     <div class="content">
         <div class="accounting-header">
             <div>
@@ -424,15 +438,18 @@ try {
             
             <form method="GET" class="date-filter">
                 <label>
-                    From: <input type="date" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>">
+                    From: <input type="date" name="start_date" value="<?php echo htmlspecialchars($showAll ? '' : $startDate); ?>">
                 </label>
                 <label>
-                    To: <input type="date" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>">
+                    To: <input type="date" name="end_date" value="<?php echo htmlspecialchars($showAll ? '' : $endDate); ?>">
                 </label>
                 <button type="submit">
                     <i class="fas fa-filter"></i> Apply Filter
                 </button>
-                <a href="accounting-dashboard.php" style="color: var(--navy); text-decoration: none; font-size: 14px;">Reset</a>
+                <a href="accounting-dashboard.php?show_all=1" style="color: var(--navy); text-decoration: none; font-size: 14px; margin-left: 10px;">
+                    <i class="fas fa-calendar-alt"></i> Show All Time
+                </a>
+                <a href="accounting-dashboard.php" style="color: var(--navy); text-decoration: none; font-size: 14px; margin-left: 10px;">Reset</a>
             </form>
         </div>
 
@@ -583,10 +600,11 @@ try {
                         <th>Reference</th>
                         <th>Booking</th>
                         <th>Type</th>
-                        <th>Date</th>
+                        <th>Payment Date</th>
                         <th>Amount</th>
                         <th>Method</th>
                         <th>Status</th>
+                        <th>Created</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -601,7 +619,12 @@ try {
                                         <?php echo ucfirst($payment['booking_type']); ?>
                                     </span>
                                 </td>
-                                <td><?php echo date('M j, Y', strtotime($payment['payment_date'])); ?></td>
+                                <td>
+                                    <?php echo date('M j, Y', strtotime($payment['payment_date'])); ?>
+                                    <br><small style="color: #666; font-size: 11px;">
+                                        <i class="fas fa-clock"></i> <?php echo date('H:i', strtotime($payment['payment_date'])); ?>
+                                    </small>
+                                </td>
                                 <td>
                                     <?php echo $currency_symbol; ?><?php echo number_format($payment['total_amount'], 0); ?>
                                     <?php if ($payment['vat_amount'] > 0): ?>
@@ -615,6 +638,16 @@ try {
                                     </span>
                                 </td>
                                 <td>
+                                    <small style="color: #666; font-size: 11px;">
+                                        <i class="fas fa-clock"></i> <?php echo date('M j, H:i', strtotime($payment['created_at'])); ?>
+                                    </small>
+                                    <?php if ($payment['updated_at'] && $payment['updated_at'] != $payment['created_at']): ?>
+                                        <br><small style="color: #999; font-size: 10px;">
+                                            <i class="fas fa-edit"></i> <?php echo date('M j, H:i', strtotime($payment['updated_at'])); ?>
+                                        </small>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
                                     <a href="payment-details.php?id=<?php echo $payment['id']; ?>" class="btn btn-primary btn-sm">
                                         <i class="fas fa-eye"></i> View
                                     </a>
@@ -623,7 +656,7 @@ try {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" class="empty-state">
+                            <td colspan="9" class="empty-state">
                                 <i class="fas fa-inbox"></i>
                                 <p>No payments recorded yet</p>
                             </td>

@@ -297,8 +297,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $total_amount = (float)$row['total_amount'];
             $booking_reference = $row['booking_reference'];
             
-            // Get VAT settings
-            $vatEnabled = getSetting('vat_enabled') === '1';
+            // Get VAT settings - more flexible check
+            $vatEnabled = in_array(getSetting('vat_enabled'), ['1', 1, true, 'true', 'on'], true);
             $vatRate = $vatEnabled ? (float)getSetting('vat_rate') : 0;
             
             // Calculate amounts
@@ -322,7 +322,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         payment_date, payment_amount, vat_rate, vat_amount, total_amount,
                         payment_method, payment_type, payment_status, invoice_generated,
                         status, recorded_by
-                    ) VALUES (?, 'room', ?, ?, CURDATE(), ?, ?, ?, ?, 'cash', 'full_payment', 'fully_paid', 1, 'completed', ?)
+                    ) VALUES (?, 'room', ?, ?, CURDATE(), ?, ?, ?, ?, 'cash', 'full_payment', 'completed', 1, 'completed', ?)
                 ");
                 $insert_payment->execute([
                     $payment_reference,
@@ -364,12 +364,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch all bookings with room details
+// Fetch all bookings with room details and payment status from payments table
 try {
     $stmt = $pdo->query("
-        SELECT b.*, r.name as room_name 
+        SELECT b.*,
+               r.name as room_name,
+               COALESCE(p.payment_status, b.payment_status) as actual_payment_status,
+               p.payment_reference,
+               p.payment_date as last_payment_date
         FROM bookings b
         LEFT JOIN rooms r ON b.room_id = r.id
+        LEFT JOIN payments p ON b.id = p.booking_id AND p.booking_type = 'room' AND p.status = 'completed'
         ORDER BY b.created_at DESC
     ");
     $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -397,8 +402,14 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
 // Additional statistics for new tabs
 $checked_out = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-out'));
 $cancelled = count(array_filter($bookings, fn($b) => $b['status'] === 'cancelled'));
-$paid = count(array_filter($bookings, fn($b) => $b['payment_status'] === 'paid'));
-$unpaid = count(array_filter($bookings, fn($b) => $b['payment_status'] !== 'paid'));
+
+// Count paid/unpaid based on actual payment status from payments table
+$paid = count(array_filter($bookings, fn($b) =>
+    $b['actual_payment_status'] === 'paid' || $b['actual_payment_status'] === 'completed'
+));
+$unpaid = count(array_filter($bookings, fn($b) =>
+    $b['actual_payment_status'] !== 'paid' && $b['actual_payment_status'] !== 'completed'
+));
 
 // Count expiring soon (tentative bookings expiring within 24 hours)
 $now = new DateTime();
@@ -423,6 +434,23 @@ $today_checkins = count(array_filter($bookings, fn($b) =>
 // Count today's check-outs (checked-in bookings with check-out today)
 $today_checkouts = count(array_filter($bookings, fn($b) =>
     $b['status'] === 'checked-in' && $b['check_out_date'] === $today_str
+));
+
+// Count today's bookings (created today)
+$today_bookings = count(array_filter($bookings, fn($b) =>
+    date('Y-m-d', strtotime($b['created_at'])) === $today_str
+));
+
+// Count this week's bookings (created within the last 7 days)
+$week_start = (clone $today)->modify('-7 days');
+$week_bookings = count(array_filter($bookings, fn($b) =>
+    strtotime($b['created_at']) >= $week_start->getTimestamp()
+));
+
+// Count this month's bookings (created this month)
+$month_start = $today->format('Y-m-01');
+$month_bookings = count(array_filter($bookings, fn($b) =>
+    date('Y-m', strtotime($b['created_at'])) === date('Y-m')
 ));
 ?>
 <!DOCTYPE html>
@@ -730,6 +758,13 @@ $today_checkouts = count(array_filter($bookings, fn($b) =>
         .badge-new { background: #17a2b8; color: white; }
         .badge-contacted { background: #6c757d; color: white; }
         
+        /* Payment status badges from payments table */
+        .badge-completed { background: #28a745; color: white; }
+        .badge-pending { background: #ffc107; color: #212529; }
+        .badge-failed { background: #dc3545; color: white; }
+        .badge-refunded { background: #6c757d; color: white; }
+        .badge-partially_refunded { background: #e2e3e5; color: #383d41; }
+        
         /* Tentative booking specific styles */
         .tentative-indicator {
             display: inline-flex;
@@ -979,6 +1014,21 @@ $today_checkouts = count(array_filter($bookings, fn($b) =>
             color: white;
         }
 
+        .tab-button[data-tab="today-bookings"].active .tab-count {
+            background: #007bff;
+            color: white;
+        }
+
+        .tab-button[data-tab="week-bookings"].active .tab-count {
+            background: #6f42c1;
+            color: white;
+        }
+
+        .tab-button[data-tab="month-bookings"].active .tab-count {
+            background: #fd7e14;
+            color: white;
+        }
+
         /* Adjust bookings section to connect with tabs */
         .bookings-section {
             border-radius: 0 0 12px 12px !important;
@@ -1122,6 +1172,21 @@ $today_checkouts = count(array_filter($bookings, fn($b) =>
                     Unpaid
                     <span class="tab-count"><?php echo $unpaid; ?></span>
                 </button>
+                <button class="tab-button" data-tab="today-bookings" data-count="<?php echo $today_bookings; ?>">
+                    <i class="fas fa-calendar-day"></i>
+                    Today's Bookings
+                    <span class="tab-count"><?php echo $today_bookings; ?></span>
+                </button>
+                <button class="tab-button" data-tab="week-bookings" data-count="<?php echo $week_bookings; ?>">
+                    <i class="fas fa-calendar-week"></i>
+                    This Week
+                    <span class="tab-count"><?php echo $week_bookings; ?></span>
+                </button>
+                <button class="tab-button" data-tab="month-bookings" data-count="<?php echo $month_bookings; ?>">
+                    <i class="fas fa-calendar-alt"></i>
+                    This Month
+                    <span class="tab-count"><?php echo $month_bookings; ?></span>
+                </button>
             </div>
         </div>
 
@@ -1149,6 +1214,7 @@ $today_checkouts = count(array_filter($bookings, fn($b) =>
                             <th style="width: 120px;">Total</th>
                             <th style="width: 120px;">Status</th>
                             <th style="width: 120px;">Payment</th>
+                            <th style="width: 150px;">Created</th>
                             <th style="width: 400px;">Actions</th>
                         </tr>
                     </thead>
@@ -1202,9 +1268,33 @@ $today_checkouts = count(array_filter($bookings, fn($b) =>
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <span class="badge badge-<?php echo $booking['payment_status']; ?>">
-                                        <?php echo ucfirst($booking['payment_status']); ?>
+                                    <span class="badge badge-<?php echo $booking['actual_payment_status']; ?>">
+                                        <?php
+                                            $status = $booking['actual_payment_status'];
+                                            // Map payment statuses to user-friendly labels
+                                            $status_labels = [
+                                                'paid' => 'Paid',
+                                                'unpaid' => 'Unpaid',
+                                                'partial' => 'Partial',
+                                                'completed' => 'Paid',
+                                                'pending' => 'Pending',
+                                                'failed' => 'Failed',
+                                                'refunded' => 'Refunded',
+                                                'partially_refunded' => 'Partial Refund'
+                                            ];
+                                            echo $status_labels[$status] ?? ucfirst($status);
+                                        ?>
                                     </span>
+                                    <?php if ($booking['payment_reference']): ?>
+                                        <br><small style="color: #666; font-size: 10px;">
+                                            <?php echo htmlspecialchars($booking['payment_reference']); ?>
+                                        </small>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <small style="color: #666; font-size: 11px;">
+                                        <i class="fas fa-clock"></i> <?php echo date('M j, H:i', strtotime($booking['created_at'])); ?>
+                                    </small>
                                 </td>
                                 <td>
                                     <?php if ($is_tentative): ?>
@@ -1350,11 +1440,19 @@ $today_checkouts = count(array_filter($bookings, fn($b) =>
             today.setHours(0, 0, 0, 0);
             const todayStr = today.toISOString().split('T')[0];
             
+            // Calculate week start (7 days ago)
+            const weekStart = new Date(today);
+            weekStart.setDate(weekStart.getDate() - 7);
+            
+            // Calculate month start (first day of current month)
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            
             rows.forEach(row => {
                 const statusCell = row.querySelector('td:nth-child(9)'); // Status column
                 const paymentCell = row.querySelector('td:nth-child(10)'); // Payment column
                 const checkInCell = row.querySelector('td:nth-child(4)'); // Check-in date column
                 const checkOutCell = row.querySelector('td:nth-child(5)'); // Check-out date column
+                const createdCell = row.querySelector('td:nth-child(11)'); // Created timestamp column
                 
                 if (!statusCell || !paymentCell) return;
                 
@@ -1370,6 +1468,25 @@ $today_checkouts = count(array_filter($bookings, fn($b) =>
                 const checkInDate = checkInCell ? new Date(checkInCell.textContent.trim()) : null;
                 const checkOutDate = checkOutCell ? new Date(checkOutCell.textContent.trim()) : null;
                 
+                // Parse created_at timestamp from column 11
+                // Format: "Feb 1, 14:30" or similar
+                let createdDate = null;
+                if (createdCell) {
+                    const createdText = createdCell.textContent.trim();
+                    // Parse the date format "M j, H:i" (e.g., "Feb 1, 14:30")
+                    const currentYear = today.getFullYear();
+                    const createdMatch = createdText.match(/(\w+)\s+(\d+),\s+(\d+):(\d+)/);
+                    if (createdMatch) {
+                        const months = { 'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                                        'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11 };
+                        const month = months[createdMatch[1]];
+                        const day = parseInt(createdMatch[2]);
+                        const hour = parseInt(createdMatch[3]);
+                        const minute = parseInt(createdMatch[4]);
+                        createdDate = new Date(currentYear, month, day, hour, minute);
+                    }
+                }
+                
                 // Check if tentative booking is expiring soon (within 24 hours)
                 const isExpiringSoon = row.innerHTML.includes('Expires soon') ||
                                       (status === 'tentative' && row.querySelector('.expires-soon'));
@@ -1381,6 +1498,14 @@ $today_checkouts = count(array_filter($bookings, fn($b) =>
                 const isTodayCheckOut = checkOutDate &&
                                        checkOutDate.toISOString().split('T')[0] === todayStr &&
                                        status === 'checked-in';
+                
+                // Check time-based filters
+                const isTodayBooking = createdDate &&
+                                      createdDate.toISOString().split('T')[0] === todayStr;
+                const isWeekBooking = createdDate &&
+                                     createdDate >= weekStart;
+                const isMonthBooking = createdDate &&
+                                      createdDate >= monthStart;
                 
                 let isVisible = false;
                 
@@ -1416,10 +1541,19 @@ $today_checkouts = count(array_filter($bookings, fn($b) =>
                         isVisible = status === 'cancelled';
                         break;
                     case 'paid':
-                        isVisible = payment === 'paid';
+                        isVisible = payment === 'paid' || payment === 'completed';
                         break;
                     case 'unpaid':
-                        isVisible = payment !== 'paid';
+                        isVisible = payment !== 'paid' && payment !== 'completed';
+                        break;
+                    case 'today-bookings':
+                        isVisible = isTodayBooking;
+                        break;
+                    case 'week-bookings':
+                        isVisible = isWeekBooking;
+                        break;
+                    case 'month-bookings':
+                        isVisible = isMonthBooking;
                         break;
                 }
                 
@@ -1454,7 +1588,10 @@ $today_checkouts = count(array_filter($bookings, fn($b) =>
                 'checked-out': 'Checked Out Bookings',
                 'cancelled': 'Cancelled Bookings',
                 'paid': 'Paid Bookings',
-                'unpaid': 'Unpaid Bookings'
+                'unpaid': 'Unpaid Bookings',
+                'today-bookings': "Today's Bookings",
+                'week-bookings': "This Week's Bookings",
+                'month-bookings': "This Month's Bookings"
             };
             
             const icon = titleElement.querySelector('i');
@@ -1474,6 +1611,9 @@ $today_checkouts = count(array_filter($bookings, fn($b) =>
             if (tabName === 'cancelled') newIcon = 'fa-times-circle';
             if (tabName === 'paid') newIcon = 'fa-dollar-sign';
             if (tabName === 'unpaid') newIcon = 'fa-exclamation-circle';
+            if (tabName === 'today-bookings') newIcon = 'fa-calendar-day';
+            if (tabName === 'week-bookings') newIcon = 'fa-calendar-week';
+            if (tabName === 'month-bookings') newIcon = 'fa-calendar-alt';
             
             titleElement.innerHTML = `<i class="fas ${newIcon}"></i> ${newTitle} `;
             if (countSpan) {

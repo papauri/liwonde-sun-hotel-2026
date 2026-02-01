@@ -50,8 +50,8 @@ $statusLabels = [
     'pending' => 'Pending',
     'partial' => 'Partial Payment',
     'completed' => 'Paid',
-    'overdue' => 'Overdue',
     'refunded' => 'Refunded',
+    'partially_refunded' => 'Partially Refunded',
     'cancelled' => 'Cancelled'
 ];
 while ($row = $statusStmt->fetch(PDO::FETCH_ASSOC)) {
@@ -90,7 +90,7 @@ $paymentMethodsStmt = $pdo->prepare($paymentMethodsQuery);
 $paymentMethodsStmt->execute([$start_date, $end_date]);
 $paymentMethods = $paymentMethodsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 4. Outstanding Payments (pending and overdue)
+// 4. Outstanding Payments (pending)
 $outstandingQuery = "
     SELECT
         p.*,
@@ -105,7 +105,7 @@ $outstandingQuery = "
     FROM payments p
     LEFT JOIN bookings b ON p.booking_type = 'room' AND p.booking_id = b.id
     LEFT JOIN conference_inquiries ci ON p.booking_type = 'conference' AND p.booking_id = ci.id
-    WHERE p.payment_status IN ('pending', 'partial', 'overdue')
+    WHERE p.payment_status IN ('pending', 'failed')
     ORDER BY p.payment_date ASC
 ";
 $outstandingStmt = $pdo->query($outstandingQuery);
@@ -352,8 +352,8 @@ foreach ($statusData as $status) {
         .status-card.pending { background: #fff3cd; border-left: 4px solid #ffc107; }
         .status-card.partial { background: #e2e3e5; border-left: 4px solid #6c757d; }
         .status-card.completed { background: #d4edda; border-left: 4px solid #28a745; }
-        .status-card.overdue { background: #f8d7da; border-left: 4px solid #dc3545; }
         .status-card.refunded { background: #e2e3e5; border-left: 4px solid #6c757d; }
+        .status-card.partially_refunded { background: #fff3cd; border-left: 4px solid #ffc107; }
 
         .status-card .count {
             font-size: 32px;
@@ -433,7 +433,7 @@ foreach ($statusData as $status) {
         .progress-segment.pending { background: #ffc107; }
         .progress-segment.partial { background: #6c757d; }
         .progress-segment.completed { background: #28a745; }
-        .progress-segment.overdue { background: #dc3545; }
+        .progress-segment.refunded { background: #6c757d; }
 
         .export-buttons {
             display: flex;
@@ -637,7 +637,7 @@ foreach ($statusData as $status) {
                                 <td><?php echo htmlspecialchars($payment['client_info']); ?></td>
                                 <td><?php echo $currency_symbol . ' ' . number_format($payment['total_amount'], 2); ?></td>
                                 <td>
-                                    <span class="badge" style="background: <?php echo $payment['payment_status'] === 'overdue' ? '#f8d7da' : '#fff3cd'; ?>; color: <?php echo $payment['payment_status'] === 'overdue' ? '#dc3545' : '#856404'; ?>;">
+                                    <span class="badge" style="background: <?php echo in_array($payment['payment_status'], ['failed', 'refunded']) ? '#f8d7da' : '#fff3cd'; ?>; color: <?php echo in_array($payment['payment_status'], ['failed', 'refunded']) ? '#dc3545' : '#856404'; ?>;">
                                         <?php echo ucfirst($payment['payment_status']); ?>
                                     </span>
                                 </td>
