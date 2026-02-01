@@ -1,6 +1,12 @@
 <?php
+// Load security configuration first
+require_once 'config/security.php';
+
 require_once 'config/database.php';
 require_once 'includes/reviews-display.php';
+
+// Send security headers
+sendSecurityHeaders();
 
 // Helper: resolve image URL (supports relative and absolute URLs)
 function resolveImageUrl($path) {

@@ -1,15 +1,13 @@
 <?php
-session_start();
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
 
-// Check authentication
-if (!isset($_SESSION['admin_user'])) {
-    header('Location: login.php');
-    exit;
-}
-
-require_once '../config/database.php';
-
-$user = $_SESSION['admin_user'];
+$user = [
+    'id' => $_SESSION['admin_user_id'],
+    'username' => $_SESSION['admin_username'],
+    'role' => $_SESSION['admin_role'],
+    'full_name' => $_SESSION['admin_full_name']
+];
 $booking_id = filter_var($_GET['id'] ?? 0, FILTER_VALIDATE_INT);
 $action = $_GET['action'] ?? '';
 
@@ -288,7 +286,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment'])) {
 
 $site_name = getSetting('site_name');
 $currency_symbol = getSetting('currency_symbol');
-$current_page = 'bookings.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -303,6 +300,7 @@ $current_page = 'bookings.php';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     
     <style>
         /* Booking details specific styles */
@@ -529,8 +527,9 @@ $current_page = 'bookings.php';
     </style>
 </head>
 <body>
-	<?php include 'admin-header.php'; ?>
 
+ <?php require_once 'admin-header.php'; ?>
+    
     <div class="booking-details-container">
         <div class="details-card">
             <div class="card-header">
@@ -733,5 +732,6 @@ $current_page = 'bookings.php';
             </div>
         </div>
     </div>
+    <script src="js/admin-components.js"></script>
 </body>
 </html>

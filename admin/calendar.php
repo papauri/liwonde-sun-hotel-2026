@@ -4,17 +4,8 @@
  * Liwonde Sun Hotel - Admin Panel
  */
 
-// Start session
-session_start();
-
-// Check if user is logged in
-if (!isset($_SESSION['admin_user'])) {
-    header('Location: login.php');
-    exit();
-}
-
-// Include database configuration
-require_once '../config/database.php';
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
 
 // Get date parameters
 $currentYear = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
@@ -140,15 +131,20 @@ $monthNames = [
 // Today's date for highlighting
 $today = date('Y-m-d');
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Calendar - Admin Panel</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     <style>
         .calendar-container {
             background: white;
@@ -378,9 +374,10 @@ $today = date('Y-m-d');
     </style>
 </head>
 <body>
-    <?php include 'admin-header.php'; ?>
+
+    <?php require_once 'admin-header.php'; ?>
     
-    <div class="admin-content">
+    <div class="content">
         <h1 style="margin-bottom: 20px; color: #0A1929;">📅 Room Calendar</h1>
         
         <div class="calendar-actions">
@@ -509,7 +506,7 @@ $today = date('Y-m-d');
             <?php endif; ?>
         </div>
     </div>
-    
-    <?php include '../includes/footer.php'; ?>
+
+    <script src="js/admin-components.js"></script>
 </body>
 </html>

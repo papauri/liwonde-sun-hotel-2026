@@ -1,0 +1,153 @@
+<?php
+/**
+ * Security Configuration and Utilities
+ * Liwonde Sun Hotel - Basic Security Layer
+ * 
+ * Features:
+ * - Security Headers (including CSP for Font Awesome)
+ * - Input Sanitization Helpers
+ * 
+ * @version 3.0 (Simplified)
+ * @date 2026-02-01
+ */
+
+// Ensure this file is only included, not accessed directly
+if (!defined('SECURITY_INCLUDED')) {
+    define('SECURITY_INCLUDED', true);
+}
+
+/**
+ * ============================================================================
+ * SECURITY HEADERS
+ * ============================================================================
+ */
+
+/**
+ * Send security headers
+ * Call this at the beginning of each page
+ * Includes CSP fix for Font Awesome
+ */
+function sendSecurityHeaders() {
+    // Prevent clickjacking
+    header('X-Frame-Options: SAMEORIGIN');
+    
+    // Prevent MIME type sniffing
+    header('X-Content-Type-Options: nosniff');
+    
+    // Enable XSS filter (browser-side)
+    header('X-XSS-Protection: 1; mode=block');
+    
+    // Content Security Policy with Font Awesome fix
+    // This allows Font Awesome to load properly
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self';");
+    
+    // Referrer Policy
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    
+    // Permissions Policy (formerly Feature-Policy)
+    header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+    
+    // HSTS (only on HTTPS)
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+    }
+}
+
+/**
+ * ============================================================================
+ * INPUT SANITIZATION HELPERS
+ * ============================================================================
+ */
+
+/**
+ * Sanitize input string
+ * 
+ * @param string $input Input string to sanitize
+ * @return string Sanitized string
+ */
+function sanitizeInput($input) {
+    return htmlspecialchars(trim($input), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+}
+
+/**
+ * Sanitize input array (GET, POST, etc.)
+ * 
+ * @param array $input Input array to sanitize
+ * @return array Sanitized array
+ */
+function sanitizeInputArray($input) {
+    $sanitized = [];
+    
+    foreach ($input as $key => $value) {
+        if (is_array($value)) {
+            $sanitized[$key] = sanitizeInputArray($value);
+        } else {
+            $sanitized[$key] = sanitizeInput($value);
+        }
+    }
+    
+    return $sanitized;
+}
+
+/**
+ * ============================================================================
+ * CSRF PROTECTION
+ * ============================================================================
+ */
+
+/**
+ * Generate CSRF token for forms
+ *
+ * @return string CSRF token
+ */
+function generateCsrfToken() {
+    if (!isset($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * Validate CSRF token
+ *
+ * @param string $token Token to validate
+ * @return bool True if valid, false otherwise
+ */
+function validateCsrfToken($token) {
+    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+/**
+ * ============================================================================
+ * SECURITY EVENT LOGGING (Optional)
+ * ============================================================================
+ */
+
+/**
+ * Log security event for audit trail
+ * 
+ * @param string $event Type of security event
+ * @param array $details Event details
+ */
+function logSecurityEvent($event, $details = []) {
+    $logDir = __DIR__ . '/../logs/security';
+    
+    // Create log directory if it doesn't exist
+    if (!file_exists($logDir)) {
+        mkdir($logDir, 0755, true);
+    }
+    
+    $logFile = $logDir . '/security-' . date('Y-m-d') . '.log';
+    
+    $logEntry = [
+        'timestamp' => date('Y-m-d H:i:s'),
+        'event' => $event,
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+        'uri' => $_SERVER['REQUEST_URI'] ?? 'unknown',
+        'details' => $details
+    ];
+    
+    // Append to log file
+    file_put_contents($logFile, json_encode($logEntry) . "\n", FILE_APPEND | LOCK_EX);
+}

@@ -1,17 +1,13 @@
 <?php
-session_start();
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
 
-// Check authentication
-if (!isset($_SESSION['admin_user'])) {
-    header('Location: login.php');
-    exit;
-}
-
-require_once '../config/database.php';
-require_once '../includes/modal.php';
-require_once '../includes/alert.php';
-
-$user = $_SESSION['admin_user'];
+$user = [
+    'id' => $_SESSION['admin_user_id'],
+    'username' => $_SESSION['admin_username'],
+    'role' => $_SESSION['admin_role'],
+    'full_name' => $_SESSION['admin_full_name']
+];
 $site_name = getSetting('site_name');
 $currency_symbol = getSetting('currency_symbol');
 
@@ -159,6 +155,30 @@ $otherPaymentsStmt = $pdo->prepare("
 ");
 $otherPaymentsStmt->execute([$payment['booking_type'], $payment['booking_id'], $paymentId]);
 $otherPayments = $otherPaymentsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Calculate payment summary for this booking
+$paymentSummaryStmt = $pdo->prepare("
+    SELECT
+        COALESCE(SUM(CASE WHEN payment_status = 'completed' THEN total_amount ELSE 0 END), 0) as total_paid,
+        COALESCE(SUM(CASE WHEN payment_status = 'pending' THEN total_amount ELSE 0 END), 0) as pending_amount,
+        COUNT(CASE WHEN payment_status = 'completed' THEN 1 END) as completed_payments,
+        COUNT(CASE WHEN payment_status = 'pending' THEN 1 END) as pending_payments
+    FROM payments
+    WHERE booking_type = ? AND booking_id = ? AND deleted_at IS NULL
+");
+$paymentSummaryStmt->execute([$payment['booking_type'], $payment['booking_id']]);
+$paymentSummary = $paymentSummaryStmt->fetch(PDO::FETCH_ASSOC);
+
+// Get booking total amount from booking details
+$bookingTotalAmount = 0;
+if ($bookingDetails && isset($bookingDetails['amounts']['total_with_vat'])) {
+    $bookingTotalAmount = $bookingDetails['amounts']['total_with_vat'];
+} elseif ($bookingDetails && isset($bookingDetails['amounts']['total_amount'])) {
+    $bookingTotalAmount = $bookingDetails['amounts']['total_amount'];
+}
+
+// Calculate due amount
+$dueAmount = $bookingTotalAmount - $paymentSummary['total_paid'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -389,11 +409,137 @@ $otherPayments = $otherPaymentsStmt->fetchAll(PDO::FETCH_ASSOC);
         .btn-danger:hover {
             background: #c82333;
         }
+        
+        /* Payment Summary Styles */
+        .payment-summary-card {
+            background: linear-gradient(135deg, var(--navy) 0%, #1a3a5c 100%);
+            color: white;
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            margin-bottom: 24px;
+        }
+        
+        .payment-summary-card h3 {
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+        
+        .payment-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+        
+        .summary-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 16px;
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+        
+        .summary-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .summary-value {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .summary-item.total .summary-value {
+            color: #ffd700;
+        }
+        
+        .summary-item.paid .summary-value {
+            color: #4ade80;
+        }
+        
+        .summary-item.due .summary-value {
+            color: <?php echo $dueAmount > 0 ? '#f87171' : '#4ade80'; ?>;
+        }
+        
+        .summary-item.pending .summary-value {
+            color: #fbbf24;
+        }
+        
+        .payment-status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+        
+        .status-fully-paid {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.4);
+        }
+        
+        .status-partially-paid {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.4);
+        }
+        
+        .status-unpaid {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.4);
+        }
+        
+        .payment-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+        
+        .payment-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #22c55e);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .payment-summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .summary-value {
+                font-size: 22px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .payment-summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <?php include 'admin-header.php'; ?>
+    <?php require_once 'admin-header.php'; ?>
 
     <div class="content">
         <div class="page-header">
@@ -413,6 +559,52 @@ $otherPayments = $otherPaymentsStmt->fetchAll(PDO::FETCH_ASSOC);
                 <a href="payments.php" class="btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Payments
                 </a>
+            </div>
+        </div>
+
+        <!-- Payment Summary Card -->
+        <div class="payment-summary-card">
+            <h3><i class="fas fa-chart-pie"></i> Payment Summary</h3>
+            
+            <div class="payment-summary-grid">
+                <div class="summary-item total">
+                    <div class="summary-label">Total Amount</div>
+                    <div class="summary-value"><?php echo $currency_symbol; ?><?php echo number_format($bookingTotalAmount, 0); ?></div>
+                </div>
+                
+                <div class="summary-item paid">
+                    <div class="summary-label">Paid Amount</div>
+                    <div class="summary-value"><?php echo $currency_symbol; ?><?php echo number_format($paymentSummary['total_paid'], 0); ?></div>
+                </div>
+                
+                <div class="summary-item due">
+                    <div class="summary-label">Due Amount</div>
+                    <div class="summary-value"><?php echo $currency_symbol; ?><?php echo number_format($dueAmount, 0); ?></div>
+                </div>
+                
+                <?php if ($paymentSummary['pending_amount'] > 0): ?>
+                    <div class="summary-item pending">
+                        <div class="summary-label">Pending</div>
+                        <div class="summary-value"><?php echo $currency_symbol; ?><?php echo number_format($paymentSummary['pending_amount'], 0); ?></div>
+                    </div>
+                <?php endif; ?>
+            </div>
+            
+            <?php
+            $paymentPercentage = $bookingTotalAmount > 0 ? ($paymentSummary['total_paid'] / $bookingTotalAmount) * 100 : 0;
+            $paymentStatusClass = $dueAmount <= 0 ? 'status-fully-paid' : ($paymentSummary['total_paid'] > 0 ? 'status-partially-paid' : 'status-unpaid');
+            $paymentStatusText = $dueAmount <= 0 ? 'Fully Paid' : ($paymentSummary['total_paid'] > 0 ? 'Partially Paid' : 'Unpaid');
+            ?>
+            
+            <div class="payment-progress-bar">
+                <div class="payment-progress-fill" style="width: <?php echo min($paymentPercentage, 100); ?>%;"></div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 16px;">
+                <span class="payment-status-indicator <?php echo $paymentStatusClass; ?>">
+                    <i class="fas <?php echo $dueAmount <= 0 ? 'fa-check-circle' : ($paymentSummary['total_paid'] > 0 ? 'fa-clock' : 'fa-exclamation-circle'); ?>"></i>
+                    <?php echo $paymentStatusText; ?> (<?php echo number_format($paymentPercentage, 1); ?>%)
+                </span>
             </div>
         </div>
 

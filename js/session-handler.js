@@ -109,7 +109,6 @@
         // Initialize
         init: function() {
             this.currentPath = window.location.pathname;
-            console.log('PageNavigation initialized:', this.currentPath);
             
             // Track navigation events
             this.bindEvents();
@@ -151,7 +150,6 @@
             const targetUrl = new URL(href, window.location.origin);
             if (targetUrl.pathname === this.currentPath) {
                 // Allow same-page hash navigation
-                console.log('Same-page hash navigation allowed');
                 return;
             }
             
@@ -192,8 +190,6 @@
             setTimeout(() => {
                 this.isNavigating = false;
             }, this.NAVIGATION_TIMEOUT);
-            
-            console.log('Navigation allowed:', href);
         },
 
         // Handle form submissions
@@ -210,7 +206,6 @@
             this.isNavigating = false;
             this.currentPath = window.location.pathname;
             SessionManager.unlockNavigation();
-            console.log('Popstate navigation:', this.currentPath);
         },
 
         // Handle browser forward
@@ -218,15 +213,12 @@
             this.isNavigating = false;
             this.currentPath = window.location.pathname;
             SessionManager.unlockNavigation();
-            console.log('Pushstate navigation:', this.currentPath);
         },
 
         // Check for navigation loops
         checkForLoops: function() {
             const currentPage = window.location.pathname;
             const visits = SessionManager.get(SessionManager.KEYS.PAGE_VISITS) || {};
-            
-            console.log('Page visit check:', currentPage, visits[currentPage]);
             
             // If this page has been visited multiple times in short session
             if (visits[currentPage] > 3) {
@@ -327,8 +319,6 @@
         
         // Initialize navigation handler
         PageNavigation.init();
-        
-        console.log('Session Handler loaded');
     });
 
 })();

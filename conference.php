@@ -1,9 +1,23 @@
 <?php
+/**
+ * Conference Booking Page with Enhanced Security
+ * Features:
+ * - CSRF protection
+ * - Secure session management
+ * - Input validation
+ */
+
+// Load security configuration first
+require_once 'config/security.php';
+
 require_once 'config/database.php';
 require_once 'config/email.php';
 require_once 'includes/modal.php';
 require_once 'includes/alert.php';
 require_once 'includes/validation.php';
+
+// Send security headers
+sendSecurityHeaders();
 
 
 // Fetch policies for footer modals
@@ -30,6 +44,9 @@ $inquiry_success = false;
 $inquiry_error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Validate CSRF token
+    requireCsrfValidation();
+    
     try {
         // Initialize validation errors array
         $validation_errors = [];
@@ -814,6 +831,7 @@ function resolveConferenceImage(?string $imagePath): string
     
     $modalContent .= '
         <form method="POST" action="" id="inquiryForm">
+            ' . getCsrfField() . '
             <input type="hidden" name="conference_room_id" id="selectedRoomId">
             
             <div class="form-group">

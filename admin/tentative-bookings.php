@@ -1,15 +1,13 @@
 <?php
-session_start();
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
 
-// Check authentication
-if (!isset($_SESSION['admin_user'])) {
-    header('Location: login.php');
-    exit;
-}
-
-require_once '../config/database.php';
-
-$user = $_SESSION['admin_user'];
+$user = [
+    'id' => $_SESSION['admin_user_id'],
+    'username' => $_SESSION['admin_username'],
+    'role' => $_SESSION['admin_role'],
+    'full_name' => $_SESSION['admin_full_name']
+];
 $message = '';
 $error = '';
 
@@ -340,7 +338,7 @@ $currency_symbol = getSetting('currency_symbol');
     </style>
 </head>
 <body>
-    <?php include 'admin-header.php'; ?>
+    <?php require_once 'admin-header.php'; ?>
 
     <div class="tentative-page">
         <div class="page-header">

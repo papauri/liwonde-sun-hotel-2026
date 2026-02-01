@@ -4,15 +4,10 @@
  * Clear and manage the file-based cache system
  */
 
-require_once '../config/database.php';
-require_once '../config/cache.php';
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
 
-// Check if user is logged in
-session_start();
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
-    exit;
-}
+require_once '../config/cache.php';
 
 $success = '';
 $error = '';
@@ -120,7 +115,7 @@ function formatBytes($bytes, $precision = 2) {
 </head>
 <body>
     <div class="admin-layout">
-        <?php include 'admin-header.php'; ?>
+        <?php require_once 'admin-header.php'; ?>
         
         <main class="admin-content">
             <div class="page-header">

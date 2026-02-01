@@ -1,20 +1,19 @@
 <?php
-session_start();
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
 
-if (!isset($_SESSION['admin_user'])) {
-    header('Location: login.php');
-    exit;
-}
-
-require_once '../config/database.php';
 require_once '../config/email.php';
 require_once '../config/invoice.php';
 require_once '../includes/alert.php';
 
-$user = $_SESSION['admin_user'];
+$user = [
+    'id' => $_SESSION['admin_user_id'],
+    'username' => $_SESSION['admin_username'],
+    'role' => $_SESSION['admin_role'],
+    'full_name' => $_SESSION['admin_full_name']
+];
 $message = '';
 $error = '';
-$current_page = basename($_SERVER['PHP_SELF']);
 
 function uploadConferenceImage(array $fileInput): ?string
 {
@@ -307,6 +306,7 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     
     <style>
         /* Conference management specific styles */
@@ -566,8 +566,9 @@ try {
     </style>
 </head>
 <body>
-    <?php include 'admin-header.php'; ?>
 
+    <?php require_once 'admin-header.php'; ?>
+    
     <div class="content">
         <?php if ($message): ?>
             <?php showAlert($message, 'success'); ?>
@@ -1011,5 +1012,6 @@ try {
             color: #004085;
         }
     </style>
+    <script src="js/admin-components.js"></script>
 </body>
 </html>

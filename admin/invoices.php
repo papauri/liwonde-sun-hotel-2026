@@ -1,16 +1,8 @@
 <?php
-session_start();
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
 
-// Check authentication
-if (!isset($_SESSION['admin_user'])) {
-    header('Location: login.php');
-    exit;
-}
-
-require_once '../config/database.php';
 require_once '../includes/alert.php';
-
-$user = $_SESSION['admin_user'];
 $message = '';
 $error = '';
 
@@ -164,7 +156,6 @@ try {
 }
 
 $site_name = getSetting('site_name');
-$current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -179,6 +170,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     
     <style>
         .invoices-container {
@@ -450,8 +442,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
     </style>
 </head>
 <body>
-    <?php include 'admin-header.php'; ?>
 
+    <?php require_once 'admin-header.php'; ?>
+    
     <div class="invoices-container">
         <div class="page-header">
             <h1 class="page-title">
@@ -639,5 +632,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
             });
         });
     </script>
+    <script src="js/admin-components.js"></script>
 </body>
 </html>

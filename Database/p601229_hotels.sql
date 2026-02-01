@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Feb 01, 2026 at 07:14 PM
+-- Generation Time: Feb 01, 2026 at 09:16 PM
 -- Server version: 8.0.44-cll-lve
 -- PHP Version: 8.4.16
 
@@ -194,7 +194,7 @@ CREATE TABLE `bookings` (
 --
 
 INSERT INTO `bookings` (`id`, `booking_reference`, `room_id`, `guest_name`, `guest_email`, `guest_phone`, `guest_country`, `guest_address`, `number_of_guests`, `check_in_date`, `check_out_date`, `number_of_nights`, `total_amount`, `amount_paid`, `amount_due`, `vat_rate`, `vat_amount`, `total_with_vat`, `last_payment_date`, `special_requests`, `status`, `is_tentative`, `tentative_expires_at`, `deposit_required`, `deposit_amount`, `deposit_paid`, `deposit_paid_at`, `reminder_sent`, `reminder_sent_at`, `converted_to_confirmed_at`, `expired_at`, `tentative_notes`, `payment_status`, `payment_amount`, `payment_date`, `created_at`, `updated_at`, `expires_at`, `converted_from_tentative`) VALUES
-(23, 'LSH20262626', 3, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-02-02', '2026-02-06', 4, 120080.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, '', 'tentative', 1, '2026-02-03 19:11:28', 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, 'unpaid', 0.00, NULL, '2026-02-01 19:11:28', '2026-02-01 19:11:28', NULL, 0);
+(23, 'LSH20262626', 3, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-02-02', '2026-02-06', 4, 120080.00, 139893.20, 0.00, 16.50, 19813.20, 139893.20, '2026-02-01', '', 'checked-in', 0, '2026-02-03 19:11:28', 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, 'paid', 0.00, NULL, '2026-02-01 19:11:28', '2026-02-01 19:35:14', NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -988,6 +988,13 @@ CREATE TABLE `payments` (
   `processed_by` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Admin user who processed the payment',
   `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete timestamp'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='All payment transactions for room and conference bookings';
+
+--
+-- Dumping data for table `payments`
+--
+
+INSERT INTO `payments` (`id`, `payment_reference`, `booking_type`, `booking_id`, `conference_id`, `booking_reference`, `payment_date`, `payment_amount`, `vat_rate`, `vat_amount`, `total_amount`, `payment_method`, `payment_type`, `payment_reference_number`, `payment_status`, `invoice_generated`, `invoice_number`, `amount`, `status`, `transaction_id`, `invoice_path`, `notes`, `recorded_by`, `created_at`, `updated_at`, `cc_emails`, `receipt_number`, `processed_by`, `deleted_at`) VALUES
+(3, 'PAY-2026-000023', 'room', 23, NULL, 'LSH20262626', '2026-02-01', 120080.00, 16.50, 19813.20, 139893.20, 'cash', 'full_payment', NULL, 'completed', 1, 'INV-2026-001001', 0.00, 'completed', NULL, 'invoices/INV-2026-001001.html', NULL, 2, '2026-02-01 19:18:53', '2026-02-01 20:07:15', NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1802,7 +1809,7 @@ ALTER TABLE `page_loaders`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `policies`

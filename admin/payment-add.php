@@ -1,19 +1,16 @@
 <?php
-session_start();
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
 
-// Check authentication
-if (!isset($_SESSION['admin_user'])) {
-    header('Location: login.php');
-    exit;
-}
-
-require_once '../config/database.php';
 require_once '../config/email.php';
 require_once '../config/invoice.php';
-require_once '../includes/modal.php';
-require_once '../includes/alert.php';
 
-$user = $_SESSION['admin_user'];
+$user = [
+    'id' => $_SESSION['admin_user_id'],
+    'username' => $_SESSION['admin_username'],
+    'role' => $_SESSION['admin_role'],
+    'full_name' => $_SESSION['admin_full_name']
+];
 $site_name = getSetting('site_name');
 $currency_symbol = getSetting('currency_symbol');
 
@@ -571,6 +568,13 @@ function updateConferenceEnquiryPayments($pdo, $enquiryId) {
             box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.1);
         }
         
+        .form-group input:disabled,
+        .form-group select:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+        
         .form-group textarea {
             min-height: 100px;
             resize: vertical;
@@ -587,6 +591,11 @@ function updateConferenceEnquiryPayments($pdo, $enquiryId) {
             padding: 16px;
             border-radius: var(--radius);
             margin-bottom: 20px;
+        }
+        
+        .booking-info.fully-paid {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
         }
         
         .booking-info h4 {
@@ -697,11 +706,66 @@ function updateConferenceEnquiryPayments($pdo, $enquiryId) {
             text-align: center;
             color: var(--navy);
         }
+        
+        /* Warning and alert styles */
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .warning-box h5 {
+            color: #856404;
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .warning-box p {
+            color: #856404;
+            margin: 0;
+            font-size: 13px;
+        }
+        
+        .fully-paid-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .checkbox-wrapper input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+        
+        .checkbox-wrapper label {
+            margin: 0;
+            font-weight: 400;
+            font-size: 13px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <?php include 'admin-header.php'; ?>
+    <?php require_once 'admin-header.php'; ?>
 
     <div class="content">
         <div class="form-container">
@@ -764,6 +828,15 @@ function updateConferenceEnquiryPayments($pdo, $enquiryId) {
                                 <div id="booking_search_results" class="booking-search-results" style="display: none;"></div>
                                 <div class="help-text">Enter the booking ID manually or click search to find bookings</div>
                             </div>
+                        </div>
+                        
+                        <!-- Dynamic Booking Info Section -->
+                        <div id="dynamic_booking_info" class="booking-info" style="display: none;">
+                            <h4 id="booking_info_title">Booking Details</h4>
+                            <div id="booking_info_content"></div>
+                            <button type="button" id="clear_booking_btn" class="btn btn-secondary" style="margin-top: 12px; padding: 8px 16px; font-size: 13px;">
+                                <i class="fas fa-times"></i> Clear Selection
+                            </button>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -979,9 +1052,191 @@ function updateConferenceEnquiryPayments($pdo, $enquiryId) {
             // Add click handlers
             searchResults.querySelectorAll('.booking-search-item').forEach(item => {
                 item.addEventListener('click', function() {
-                    bookingIdInput.value = this.dataset.id;
+                    const bookingId = this.dataset.id;
+                    bookingIdInput.value = bookingId;
                     searchResults.style.display = 'none';
+                    
+                    // Auto-populate booking details
+                    fetchBookingDetails(bookingTypeSelect.value, bookingId);
                 });
+            });
+        }
+        
+        // Fetch and populate booking details
+        function fetchBookingDetails(bookingType, bookingId) {
+            if (!bookingType || !bookingId) return;
+            
+            const dynamicInfo = document.getElementById('dynamic_booking_info');
+            const infoContent = document.getElementById('booking_info_content');
+            const infoTitle = document.getElementById('booking_info_title');
+            const paymentAmountInput = document.getElementById('payment_amount');
+            const paymentDateInput = document.querySelector('input[name="payment_date"]');
+            const paymentMethodSelect = document.querySelector('select[name="payment_method"]');
+            const paymentStatusSelect = document.querySelector('select[name="payment_status"]');
+            
+            // Show loading state
+            dynamicInfo.style.display = 'block';
+            infoTitle.textContent = 'Loading...';
+            infoContent.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Loading booking details...</div>';
+            
+            // Fetch booking details from API
+            fetch(`api/search-bookings.php?type=${bookingType}&q=${bookingId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.bookings || data.bookings.length === 0) {
+                        infoTitle.textContent = 'Error';
+                        infoContent.innerHTML = '<p style="color: #dc3545;">Booking not found. Please try again.</p>';
+                        return;
+                    }
+                    
+                    const booking = data.bookings[0];
+                    const isFullyPaid = booking.amount_due <= 0;
+                    
+                    // Update booking info styling based on payment status
+                    if (isFullyPaid) {
+                        dynamicInfo.classList.add('fully-paid');
+                    } else {
+                        dynamicInfo.classList.remove('fully-paid');
+                    }
+                    
+                    if (bookingType === 'room') {
+                        infoTitle.innerHTML = 'Room Booking Details' + (isFullyPaid ? ' <span class="fully-paid-badge">FULLY PAID</span>' : '');
+                        infoContent.innerHTML = `
+                            <p><strong>Reference:</strong> ${booking.booking_reference}</p>
+                            <p><strong>Guest:</strong> ${booking.guest_name}</p>
+                            <p><strong>Email:</strong> ${booking.guest_email || 'N/A'}</p>
+                            <p><strong>Room:</strong> ${booking.room_name || 'N/A'}</p>
+                            <p><strong>Dates:</strong> ${booking.check_in_date} - ${booking.check_out_date}</p>
+                            <p><strong>Total Amount:</strong> ${currencySymbol}${booking.total_amount.toLocaleString()}</p>
+                            <p><strong>Amount Paid:</strong> ${currencySymbol}${booking.amount_paid.toLocaleString()}</p>
+                            <p><strong>Amount Due:</strong> <span style="color: ${booking.amount_due > 0 ? '#dc3545' : '#28a745'}; font-weight: 600;">${currencySymbol}${booking.amount_due.toLocaleString()}</span></p>
+                            ${isFullyPaid ? '<div class="warning-box" style="margin-top: 12px;"><h5><i class="fas fa-exclamation-triangle"></i> Fully Paid Booking</h5><p>This booking has been fully paid. Adding additional payments will create a credit balance.</p></div>' : ''}
+                        `;
+                    } else {
+                        infoTitle.innerHTML = 'Conference Booking Details' + (isFullyPaid ? ' <span class="fully-paid-badge">FULLY PAID</span>' : '');
+                        infoContent.innerHTML = `
+                            <p><strong>Reference:</strong> ${booking.enquiry_reference}</p>
+                            <p><strong>Organization:</strong> ${booking.organization_name || 'N/A'}</p>
+                            <p><strong>Contact:</strong> ${booking.contact_name}</p>
+                            <p><strong>Email:</strong> ${booking.contact_email || 'N/A'}</p>
+                            <p><strong>Dates:</strong> ${booking.start_date} - ${booking.end_date}</p>
+                            <p><strong>Total Amount:</strong> ${currencySymbol}${booking.total_amount.toLocaleString()}</p>
+                            <p><strong>Amount Paid:</strong> ${currencySymbol}${booking.amount_paid.toLocaleString()}</p>
+                            <p><strong>Amount Due:</strong> <span style="color: ${booking.amount_due > 0 ? '#dc3545' : '#28a745'}; font-weight: 600;">${currencySymbol}${booking.amount_due.toLocaleString()}</span></p>
+                            ${isFullyPaid ? '<div class="warning-box" style="margin-top: 12px;"><h5><i class="fas fa-exclamation-triangle"></i> Fully Paid Booking</h5><p>This booking has been fully paid. Adding additional payments will create a credit balance.</p></div>' : ''}
+                        `;
+                    }
+                    
+                    // Handle fully paid bookings
+                    if (isFullyPaid) {
+                        // Disable payment amount field
+                        paymentAmountInput.disabled = true;
+                        paymentAmountInput.value = '';
+                        updateCalculation();
+                        
+                        // Add warning and override checkbox
+                        const paymentSection = document.querySelector('.form-section:nth-child(2)');
+                        let warningBox = paymentSection.querySelector('.fully-paid-warning');
+                        
+                        if (!warningBox) {
+                            warningBox = document.createElement('div');
+                            warningBox.className = 'warning-box fully-paid-warning';
+                            warningBox.innerHTML = `
+                                <h5><i class="fas fa-exclamation-triangle"></i> Warning: Fully Paid Booking</h5>
+                                <p>This booking has been fully paid. The payment amount field has been disabled to prevent accidental overpayment.</p>
+                                <div class="checkbox-wrapper">
+                                    <input type="checkbox" id="allow_manual_payment" name="allow_manual_payment">
+                                    <label for="allow_manual_payment">Allow manual payment entry (for refunds, adjustments, or credit)</label>
+                                </div>
+                            `;
+                            paymentSection.insertBefore(warningBox, paymentSection.querySelector('.form-row'));
+                            
+                            // Add event listener for override checkbox
+                            document.getElementById('allow_manual_payment').addEventListener('change', function() {
+                                paymentAmountInput.disabled = !this.checked;
+                                if (!this.checked) {
+                                    paymentAmountInput.value = '';
+                                    updateCalculation();
+                                }
+                            });
+                        }
+                    } else {
+                        // Re-enable payment amount field
+                        paymentAmountInput.disabled = false;
+                        
+                        // Remove warning box if exists
+                        const warningBox = document.querySelector('.fully-paid-warning');
+                        if (warningBox) {
+                            warningBox.remove();
+                        }
+                        
+                        // Auto-fill payment amount with outstanding amount
+                        paymentAmountInput.value = booking.amount_due;
+                        updateCalculation();
+                    }
+                    
+                    // Auto-fill payment date with today's date
+                    if (!paymentDateInput.value) {
+                        paymentDateInput.value = new Date().toISOString().split('T')[0];
+                    }
+                    
+                    // Auto-fill payment status based on booking payment status
+                    // Default to 'completed' for new payments
+                    if (!paymentStatusSelect.value || paymentStatusSelect.value === 'pending') {
+                        paymentStatusSelect.value = 'completed';
+                    }
+                    
+                    // Auto-fill payment method with default or last used
+                    // Try to get last used payment method from localStorage
+                    const lastPaymentMethod = localStorage.getItem('lastPaymentMethod');
+                    if (lastPaymentMethod && paymentMethodSelect.value === '') {
+                        paymentMethodSelect.value = lastPaymentMethod;
+                    } else if (paymentMethodSelect.value === '') {
+                        // Set default to 'cash' if no previous method
+                        paymentMethodSelect.value = 'cash';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching booking details:', error);
+                    infoTitle.textContent = 'Error';
+                    infoContent.innerHTML = '<p style="color: #dc3545;">Failed to load booking details. Please try again.</p>';
+                });
+        }
+        
+        // Clear booking selection
+        const clearBookingBtn = document.getElementById('clear_booking_btn');
+        if (clearBookingBtn) {
+            clearBookingBtn.addEventListener('click', function() {
+                const dynamicInfo = document.getElementById('dynamic_booking_info');
+                const paymentAmountInput = document.getElementById('payment_amount');
+                
+                // Hide booking info
+                dynamicInfo.style.display = 'none';
+                dynamicInfo.classList.remove('fully-paid');
+                
+                // Clear booking ID
+                bookingIdInput.value = '';
+                
+                // Re-enable and clear payment amount
+                paymentAmountInput.disabled = false;
+                paymentAmountInput.value = '';
+                updateCalculation();
+                
+                // Remove warning box if exists
+                const warningBox = document.querySelector('.fully-paid-warning');
+                if (warningBox) {
+                    warningBox.remove();
+                }
+            });
+        }
+        
+        // Save payment method to localStorage when changed
+        const paymentMethodSelect = document.querySelector('select[name="payment_method"]');
+        if (paymentMethodSelect) {
+            paymentMethodSelect.addEventListener('change', function() {
+                if (this.value) {
+                    localStorage.setItem('lastPaymentMethod', this.value);
+                }
             });
         }
         
@@ -997,12 +1252,43 @@ function updateConferenceEnquiryPayments($pdo, $enquiryId) {
         bookingIdInput.addEventListener('input', function() {
             if (this.value.trim().length > 0) {
                 searchBookings();
+            } else {
+                // Clear booking info when input is cleared
+                const dynamicInfo = document.getElementById('dynamic_booking_info');
+                const paymentAmountInput = document.getElementById('payment_amount');
+                
+                dynamicInfo.style.display = 'none';
+                dynamicInfo.classList.remove('fully-paid');
+                paymentAmountInput.disabled = false;
+                paymentAmountInput.value = '';
+                updateCalculation();
+                
+                // Remove warning box if exists
+                const warningBox = document.querySelector('.fully-paid-warning');
+                if (warningBox) {
+                    warningBox.remove();
+                }
             }
         });
         
         bookingTypeSelect.addEventListener('change', function() {
             searchResults.style.display = 'none';
             bookingIdInput.value = '';
+            
+            const dynamicInfo = document.getElementById('dynamic_booking_info');
+            const paymentAmountInput = document.getElementById('payment_amount');
+            
+            dynamicInfo.style.display = 'none';
+            dynamicInfo.classList.remove('fully-paid');
+            paymentAmountInput.disabled = false;
+            paymentAmountInput.value = '';
+            updateCalculation();
+            
+            // Remove warning box if exists
+            const warningBox = document.querySelector('.fully-paid-warning');
+            if (warningBox) {
+                warningBox.remove();
+            }
         });
         
         // Close search results when clicking outside

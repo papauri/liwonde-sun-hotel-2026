@@ -5,9 +5,15 @@
  * Used by booking form for real-time availability checking
  */
 
+// Load security configuration first
+require_once 'config/security.php';
+
 header('Content-Type: application/json');
 
 require_once 'config/database.php';
+
+// Send security headers
+sendSecurityHeaders();
 
 // Get parameters
 $room_id = isset($_GET['room_id']) ? (int)$_GET['room_id'] : 0;

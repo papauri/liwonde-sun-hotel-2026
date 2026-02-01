@@ -1,17 +1,9 @@
 <?php
-session_start();
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
 
-// Check authentication
-if (!isset($_SESSION['admin_user'])) {
-    header('Location: login.php');
-    exit;
-}
-
-require_once '../config/database.php';
 require_once '../includes/modal.php';
 require_once '../includes/alert.php';
-
-$user = $_SESSION['admin_user'];
 $message = '';
 $error = '';
 
@@ -465,6 +457,7 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     <style>
         /* Bookings specific styles */
         .stats-grid {
@@ -1074,9 +1067,9 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
     </style>
 </head>
 <body>
-    <?php include 'admin-header.php'; ?>
 
-
+    <?php require_once 'admin-header.php'; ?>
+    
     <div class="content">
         <div class="stats-grid">
             <div class="stat-card">
@@ -1762,5 +1755,6 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             });
         }
     </script>
+    <script src="js/admin-components.js"></script>
 </body>
 </html>

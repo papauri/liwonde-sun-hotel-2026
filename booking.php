@@ -1,11 +1,27 @@
 <?php
-session_start();
+/**
+ * Room Booking Page with Enhanced Security
+ * Features:
+ * - CSRF protection
+ * - Secure session management
+ * - Input validation
+ */
+
+// Load security configuration first
+require_once 'config/security.php';
+
 require_once 'config/database.php';
 require_once 'config/email.php';
 require_once 'includes/validation.php';
 
+// Send security headers
+sendSecurityHeaders();
+
 // Handle booking submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Validate CSRF token
+    requireCsrfValidation();
+    
     try {
         // Initialize validation errors array
         $validation_errors = [];
@@ -868,6 +884,7 @@ try {
         <?php endif; ?>
 
         <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF'] . (isset($_GET['room_id']) ? '?room_id=' . (int)$_GET['room_id'] : '')); ?>" class="booking-form-card" id="bookingForm">
+            <?php echo getCsrfField(); ?>
             <!-- Room Selection (hidden if pre-selected) -->
             <?php if (!$preselected_room): ?>
             <div class="form-section">

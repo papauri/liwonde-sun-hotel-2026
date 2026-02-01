@@ -1,7 +1,7 @@
 <?php
 /**
  * Admin Interface for Managing API Keys
- * 
+ *
  * Allows administrators to:
  * - Create new API keys for external websites
  * - View and manage existing API keys
@@ -9,13 +9,12 @@
  * - Revoke/regenerate API keys
  */
 
-require_once __DIR__ . '/admin-header.php';
-require_once __DIR__ . '/../config/database.php';
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
 
-// Check admin authentication
-session_start();
-if (!isset($_SESSION['admin_user_id']) || $_SESSION['admin_role'] !== 'admin') {
-    header('Location: login.php');
+// Check admin authentication - only admin role can access API keys
+if ($_SESSION['admin_role'] !== 'admin') {
+    header('Location: dashboard.php');
     exit;
 }
 
@@ -186,7 +185,26 @@ $availablePermissions = [
 ];
 ?>
 
-<div class="admin-container">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Keys Management - Admin Panel</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
+</head>
+<body>
+
+    <?php require_once 'admin-header.php'; ?>
+    
+    <div class="admin-container">
     <div class="admin-header">
         <h1><i class="fas fa-key"></i> API Keys Management</h1>
         <p>Manage API keys for external websites to access the booking system</p>
@@ -469,4 +487,5 @@ fetch(API_BASE + 'rooms', {
     </div>
 </div>
 
-<?php require_once __DIR__ . '/admin-footer.php'; ?>
+</body>
+</html>

@@ -2,24 +2,16 @@
 /**
  * Blocked Dates Management Page
  * Liwonde Sun Hotel - Admin Panel
- * 
+ *
  * Allows administrators to block/unblock room dates
  * for maintenance, events, or other reasons
  */
 
-session_start();
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
 
-// Check authentication
-if (!isset($_SESSION['admin_user'])) {
-    header('Location: login.php');
-    exit;
-}
-
-require_once '../config/database.php';
 require_once '../includes/modal.php';
 require_once '../includes/alert.php';
-
-$user = $_SESSION['admin_user'];
 
 // Handle form submissions
 $message = '';
@@ -143,6 +135,7 @@ $site_name = getSetting('site_name');
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     
     <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -392,8 +385,8 @@ $site_name = getSetting('site_name');
 </head>
 <body>
 
-    <?php include 'admin-header.php'; ?>
-
+    <?php require_once 'admin-header.php'; ?>
+    
     <div class="content">
         <h2 class="section-title">Blocked Dates Management</h2>
         
@@ -722,5 +715,6 @@ $site_name = getSetting('site_name');
         }
     });
     </script>
+    <script src="js/admin-components.js"></script>
 </body>
 </html>

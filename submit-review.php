@@ -1,11 +1,16 @@
 <?php
 /**
- * Review Submission Form
+ * Review Submission Form with Enhanced Security
  * Liwonde Sun Hotel - Guest Review Submission
+ *
+ * Features:
+ * - CSRF protection
+ * - Secure session management
+ * - Input validation
  */
 
-// Start session for alerts
-session_start();
+// Load security configuration first
+require_once 'config/security.php';
 
 // Include database configuration
 require_once 'config/database.php';
@@ -15,6 +20,9 @@ require_once 'includes/alert.php';
 
 // Include validation library
 require_once 'includes/validation.php';
+
+// Send security headers
+sendSecurityHeaders();
 
 // Initialize variables
 $rooms = [];
@@ -42,6 +50,9 @@ try {
 
 // Handle form submission via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Validate CSRF token
+    requireCsrfValidation();
+    
     // Initialize validation errors array
     $validation_errors = [];
     $sanitized_data = [];
@@ -671,6 +682,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
                 
                 <form id="reviewForm" method="POST" action="submit-review.php<?php echo $selected_room_id > 0 ? '?room_id=' . $selected_room_id : ''; ?>" novalidate>
+                    <?php echo getCsrfField(); ?>
                     <!-- Personal Information -->
                     <div class="form-section-title">
                         <i class="fas fa-user"></i>

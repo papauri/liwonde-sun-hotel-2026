@@ -1,6 +1,12 @@
 <?php
+// Load security configuration first (before session_start)
+require_once 'config/security.php';
+
 session_start();
 require_once 'config/database.php';
+
+// Send security headers
+sendSecurityHeaders();
 
 // Get booking reference from URL
 $booking_reference = $_GET['ref'] ?? null;

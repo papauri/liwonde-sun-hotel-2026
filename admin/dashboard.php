@@ -1,17 +1,16 @@
 <?php
-session_start();
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
 
-// Check authentication
-if (!isset($_SESSION['admin_user'])) {
-    header('Location: login.php');
-    exit;
-}
-
-require_once '../config/database.php';
 require_once '../includes/modal.php';
 require_once '../includes/alert.php';
 
-$user = $_SESSION['admin_user'];
+$user = [
+    'id' => $_SESSION['admin_user_id'],
+    'username' => $_SESSION['admin_username'],
+    'role' => $_SESSION['admin_role'],
+    'full_name' => $_SESSION['admin_full_name']
+];
 $today = date('Y-m-d');
 
 // Fetch dashboard statistics
@@ -119,6 +118,7 @@ $currency_symbol = getSetting('currency_symbol');
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     
     <style>
         /* Dashboard-specific styles */
@@ -185,8 +185,8 @@ $currency_symbol = getSetting('currency_symbol');
 </head>
 <body>
 
-    <?php include 'admin-header.php'; ?>
-
+    <?php require_once 'admin-header.php'; ?>
+    
     <div class="content">
         <h2 class="section-title">Dashboard Overview</h2>
         
@@ -555,6 +555,7 @@ $currency_symbol = getSetting('currency_symbol');
         </div>
     </div>
 
+    <script src="js/admin-components.js"></script>
     <script>
         function processCheckIn(bookingId, guestName) {
             if (!confirm(`Check in ${guestName}?`)) {

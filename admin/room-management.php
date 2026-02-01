@@ -1,21 +1,6 @@
 <?php
-session_start();
-
-// Check authentication
-if (!isset($_SESSION['admin_user'])) {
-    // For AJAX requests, return JSON with 401 instead of redirecting HTML
-    $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-    if ($is_ajax) {
-        header('Content-Type: application/json');
-        http_response_code(401);
-        echo json_encode(['success' => false, 'message' => 'Session expired. Please login again.']);
-        exit;
-    }
-    header('Location: login.php');
-    exit;
-}
-
-require_once '../config/database.php';
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
 
 // Only include alert.php for non-AJAX requests to prevent HTML output in JSON responses
 $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
@@ -40,10 +25,14 @@ function is_ajax_request() {
     return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 }
 
-$user = $_SESSION['admin_user'];
+$user = [
+    'id' => $_SESSION['admin_user_id'],
+    'username' => $_SESSION['admin_username'],
+    'role' => $_SESSION['admin_role'],
+    'full_name' => $_SESSION['admin_full_name']
+];
 $message = '';
 $error = '';
-$current_page = basename($_SERVER['PHP_SELF']);
 
 // Handle room actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -250,6 +239,7 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     
     <style>
         /* Room management specific styles */

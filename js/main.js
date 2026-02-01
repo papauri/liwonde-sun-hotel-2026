@@ -62,10 +62,6 @@ document.addEventListener('DOMContentLoaded', function() {
             imageUploadForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 const formData = new FormData(imageUploadForm);
-                // Debug: Log form data keys and values
-                for (let pair of formData.entries()) {
-                    console.log('FormData:', pair[0], pair[1]);
-                }
                 fetch('room-management.php', {
                     method: 'POST',
                     body: formData,
@@ -77,7 +73,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     let text = await res.text();
                     try {
                         let data = JSON.parse(text);
-                        console.log('Upload response:', data);
                         if (data.success && data.image_url) {
                             if (currentImage) {
                                 currentImage.src = '../' + data.image_url;
@@ -267,20 +262,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Start observing the document body for added nodes
     smoothScrollObserver.observe(document.body, { childList: true, subtree: true });
 
-    // Debug: capture menu link clicks and defaultPrevented state
-    document.addEventListener('click', function(e) {
-        const link = e.target.closest('a');
-        if (link && link.closest('.nav-menu')) {
-            console.log('[mobile-menu] capture click', {
-                href: link.getAttribute('href'),
-                defaultPrevented: e.defaultPrevented,
-                cancelable: e.cancelable
-            });
-            setTimeout(() => {
-                console.log('[mobile-menu] post-click location', window.location.href);
-            }, 100);
-        }
-    }, true);
     
     // Supreme Premium Header Scroll Effect
     const header = document.querySelector('.header');
@@ -390,26 +371,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Ensure menu is at top of screen and visible
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-
-            console.log('[mobile-menu] setMenuOpen', {
-                open,
-                navMenuActive: navMenu.classList.contains('active'),
-                overlayActive: mobileMenuOverlay ? mobileMenuOverlay.classList.contains('active') : null
-            });
         };
 
         const isMenuOpen = () => navMenu.classList.contains('active');
 
         // Primary toggle
         mobileMenuBtn.addEventListener('click', function() {
-            console.log('[mobile-menu] toggle button clicked');
             setMenuOpen(!isMenuOpen());
         });
 
         // Close menu when clicking overlay
         if (mobileMenuOverlay) {
             mobileMenuOverlay.addEventListener('click', function() {
-                console.log('[mobile-menu] overlay clicked');
                 setMenuOpen(false);
             });
         }
@@ -417,7 +390,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Close menu when clicking on a link
         navMenu.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', function() {
-                console.log('[mobile-menu] nav link clicked', this.getAttribute('href'));
                 setMenuOpen(false);
             });
         });
@@ -530,14 +502,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const policyLinks = document.querySelectorAll('.policy-link');
     const policyOverlay = document.querySelector('[data-policy-overlay]');
     
-    console.log('Policy links found:', policyLinks.length);
-    console.log('Modal available:', typeof Modal);
-    
     function openPolicy(slug) {
         const modalId = 'policy-' + slug;
-        console.log('Opening policy modal:', modalId);
         const modal = document.getElementById(modalId);
-        console.log('Modal element found:', !!modal);
         
         if (typeof Modal !== 'undefined' && Modal.open) {
             Modal.open(modalId);
@@ -551,7 +518,6 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
             const slug = this.dataset.policy;
-            console.log('Policy link clicked, slug:', slug);
             openPolicy(slug);
         });
     });
@@ -783,6 +749,4 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize
         updateCarousel(false);
     }
-    
-    console.log('Liwonde Sun Hotel - Website loaded successfully');
 });

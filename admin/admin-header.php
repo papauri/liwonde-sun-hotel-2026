@@ -1,14 +1,16 @@
 <?php
-// admin-header.php: Shared header and navbar for admin pages
-if (session_status() === PHP_SESSION_NONE) session_start();
-if (!isset($_SESSION['admin_user'])) {
-    header('Location: login.php');
-    exit;
-}
-require_once '../config/database.php';
-$site_name = getSetting('site_name');
-$user = $_SESSION['admin_user'];
-$current_page = basename($_SERVER['PHP_SELF']);
+/**
+ * Admin Header HTML Output
+ * Shared header and navbar for admin pages
+ * 
+ * NOTE: This file outputs HTML. Include admin-init.php FIRST
+ * before including this file to ensure proper initialization.
+ * 
+ * Usage:
+ * 1. require_once 'admin-init.php';  // BEFORE <head>
+ * 2. ... <head> with CSS links ...
+ * 3. require_once 'admin-header.php';  // AFTER <head>
+ */
 ?>
 <div class="admin-header">
     <h1><i class="fas fa-hotel"></i> <?php echo htmlspecialchars($site_name); ?></h1>

@@ -1,8 +1,14 @@
 <?php
+/**
+ * Admin Login Page
+ * Simple session-based authentication
+ */
+
+// Start session
 session_start();
 
 // Check if already logged in
-if (isset($_SESSION['admin_user'])) {
+if (isset($_SESSION['admin_user_id'])) {
     header('Location: dashboard.php');
     exit;
 }
@@ -22,7 +28,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($user && password_verify($password, $user['password_hash'])) {
-                // Successful login
+                // Successful login - set individual session variables
+                $_SESSION['admin_user_id'] = $user['id'];
+                $_SESSION['admin_username'] = $user['username'];
+                $_SESSION['admin_role'] = $user['role'];
+                $_SESSION['admin_full_name'] = $user['full_name'];
+                
+                // Also set admin_user array for backward compatibility
                 $_SESSION['admin_user'] = [
                     'id' => $user['id'],
                     'username' => $user['username'],
@@ -30,16 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'full_name' => $user['full_name']
                 ];
 
-                // Update last login
-                $update_stmt = $pdo->prepare("UPDATE admin_users SET last_login = NOW() WHERE id = ?");
-                $update_stmt->execute([$user['id']]);
-
                 header('Location: dashboard.php');
                 exit;
             } else {
                 $error_message = 'Invalid username or password.';
             }
         } catch (PDOException $e) {
+            error_log("Login error: " . $e->getMessage());
             $error_message = 'Login error. Please try again.';
         }
     } else {
@@ -218,7 +227,9 @@ $site_name = getSetting('site_name');
             </div>
 
             <?php if ($error_message): ?>
-                <?php showAlert($error_message, 'error'); ?>
+                <div class="alert-danger">
+                    <?php echo htmlspecialchars($error_message); ?>
+                </div>
             <?php endif; ?>
 
             <form method="POST" action="login.php">

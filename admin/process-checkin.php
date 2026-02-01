@@ -1,15 +1,9 @@
 <?php
-session_start();
+// Include admin initialization (PHP-only, no HTML output)
+require_once 'admin-init.php';
+
 header('Content-Type: application/json');
 
-// Check authentication
-if (!isset($_SESSION['admin_user'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-    exit;
-}
-
-require_once '../config/database.php';
 require_once '../config/email-simple.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action'])) {
