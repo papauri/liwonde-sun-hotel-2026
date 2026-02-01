@@ -7,9 +7,9 @@ if (!isset($_SESSION['admin_user'])) {
     exit;
 }
 
-require_once '../../config/database.php';
-require_once '../../includes/modal.php';
-require_once '../../includes/alert.php';
+require_once '../config/database.php';
+require_once '../includes/modal.php';
+require_once '../includes/alert.php';
 
 $user = $_SESSION['admin_user'];
 $site_name = getSetting('site_name');
@@ -28,67 +28,76 @@ $offset = ($page - 1) * $limit;
 
 // Build query
 $sql = "
-    SELECT 
+    SELECT
         p.*,
-        CASE 
+        CASE
             WHEN p.booking_type = 'room' THEN CONCAT(b.guest_name, ' (', b.booking_reference, ')')
-            WHEN p.booking_type = 'conference' THEN CONCAT(ci.organization_name, ' (', ci.enquiry_reference, ')')
+            WHEN p.booking_type = 'conference' THEN CONCAT(ci.company_name, ' (', ci.inquiry_reference, ')')
             ELSE 'Unknown'
         END as booking_description,
-        CASE 
+        CASE
             WHEN p.booking_type = 'room' THEN b.booking_reference
-            WHEN p.booking_type = 'conference' THEN ci.enquiry_reference
+            WHEN p.booking_type = 'conference' THEN ci.inquiry_reference
             ELSE NULL
         END as booking_reference,
-        CASE 
+        CASE
             WHEN p.booking_type = 'room' THEN b.guest_email
-            WHEN p.booking_type = 'conference' THEN ci.contact_email
+            WHEN p.booking_type = 'conference' THEN ci.email
             ELSE NULL
         END as contact_email
     FROM payments p
     LEFT JOIN bookings b ON p.booking_type = 'room' AND p.booking_id = b.id
     LEFT JOIN conference_inquiries ci ON p.booking_type = 'conference' AND p.booking_id = ci.id
-    WHERE p.deleted_at IS NULL
 ";
 
+$where_conditions = [];
 $params = [];
 
 if ($bookingType) {
-    $sql .= " AND p.booking_type = ?";
+    $where_conditions[] = "p.booking_type = ?";
     $params[] = $bookingType;
 }
 
 if ($bookingId) {
-    $sql .= " AND p.booking_id = ?";
+    $where_conditions[] = "p.booking_id = ?";
     $params[] = $bookingId;
 }
 
 if ($status) {
-    $sql .= " AND p.payment_status = ?";
+    $where_conditions[] = "p.payment_status = ?";
     $params[] = $status;
 }
 
 if ($paymentMethod) {
-    $sql .= " AND p.payment_method = ?";
+    $where_conditions[] = "p.payment_method = ?";
     $params[] = $paymentMethod;
 }
 
 if ($startDate) {
-    $sql .= " AND p.payment_date >= ?";
+    $where_conditions[] = "p.payment_date >= ?";
     $params[] = $startDate;
 }
 
 if ($endDate) {
-    $sql .= " AND p.payment_date <= ?";
+    $where_conditions[] = "p.payment_date <= ?";
     $params[] = $endDate;
 }
 
+if (!empty($where_conditions)) {
+    $sql .= " WHERE " . implode(' AND ', $where_conditions);
+}
+
 // Get total count
-$countSql = str_replace(
-    "SELECT p.*,",
-    "SELECT COUNT(*) as total,",
-    $sql
-);
+$countSql = "
+    SELECT COUNT(*) as total
+    FROM payments p
+    LEFT JOIN bookings b ON p.booking_type = 'room' AND p.booking_id = b.id
+    LEFT JOIN conference_inquiries ci ON p.booking_type = 'conference' AND p.booking_id = ci.id
+";
+
+if (!empty($where_conditions)) {
+    $countSql .= " WHERE " . implode(' AND ', $where_conditions);
+}
 $countStmt = $pdo->prepare($countSql);
 $countStmt->execute($params);
 $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
@@ -105,9 +114,8 @@ $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Get unique payment methods for filter
 $methodsStmt = $pdo->query("
-    SELECT DISTINCT payment_method 
-    FROM payments 
-    WHERE deleted_at IS NULL 
+    SELECT DISTINCT payment_method
+    FROM payments
     ORDER BY payment_method
 ");
 $paymentMethods = $methodsStmt->fetchAll(PDO::FETCH_COLUMN);
@@ -125,8 +133,8 @@ $totalPages = ceil($total / $limit);
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../../css/style.css">
-    <link rel="stylesheet" href="../css/admin-styles.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/admin-styles.css">
     
     <style>
         .page-header {
@@ -206,29 +214,29 @@ $totalPages = ceil($total / $limit);
             background: #5a6268;
         }
         
-        .badge-completed {
-            background: #d4edda;
-            color: #155724;
-        }
-        
         .badge-pending {
             background: #fff3cd;
             color: #856404;
         }
         
-        .badge-refunded {
+        .badge-partial {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .badge-fully_paid {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-overdue {
             background: #f8d7da;
             color: #721c24;
         }
         
-        .badge-partially_refunded {
+        .badge-refunded {
             background: #e2e3e5;
             color: #383d41;
-        }
-        
-        .badge-failed {
-            background: #f8d7da;
-            color: #721c24;
         }
         
         .badge-room {
@@ -306,7 +314,7 @@ $totalPages = ceil($total / $limit);
 </head>
 <body>
 
-    <?php include '../admin-header.php'; ?>
+    <?php include 'admin-header.php'; ?>
 
     <div class="content">
         <div class="page-header">
@@ -322,13 +330,12 @@ $totalPages = ceil($total / $limit);
         <!-- Summary Cards -->
         <?php
         $summaryStmt = $pdo->prepare("
-            SELECT 
+            SELECT
                 COUNT(*) as total_payments,
-                SUM(CASE WHEN payment_status = 'completed' THEN total_amount ELSE 0 END) as total_collected,
+                SUM(CASE WHEN payment_status = 'fully_paid' THEN total_amount ELSE 0 END) as total_collected,
                 SUM(CASE WHEN payment_status = 'pending' THEN total_amount ELSE 0 END) as total_pending,
-                SUM(CASE WHEN payment_status IN ('refunded', 'partially_refunded') THEN total_amount ELSE 0 END) as total_refunded
+                SUM(CASE WHEN payment_status = 'refunded' THEN total_amount ELSE 0 END) as total_refunded
             FROM payments
-            WHERE deleted_at IS NULL
         ");
         $summaryStmt->execute();
         $summary = $summaryStmt->fetch(PDO::FETCH_ASSOC);
@@ -375,10 +382,10 @@ $totalPages = ceil($total / $limit);
                     <select name="status">
                         <option value="">All Statuses</option>
                         <option value="pending" <?php echo $status === 'pending' ? 'selected' : ''; ?>>Pending</option>
-                        <option value="completed" <?php echo $status === 'completed' ? 'selected' : ''; ?>>Completed</option>
-                        <option value="failed" <?php echo $status === 'failed' ? 'selected' : ''; ?>>Failed</option>
+                        <option value="partial" <?php echo $status === 'partial' ? 'selected' : ''; ?>>Partial</option>
+                        <option value="fully_paid" <?php echo $status === 'fully_paid' ? 'selected' : ''; ?>>Fully Paid</option>
+                        <option value="overdue" <?php echo $status === 'overdue' ? 'selected' : ''; ?>>Overdue</option>
                         <option value="refunded" <?php echo $status === 'refunded' ? 'selected' : ''; ?>>Refunded</option>
-                        <option value="partially_refunded" <?php echo $status === 'partially_refunded' ? 'selected' : ''; ?>>Partially Refunded</option>
                     </select>
                 </div>
                 
@@ -461,8 +468,8 @@ $totalPages = ceil($total / $limit);
                                     </span>
                                 </td>
                                 <td>
-                                    <?php if ($payment['receipt_number']): ?>
-                                        <span style="color: #28a745;"><i class="fas fa-check"></i> <?php echo htmlspecialchars($payment['receipt_number']); ?></span>
+                                    <?php if (!empty($payment['payment_reference_number'])): ?>
+                                        <span style="color: #28a745;"><i class="fas fa-check"></i> <?php echo htmlspecialchars($payment['payment_reference_number']); ?></span>
                                     <?php else: ?>
                                         <span style="color: #999;">N/A</span>
                                     <?php endif; ?>
@@ -472,7 +479,7 @@ $totalPages = ceil($total / $limit);
                                         <a href="payment-details.php?id=<?php echo $payment['id']; ?>" class="btn btn-primary btn-sm">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <?php if ($payment['payment_status'] !== 'completed'): ?>
+                                        <?php if ($payment['payment_status'] !== 'fully_paid'): ?>
                                             <a href="payment-add.php?edit=<?php echo $payment['id']; ?>" class="btn btn-warning btn-sm">
                                                 <i class="fas fa-edit"></i>
                                             </a>

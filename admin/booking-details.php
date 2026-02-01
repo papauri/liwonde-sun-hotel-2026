@@ -22,6 +22,45 @@ if (!$booking_id) {
 if ($action && $_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
         switch ($action) {
+            case 'convert':
+                // Convert tentative booking to confirmed
+                $stmt = $pdo->prepare("SELECT * FROM bookings WHERE id = ?");
+                $stmt->execute([$booking_id]);
+                $booking_data = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$booking_data) {
+                    $_SESSION['error_message'] = 'Booking not found.';
+                } elseif ($booking_data['status'] !== 'tentative' || $booking_data['is_tentative'] != 1) {
+                    $_SESSION['error_message'] = 'This is not a tentative booking.';
+                } else {
+                    // Convert to confirmed
+                    $update = $pdo->prepare("UPDATE bookings SET status = 'confirmed', is_tentative = 0, updated_at = NOW() WHERE id = ?");
+                    $update->execute([$booking_id]);
+                    
+                    // Log the conversion
+                    $log_stmt = $pdo->prepare("
+                        INSERT INTO tentative_booking_log (
+                            booking_id, action, action_by, action_at, notes
+                        ) VALUES (?, 'converted', ?, NOW(), ?)
+                    ");
+                    $log_stmt->execute([
+                        $booking_id,
+                        $user['id'],
+                        'Converted from tentative to confirmed by admin'
+                    ]);
+                    
+                    // Send conversion email
+                    require_once '../config/email.php';
+                    $email_result = sendTentativeBookingConvertedEmail($booking_data);
+                    
+                    if ($email_result['success']) {
+                        $_SESSION['success_message'] = 'Tentative booking converted to confirmed! Conversion email sent to guest.';
+                    } else {
+                        $_SESSION['success_message'] = 'Tentative booking converted! (Email failed: ' . $email_result['message'] . ')';
+                    }
+                }
+                break;
+            
             case 'confirm':
                 $stmt = $pdo->prepare("UPDATE bookings SET status = 'confirmed', updated_at = NOW() WHERE id = ? AND status = 'pending'");
                 $stmt->execute([$booking_id]);
@@ -41,13 +80,70 @@ if ($action && $_SERVER['REQUEST_METHOD'] === 'GET') {
                 break;
             
             case 'cancel':
-                $stmt = $pdo->prepare("UPDATE bookings SET status = 'cancelled', updated_at = NOW() WHERE id = ?");
-                $stmt->execute([$booking_id]);
-                $_SESSION['success_message'] = 'Booking cancelled.';
+                // Get booking details before cancelling
+                $booking_stmt = $pdo->prepare("
+                    SELECT b.*, r.name as room_name
+                    FROM bookings b
+                    LEFT JOIN rooms r ON b.room_id = r.id
+                    WHERE b.id = ?
+                ");
+                $booking_stmt->execute([$booking_id]);
+                $booking = $booking_stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($booking) {
+                    // Update booking status
+                    $stmt = $pdo->prepare("UPDATE bookings SET status = 'cancelled', updated_at = NOW() WHERE id = ?");
+                    $stmt->execute([$booking_id]);
+                    
+                    // Restore room availability
+                    if ($booking['status'] === 'confirmed') {
+                        $update_room = $pdo->prepare("UPDATE rooms SET rooms_available = rooms_available + 1 WHERE id = ? AND rooms_available < total_rooms");
+                        $update_room->execute([$booking['room_id']]);
+                    }
+                    
+                    // Send cancellation email
+                    require_once '../config/email.php';
+                    $cancellation_reason = $_GET['reason'] ?? 'Cancelled by admin';
+                    $email_result = sendBookingCancelledEmail($booking, $cancellation_reason);
+                    
+                    // Log cancellation to database
+                    $email_sent = $email_result['success'];
+                    $email_status = $email_result['message'];
+                    logCancellationToDatabase(
+                        $booking['id'],
+                        $booking['booking_reference'],
+                        'room',
+                        $booking['guest_email'],
+                        $user['id'],
+                        $cancellation_reason,
+                        $email_sent,
+                        $email_status
+                    );
+                    
+                    // Log cancellation to file
+                    logCancellationToFile(
+                        $booking['booking_reference'],
+                        'room',
+                        $booking['guest_email'],
+                        $user['full_name'] ?? $user['username'],
+                        $cancellation_reason,
+                        $email_sent,
+                        $email_status
+                    );
+                    
+                    if ($email_sent) {
+                        $_SESSION['success_message'] = 'Booking cancelled. Cancellation email sent to guest.';
+                    } else {
+                        $_SESSION['success_message'] = 'Booking cancelled. (Email failed: ' . $email_status . ')';
+                    }
+                } else {
+                    $_SESSION['error_message'] = 'Booking not found.';
+                }
                 break;
         }
     } catch (PDOException $e) {
         $_SESSION['error_message'] = 'Action failed. Please try again.';
+        error_log("Booking action error: " . $e->getMessage());
     }
     
     header('Location: dashboard.php');
@@ -278,6 +374,42 @@ $current_page = 'bookings.php';
             background: #f8d7da;
             color: #721c24;
         }
+        .status-tentative {
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            color: var(--navy);
+            font-weight: 600;
+        }
+        .tentative-info {
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            border-left: 4px solid var(--gold);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .tentative-info h4 {
+            margin: 0 0 8px 0;
+            color: var(--navy);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tentative-info p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .tentative-info .expires-at {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
+            font-weight: 600;
+            color: var(--navy);
+        }
+        .tentative-info .expires-at i {
+            color: #dc3545;
+            margin-right: 6px;
+        }
         .action-buttons {
             display: flex;
             gap: 12px;
@@ -424,6 +556,20 @@ $current_page = 'bookings.php';
                 </div>
             </div>
 
+            <?php
+                $is_tentative = ($booking['status'] === 'tentative' || $booking['is_tentative'] == 1);
+                if ($is_tentative && $booking['tentative_expires_at']):
+            ?>
+            <div class="tentative-info">
+                <h4><i class="fas fa-clock"></i> Tentative Booking</h4>
+                <p>This booking is currently on hold. The guest has not yet confirmed their reservation.</p>
+                <div class="expires-at">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Expires: <?php echo date('M j, Y \a\t g:i A', strtotime($booking['tentative_expires_at'])); ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <?php if ($booking['special_requests']): ?>
             <div class="detail-item" style="margin-top: 20px;">
                 <label>Special Requests</label>
@@ -434,6 +580,12 @@ $current_page = 'bookings.php';
             <div style="margin-top: 32px;">
                 <label style="display: block; margin-bottom: 12px; font-weight: 600;">Quick Actions</label>
                 <div class="action-buttons">
+                    <?php if ($booking['status'] == 'tentative' || $booking['is_tentative'] == 1): ?>
+                    <a href="booking-details.php?id=<?php echo $booking_id; ?>&action=convert" class="btn btn-success" onclick="return confirm('Convert this tentative booking to confirmed? This will send a confirmation email to the guest.')">
+                        <i class="fas fa-check"></i> Convert to Confirmed
+                    </a>
+                    <?php endif; ?>
+                    
                     <?php if ($booking['status'] == 'pending'): ?>
                     <a href="booking-details.php?id=<?php echo $booking_id; ?>&action=confirm" class="btn btn-success" onclick="return confirm('Confirm this booking?')">
                         <i class="fas fa-check"></i> Confirm Booking

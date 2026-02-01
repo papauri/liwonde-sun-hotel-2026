@@ -4,14 +4,11 @@
  * Provides comprehensive payment status tracking and financial reporting
  */
 
-require_once __DIR__ . '/../../config/database.php';
-require_once __DIR__ . '/../admin-header.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/admin-header.php';
 
-// Check permissions
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: admin-login.php');
-    exit;
-}
+// Check permissions - admin-header.php already checks for $_SESSION['admin_user']
+// No additional check needed here
 
 // Get date range from query parameters or default to current month
 $start_date = $_GET['start_date'] ?? date('Y-m-01');
@@ -40,12 +37,11 @@ $date_filter = "AND payment_date >= ? AND payment_date <= ?";
 
 // 1. Payment Status Overview
 $statusQuery = "
-    SELECT 
+    SELECT
         payment_status,
         COUNT(*) as count,
         SUM(total_amount) as total_amount
     FROM payments
-    WHERE deleted_at IS NULL
     GROUP BY payment_status
 ";
 $statusStmt = $pdo->query($statusQuery);
@@ -64,14 +60,13 @@ while ($row = $statusStmt->fetch(PDO::FETCH_ASSOC)) {
 
 // 2. Revenue by Booking Type
 $revenueByTypeQuery = "
-    SELECT 
+    SELECT
         booking_type,
         COUNT(*) as count,
         SUM(total_amount) as total_revenue,
         SUM(vat_amount) as total_vat
     FROM payments
-    WHERE payment_status = 'completed' 
-    AND deleted_at IS NULL
+    WHERE payment_status = 'completed'
     $date_filter
     GROUP BY booking_type
 ";
@@ -81,13 +76,12 @@ $revenueByType = $revenueByTypeStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 3. Payment Method Breakdown
 $paymentMethodsQuery = "
-    SELECT 
+    SELECT
         payment_method,
         COUNT(*) as count,
         SUM(total_amount) as total_amount
     FROM payments
     WHERE payment_status = 'completed'
-    AND deleted_at IS NULL
     $date_filter
     GROUP BY payment_method
     ORDER BY total_amount DESC
@@ -98,13 +92,13 @@ $paymentMethods = $paymentMethodsStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 4. Outstanding Payments (pending and overdue)
 $outstandingQuery = "
-    SELECT 
+    SELECT
         p.*,
-        CASE 
+        CASE
             WHEN p.booking_type = 'room' THEN CONCAT('BK-', b.booking_reference)
             WHEN p.booking_type = 'conference' THEN CONCAT('CONF-', ci.inquiry_reference)
         END as booking_reference,
-        CASE 
+        CASE
             WHEN p.booking_type = 'room' THEN CONCAT(b.guest_name, ' (', b.guest_email, ')')
             WHEN p.booking_type = 'conference' THEN CONCAT(ci.company_name, ' - ', ci.contact_person)
         END as client_info
@@ -112,7 +106,6 @@ $outstandingQuery = "
     LEFT JOIN bookings b ON p.booking_type = 'room' AND p.booking_id = b.id
     LEFT JOIN conference_inquiries ci ON p.booking_type = 'conference' AND p.booking_id = ci.id
     WHERE p.payment_status IN ('pending', 'partial', 'overdue')
-    AND p.deleted_at IS NULL
     ORDER BY p.payment_date ASC
 ";
 $outstandingStmt = $pdo->query($outstandingQuery);
@@ -120,13 +113,12 @@ $outstandingPayments = $outstandingStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 5. Daily Revenue Trend
 $dailyRevenueQuery = "
-    SELECT 
+    SELECT
         DATE(payment_date) as date,
         COUNT(*) as transaction_count,
         SUM(total_amount) as daily_revenue
     FROM payments
     WHERE payment_status = 'completed'
-    AND deleted_at IS NULL
     $date_filter
     GROUP BY DATE(payment_date)
     ORDER BY date ASC
@@ -137,14 +129,13 @@ $dailyRevenue = $dailyRevenueStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 6. VAT Collected Report
 $vatCollectedQuery = "
-    SELECT 
+    SELECT
         DATE(payment_date) as date,
         COUNT(*) as transaction_count,
         SUM(vat_amount) as vat_collected,
         SUM(total_amount) as total_revenue
     FROM payments
     WHERE payment_status = 'completed'
-    AND deleted_at IS NULL
     $date_filter
     GROUP BY DATE(payment_date)
     ORDER BY date ASC
@@ -155,8 +146,8 @@ $vatCollected = $vatCollectedStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 7. Top Clients by Revenue
 $topClientsQuery = "
-    SELECT 
-        CASE 
+    SELECT
+        CASE
             WHEN p.booking_type = 'room' THEN b.guest_name
             WHEN p.booking_type = 'conference' THEN ci.company_name
         END as client_name,
@@ -167,7 +158,6 @@ $topClientsQuery = "
     LEFT JOIN bookings b ON p.booking_type = 'room' AND p.booking_id = b.id
     LEFT JOIN conference_inquiries ci ON p.booking_type = 'conference' AND p.booking_id = ci.id
     WHERE p.payment_status = 'completed'
-    AND p.deleted_at IS NULL
     $date_filter
     GROUP BY client_name, p.booking_type
     ORDER BY total_spent DESC
@@ -761,7 +751,7 @@ foreach ($statusData as $status) {
             const reportType = document.getElementById('report_type').value;
             
             // Create CSV export URL
-            const url = `../../api/reports-export.php?start_date=${startDate}&end_date=${endDate}&report_type=${reportType}`;
+            const url = `../api/reports-export.php?start_date=${startDate}&end_date=${endDate}&report_type=${reportType}`;
             window.open(url, '_blank');
         }
 

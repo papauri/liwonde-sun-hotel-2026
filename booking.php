@@ -152,6 +152,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check_out_date = $sanitized_data['check_out_date'];
         $special_requests = $sanitized_data['special_requests'];
 
+        // Get booking type (standard or tentative)
+        $is_tentative_booking = isset($_POST['booking_type']) && $_POST['booking_type'] === 'tentative';
+        
         // Get room details for pricing
         $room = $validation_result['availability']['room'];
         $number_of_nights = $validation_result['availability']['nights'];
@@ -165,22 +168,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ref_exists = $ref_check->fetch(PDO::FETCH_ASSOC)['count'] > 0;
         } while ($ref_exists);
 
+        // Determine status and tentative expiration
+        $booking_status = $is_tentative_booking ? 'tentative' : 'pending';
+        $is_tentative = $is_tentative_booking ? 1 : 0;
+        $tentative_expires_at = null;
+        
+        if ($is_tentative_booking) {
+            // Get tentative duration from settings (default 48 hours)
+            $tentative_duration_hours = (int)getSetting('tentative_duration_hours', 48);
+            $tentative_expires_at = date('Y-m-d H:i:s', strtotime("+{$tentative_duration_hours} hours"));
+        }
+
         // Insert booking with transaction for data integrity
         $pdo->beginTransaction(); // Start transaction
         
         try {
             $insert_stmt = $pdo->prepare("
                 INSERT INTO bookings (
-                    booking_reference, room_id, guest_name, guest_email, guest_phone, 
-                    guest_country, guest_address, number_of_guests, check_in_date, 
-                    check_out_date, number_of_nights, total_amount, special_requests, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+                    booking_reference, room_id, guest_name, guest_email, guest_phone,
+                    guest_country, guest_address, number_of_guests, check_in_date,
+                    check_out_date, number_of_nights, total_amount, special_requests, status,
+                    is_tentative, tentative_expires_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
 
             $insert_stmt->execute([
                 $booking_reference, $room_id, $guest_name, $guest_email, $guest_phone,
                 $guest_country, $guest_address, $number_of_guests, $check_in_date,
-                $check_out_date, $number_of_nights, $total_amount, $special_requests
+                $check_out_date, $number_of_nights, $total_amount, $special_requests,
+                $booking_status, $is_tentative, $tentative_expires_at
             ]);
 
             // Commit transaction - booking secured with foreign key constraints!
@@ -200,18 +216,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'number_of_guests' => $number_of_guests,
                 'total_amount' => $total_amount,
                 'special_requests' => $special_requests,
-                'status' => 'pending'
+                'status' => $booking_status,
+                'is_tentative' => $is_tentative,
+                'tentative_expires_at' => $tentative_expires_at
             ];
             
-            // Send booking received email to guest (first email - awaiting confirmation)
-            $email_result = sendBookingReceivedEmail($booking_data);
+            // Send appropriate email based on booking type
+            if ($is_tentative_booking) {
+                // Send tentative booking confirmation email
+                $email_result = sendTentativeBookingConfirmedEmail($booking_data);
+                $log_type = "Tentative booking confirmed";
+            } else {
+                // Send standard booking received email
+                $email_result = sendBookingReceivedEmail($booking_data);
+                $log_type = "Booking received";
+            }
             
             // Log email result for debugging
             if (!$email_result['success']) {
-                error_log("Failed to send booking received email: " . $email_result['message']);
+                error_log("Failed to send {$log_type} email: " . $email_result['message']);
             } else {
                 // Log success with preview URL if available
-                $logMsg = "Booking received email processed (PHPMailer)";
+                $logMsg = "{$log_type} email processed (PHPMailer)";
                 if (isset($email_result['preview_url'])) {
                     $logMsg .= " - Preview: " . $email_result['preview_url'];
                 }
@@ -241,7 +267,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'check_out' => $check_out_date,
                 'nights' => $number_of_nights,
                 'total' => $total_amount,
-                'email_sent' => $email_result['success']
+                'email_sent' => $email_result['success'],
+                'is_tentative' => $is_tentative,
+                'tentative_expires_at' => $tentative_expires_at
             ];
 
             header('Location: booking-confirmation.php?ref=' . $booking_reference);
@@ -266,9 +294,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $preselected_room_id = isset($_GET['room_id']) ? (int)$_GET['room_id'] : null;
 $preselected_room = null;
 
-// Fetch available rooms for booking form
-$rooms_stmt = $pdo->query("SELECT id, name, price_per_night, max_guests, short_description, image_url FROM rooms WHERE is_active = 1 ORDER BY display_order ASC");
+// Fetch available rooms for booking form with all details needed for validation
+$rooms_stmt = $pdo->query("SELECT id, name, price_per_night, max_guests, rooms_available, total_rooms, short_description, image_url FROM rooms WHERE is_active = 1 ORDER BY display_order ASC");
 $available_rooms = $rooms_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Build rooms data for JavaScript
+$rooms_data = [];
+foreach ($available_rooms as $room) {
+    $rooms_data[] = [
+        'id' => (int)$room['id'],
+        'name' => $room['name'],
+        'max_guests' => (int)$room['max_guests'],
+        'price_per_night' => (float)$room['price_per_night'],
+        'rooms_available' => (int)$room['rooms_available'],
+        'total_rooms' => (int)$room['total_rooms']
+    ];
+}
 
 // Get pre-selected room details
 if ($preselected_room_id) {
@@ -286,6 +327,7 @@ $site_logo = getSetting('site_logo');
 $currency_symbol = getSetting('currency_symbol');
 $phone_main = getSetting('phone_main');
 $email_reservations = getSetting('email_reservations');
+$email_reservations_esc = addslashes($email_reservations); // For JavaScript
 
 // Get maximum advance booking days
 $max_advance_days = (int)getSetting('max_advance_booking_days');
@@ -710,6 +752,103 @@ try {
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Booking Type Selection Styles */
+        .booking-type-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 16px;
+        }
+
+        .booking-type-option {
+            position: relative;
+            cursor: pointer;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .booking-type-option:hover {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .booking-type-option.selected {
+            border-color: var(--gold);
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+        }
+
+        .booking-type-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .booking-type-content {
+            position: relative;
+        }
+
+        .booking-type-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .booking-type-header i {
+            font-size: 24px;
+            color: var(--gold);
+        }
+
+        .booking-type-header h4 {
+            margin: 0;
+            color: var(--navy);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .booking-type-description {
+            margin: 0 0 12px 0;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .booking-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .booking-type-badge.recommended {
+            background: linear-gradient(135deg, var(--gold) 0%, #c49b2e 100%);
+            color: var(--deep-navy);
+        }
+
+        .booking-type-badge.info {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            color: #1565c0;
+        }
+
+        .booking-type-option.selected .booking-type-badge.recommended {
+            background: linear-gradient(135deg, #c49b2e 0%, #b88a1f 100%);
+        }
+
+        @media (max-width: 768px) {
+            .booking-type-selection {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body class="booking-page">
@@ -735,12 +874,12 @@ try {
                 <h3 class="form-section-title"><i class="fas fa-bed"></i> Select Your Room</h3>
                 <div class="room-selection">
                     <?php foreach ($available_rooms as $room): ?>
-                    <label class="room-option" onclick="selectRoom(this)" data-room-id="<?php echo $room['id']; ?>" data-room-name="<?php echo htmlspecialchars($room['name']); ?>" data-room-price="<?php echo $room['price_per_night']; ?>">
+                    <label class="room-option" onclick="selectRoom(this)" data-room-id="<?php echo $room['id']; ?>" data-room-name="<?php echo htmlspecialchars($room['name']); ?>" data-room-price="<?php echo $room['price_per_night']; ?>" data-max-guests="<?php echo $room['max_guests']; ?>" data-rooms-available="<?php echo $room['rooms_available']; ?>">
                         <input type="radio" name="room_id" value="<?php echo $room['id']; ?>" required>
                         <div class="room-info">
                             <h4><?php echo htmlspecialchars($room['name']); ?></h4>
                             <p><?php echo htmlspecialchars($room['short_description']); ?></p>
-                            <p><i class="fas fa-users"></i> Max <?php echo $room['max_guests']; ?> guests</p>
+                            <p><i class="fas fa-users"></i> Max <?php echo $room['max_guests']; ?> guests <?php echo $room['rooms_available'] > 1 ? "({$room['rooms_available']} rooms available)" : ''; ?></p>
                         </div>
                         <div class="room-price">
                             <div class="room-price-amount"><?php echo $currency_symbol; ?><?php echo number_format($room['price_per_night'], 0); ?></div>
@@ -752,6 +891,51 @@ try {
             </div>
             <?php endif; ?>
 
+            <!-- Booking Type Selection -->
+            <div class="form-section">
+                <h3 class="form-section-title"><i class="fas fa-clipboard-list"></i> Booking Type</h3>
+                <div class="booking-type-selection">
+                    <label class="booking-type-option" onclick="selectBookingType('standard')">
+                        <input type="radio" name="booking_type" value="standard" checked>
+                        <div class="booking-type-content">
+                            <div class="booking-type-header">
+                                <i class="fas fa-check-circle"></i>
+                                <h4>Standard Booking</h4>
+                            </div>
+                            <p class="booking-type-description">
+                                Confirm your booking immediately. Our team will review and confirm your reservation within 24 hours.
+                                Payment details will be provided upon confirmation.
+                            </p>
+                            <div class="booking-type-badge recommended">
+                                <i class="fas fa-star"></i> Recommended
+                            </div>
+                        </div>
+                    </label>
+                    
+                    <label class="booking-type-option" onclick="selectBookingType('tentative')">
+                        <input type="radio" name="booking_type" value="tentative">
+                        <div class="booking-type-content">
+                            <div class="booking-type-header">
+                                <i class="fas fa-clock"></i>
+                                <h4>Tentative Booking</h4>
+                            </div>
+                            <p class="booking-type-description">
+                                Place this room on temporary hold for <?php echo (int)getSetting('tentative_duration_hours', 48); ?> hours without immediate confirmation.
+                                Perfect when you need time to finalize travel plans. You'll receive a reminder before expiration.
+                            </p>
+                            <div class="booking-type-badge info">
+                                <i class="fas fa-info-circle"></i> No payment required yet
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <p style="margin-top: 15px; color: #666; font-size: 13px; text-align: center;">
+                    <i class="fas fa-lightbulb" style="color: var(--gold);"></i>
+                    <strong>Tentative bookings</strong> can be converted to standard bookings anytime before expiration.
+                    After expiration, the room hold will be released automatically.
+                </p>
+            </div>
+
             <!-- Pre-selected Room Info (shown if room is pre-selected) -->
             <?php if ($preselected_room): ?>
             <div class="form-section">
@@ -762,7 +946,7 @@ try {
                         <div class="room-info">
                             <h4><?php echo htmlspecialchars($preselected_room['name']); ?></h4>
                             <p><?php echo htmlspecialchars($preselected_room['short_description']); ?></p>
-                            <p><i class="fas fa-users"></i> Max <?php echo $preselected_room['max_guests']; ?> guests</p>
+                            <p><i class="fas fa-users"></i> Max <?php echo $preselected_room['max_guests']; ?> guests <?php echo $preselected_room['rooms_available'] > 1 ? "({$preselected_room['rooms_available']} rooms available)" : ''; ?></p>
                         </div>
                         <div class="room-price">
                             <div class="room-price-amount"><?php echo $currency_symbol; ?><?php echo number_format($preselected_room['price_per_night'], 0); ?></div>
@@ -849,13 +1033,21 @@ try {
                     <div class="form-group">
                         <label for="number_of_guests" class="required">Number of Guests</label>
                         <select id="number_of_guests" name="number_of_guests" class="form-control" required>
-                            <option value="">Select...</option>
-                            <option value="1" <?php echo (isset($_POST['number_of_guests']) && $_POST['number_of_guests'] == '1') ? 'selected' : ''; ?>>1 Guest</option>
-                            <option value="2" <?php echo (isset($_POST['number_of_guests']) && $_POST['number_of_guests'] == '2') ? 'selected' : ''; ?>>2 Guests</option>
-                            <option value="3" <?php echo (isset($_POST['number_of_guests']) && $_POST['number_of_guests'] == '3') ? 'selected' : ''; ?>>3 Guests</option>
-                            <option value="4" <?php echo (isset($_POST['number_of_guests']) && $_POST['number_of_guests'] == '4') ? 'selected' : ''; ?>>4 Guests</option>
-                            <option value="5" <?php echo (isset($_POST['number_of_guests']) && $_POST['number_of_guests'] == '5') ? 'selected' : ''; ?>>5+ Guests</option>
+                            <option value="">Select room first...</option>
                         </select>
+                        <small id="guestCapacityHint" style="color: #666; font-size: 12px; margin-top: 5px; display: none;"></small>
+                    </div>
+                    
+                    <!-- Second Room Suggestion (hidden by default) -->
+                    <div id="secondRoomSuggestion" style="display: none; margin-top: 15px; padding: 15px; background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border-left: 4px solid var(--gold); border-radius: 8px;">
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <i class="fas fa-info-circle" style="color: var(--gold); font-size: 20px; margin-top: 2px;"></i>
+                            <div>
+                                <h4 style="margin: 0 0 8px 0; color: var(--navy); font-size: 16px;">Consider Booking Multiple Rooms</h4>
+                                <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">Your group size exceeds the maximum capacity for one room. You can book multiple rooms to accommodate all guests.</p>
+                                <div id="secondRoomOptions" style="margin-top: 10px;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -904,17 +1096,26 @@ try {
     <script src="js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
+        // Site settings
+        const emailReservations = '<?php echo $email_reservations_esc; ?>';
+        const currencySymbol = '<?php echo htmlspecialchars($currency_symbol); ?>';
+        
         // Blocked dates from server
         const blockedDates = <?php echo json_encode($blocked_dates_array); ?>;
         const preselectedRoomId = <?php echo $preselected_room_id ? $preselected_room_id : 'null'; ?>;
         const preselectedRoomPrice = <?php echo $preselected_room ? $preselected_room['price_per_night'] : 'null'; ?>;
         const preselectedRoomName = <?php echo $preselected_room ? '"' . addslashes($preselected_room['name']) . '"' : 'null'; ?>;
+        const preselectedRoomMaxGuests = <?php echo $preselected_room ? $preselected_room['max_guests'] : 'null'; ?>;
+        
+        // Rooms data for dynamic validation
+        const roomsData = <?php echo json_encode($rooms_data); ?>;
         
         let checkInCalendar = null;
         let checkOutCalendar = null;
         let selectedRoomId = preselectedRoomId;
         let selectedRoomPrice = preselectedRoomPrice;
         let selectedRoomName = preselectedRoomName;
+        let selectedRoomMaxGuests = preselectedRoomMaxGuests;
         
         // Initialize calendars
         function initCalendars() {
@@ -985,6 +1186,8 @@ try {
                 selectedRoomId = preselectedRoomId;
                 selectedRoomPrice = preselectedRoomPrice;
                 selectedRoomName = preselectedRoomName;
+                selectedRoomMaxGuests = preselectedRoomMaxGuests;
+                updateGuestOptions(preselectedRoomMaxGuests);
             }
         });
         
@@ -1003,7 +1206,7 @@ try {
             document.getElementById('summaryCheckIn').textContent = checkInDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             document.getElementById('summaryCheckOut').textContent = checkOutDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             document.getElementById('summaryNights').textContent = selection.nights + (selection.nights === 1 ? ' night' : ' nights');
-            document.getElementById('summaryTotal').textContent = '<?php echo $currency_symbol; ?>' + (roomPrice * selection.nights).toLocaleString();
+            document.getElementById('summaryTotal').textContent = currencySymbol + (roomPrice * selection.nights).toLocaleString();
             document.getElementById('bookingSummary').style.display = 'block';
             
             // Enable submit button
@@ -1025,9 +1228,116 @@ try {
             selectedRoomId = roomId;
             selectedRoomName = roomName;
             selectedRoomPrice = roomPrice;
+            selectedRoomMaxGuests = parseInt(label.getAttribute('data-max-guests'));
+            
+            // Update guest options based on room capacity
+            updateGuestOptions(selectedRoomMaxGuests);
             
             // Reinitialize calendars with new room's blocked dates
             updateBlockedDatesForRoom(roomId);
+        }
+        
+        // Update guest dropdown options based on room capacity
+        function updateGuestOptions(maxGuests) {
+            const guestSelect = document.getElementById('number_of_guests');
+            const capacityHint = document.getElementById('guestCapacityHint');
+            
+            // Clear existing options
+            guestSelect.innerHTML = '<option value="">Select number of guests...</option>';
+            
+            // Add options up to max guests
+            for (let i = 1; i <= maxGuests; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i + (i === 1 ? ' Guest' : ' Guests');
+                guestSelect.appendChild(option);
+            }
+            
+            // Add option for more guests (will trigger second room suggestion)
+            const moreOption = document.createElement('option');
+            moreOption.value = maxGuests + 1;
+            moreOption.textContent = (maxGuests + 1) + '+ Guests (Multiple Rooms)';
+            moreOption.style.color = '#dc3545';
+            moreOption.style.fontWeight = '600';
+            guestSelect.appendChild(moreOption);
+            
+            // Update capacity hint
+            capacityHint.textContent = `This room accommodates up to ${maxGuests} guest${maxGuests > 1 ? 's' : ''}.`;
+            capacityHint.style.display = 'block';
+            
+            // Reset selection
+            guestSelect.value = '';
+            
+            // Hide second room suggestion
+            document.getElementById('secondRoomSuggestion').style.display = 'none';
+        }
+        
+        // Check if guests exceed capacity and show second room suggestion
+        function checkGuestCapacity() {
+            const guestSelect = document.getElementById('number_of_guests');
+            const numGuests = parseInt(guestSelect.value);
+            const suggestionBox = document.getElementById('secondRoomSuggestion');
+            const optionsContainer = document.getElementById('secondRoomOptions');
+            
+            if (!numGuests || !selectedRoomMaxGuests) {
+                suggestionBox.style.display = 'none';
+                return;
+            }
+            
+            // Check if guests exceed room capacity
+            if (numGuests > selectedRoomMaxGuests) {
+                suggestionBox.style.display = 'block';
+                
+                // Calculate how many rooms needed
+                const roomsNeeded = Math.ceil(numGuests / selectedRoomMaxGuests);
+                
+                // Build suggestion message
+                let html = `
+                    <div style="background: white; padding: 12px; border-radius: 6px; margin-top: 8px;">
+                        <strong style="color: var(--navy);">Recommended: ${roomsNeeded} room${roomsNeeded > 1 ? 's' : ''}</strong>
+                        <p style="margin: 5px 0 0 0; font-size: 13px; color: #666;">
+                            Each ${selectedRoomName} can accommodate up to ${selectedRoomMaxGuests} guest${selectedRoomMaxGuests > 1 ? 's' : ''}.
+                        </p>
+                        <p style="margin: 8px 0 0 0; font-size: 13px; color: #666;">
+                            <strong>Option 1:</strong> Complete this booking for up to ${selectedRoomMaxGuests} guests, then make another booking for the remaining ${numGuests - selectedRoomMaxGuests} guest${numGuests - selectedRoomMaxGuests > 1 ? 's' : ''}.
+                        </p>
+                        <p style="margin: 5px 0 0 0; font-size: 13px; color: #666;">
+                            <strong>Option 2:</strong> Contact us directly at <a href="mailto:${emailReservations}" style="color: var(--gold);">${emailReservations}</a> for group booking assistance.
+                        </p>
+                    </div>
+                `;
+                
+                optionsContainer.innerHTML = html;
+                
+                // Disable submit button
+                const submitBtn = document.querySelector('.btn-submit');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Please Adjust Guest Count';
+                submitBtn.style.opacity = '0.6';
+            } else {
+                suggestionBox.style.display = 'none';
+                
+                // Enable submit button if all validations pass
+                validateFormForSubmit();
+            }
+        }
+        
+        // Validate form for submit
+        function validateFormForSubmit() {
+            const checkIn = document.getElementById('check_in_date').value;
+            const checkOut = document.getElementById('check_out_date').value;
+            const numGuests = document.getElementById('number_of_guests').value;
+            const submitBtn = document.querySelector('.btn-submit');
+            
+            if (selectedRoomId && checkIn && checkOut && numGuests) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Confirm Booking';
+                submitBtn.style.opacity = '1';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Complete All Fields';
+                submitBtn.style.opacity = '0.6';
+            }
         }
         
         function updateBlockedDatesForRoom(roomId) {
@@ -1084,7 +1394,7 @@ try {
                     document.getElementById('summaryCheckIn').textContent = checkInDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                     document.getElementById('summaryCheckOut').textContent = checkOutDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                     document.getElementById('summaryNights').textContent = nights + (nights === 1 ? ' night' : ' nights');
-                    document.getElementById('summaryTotal').textContent = '<?php echo $currency_symbol; ?>' + total.toLocaleString();
+                    document.getElementById('summaryTotal').textContent = currencySymbol + total.toLocaleString();
                     
                     document.getElementById('bookingSummary').style.display = 'block';
                     
@@ -1125,9 +1435,33 @@ try {
             nextDay.setDate(checkIn.getDate() + 1);
             document.getElementById('check_out_date').min = nextDay.toISOString().split('T')[0];
             updateSummary();
+            validateFormForSubmit();
         });
 
-        document.getElementById('check_out_date').addEventListener('change', updateSummary);
+        document.getElementById('check_out_date').addEventListener('change', function() {
+            updateSummary();
+            validateFormForSubmit();
+        });
+        
+        // Add guest count change listener
+        document.getElementById('number_of_guests').addEventListener('change', checkGuestCapacity);
+        
+        // Booking type selection function
+        function selectBookingType(type) {
+            document.querySelectorAll('.booking-type-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            const selectedOption = document.querySelector(`input[name="booking_type"][value="${type}"]`);
+            if (selectedOption) {
+                selectedOption.closest('.booking-type-option').classList.add('selected');
+            }
+        }
+        
+        // Initialize booking type selection on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            selectBookingType('standard');
+        });
     </script>
 
     <?php include 'includes/scroll-to-top.php'; ?>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 30, 2026 at 12:27 AM
+-- Generation Time: Feb 01, 2026 at 07:14 PM
 -- Server version: 8.0.44-cll-lve
 -- PHP Version: 8.4.16
 
@@ -93,7 +93,7 @@ CREATE TABLE `admin_users` (
 
 INSERT INTO `admin_users` (`id`, `username`, `email`, `password_hash`, `full_name`, `role`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
 (1, 'admin', 'admin@liwondesunhotel.com', '$2y$10$kHKXltLQhR3JuVFtHQ7mZ.KhVjTNKJf7tEU0IwD8HKzKdvyG1Cy/W', 'System Administrator', 'admin', 1, NULL, '2026-01-20 19:08:40', '2026-01-20 19:08:40'),
-(2, 'receptionist', 'reception@liwondesunhotel.com', '$2y$10$OFHlFcgoqltOd7X6Z3IqVeg0961Adk9LxyfW8UBBfENSawMRZ3fF6', 'Front Desk', 'receptionist', 1, '2026-01-29 13:46:08', '2026-01-20 19:08:40', '2026-01-29 13:46:08');
+(2, 'receptionist', 'reception@liwondesunhotel.com', '$2y$10$OFHlFcgoqltOd7X6Z3IqVeg0961Adk9LxyfW8UBBfENSawMRZ3fF6', 'Front Desk', 'receptionist', 1, '2026-01-30 00:40:07', '2026-01-20 19:08:40', '2026-01-30 00:40:07');
 
 -- --------------------------------------------------------
 
@@ -168,20 +168,33 @@ CREATE TABLE `bookings` (
   `total_with_vat` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT 'Total amount including VAT',
   `last_payment_date` date DEFAULT NULL COMMENT 'Date of last payment',
   `special_requests` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `status` enum('pending','confirmed','checked-in','checked-out','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `status` enum('pending','tentative','confirmed','checked-in','checked-out','cancelled') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `is_tentative` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether this is a tentative booking',
+  `tentative_expires_at` datetime DEFAULT NULL COMMENT 'When tentative booking expires',
+  `deposit_required` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether deposit is required',
+  `deposit_amount` decimal(10,2) DEFAULT NULL COMMENT 'Required deposit amount',
+  `deposit_paid` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether deposit has been paid',
+  `deposit_paid_at` datetime DEFAULT NULL COMMENT 'When deposit was paid',
+  `reminder_sent` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Expiration reminder sent',
+  `reminder_sent_at` datetime DEFAULT NULL COMMENT 'When reminder was sent',
+  `converted_to_confirmed_at` datetime DEFAULT NULL COMMENT 'When converted to confirmed',
+  `expired_at` datetime DEFAULT NULL COMMENT 'When booking expired',
+  `tentative_notes` text COLLATE utf8mb4_unicode_ci COMMENT 'Notes about tentative booking',
   `payment_status` enum('unpaid','partial','paid') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'unpaid',
   `payment_amount` decimal(10,2) DEFAULT '0.00',
   `payment_date` date DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `expires_at` datetime DEFAULT NULL COMMENT 'When tentative booking expires (NULL for non-tentative bookings)',
+  `converted_from_tentative` tinyint(1) DEFAULT '0' COMMENT 'Whether this booking was converted from tentative status (1=yes, 0=no)'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `bookings`
 --
 
-INSERT INTO `bookings` (`id`, `booking_reference`, `room_id`, `guest_name`, `guest_email`, `guest_phone`, `guest_country`, `guest_address`, `number_of_guests`, `check_in_date`, `check_out_date`, `number_of_nights`, `total_amount`, `amount_paid`, `amount_due`, `vat_rate`, `vat_amount`, `total_with_vat`, `last_payment_date`, `special_requests`, `status`, `payment_status`, `payment_amount`, `payment_date`, `created_at`, `updated_at`) VALUES
-(15, 'LSH20262970', 1, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-01-30', '2026-01-31', 1, 50000.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, '', 'confirmed', 'paid', 0.00, NULL, '2026-01-29 15:32:35', '2026-01-30 00:14:26');
+INSERT INTO `bookings` (`id`, `booking_reference`, `room_id`, `guest_name`, `guest_email`, `guest_phone`, `guest_country`, `guest_address`, `number_of_guests`, `check_in_date`, `check_out_date`, `number_of_nights`, `total_amount`, `amount_paid`, `amount_due`, `vat_rate`, `vat_amount`, `total_with_vat`, `last_payment_date`, `special_requests`, `status`, `is_tentative`, `tentative_expires_at`, `deposit_required`, `deposit_amount`, `deposit_paid`, `deposit_paid_at`, `reminder_sent`, `reminder_sent_at`, `converted_to_confirmed_at`, `expired_at`, `tentative_notes`, `payment_status`, `payment_amount`, `payment_date`, `created_at`, `updated_at`, `expires_at`, `converted_from_tentative`) VALUES
+(23, 'LSH20262626', 3, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-02-02', '2026-02-06', 4, 120080.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, '', 'tentative', 1, '2026-02-03 19:11:28', 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, 'unpaid', 0.00, NULL, '2026-02-01 19:11:28', '2026-02-01 19:11:28', NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -196,6 +209,26 @@ CREATE TABLE `booking_notes` (
   `created_by` int UNSIGNED DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cancellation_log`
+--
+
+CREATE TABLE `cancellation_log` (
+  `id` int NOT NULL,
+  `booking_id` int NOT NULL,
+  `booking_reference` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `booking_type` enum('room','conference') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'room',
+  `guest_email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cancellation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `cancelled_by` int NOT NULL,
+  `cancellation_reason` text COLLATE utf8mb4_unicode_ci,
+  `email_sent` tinyint(1) DEFAULT '0',
+  `email_status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Audit log for all booking cancellations with email tracking';
 
 -- --------------------------------------------------------
 
@@ -236,13 +269,6 @@ CREATE TABLE `conference_inquiries` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `conference_inquiries`
---
-
-INSERT INTO `conference_inquiries` (`id`, `inquiry_reference`, `conference_room_id`, `company_name`, `contact_person`, `email`, `phone`, `event_date`, `start_time`, `end_time`, `number_of_attendees`, `event_type`, `special_requirements`, `catering_required`, `av_equipment`, `status`, `total_amount`, `amount_paid`, `amount_due`, `vat_rate`, `vat_amount`, `total_with_vat`, `last_payment_date`, `deposit_required`, `deposit_amount`, `deposit_paid`, `payment_status`, `total_paid`, `notes`, `created_at`, `updated_at`) VALUES
-(1, 'CONF-2026-48238', 4, 'ProManaged', 'John', 'johnpaulchirwa@gmail.com', '0860081635', '2026-01-30', '23:27:00', '03:31:00', 12, 'Meeting', '', 1, 'TV', 'confirmed', 299000.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, 0, NULL, 0, 'pending', 0.00, NULL, '2026-01-25 11:27:17', '2026-01-29 23:11:37');
 
 -- --------------------------------------------------------
 
@@ -946,7 +972,7 @@ CREATE TABLE `payments` (
   `payment_method` enum('cash','bank_transfer','mobile_money','credit_card','debit_card','cheque','other') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'cash',
   `payment_type` enum('deposit','full_payment','partial_payment','refund','adjustment') COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Type of payment transaction',
   `payment_reference_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Transaction ID, receipt number, or cheque number',
-  `payment_status` enum('pending','partial','fully_paid','overdue','refunded') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `payment_status` enum('pending','partial','paid','completed','refunded','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
   `invoice_generated` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether invoice has been generated',
   `invoice_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Invoice number (e.g., INV-2026-000001)',
   `amount` decimal(10,2) DEFAULT '0.00' COMMENT 'Additional payment amount field - coexists with payment_amount',
@@ -956,7 +982,11 @@ CREATE TABLE `payments` (
   `notes` text COLLATE utf8mb4_unicode_ci COMMENT 'Additional payment notes',
   `recorded_by` int UNSIGNED DEFAULT NULL COMMENT 'Admin user who recorded the payment',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `cc_emails` text COLLATE utf8mb4_unicode_ci COMMENT 'Additional CC email addresses for payment receipt',
+  `receipt_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Sequential receipt number for payments',
+  `processed_by` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Admin user who processed the payment',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete timestamp'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='All payment transactions for room and conference bookings';
 
 -- --------------------------------------------------------
@@ -1095,10 +1125,10 @@ CREATE TABLE `rooms` (
 --
 
 INSERT INTO `rooms` (`id`, `name`, `slug`, `description`, `short_description`, `price_per_night`, `size_sqm`, `max_guests`, `rooms_available`, `total_rooms`, `bed_type`, `image_url`, `badge`, `amenities`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'Presidential Suite', 'presidential-suite', 'Ultimate luxury with private terrace and exclusive service', 'Ultimate luxury with private terrace and exclusive service', 50000.00, 110, 4, 1, 2, 'King Bed', 'images/rooms/room_1_1768949756.png', 'Luxury', 'King Bed,Private Terrace,Jacuzzi,Butler Service,Living Area,Dining Area,Full Kitchen,Smart TV,Premium WiFi,Climate Control', 1, 1, 1, '2026-01-19 20:22:49', '2026-01-30 00:14:26'),
-(2, 'Executive Suite', 'executive-suite', 'Designed for discerning business travelers, featuring separate work area, premium furnishings, and personalized butler service. Perfect blend of productivity and comfort.', 'Premium executive suite with work area and butler service', 30050.00, 60, 3, 2, 5, 'King Bed', 'images\\rooms\\Deluxe Room.jpg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-01-27 16:15:26'),
+(1, 'Presidential Suite', 'presidential-suite', 'Ultimate luxury with private terrace and exclusive service', 'Ultimate luxury with private terrace and exclusive service', 50000.00, 110, 4, 3, 5, 'King Bed', 'images/rooms/room_1_1768949756.png', 'Luxury', 'King Bed,Private Terrace,Jacuzzi,Butler Service,Living Area,Dining Area,Full Kitchen,Smart TV,Premium WiFi,Climate Control', 1, 1, 1, '2026-01-19 20:22:49', '2026-02-01 12:31:01'),
+(2, 'Executive Suite', 'executive-suite', 'Premium executive suite with work area and butler service', 'Premium executive suite with work area and butler service', 30050.00, 60, 3, 4, 5, 'King Bed', 'images\\rooms\\Deluxe Room.jpg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-02-01 12:38:20'),
 (3, 'Family Suite', 'family-suite', 'Spacious two-bedroom suite perfect for families, featuring two king beds, dual bathrooms, and separate living area. Create lasting memories in ultimate comfort.', 'Spacious family accommodation with 2 bedrooms', 30020.00, 55, 6, 5, 5, '2 King Beds', 'images\\rooms\\family_suite.jpg', 'Family', '2 King Beds,2 Bathrooms,Living Area,Kitchenette,Smart TV,Kids Welcome,Free WiFi,Climate Control', 1, 1, 3, '2026-01-19 20:22:49', '2026-01-20 17:01:46'),
-(4, 'Deluxe Suite', 'deluxe-suite', 'Luxurious suite with marble bathroom featuring jacuzzi tub, separate living area, and premium bedding. Experience sophistication and indulgence.', 'Luxury suite with jacuzzi and separate living area', 28000.00, 45, 2, 5, 5, 'King Bed', 'images/rooms/room_4_featured_1769093172.png', 'Popular', 'King Bed,Jacuzzi Tub,Living Area,Marble Bathroom,Premium Bedding,Smart TV,Mini Bar,Free WiFi', 1, 1, 4, '2026-01-19 20:22:49', '2026-01-22 14:46:13'),
+(4, 'Deluxe Suite', 'deluxe-suite', 'Luxurious suite with marble bathroom featuring jacuzzi tub, separate living area, and premium bedding. Experience sophistication and indulgence.', 'Luxury suite with jacuzzi and separate living area', 28000.00, 45, 2, 4, 5, 'King Bed', 'images/rooms/room_4_featured_1769093172.png', 'Popular', 'King Bed,Jacuzzi Tub,Living Area,Marble Bathroom,Premium Bedding,Smart TV,Mini Bar,Free WiFi', 1, 1, 4, '2026-01-19 20:22:49', '2026-01-30 07:42:24'),
 (5, 'Superior Room', 'superior-room', 'Spacious room with premium furnishings, stunning views, and modern amenities. Enjoy comfort and elegance in every detail.', 'Spacious room with premium amenities and views', 21000.00, 35, 2, 5, 5, 'King Bed', 'https://source.unsplash.com/1600x900/?superior,hotel,room,view,interior', NULL, 'King Bed,City View,Balcony,Smart TV,Free WiFi,Coffee Machine,Safe,Climate Control', 0, 0, 5, '2026-01-19 20:22:49', '2026-01-22 23:45:09'),
 (6, 'Standard Room', 'standard-room', 'Comfortable and well-appointed room with all essential amenities for a pleasant stay. Perfect for travelers seeking quality at exceptional value.', 'Comfortable room with essential amenities', 15000.00, 25, 2, 5, 5, 'Queen Bed', 'https://source.unsplash.com/1600x900/?standard,hotel,room,interior', 'Value', 'Queen Bed,Free WiFi,Smart TV,Daily Breakfast,Climate Control,Safe,Coffee Machine', 0, 0, 6, '2026-01-19 20:22:49', '2026-01-22 23:45:13');
 
@@ -1117,21 +1147,6 @@ CREATE TABLE `room_blocked_dates` (
   `created_by` int UNSIGNED DEFAULT NULL COMMENT 'Admin user who created this block',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When the block was created'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Manually blocked dates for rooms - prevents bookings on specified dates';
-
---
--- Dumping data for table `room_blocked_dates`
---
-
-INSERT INTO `room_blocked_dates` (`id`, `room_id`, `block_date`, `block_type`, `reason`, `created_by`, `created_at`) VALUES
-(9, 3, '2026-01-30', 'manual', '', 2, '2026-01-29 14:18:02'),
-(10, 3, '2026-01-31', 'manual', '', 2, '2026-01-29 14:18:02'),
-(11, 3, '2026-02-01', 'manual', '', 2, '2026-01-29 14:18:03'),
-(12, 3, '2026-02-02', 'manual', '', 2, '2026-01-29 14:18:03'),
-(13, 3, '2026-02-03', 'manual', '', 2, '2026-01-29 14:18:03'),
-(14, 3, '2026-02-04', 'manual', '', 2, '2026-01-29 14:18:03'),
-(15, 3, '2026-02-05', 'manual', '', 2, '2026-01-29 14:18:03'),
-(16, 3, '2026-02-06', 'manual', '', 2, '2026-01-29 14:18:03'),
-(17, 3, '2026-02-07', 'manual', '', 2, '2026-01-29 14:18:03');
 
 -- --------------------------------------------------------
 
@@ -1180,7 +1195,34 @@ INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_grou
 (34, 'vat_number', 'MW123456789', 'accounting', '2026-01-30 00:09:59'),
 (35, 'payment_terms', 'Payment due upon check-in', 'accounting', '2026-01-30 00:09:59'),
 (36, 'invoice_prefix', 'INV', 'accounting', '2026-01-30 00:09:59'),
-(37, 'invoice_start_number', '1001', 'accounting', '2026-01-30 00:09:59');
+(37, 'invoice_start_number', '1001', 'accounting', '2026-01-30 00:09:59'),
+(44, 'max_advance_booking_days', '22', 'booking', '2026-01-30 00:40:21'),
+(45, 'payment_policy', 'Full payment is required upon check-in. We accept cash, credit cards, and bank transfers.', 'booking', '2026-01-30 00:36:10'),
+(76, 'tentative_enabled', '1', 'bookings', '2026-02-01 16:32:10'),
+(77, 'tentative_duration_hours', '48', 'bookings', '2026-02-01 16:32:10'),
+(78, 'tentative_reminder_hours', '24', 'bookings', '2026-02-01 16:32:10'),
+(79, 'tentative_max_extensions', '2', 'bookings', '2026-02-01 16:32:10'),
+(80, 'tentative_deposit_percent', '20', 'bookings', '2026-02-01 16:32:10'),
+(81, 'tentative_deposit_required', '0', 'bookings', '2026-02-01 16:32:10'),
+(82, 'tentative_block_availability', '1', 'bookings', '2026-02-01 16:32:10'),
+(90, 'whatsapp_number', '+265888860670', 'contact', '2026-02-01 19:09:42');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tentative_booking_log`
+--
+
+CREATE TABLE `tentative_booking_log` (
+  `id` int UNSIGNED NOT NULL,
+  `booking_id` int UNSIGNED NOT NULL,
+  `action` enum('created','extended','reminder_sent','converted','expired','cancelled') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `previous_expires_at` datetime DEFAULT NULL,
+  `new_expires_at` datetime DEFAULT NULL,
+  `action_reason` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `performed_by` int UNSIGNED DEFAULT NULL COMMENT 'Admin user ID, or NULL for system',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Audit log for tentative booking actions';
 
 -- --------------------------------------------------------
 
@@ -1210,6 +1252,61 @@ INSERT INTO `testimonials` (`id`, `guest_name`, `guest_location`, `rating`, `tes
 (1, 'Sarah Johnson', 'London, UK', 4, 'Absolutely stunning hotel! The service was impeccable, rooms were luxurious, and the restaurant exceeded all expectations. Can\'t wait to return.', '2025-12-15', NULL, 1, 1, 1, '2026-01-19 20:22:49'),
 (2, 'Michael Chen', 'Singapore', 5, 'Best hotel experience in Africa. The attention to detail, the spa facilities, and the breathtaking views made our anniversary unforgettable.', '2025-11-20', NULL, 1, 1, 2, '2026-01-19 20:22:49'),
 (3, 'Emma Williams', 'New York, USA', 5, 'Five stars aren\'t enough! From check-in to check-out, everything was perfect. The staff went above and beyond to make our stay special.', '2026-01-05', NULL, 1, 1, 3, '2026-01-19 20:22:49');
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_active_tentative_bookings`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_active_tentative_bookings` (
+`id` int unsigned
+,`booking_reference` varchar(20)
+,`room_id` int unsigned
+,`room_name` varchar(100)
+,`room_slug` varchar(100)
+,`price_per_night` decimal(10,2)
+,`guest_name` varchar(255)
+,`guest_email` varchar(255)
+,`guest_phone` varchar(50)
+,`check_in_date` date
+,`check_out_date` date
+,`number_of_nights` int
+,`total_amount` decimal(10,2)
+,`status` enum('pending','tentative','confirmed','checked-in','checked-out','cancelled')
+,`is_tentative` tinyint(1)
+,`tentative_expires_at` datetime
+,`deposit_required` tinyint(1)
+,`deposit_amount` decimal(10,2)
+,`deposit_paid` tinyint(1)
+,`reminder_sent` tinyint(1)
+,`reminder_sent_at` datetime
+,`created_at` timestamp
+,`tentative_notes` text
+,`hours_until_expiration` bigint
+,`expiration_status` varchar(8)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_tentative_booking_stats`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_tentative_booking_stats` (
+`total_tentative_bookings` bigint
+,`active_count` decimal(23,0)
+,`warning_count` decimal(23,0)
+,`critical_count` decimal(23,0)
+,`expired_count` decimal(23,0)
+,`deposits_required_count` decimal(23,0)
+,`deposits_paid_count` decimal(23,0)
+,`total_deposits_amount` decimal(32,2)
+,`reminders_sent_count` decimal(23,0)
+,`total_value` decimal(32,2)
+,`average_booking_value` decimal(14,6)
+,`unique_rooms_booked` bigint
+);
 
 --
 -- Indexes for dumped tables
@@ -1262,7 +1359,11 @@ ALTER TABLE `bookings`
   ADD KEY `idx_guest_email` (`guest_email`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_dates` (`check_in_date`,`check_out_date`),
-  ADD KEY `idx_payment_status` (`payment_status`);
+  ADD KEY `idx_payment_status` (`payment_status`),
+  ADD KEY `idx_expires_at` (`expires_at`),
+  ADD KEY `idx_tentative_bookings` (`status`,`expires_at`),
+  ADD KEY `idx_tentative_expires` (`tentative_expires_at`,`status`),
+  ADD KEY `idx_is_tentative` (`is_tentative`,`status`);
 
 --
 -- Indexes for table `booking_notes`
@@ -1271,6 +1372,16 @@ ALTER TABLE `booking_notes`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_booking_id` (`booking_id`),
   ADD KEY `idx_created_by` (`created_by`);
+
+--
+-- Indexes for table `cancellation_log`
+--
+ALTER TABLE `cancellation_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_booking_id` (`booking_id`),
+  ADD KEY `idx_booking_reference` (`booking_reference`),
+  ADD KEY `idx_cancellation_date` (`cancellation_date`),
+  ADD KEY `idx_booking_type` (`booking_type`);
 
 --
 -- Indexes for table `conference_inquiries`
@@ -1430,6 +1541,7 @@ ALTER TABLE `page_loaders`
 ALTER TABLE `payments`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `payment_reference` (`payment_reference`),
+  ADD UNIQUE KEY `receipt_number` (`receipt_number`),
   ADD KEY `idx_booking_type_id` (`booking_type`,`booking_id`),
   ADD KEY `idx_payment_date` (`payment_date`),
   ADD KEY `idx_payment_status` (`payment_status`),
@@ -1498,6 +1610,16 @@ ALTER TABLE `site_settings`
   ADD UNIQUE KEY `setting_key` (`setting_key`);
 
 --
+-- Indexes for table `tentative_booking_log`
+--
+ALTER TABLE `tentative_booking_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_booking_id` (`booking_id`),
+  ADD KEY `idx_action` (`action`),
+  ADD KEY `idx_created_at` (`created_at`),
+  ADD KEY `performed_by` (`performed_by`);
+
+--
 -- Indexes for table `testimonials`
 --
 ALTER TABLE `testimonials`
@@ -1536,13 +1658,19 @@ ALTER TABLE `api_usage_logs`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `booking_notes`
 --
 ALTER TABLE `booking_notes`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `cancellation_log`
+--
+ALTER TABLE `cancellation_log`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `conference_inquiries`
@@ -1650,7 +1778,7 @@ ALTER TABLE `menu_categories`
 -- AUTO_INCREMENT for table `migration_log`
 --
 ALTER TABLE `migration_log`
-  MODIFY `migration_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `migration_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `newsletter_subscribers`
@@ -1674,7 +1802,7 @@ ALTER TABLE `page_loaders`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `policies`
@@ -1710,19 +1838,43 @@ ALTER TABLE `rooms`
 -- AUTO_INCREMENT for table `room_blocked_dates`
 --
 ALTER TABLE `room_blocked_dates`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `site_settings`
 --
 ALTER TABLE `site_settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
+
+--
+-- AUTO_INCREMENT for table `tentative_booking_log`
+--
+ALTER TABLE `tentative_booking_log`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `testimonials`
 --
 ALTER TABLE `testimonials`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_active_tentative_bookings`
+--
+DROP TABLE IF EXISTS `v_active_tentative_bookings`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`p601229`@`localhost` SQL SECURITY DEFINER VIEW `v_active_tentative_bookings`  AS SELECT `b`.`id` AS `id`, `b`.`booking_reference` AS `booking_reference`, `b`.`room_id` AS `room_id`, `r`.`name` AS `room_name`, `r`.`slug` AS `room_slug`, `r`.`price_per_night` AS `price_per_night`, `b`.`guest_name` AS `guest_name`, `b`.`guest_email` AS `guest_email`, `b`.`guest_phone` AS `guest_phone`, `b`.`check_in_date` AS `check_in_date`, `b`.`check_out_date` AS `check_out_date`, `b`.`number_of_nights` AS `number_of_nights`, `b`.`total_amount` AS `total_amount`, `b`.`status` AS `status`, `b`.`is_tentative` AS `is_tentative`, `b`.`tentative_expires_at` AS `tentative_expires_at`, `b`.`deposit_required` AS `deposit_required`, `b`.`deposit_amount` AS `deposit_amount`, `b`.`deposit_paid` AS `deposit_paid`, `b`.`reminder_sent` AS `reminder_sent`, `b`.`reminder_sent_at` AS `reminder_sent_at`, `b`.`created_at` AS `created_at`, `b`.`tentative_notes` AS `tentative_notes`, timestampdiff(HOUR,now(),`b`.`tentative_expires_at`) AS `hours_until_expiration`, (case when (`b`.`tentative_expires_at` < now()) then 'expired' when (`b`.`tentative_expires_at` <= (now() + interval 24 hour)) then 'critical' when (`b`.`tentative_expires_at` <= (now() + interval 48 hour)) then 'warning' else 'active' end) AS `expiration_status` FROM (`bookings` `b` left join `rooms` `r` on((`b`.`room_id` = `r`.`id`))) WHERE ((`b`.`is_tentative` = 1) AND (`b`.`status` = 'tentative') AND (`b`.`tentative_expires_at` is not null)) ORDER BY `b`.`tentative_expires_at` ASC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_tentative_booking_stats`
+--
+DROP TABLE IF EXISTS `v_tentative_booking_stats`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`p601229`@`localhost` SQL SECURITY DEFINER VIEW `v_tentative_booking_stats`  AS SELECT count(0) AS `total_tentative_bookings`, sum((case when (`v_active_tentative_bookings`.`expiration_status` = 'active') then 1 else 0 end)) AS `active_count`, sum((case when (`v_active_tentative_bookings`.`expiration_status` = 'warning') then 1 else 0 end)) AS `warning_count`, sum((case when (`v_active_tentative_bookings`.`expiration_status` = 'critical') then 1 else 0 end)) AS `critical_count`, sum((case when (`v_active_tentative_bookings`.`expiration_status` = 'expired') then 1 else 0 end)) AS `expired_count`, sum((case when (`v_active_tentative_bookings`.`deposit_required` = 1) then 1 else 0 end)) AS `deposits_required_count`, sum((case when (`v_active_tentative_bookings`.`deposit_paid` = 1) then 1 else 0 end)) AS `deposits_paid_count`, sum(`v_active_tentative_bookings`.`deposit_amount`) AS `total_deposits_amount`, sum((case when (`v_active_tentative_bookings`.`reminder_sent` = 1) then 1 else 0 end)) AS `reminders_sent_count`, sum(`v_active_tentative_bookings`.`total_amount`) AS `total_value`, avg(`v_active_tentative_bookings`.`total_amount`) AS `average_booking_value`, count(distinct `v_active_tentative_bookings`.`room_id`) AS `unique_rooms_booked` FROM `v_active_tentative_bookings` ;
 
 --
 -- Constraints for dumped tables
@@ -1766,6 +1918,13 @@ ALTER TABLE `review_responses`
 ALTER TABLE `room_blocked_dates`
   ADD CONSTRAINT `fk_blocked_admin` FOREIGN KEY (`created_by`) REFERENCES `admin_users` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_blocked_room` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `tentative_booking_log`
+--
+ALTER TABLE `tentative_booking_log`
+  ADD CONSTRAINT `tentative_booking_log_ibfk_1` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `tentative_booking_log_ibfk_2` FOREIGN KEY (`performed_by`) REFERENCES `admin_users` (`id`) ON DELETE SET NULL;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

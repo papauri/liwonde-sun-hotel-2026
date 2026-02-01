@@ -20,7 +20,110 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $action = $_POST['action'] ?? '';
 
-        if ($action === 'update_status') {
+        if ($action === 'make_tentative') {
+            $booking_id = (int)($_POST['id'] ?? 0);
+            
+            if ($booking_id <= 0) {
+                throw new Exception('Invalid booking id');
+            }
+            
+            // Get booking details
+            $stmt = $pdo->prepare("SELECT * FROM bookings WHERE id = ?");
+            $stmt->execute([$booking_id]);
+            $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$booking) {
+                throw new Exception('Booking not found');
+            }
+            
+            if ($booking['status'] !== 'pending') {
+                throw new Exception('Only pending bookings can be made tentative');
+            }
+            
+            // Get tentative duration setting
+            $tentative_hours = (int)getSetting('tentative_duration_hours', 48);
+            $expires_at = date('Y-m-d H:i:s', strtotime("+$tentative_hours hours"));
+            
+            // Convert to tentative status
+            $update_stmt = $pdo->prepare("
+                UPDATE bookings
+                SET status = 'tentative',
+                    is_tentative = 1,
+                    tentative_expires_at = ?
+                WHERE id = ?
+            ");
+            $update_stmt->execute([$expires_at, $booking_id]);
+            
+            // Log the action
+            $log_stmt = $pdo->prepare("
+                INSERT INTO tentative_booking_log (
+                    booking_id, action, new_expires_at, performed_by, created_at
+                ) VALUES (?, 'created', ?, ?, NOW())
+            ");
+            $log_stmt->execute([
+                $booking_id,
+                $expires_at,
+                $user['id']
+            ]);
+            
+            // Send tentative booking email
+            require_once '../config/email.php';
+            $booking['tentative_expires_at'] = $expires_at;
+            $email_result = sendTentativeBookingConfirmedEmail($booking);
+            
+            if ($email_result['success']) {
+                $message = 'Booking converted to tentative! Confirmation email sent to guest.';
+            } else {
+                $message = 'Booking made tentative! (Email failed: ' . $email_result['message'] . ')';
+            }
+            
+        } elseif ($action === 'convert_tentative') {
+            $booking_id = (int)($_POST['id'] ?? 0);
+            
+            if ($booking_id <= 0) {
+                throw new Exception('Invalid booking id');
+            }
+            
+            // Get booking details
+            $stmt = $pdo->prepare("SELECT * FROM bookings WHERE id = ?");
+            $stmt->execute([$booking_id]);
+            $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$booking) {
+                throw new Exception('Booking not found');
+            }
+            
+            if ($booking['status'] !== 'tentative' || $booking['is_tentative'] != 1) {
+                throw new Exception('This is not a tentative booking');
+            }
+            
+            // Convert to confirmed status
+            $update_stmt = $pdo->prepare("UPDATE bookings SET status = 'confirmed', is_tentative = 0 WHERE id = ?");
+            $update_stmt->execute([$booking_id]);
+            
+            // Log the conversion
+            $log_stmt = $pdo->prepare("
+                INSERT INTO tentative_booking_log (
+                    booking_id, action, action_by, action_at, notes
+                ) VALUES (?, 'converted', ?, NOW(), ?)
+            ");
+            $log_stmt->execute([
+                $booking_id,
+                $user['id'],
+                'Converted from tentative to confirmed by admin'
+            ]);
+            
+            // Send conversion email
+            require_once '../config/email.php';
+            $email_result = sendTentativeBookingConvertedEmail($booking);
+            
+            if ($email_result['success']) {
+                $message = 'Tentative booking converted to confirmed! Conversion email sent to guest.';
+            } else {
+                $message = 'Tentative booking converted! (Email failed: ' . $email_result['message'] . ')';
+            }
+            
+        } elseif ($action === 'update_status') {
             $booking_id = (int)($_POST['id'] ?? 0);
             $new_status = $_POST['status'] ?? '';
 
@@ -126,6 +229,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($update_room->rowCount() > 0) {
                         $message .= ' Room availability restored.';
                     }
+                    
+                    // Get booking details for email and logging
+                    $booking_stmt = $pdo->prepare("
+                        SELECT b.*, r.name as room_name
+                        FROM bookings b
+                        LEFT JOIN rooms r ON b.room_id = r.id
+                        WHERE b.id = ?
+                    ");
+                    $booking_stmt->execute([$booking_id]);
+                    $booking = $booking_stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($booking) {
+                        // Send cancellation email
+                        require_once '../config/email.php';
+                        $cancellation_reason = $_POST['cancellation_reason'] ?? 'Cancelled by admin';
+                        $email_result = sendBookingCancelledEmail($booking, $cancellation_reason);
+                        
+                        // Log cancellation to database
+                        $email_sent = $email_result['success'];
+                        $email_status = $email_result['message'];
+                        logCancellationToDatabase(
+                            $booking['id'],
+                            $booking['booking_reference'],
+                            'room',
+                            $booking['guest_email'],
+                            $user['id'],
+                            $cancellation_reason,
+                            $email_sent,
+                            $email_status
+                        );
+                        
+                        // Log cancellation to file
+                        logCancellationToFile(
+                            $booking['booking_reference'],
+                            'room',
+                            $booking['guest_email'],
+                            $user['full_name'] ?? $user['username'],
+                            $cancellation_reason,
+                            $email_sent,
+                            $email_status
+                        );
+                        
+                        if ($email_sent) {
+                            $message .= ' Cancellation email sent.';
+                        } else {
+                            $message .= ' (Email failed: ' . $email_status . ')';
+                        }
+                    }
                 }
             }
 
@@ -133,19 +284,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $payment_status = $_POST['payment_status'];
             $booking_id = $_POST['id'];
             
-            // Get previous payment status
-            $check = $pdo->prepare("SELECT payment_status FROM bookings WHERE id = ?");
+            // Get previous payment status and booking details
+            $check = $pdo->prepare("SELECT payment_status, total_amount, booking_reference FROM bookings WHERE id = ?");
             $check->execute([$booking_id]);
             $row = $check->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$row) {
+                throw new Exception('Booking not found');
+            }
+            
             $previous_status = $row['payment_status'] ?? 'unpaid';
+            $total_amount = (float)$row['total_amount'];
+            $booking_reference = $row['booking_reference'];
+            
+            // Get VAT settings
+            $vatEnabled = getSetting('vat_enabled') === '1';
+            $vatRate = $vatEnabled ? (float)getSetting('vat_rate') : 0;
+            
+            // Calculate amounts
+            $vatAmount = $vatEnabled ? ($total_amount * ($vatRate / 100)) : 0;
+            $totalWithVat = $total_amount + $vatAmount;
             
             // Update payment status
             $stmt = $pdo->prepare("UPDATE bookings SET payment_status = ? WHERE id = ?");
             $stmt->execute([$payment_status, $booking_id]);
             $message = 'Payment status updated!';
             
-            // Send invoice email if payment status changed to 'paid'
+            // If marking as paid, insert into payments table and update booking amounts
             if ($payment_status === 'paid' && $previous_status !== 'paid') {
+                // Generate payment reference
+                $payment_reference = 'PAY-' . date('Y') . '-' . str_pad($booking_id, 6, '0', STR_PAD_LEFT);
+                
+                // Insert into payments table
+                $insert_payment = $pdo->prepare("
+                    INSERT INTO payments (
+                        payment_reference, booking_type, booking_id, booking_reference,
+                        payment_date, payment_amount, vat_rate, vat_amount, total_amount,
+                        payment_method, payment_type, payment_status, invoice_generated,
+                        status, recorded_by
+                    ) VALUES (?, 'room', ?, ?, CURDATE(), ?, ?, ?, ?, 'cash', 'full_payment', 'fully_paid', 1, 'completed', ?)
+                ");
+                $insert_payment->execute([
+                    $payment_reference,
+                    $booking_id,
+                    $booking_reference,
+                    $total_amount,
+                    $vatRate,
+                    $vatAmount,
+                    $totalWithVat,
+                    $user['id']
+                ]);
+                
+                // Update booking payment tracking columns
+                $update_amounts = $pdo->prepare("
+                    UPDATE bookings
+                    SET amount_paid = ?, amount_due = 0, vat_rate = ?, vat_amount = ?,
+                        total_with_vat = ?, last_payment_date = CURDATE()
+                    WHERE id = ?
+                ");
+                $update_amounts->execute([$totalWithVat, $vatRate, $vatAmount, $totalWithVat, $booking_id]);
+                
+                $message .= ' Payment recorded in accounting system.';
+                
+                // Send invoice email
                 require_once '../config/invoice.php';
                 $invoice_result = sendPaymentInvoiceEmail($booking_id);
                 
@@ -189,8 +390,40 @@ try {
 // Count statistics
 $total_bookings = count($bookings);
 $pending = count(array_filter($bookings, fn($b) => $b['status'] === 'pending'));
+$tentative = count(array_filter($bookings, fn($b) => $b['status'] === 'tentative' || $b['is_tentative'] == 1));
 $confirmed = count(array_filter($bookings, fn($b) => $b['status'] === 'confirmed'));
 $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-in'));
+
+// Additional statistics for new tabs
+$checked_out = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-out'));
+$cancelled = count(array_filter($bookings, fn($b) => $b['status'] === 'cancelled'));
+$paid = count(array_filter($bookings, fn($b) => $b['payment_status'] === 'paid'));
+$unpaid = count(array_filter($bookings, fn($b) => $b['payment_status'] !== 'paid'));
+
+// Count expiring soon (tentative bookings expiring within 24 hours)
+$now = new DateTime();
+$expiring_soon = 0;
+foreach ($bookings as $booking) {
+    if (($booking['status'] === 'tentative' || $booking['is_tentative'] == 1) && $booking['tentative_expires_at']) {
+        $expires_at = new DateTime($booking['tentative_expires_at']);
+        $hours_until_expiry = ($expires_at->getTimestamp() - $now->getTimestamp()) / 3600;
+        if ($hours_until_expiry <= 24 && $hours_until_expiry > 0) {
+            $expiring_soon++;
+        }
+    }
+}
+
+// Count today's check-ins (confirmed bookings with check-in today)
+$today = new DateTime();
+$today_str = $today->format('Y-m-d');
+$today_checkins = count(array_filter($bookings, fn($b) =>
+    $b['status'] === 'confirmed' && $b['check_in_date'] === $today_str
+));
+
+// Count today's check-outs (checked-in bookings with check-out today)
+$today_checkouts = count(array_filter($bookings, fn($b) =>
+    $b['status'] === 'checked-in' && $b['check_out_date'] === $today_str
+));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -486,14 +719,41 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
         }
         .badge-pending { background: #ffc107; color: #212529; }
         .badge-confirmed { background: #28a745; color: white; }
+        .badge-tentative { background: linear-gradient(135deg, var(--gold) 0%, #c49b2e 100%); color: var(--deep-navy); }
         .badge-checked-in { background: #17a2b8; color: white; }
         .badge-checked-out { background: #6c757d; color: white; }
         .badge-cancelled { background: #dc3545; color: white; }
+        .badge-expired { background: #6c757d; color: white; }
         .badge-unpaid { background: #dc3545; color: white; }
         .badge-partial { background: #ffc107; color: #212529; }
         .badge-paid { background: #28a745; color: white; }
         .badge-new { background: #17a2b8; color: white; }
         .badge-contacted { background: #6c757d; color: white; }
+        
+        /* Tentative booking specific styles */
+        .tentative-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: var(--gold);
+            font-weight: 600;
+        }
+        .tentative-indicator i {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .expires-soon {
+            color: #dc3545;
+            font-weight: 600;
+            font-size: 11px;
+        }
+        .expires-soon i {
+            margin-right: 4px;
+        }
         .quick-action {
             padding: 6px 14px;
             border: none;
@@ -544,6 +804,13 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
         .quick-action.paid:hover {
             background: #c19b2e;
         }
+        .quick-action.cancel {
+            background: #dc3545;
+            color: white;
+        }
+        .quick-action.cancel:hover {
+            background: #c82333;
+        }
         .empty-state {
             text-align: center;
             padding: 40px;
@@ -588,6 +855,172 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
                 padding: 6px;
             }
         }
+        /* Tab Navigation Styles */
+        .tabs-container {
+            background: white;
+            border-radius: 12px 12px 0 0;
+            padding: 0;
+            margin-bottom: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .tabs-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            border-bottom: 2px solid #e0e0e0;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 20px;
+            background: white;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .tab-button:hover {
+            background: #f8f9fa;
+            color: var(--navy);
+        }
+
+        .tab-button.active {
+            color: var(--navy);
+            border-bottom-color: var(--gold);
+            background: linear-gradient(to bottom, #fff8e1 0%, white 100%);
+        }
+
+        .tab-button i {
+            font-size: 16px;
+        }
+
+        .tab-count {
+            background: #f0f0f0;
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .tab-button.active .tab-count {
+            background: var(--gold);
+            color: var(--deep-navy);
+        }
+
+        /* Tab-specific active colors */
+        .tab-button[data-tab="pending"].active .tab-count {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .tab-button[data-tab="tentative"].active .tab-count {
+            background: linear-gradient(135deg, var(--gold) 0%, #c49b2e 100%);
+            color: var(--deep-navy);
+        }
+
+        .tab-button[data-tab="expiring-soon"].active .tab-count {
+            background: #ff6b35;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .tab-button[data-tab="confirmed"].active .tab-count {
+            background: #28a745;
+            color: white;
+        }
+
+        .tab-button[data-tab="today-checkins"].active .tab-count {
+            background: #007bff;
+            color: white;
+        }
+
+        .tab-button[data-tab="today-checkouts"].active .tab-count {
+            background: #6f42c1;
+            color: white;
+        }
+
+        .tab-button[data-tab="checked-in"].active .tab-count {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .tab-button[data-tab="checked-out"].active .tab-count {
+            background: #6c757d;
+            color: white;
+        }
+
+        .tab-button[data-tab="cancelled"].active .tab-count {
+            background: #dc3545;
+            color: white;
+        }
+
+        .tab-button[data-tab="paid"].active .tab-count {
+            background: #28a745;
+            color: white;
+        }
+
+        .tab-button[data-tab="unpaid"].active .tab-count {
+            background: #dc3545;
+            color: white;
+        }
+
+        /* Adjust bookings section to connect with tabs */
+        .bookings-section {
+            border-radius: 0 0 12px 12px !important;
+            margin-top: -1px !important;
+        }
+
+        /* Responsive tabs */
+        @media (max-width: 1024px) {
+            .tabs-header {
+                justify-content: flex-start;
+            }
+            
+            .tab-button {
+                padding: 12px 16px;
+                font-size: 13px;
+            }
+            
+            .tab-count {
+                font-size: 11px;
+                padding: 2px 6px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .tabs-header {
+                gap: 0;
+            }
+            
+            .tab-button {
+                padding: 10px 12px;
+                font-size: 12px;
+                flex: 0 0 auto;
+            }
+            
+            .tab-button span:not(.tab-count) {
+                display: none;
+            }
+            
+            .tab-button i {
+                font-size: 18px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -603,6 +1036,10 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
             <div class="stat-card pending">
                 <h3>Pending</h3>
                 <div class="number"><?php echo $pending; ?></div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);">
+                <h3 style="color: var(--navy);">Tentative</h3>
+                <div class="number" style="color: var(--gold);"><?php echo $tentative; ?></div>
             </div>
             <div class="stat-card confirmed">
                 <h3>Confirmed</h3>
@@ -621,6 +1058,72 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
         <?php if ($error): ?>
             <?php showAlert($error, 'error'); ?>
         <?php endif; ?>
+
+        <!-- Tab Navigation -->
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <button class="tab-button active" data-tab="all" data-count="<?php echo $total_bookings; ?>">
+                    <i class="fas fa-list"></i>
+                    All
+                    <span class="tab-count"><?php echo $total_bookings; ?></span>
+                </button>
+                <button class="tab-button" data-tab="pending" data-count="<?php echo $pending; ?>">
+                    <i class="fas fa-clock"></i>
+                    Pending
+                    <span class="tab-count"><?php echo $pending; ?></span>
+                </button>
+                <button class="tab-button" data-tab="tentative" data-count="<?php echo $tentative; ?>">
+                    <i class="fas fa-hourglass-half"></i>
+                    Tentative
+                    <span class="tab-count"><?php echo $tentative; ?></span>
+                </button>
+                <button class="tab-button" data-tab="expiring-soon" data-count="<?php echo $expiring_soon; ?>">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Expiring Soon
+                    <span class="tab-count"><?php echo $expiring_soon; ?></span>
+                </button>
+                <button class="tab-button" data-tab="confirmed" data-count="<?php echo $confirmed; ?>">
+                    <i class="fas fa-check-circle"></i>
+                    Confirmed
+                    <span class="tab-count"><?php echo $confirmed; ?></span>
+                </button>
+                <button class="tab-button" data-tab="today-checkins" data-count="<?php echo $today_checkins; ?>">
+                    <i class="fas fa-calendar-day"></i>
+                    Today's Check-ins
+                    <span class="tab-count"><?php echo $today_checkins; ?></span>
+                </button>
+                <button class="tab-button" data-tab="today-checkouts" data-count="<?php echo $today_checkouts; ?>">
+                    <i class="fas fa-calendar-times"></i>
+                    Today's Check-outs
+                    <span class="tab-count"><?php echo $today_checkouts; ?></span>
+                </button>
+                <button class="tab-button" data-tab="checked-in" data-count="<?php echo $checked_in; ?>">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Checked In
+                    <span class="tab-count"><?php echo $checked_in; ?></span>
+                </button>
+                <button class="tab-button" data-tab="checked-out" data-count="<?php echo $checked_out; ?>">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Checked Out
+                    <span class="tab-count"><?php echo $checked_out; ?></span>
+                </button>
+                <button class="tab-button" data-tab="cancelled" data-count="<?php echo $cancelled; ?>">
+                    <i class="fas fa-times-circle"></i>
+                    Cancelled
+                    <span class="tab-count"><?php echo $cancelled; ?></span>
+                </button>
+                <button class="tab-button" data-tab="paid" data-count="<?php echo $paid; ?>">
+                    <i class="fas fa-dollar-sign"></i>
+                    Paid
+                    <span class="tab-count"><?php echo $paid; ?></span>
+                </button>
+                <button class="tab-button" data-tab="unpaid" data-count="<?php echo $unpaid; ?>">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Unpaid
+                    <span class="tab-count"><?php echo $unpaid; ?></span>
+                </button>
+            </div>
+        </div>
 
         <!-- Room Bookings -->
         <div class="bookings-section">
@@ -651,8 +1154,23 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
                     </thead>
                     <tbody>
                         <?php foreach ($bookings as $booking): ?>
-                            <tr>
-                                <td><strong><?php echo htmlspecialchars($booking['booking_reference']); ?></strong></td>
+                            <?php
+                                $is_tentative = ($booking['status'] === 'tentative' || $booking['is_tentative'] == 1);
+                                $expires_soon = false;
+                                if ($is_tentative && $booking['tentative_expires_at']) {
+                                    $expires_at = new DateTime($booking['tentative_expires_at']);
+                                    $now = new DateTime();
+                                    $hours_until_expiry = ($expires_at->getTimestamp() - $now->getTimestamp()) / 3600;
+                                    $expires_soon = $hours_until_expiry <= 24 && $hours_until_expiry > 0;
+                                }
+                            ?>
+                            <tr <?php echo $is_tentative ? 'style="background: linear-gradient(90deg, rgba(212, 175, 55, 0.05) 0%, white 10%);"' : ''; ?>>
+                                <td>
+                                    <strong><?php echo htmlspecialchars($booking['booking_reference']); ?></strong>
+                                    <?php if ($is_tentative): ?>
+                                        <br><span class="tentative-indicator"><i class="fas fa-clock"></i> Tentative</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
                                     <?php echo htmlspecialchars($booking['guest_name']); ?>
                                     <br><small style="color: #666;"><?php echo htmlspecialchars($booking['guest_phone']); ?></small>
@@ -662,11 +1180,26 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
                                 <td><?php echo date('M d, Y', strtotime($booking['check_out_date'])); ?></td>
                                 <td><?php echo $booking['number_of_nights']; ?></td>
                                 <td><?php echo $booking['number_of_guests']; ?></td>
-                                <td><strong>K <?php echo number_format($booking['total_amount'], 0); ?></strong></td>
+                                <td>
+                                    <strong>K <?php echo number_format($booking['total_amount'], 0); ?></strong>
+                                    <?php if ($is_tentative && $booking['tentative_expires_at']): ?>
+                                        <?php if ($expires_soon): ?>
+                                            <br><span class="expires-soon"><i class="fas fa-exclamation-triangle"></i> Expires soon!</span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
                                     <span class="badge badge-<?php echo $booking['status']; ?>">
                                         <?php echo ucfirst($booking['status']); ?>
                                     </span>
+                                    <?php if ($is_tentative && $booking['tentative_expires_at']): ?>
+                                        <br><small style="color: #666; font-size: 10px;">
+                                            <?php
+                                                $expires = new DateTime($booking['tentative_expires_at']);
+                                                echo 'Expires: ' . $expires->format('M d, H:i');
+                                            ?>
+                                        </small>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <span class="badge badge-<?php echo $booking['payment_status']; ?>">
@@ -674,9 +1207,22 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
                                     </span>
                                 </td>
                                 <td>
-                                    <?php if ($booking['status'] === 'pending'): ?>
+                                    <?php if ($is_tentative): ?>
+                                        <button class="quick-action confirm" onclick="convertTentativeBooking(<?php echo $booking['id']; ?>)">
+                                            <i class="fas fa-check"></i> Convert
+                                        </button>
+                                        <button class="quick-action cancel" onclick="cancelBooking(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars($booking['booking_reference'], ENT_QUOTES); ?>')">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                    <?php elseif ($booking['status'] === 'pending'): ?>
                                         <button class="quick-action confirm" onclick="updateStatus(<?php echo $booking['id']; ?>, 'confirmed')">
                                             <i class="fas fa-check"></i> Confirm
+                                        </button>
+                                        <button class="quick-action" style="background: linear-gradient(135deg, var(--gold) 0%, #c49b2e 100%); color: var(--deep-navy);" onclick="makeTentative(<?php echo $booking['id']; ?>)">
+                                            <i class="fas fa-clock"></i> Make Tentative
+                                        </button>
+                                        <button class="quick-action cancel" onclick="cancelBooking(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars($booking['booking_reference'], ENT_QUOTES); ?>')">
+                                            <i class="fas fa-times"></i> Cancel
                                         </button>
                                     <?php endif; ?>
                                     <?php if ($booking['status'] === 'confirmed'): ?>
@@ -684,6 +1230,9 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
                                         <button class="quick-action check-in <?php echo $can_checkin ? '' : 'disabled'; ?>"
                                                 onclick="<?php echo $can_checkin ? "updateStatus({$booking['id']}, 'checked-in')" : "Alert.show('Cannot check in: booking must be PAID first.', 'error')"; ?>">
                                             <i class="fas fa-sign-in-alt"></i> Check In
+                                        </button>
+                                        <button class="quick-action cancel" onclick="cancelBooking(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars($booking['booking_reference'], ENT_QUOTES); ?>')">
+                                            <i class="fas fa-times"></i> Cancel
                                         </button>
                                     <?php endif; ?>
                                     <?php if ($booking['status'] === 'checked-in'): ?>
@@ -768,6 +1317,236 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
     </div>
 
     <script>
+        // Tab switching functionality
+        let currentTab = 'all';
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // Update active tab button
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.tab === tabName) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Filter table rows
+            filterBookingsTable(tabName);
+            
+            // Update section title
+            updateSectionTitle(tabName);
+        }
+
+        function filterBookingsTable(tabName) {
+            const table = document.querySelector('.booking-table tbody');
+            if (!table) return;
+            
+            const rows = table.querySelectorAll('tr');
+            let visibleCount = 0;
+            
+            // Get today's date for comparison
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayStr = today.toISOString().split('T')[0];
+            
+            rows.forEach(row => {
+                const statusCell = row.querySelector('td:nth-child(9)'); // Status column
+                const paymentCell = row.querySelector('td:nth-child(10)'); // Payment column
+                const checkInCell = row.querySelector('td:nth-child(4)'); // Check-in date column
+                const checkOutCell = row.querySelector('td:nth-child(5)'); // Check-out date column
+                
+                if (!statusCell || !paymentCell) return;
+                
+                const statusBadge = statusCell.querySelector('.badge');
+                const paymentBadge = paymentCell.querySelector('.badge');
+                
+                if (!statusBadge || !paymentBadge) return;
+                
+                const status = statusBadge.textContent.trim().toLowerCase().replace(' ', '-');
+                const payment = paymentBadge.textContent.trim().toLowerCase();
+                
+                // Parse dates from table cells
+                const checkInDate = checkInCell ? new Date(checkInCell.textContent.trim()) : null;
+                const checkOutDate = checkOutCell ? new Date(checkOutCell.textContent.trim()) : null;
+                
+                // Check if tentative booking is expiring soon (within 24 hours)
+                const isExpiringSoon = row.innerHTML.includes('Expires soon') ||
+                                      (status === 'tentative' && row.querySelector('.expires-soon'));
+                
+                // Check if check-in/check-out is today
+                const isTodayCheckIn = checkInDate &&
+                                      checkInDate.toISOString().split('T')[0] === todayStr &&
+                                      status === 'confirmed';
+                const isTodayCheckOut = checkOutDate &&
+                                       checkOutDate.toISOString().split('T')[0] === todayStr &&
+                                       status === 'checked-in';
+                
+                let isVisible = false;
+                
+                switch(tabName) {
+                    case 'all':
+                        isVisible = true;
+                        break;
+                    case 'pending':
+                        isVisible = status === 'pending';
+                        break;
+                    case 'tentative':
+                        isVisible = status === 'tentative' || row.innerHTML.includes('Tentative');
+                        break;
+                    case 'expiring-soon':
+                        isVisible = isExpiringSoon;
+                        break;
+                    case 'confirmed':
+                        isVisible = status === 'confirmed';
+                        break;
+                    case 'today-checkins':
+                        isVisible = isTodayCheckIn;
+                        break;
+                    case 'today-checkouts':
+                        isVisible = isTodayCheckOut;
+                        break;
+                    case 'checked-in':
+                        isVisible = status === 'checked-in';
+                        break;
+                    case 'checked-out':
+                        isVisible = status === 'checked-out';
+                        break;
+                    case 'cancelled':
+                        isVisible = status === 'cancelled';
+                        break;
+                    case 'paid':
+                        isVisible = payment === 'paid';
+                        break;
+                    case 'unpaid':
+                        isVisible = payment !== 'paid';
+                        break;
+                }
+                
+                if (isVisible) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update count in section title
+            const countSpan = document.querySelector('.section-title span');
+            if (countSpan) {
+                countSpan.textContent = `(${visibleCount} shown)`;
+            }
+        }
+
+        function updateSectionTitle(tabName) {
+            const titleElement = document.querySelector('.section-title');
+            if (!titleElement) return;
+            
+            const tabTitles = {
+                'all': 'All Room Bookings',
+                'pending': 'Pending Bookings',
+                'tentative': 'Tentative Bookings',
+                'expiring-soon': 'Expiring Soon (Urgent)',
+                'confirmed': 'Confirmed Bookings',
+                'today-checkins': "Today's Check-ins",
+                'today-checkouts': "Today's Check-outs",
+                'checked-in': 'Checked In Guests',
+                'checked-out': 'Checked Out Bookings',
+                'cancelled': 'Cancelled Bookings',
+                'paid': 'Paid Bookings',
+                'unpaid': 'Unpaid Bookings'
+            };
+            
+            const icon = titleElement.querySelector('i');
+            const countSpan = titleElement.querySelector('span');
+            
+            let newTitle = tabTitles[tabName] || 'Room Bookings';
+            let newIcon = 'fa-bed';
+            
+            if (tabName === 'pending') newIcon = 'fa-clock';
+            if (tabName === 'tentative') newIcon = 'fa-hourglass-half';
+            if (tabName === 'expiring-soon') newIcon = 'fa-exclamation-triangle';
+            if (tabName === 'confirmed') newIcon = 'fa-check-circle';
+            if (tabName === 'today-checkins') newIcon = 'fa-calendar-day';
+            if (tabName === 'today-checkouts') newIcon = 'fa-calendar-times';
+            if (tabName === 'checked-in') newIcon = 'fa-sign-in-alt';
+            if (tabName === 'checked-out') newIcon = 'fa-sign-out-alt';
+            if (tabName === 'cancelled') newIcon = 'fa-times-circle';
+            if (tabName === 'paid') newIcon = 'fa-dollar-sign';
+            if (tabName === 'unpaid') newIcon = 'fa-exclamation-circle';
+            
+            titleElement.innerHTML = `<i class="fas ${newIcon}"></i> ${newTitle} `;
+            if (countSpan) {
+                titleElement.appendChild(countSpan);
+            }
+        }
+
+        // Initialize tab click handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabName = this.dataset.tab;
+                    switchTab(tabName);
+                });
+            });
+            
+            // Initial filter
+            switchTab('all');
+        });
+
+        function makeTentative(id) {
+            if (!confirm('Convert this pending booking to a tentative reservation? This will hold the room for 48 hours and send a confirmation email to the guest.')) {
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('action', 'make_tentative');
+            formData.append('id', id);
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    Alert.show('Error converting booking to tentative', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Alert.show('Error converting booking to tentative', 'error');
+            });
+        }
+        
+        function convertTentativeBooking(id) {
+            if (!confirm('Convert this tentative booking to a confirmed reservation? This will send a confirmation email to the guest.')) {
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('action', 'convert_tentative');
+            formData.append('id', id);
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    Alert.show('Error converting booking', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Alert.show('Error converting booking', 'error');
+            });
+        }
+        
         function updateStatus(id, status) {
             const formData = new FormData();
             formData.append('action', 'update_status');
@@ -811,6 +1590,35 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
             .catch(error => {
                 console.error('Error:', error);
                 Alert.show('Error updating payment', 'error');
+            });
+        }
+
+        function cancelBooking(id, reference) {
+            const reason = prompt('Enter cancellation reason (optional):');
+            if (reason === null) {
+                return; // User cancelled
+            }
+            
+            const formData = new FormData();
+            formData.append('action', 'update_status');
+            formData.append('id', id);
+            formData.append('status', 'cancelled');
+            formData.append('cancellation_reason', reason || 'Cancelled by admin');
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    Alert.show('Error cancelling booking', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Alert.show('Error cancelling booking', 'error');
             });
         }
     </script>

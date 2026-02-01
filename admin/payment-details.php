@@ -7,9 +7,9 @@ if (!isset($_SESSION['admin_user'])) {
     exit;
 }
 
-require_once '../../config/database.php';
-require_once '../../includes/modal.php';
-require_once '../../includes/alert.php';
+require_once '../config/database.php';
+require_once '../includes/modal.php';
+require_once '../includes/alert.php';
 
 $user = $_SESSION['admin_user'];
 $site_name = getSetting('site_name');
@@ -62,7 +62,7 @@ $stmt->execute([$paymentId]);
 $payment = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$payment) {
-    $_SESSION['alert'] = ['type' => 'error', 'message' => 'Payment not found'];
+    $_SESSION['alert'] = ['type' => 'info', 'message' => 'Payment not found. It may have been deleted or does not exist.'];
     header('Location: payments.php');
     exit;
 }
@@ -171,8 +171,8 @@ $otherPayments = $otherPaymentsStmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../../css/style.css">
-    <link rel="stylesheet" href="../css/admin-styles.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/admin-styles.css">
     
     <style>
         .page-header {
@@ -393,7 +393,7 @@ $otherPayments = $otherPaymentsStmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body>
 
-    <?php include '../admin-header.php'; ?>
+    <?php include 'admin-header.php'; ?>
 
     <div class="content">
         <div class="page-header">
@@ -561,7 +561,7 @@ $otherPayments = $otherPaymentsStmt->fetchAll(PDO::FETCH_ASSOC);
                     <?php endif; ?>
                 </div>
                 
-                <a href="<?php echo $bookingDetails['type'] === 'room' ? '../booking-details.php?id=' . $bookingDetails['id'] : '../conference-management.php'; ?>" class="btn-primary" style="display: inline-block; padding: 10px 20px; text-decoration: none;">
+                <a href="<?php echo $bookingDetails['type'] === 'room' ? 'booking-details.php?id=' . $bookingDetails['id'] : 'conference-management.php'; ?>" class="btn-primary" style="display: inline-block; padding: 10px 20px; text-decoration: none;">
                     <i class="fas fa-external-link-alt"></i> View Full Booking Details
                 </a>
             </div>

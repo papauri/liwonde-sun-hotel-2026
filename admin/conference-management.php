@@ -165,10 +165,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enquiry_action'])) {
             // Send cancellation email
             if ($enquiry) {
                 $email_result = sendConferenceCancelledEmail($enquiry);
-                if ($email_result['success']) {
+                
+                // Log cancellation to database
+                $email_sent = $email_result['success'];
+                $email_status = $email_result['message'];
+                logCancellationToDatabase(
+                    $enquiry['id'],
+                    $enquiry['inquiry_reference'],
+                    'conference',
+                    $enquiry['email'],
+                    $user['id'],
+                    'Cancelled by admin',
+                    $email_sent,
+                    $email_status
+                );
+                
+                // Log cancellation to file
+                logCancellationToFile(
+                    $enquiry['inquiry_reference'],
+                    'conference',
+                    $enquiry['email'],
+                    $user['full_name'] ?? $user['username'],
+                    'Cancelled by admin',
+                    $email_sent,
+                    $email_status
+                );
+                
+                if ($email_sent) {
                     $message = 'Conference enquiry cancelled successfully! Cancellation email sent.';
                 } else {
-                    $message = 'Conference enquiry cancelled successfully! (Email not sent: ' . $email_result['message'] . ')';
+                    $message = 'Conference enquiry cancelled successfully! (Email not sent: ' . $email_status . ')';
                 }
             } else {
                 $message = 'Conference enquiry cancelled successfully!';

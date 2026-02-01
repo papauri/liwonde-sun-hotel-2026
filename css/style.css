@@ -699,6 +699,17 @@ button {
     display: block;
 }
 
+/* Increase height on larger screens to prevent hero-content from covering controls */
+@media (min-width: 1200px) {
+    .hero {
+        height: 700px; /* Increase height to provide more space */
+    }
+
+    .hero-carousel {
+        height: 700px; /* Match the increased height */
+    }
+}
+
 .hero-slide {
     position: absolute;
     inset: 0;

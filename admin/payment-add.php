@@ -7,11 +7,11 @@ if (!isset($_SESSION['admin_user'])) {
     exit;
 }
 
-require_once '../../config/database.php';
-require_once '../../config/email.php';
-require_once '../../config/invoice.php';
-require_once '../../includes/modal.php';
-require_once '../../includes/alert.php';
+require_once '../config/database.php';
+require_once '../config/email.php';
+require_once '../config/invoice.php';
+require_once '../includes/modal.php';
+require_once '../includes/alert.php';
 
 $user = $_SESSION['admin_user'];
 $site_name = getSetting('site_name');
@@ -31,7 +31,7 @@ if ($editId) {
     $payment = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$payment) {
-        $_SESSION['alert'] = ['type' => 'error', 'message' => 'Payment not found'];
+        $_SESSION['alert'] = ['type' => 'info', 'message' => 'Payment not found. It may have been deleted or does not exist.'];
         header('Location: payments.php');
         exit;
     }
@@ -108,6 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $paymentStatus = $_POST['payment_status'] ?? 'pending';
     $transactionReference = $_POST['transaction_reference'] ?? '';
     $notes = $_POST['notes'] ?? '';
+    $ccEmails = $_POST['cc_emails'] ?? '';
     $processedBy = $user;
     
     // Validate
@@ -124,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'payment_status = ?',
                     'transaction_reference = ?',
                     'notes = ?',
+                    'cc_emails = ?',
                     'processed_by = ?'
                 ];
                 
@@ -134,6 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $paymentStatus,
                     $transactionReference ?: null,
                     $notes ?: null,
+                    $ccEmails ?: null,
                     $processedBy
                 ];
                 
@@ -229,8 +232,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         payment_reference, booking_type, booking_id, booking_reference, payment_date,
                         payment_amount, vat_rate, vat_amount, total_amount,
                         payment_method, payment_status, transaction_reference,
-                        receipt_number, processed_by, notes
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        receipt_number, cc_emails, processed_by, notes
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
                 
                 $stmt->execute([
@@ -247,6 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $paymentStatus,
                     $transactionReference ?: null,
                     $receiptNumber,
+                    $ccEmails ?: null,
                     $processedBy,
                     $notes ?: null
                 ]);
@@ -265,13 +269,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Send payment confirmation email for room bookings
                 if ($bookingType === 'room' && $paymentStatus === 'completed') {
                     try {
-                        $email_result = sendPaymentInvoiceEmail($bookingId);
+                        // Merge default CC recipients with additional CCs from form
+                        $defaultCcRecipients = getEmailSetting('invoice_recipients', '');
+                        $smtpUsername = getEmailSetting('smtp_username', '');
+                        
+                        // Parse default recipients
+                        $allCcRecipients = array_filter(array_map('trim', explode(',', $defaultCcRecipients)));
+                        
+                        // Add SMTP username to CC list
+                        if (!empty($smtpUsername) && !in_array($smtpUsername, $allCcRecipients)) {
+                            $allCcRecipients[] = $smtpUsername;
+                        }
+                        
+                        // Add additional CCs from form
+                        if (!empty($ccEmails)) {
+                            $additionalCc = array_filter(array_map('trim', explode(',', $ccEmails)));
+                            foreach ($additionalCc as $email) {
+                                if (!in_array($email, $allCcRecipients)) {
+                                    $allCcRecipients[] = $email;
+                                }
+                            }
+                        }
+                        
+                        // Send payment invoice with CC recipients
+                        $email_result = sendPaymentInvoiceEmailWithCC($bookingId, $allCcRecipients);
                         if (!$email_result['success']) {
                             error_log("Failed to send room payment invoice email: " . $email_result['message']);
                         } else {
                             $logMsg = "Room payment invoice email sent successfully";
                             if (isset($email_result['preview_url'])) {
                                 $logMsg .= " - Preview: " . $email_result['preview_url'];
+                            }
+                            if (!empty($allCcRecipients)) {
+                                $logMsg .= " - CC: " . implode(', ', $allCcRecipients);
                             }
                             error_log($logMsg);
                         }
@@ -280,56 +310,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 
-                // Send payment confirmation email for conference bookings
+                // Send invoice email for conference bookings
                 if ($bookingType === 'conference' && $paymentStatus === 'completed') {
                     try {
-                        // Fetch conference enquiry details
-                        $enquiryStmt = $pdo->prepare("
-                            SELECT ci.*, cr.name as room_name
-                            FROM conference_inquiries ci
-                            LEFT JOIN conference_rooms cr ON ci.conference_room_id = cr.id
-                            WHERE ci.id = ?
-                        ");
-                        $enquiryStmt->execute([$bookingId]);
-                        $enquiry = $enquiryStmt->fetch(PDO::FETCH_ASSOC);
+                        // Merge default CC recipients with additional CCs from form
+                        $defaultCcRecipients = getEmailSetting('invoice_recipients', '');
+                        $smtpUsername = getEmailSetting('smtp_username', '');
                         
-                        if ($enquiry) {
-                            $payment_data = [
-                                'id' => $enquiry['id'],
-                                'inquiry_reference' => $enquiry['inquiry_reference'],
-                                'conference_room_id' => $enquiry['conference_room_id'],
-                                'company_name' => $enquiry['company_name'],
-                                'contact_person' => $enquiry['contact_person'],
-                                'email' => $enquiry['email'],
-                                'phone' => $enquiry['phone'],
-                                'event_date' => $enquiry['event_date'],
-                                'start_time' => $enquiry['start_time'],
-                                'end_time' => $enquiry['end_time'],
-                                'number_of_attendees' => $enquiry['number_of_attendees'],
-                                'event_type' => $enquiry['event_type'],
-                                'special_requirements' => $enquiry['special_requirements'],
-                                'catering_required' => $enquiry['catering_required'],
-                                'av_equipment' => $enquiry['av_equipment'],
-                                'total_amount' => $enquiry['total_amount'],
-                                'payment_amount' => $paymentAmount,
-                                'payment_date' => $paymentDate,
-                                'payment_method' => $paymentMethod,
-                                'payment_reference' => $paymentRef
-                            ];
-                            
-                            $email_result = sendConferencePaymentEmail($payment_data);
-                            if (!$email_result['success']) {
-                                error_log("Failed to send conference payment email: " . $email_result['message']);
-                            } else {
-                                $logMsg = "Conference payment email processed";
-                                if (isset($email_result['preview_url'])) {
-                                    $logMsg .= " - Preview: " . $email_result['preview_url'];
+                        // Parse default recipients
+                        $allCcRecipients = array_filter(array_map('trim', explode(',', $defaultCcRecipients)));
+                        
+                        // Add SMTP username to CC list
+                        if (!empty($smtpUsername) && !in_array($smtpUsername, $allCcRecipients)) {
+                            $allCcRecipients[] = $smtpUsername;
+                        }
+                        
+                        // Add additional CCs from form
+                        if (!empty($ccEmails)) {
+                            $additionalCc = array_filter(array_map('trim', explode(',', $ccEmails)));
+                            foreach ($additionalCc as $email) {
+                                if (!in_array($email, $allCcRecipients)) {
+                                    $allCcRecipients[] = $email;
                                 }
-                                error_log($logMsg);
                             }
                         }
+                        
+                        // Generate invoice and send with CC recipients
+                        $email_result = sendConferenceInvoiceEmailWithCC($bookingId, $allCcRecipients);
+                        if (!$email_result['success']) {
+                            error_log("Failed to send conference invoice email: " . $email_result['message']);
+                        } else {
+                            $logMsg = "Conference invoice email sent successfully";
+                            if (isset($email_result['preview_url'])) {
+                                $logMsg .= " - Preview: " . $email_result['preview_url'];
+                            }
+                            if (!empty($allCcRecipients)) {
+                                $logMsg .= " - CC: " . implode(', ', $allCcRecipients);
+                            }
+                            error_log($logMsg);
+                        }
                     } catch (Exception $e) {
-                        error_log("Error sending conference payment email: " . $e->getMessage());
+                        error_log("Error sending conference invoice email: " . $e->getMessage());
                     }
                 }
                 
@@ -343,6 +364,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->rollBack();
             }
             $_SESSION['alert'] = ['type' => 'error', 'message' => 'Database error: ' . $e->getMessage()];
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $_SESSION['alert'] = ['type' => 'error', 'message' => 'Error: ' . $e->getMessage()];
         }
     }
 }
@@ -487,8 +513,8 @@ function updateConferenceEnquiryPayments($pdo, $enquiryId) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../../css/style.css">
-    <link rel="stylesheet" href="../css/admin-styles.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/admin-styles.css">
     
     <style>
         .form-container {
@@ -618,11 +644,64 @@ function updateConferenceEnquiryPayments($pdo, $enquiryId) {
             color: #666;
             margin-top: 4px;
         }
+        
+        .booking-search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            margin-top: 4px;
+        }
+        
+        .booking-search-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .booking-search-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .booking-search-item:last-child {
+            border-bottom: none;
+        }
+        
+        .booking-search-item strong {
+            color: var(--navy);
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .booking-search-item small {
+            color: #666;
+            display: block;
+        }
+        
+        .booking-search-no-results {
+            padding: 16px;
+            text-align: center;
+            color: #666;
+        }
+        
+        .booking-search-loading {
+            padding: 16px;
+            text-align: center;
+            color: var(--navy);
+        }
     </style>
 </head>
 <body>
 
-    <?php include '../admin-header.php'; ?>
+    <?php include 'admin-header.php'; ?>
 
     <div class="content">
         <div class="form-container">
@@ -673,10 +752,17 @@ function updateConferenceEnquiryPayments($pdo, $enquiryId) {
                                 </select>
                             </div>
                             
-                            <div class="form-group">
+                            <div class="form-group" style="position: relative;">
                                 <label>Booking ID <span class="required">*</span></label>
-                                <input type="number" name="booking_id" id="booking_id" value="<?php echo $bookingId; ?>" required>
-                                <div class="help-text">Enter the booking ID from the bookings or conference management page</div>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="number" name="booking_id" id="booking_id" value="<?php echo $bookingId; ?>" required
+                                           style="flex: 1;" placeholder="Enter booking ID or search...">
+                                    <button type="button" id="search_booking_btn" class="btn btn-secondary" style="padding: 12px 16px;">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                                <div id="booking_search_results" class="booking-search-results" style="display: none;"></div>
+                                <div class="help-text">Enter the booking ID manually or click search to find bookings</div>
                             </div>
                         </div>
                     <?php endif; ?>
@@ -729,6 +815,12 @@ function updateConferenceEnquiryPayments($pdo, $enquiryId) {
                     <div class="form-group">
                         <label>Transaction Reference</label>
                         <input type="text" name="transaction_reference" value="<?php echo htmlspecialchars($payment['transaction_reference'] ?? ''); ?>" placeholder="Bank reference, cheque number, etc.">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Additional CC Emails</label>
+                        <input type="text" name="cc_emails" value="<?php echo htmlspecialchars($payment['cc_emails'] ?? ''); ?>" placeholder="email1@example.com, email2@example.com">
+                        <div class="help-text">Comma-separated email addresses to receive a copy of the payment receipt (in addition to default recipients)</div>
                     </div>
                     
                     <div class="form-group">
@@ -794,6 +886,131 @@ function updateConferenceEnquiryPayments($pdo, $enquiryId) {
         if (paymentAmount.value) {
             updateCalculation();
         }
+        
+        // Booking Search Functionality
+        const bookingTypeSelect = document.getElementById('booking_type');
+        const bookingIdInput = document.getElementById('booking_id');
+        const searchBtn = document.getElementById('search_booking_btn');
+        const searchResults = document.getElementById('booking_search_results');
+        let searchTimeout = null;
+
+        function searchBookings() {
+            const bookingType = bookingTypeSelect.value;
+            const searchTerm = bookingIdInput.value.trim();
+            
+            if (!bookingType) {
+                searchResults.innerHTML = '<div class="booking-search-no-results">Please select a booking type first</div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+            
+            if (searchTerm.length < 1) {
+                // Show recent bookings when search is empty
+                loadRecentBookings(bookingType);
+                return;
+            }
+            
+            searchResults.innerHTML = '<div class="booking-search-loading"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
+            searchResults.style.display = 'block';
+            
+            // Clear previous timeout
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+            
+            // Debounce search
+            searchTimeout = setTimeout(() => {
+                fetch(`api/search-bookings.php?type=${bookingType}&q=${encodeURIComponent(searchTerm)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        displaySearchResults(data);
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        searchResults.innerHTML = '<div class="booking-search-no-results">Error searching bookings</div>';
+                    });
+            }, 300);
+        }
+        
+        function loadRecentBookings(bookingType) {
+            searchResults.innerHTML = '<div class="booking-search-loading"><i class="fas fa-spinner fa-spin"></i> Loading recent bookings...</div>';
+            searchResults.style.display = 'block';
+            
+            fetch(`api/search-bookings.php?type=${bookingType}&recent=1`)
+                .then(response => response.json())
+                .then(data => {
+                    displaySearchResults(data, true);
+                })
+                .catch(error => {
+                    console.error('Load recent error:', error);
+                    searchResults.innerHTML = '<div class="booking-search-no-results">Error loading recent bookings</div>';
+                });
+        }
+        
+        function displaySearchResults(data, isRecent = false) {
+            if (!data.bookings || data.bookings.length === 0) {
+                searchResults.innerHTML = '<div class="booking-search-no-results">' + (isRecent ? 'No recent bookings found' : 'No bookings found matching your search') + '</div>';
+                return;
+            }
+            
+            let html = '';
+            data.bookings.forEach(booking => {
+                if (bookingTypeSelect.value === 'room') {
+                    html += `
+                        <div class="booking-search-item" data-id="${booking.id}">
+                            <strong>${booking.booking_reference} - ${booking.guest_name}</strong>
+                            <small>ID: ${booking.id} | Room: ${booking.room_name || 'N/A'} | ${booking.check_in_date} to ${booking.check_out_date}</small>
+                            <small style="color: ${booking.amount_due > 0 ? '#dc3545' : '#28a745'};">Due: ${currencySymbol}${booking.amount_due.toLocaleString()}</small>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="booking-search-item" data-id="${booking.id}">
+                            <strong>${booking.enquiry_reference} - ${booking.organization_name || booking.contact_name}</strong>
+                            <small>ID: ${booking.id} | Event: ${booking.start_date} to ${booking.end_date}</small>
+                            <small style="color: ${booking.amount_due > 0 ? '#dc3545' : '#28a745'};">Due: ${currencySymbol}${booking.amount_due.toLocaleString()}</small>
+                        </div>
+                    `;
+                }
+            });
+            
+            searchResults.innerHTML = html;
+            
+            // Add click handlers
+            searchResults.querySelectorAll('.booking-search-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    bookingIdInput.value = this.dataset.id;
+                    searchResults.style.display = 'none';
+                });
+            });
+        }
+        
+        // Event listeners
+        searchBtn.addEventListener('click', searchBookings);
+        
+        bookingIdInput.addEventListener('focus', function() {
+            if (bookingTypeSelect.value) {
+                loadRecentBookings(bookingTypeSelect.value);
+            }
+        });
+        
+        bookingIdInput.addEventListener('input', function() {
+            if (this.value.trim().length > 0) {
+                searchBookings();
+            }
+        });
+        
+        bookingTypeSelect.addEventListener('change', function() {
+            searchResults.style.display = 'none';
+            bookingIdInput.value = '';
+        });
+        
+        // Close search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.form-group') || !e.target.closest('[style*="position: relative"]')) {
+                searchResults.style.display = 'none';
+            }
+        });
     </script>
 
 </body>

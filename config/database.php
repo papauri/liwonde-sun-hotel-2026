@@ -1343,3 +1343,480 @@ function unblockRoomDates($room_id, $dates) {
     
     return $unblocked_count;
 }
+
+/**
+ * ============================================
+ * TENTATIVE BOOKING SYSTEM HELPER FUNCTIONS
+ * ============================================
+ */
+
+/**
+ * Convert a tentative booking to a standard booking
+ * Returns true on success, false on failure
+ */
+function convertTentativeBooking($booking_id, $admin_user_id = null) {
+    global $pdo;
+    
+    try {
+        // Start transaction
+        $pdo->beginTransaction();
+        
+        // Get current booking details
+        $stmt = $pdo->prepare("SELECT * FROM bookings WHERE id = ? AND status = 'tentative'");
+        $stmt->execute([$booking_id]);
+        $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$booking) {
+            $pdo->rollBack();
+            return false;
+        }
+        
+        // Update booking status to pending
+        $update_stmt = $pdo->prepare("
+            UPDATE bookings
+            SET status = 'pending',
+                is_tentative = 0,
+                tentative_expires_at = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ");
+        $update_stmt->execute([$booking_id]);
+        
+        // Log the action
+        logTentativeBookingAction($booking_id, 'converted', [
+            'converted_by' => $admin_user_id,
+            'previous_status' => 'tentative',
+            'new_status' => 'pending',
+            'previous_is_tentative' => 1,
+            'new_is_tentative' => 0
+        ]);
+        
+        $pdo->commit();
+        return true;
+        
+    } catch (PDOException $e) {
+        $pdo->rollBack();
+        error_log("Error converting tentative booking: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Cancel a tentative booking
+ * Returns true on success, false on failure
+ */
+function cancelTentativeBooking($booking_id, $admin_user_id = null, $reason = null) {
+    global $pdo;
+    
+    try {
+        // Start transaction
+        $pdo->beginTransaction();
+        
+        // Get current booking details
+        $stmt = $pdo->prepare("SELECT * FROM bookings WHERE id = ? AND status = 'tentative'");
+        $stmt->execute([$booking_id]);
+        $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$booking) {
+            $pdo->rollBack();
+            return false;
+        }
+        
+        // Update booking status to cancelled
+        $update_stmt = $pdo->prepare("
+            UPDATE bookings
+            SET status = 'cancelled',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ");
+        $update_stmt->execute([$booking_id]);
+        
+        // Log the action
+        logTentativeBookingAction($booking_id, 'cancelled', [
+            'cancelled_by' => $admin_user_id,
+            'previous_status' => 'tentative',
+            'new_status' => 'cancelled',
+            'reason' => $reason
+        ]);
+        
+        $pdo->commit();
+        return true;
+        
+    } catch (PDOException $e) {
+        $pdo->rollBack();
+        error_log("Error cancelling tentative booking: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Get tentative bookings with optional filters
+ * Returns array of tentative bookings
+ */
+function getTentativeBookings($filters = []) {
+    global $pdo;
+    
+    try {
+        $sql = "
+            SELECT
+                b.*,
+                r.name as room_name,
+                r.price_per_night,
+                au.username as admin_username
+            FROM bookings b
+            LEFT JOIN rooms r ON b.room_id = r.id
+            LEFT JOIN admin_users au ON b.updated_by = au.id
+            WHERE b.is_tentative = 1
+        ";
+        $params = [];
+        
+        // Filter by status
+        if (!empty($filters['status'])) {
+            $sql .= " AND b.status = ?";
+            $params[] = $filters['status'];
+        }
+        
+        // Filter by room
+        if (!empty($filters['room_id'])) {
+            $sql .= " AND b.room_id = ?";
+            $params[] = $filters['room_id'];
+        }
+        
+        // Filter by expiration status
+        if (!empty($filters['expiration_status'])) {
+            $now = date('Y-m-d H:i:s');
+            if ($filters['expiration_status'] === 'expired') {
+                $sql .= " AND b.tentative_expires_at < ?";
+                $params[] = $now;
+            } elseif ($filters['expiration_status'] === 'active') {
+                $sql .= " AND b.tentative_expires_at >= ?";
+                $params[] = $now;
+            }
+        }
+        
+        // Filter by date range
+        if (!empty($filters['date_from'])) {
+            $sql .= " AND b.created_at >= ?";
+            $params[] = $filters['date_from'] . ' 00:00:00';
+        }
+        
+        if (!empty($filters['date_to'])) {
+            $sql .= " AND b.created_at <= ?";
+            $params[] = $filters['date_to'] . ' 23:59:59';
+        }
+        
+        // Search by guest name or email
+        if (!empty($filters['search'])) {
+            $sql .= " AND (b.guest_name LIKE ? OR b.guest_email LIKE ? OR b.booking_reference LIKE ?)";
+            $search_term = '%' . $filters['search'] . '%';
+            $params[] = $search_term;
+            $params[] = $search_term;
+            $params[] = $search_term;
+        }
+        
+        $sql .= " ORDER BY b.created_at DESC";
+        
+        // Limit results
+        if (!empty($filters['limit'])) {
+            $sql .= " LIMIT ?";
+            $params[] = (int)$filters['limit'];
+        }
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        return $bookings;
+        
+    } catch (PDOException $e) {
+        error_log("Error fetching tentative bookings: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Get bookings expiring within X hours
+ * Returns array of bookings expiring soon
+ */
+function getExpiringTentativeBookings($hours = 24) {
+    global $pdo;
+    
+    try {
+        $now = date('Y-m-d H:i:s');
+        $cutoff = date('Y-m-d H:i:s', strtotime("+{$hours} hours"));
+        
+        $stmt = $pdo->prepare("
+            SELECT
+                b.*,
+                r.name as room_name,
+                TIMESTAMPDIFF(HOUR, NOW(), b.tentative_expires_at) as hours_until_expiration
+            FROM bookings b
+            LEFT JOIN rooms r ON b.room_id = r.id
+            WHERE b.is_tentative = 1
+            AND b.status = 'tentative'
+            AND b.tentative_expires_at >= ?
+            AND b.tentative_expires_at <= ?
+            ORDER BY b.tentative_expires_at ASC
+        ");
+        $stmt->execute([$now, $cutoff]);
+        $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        return $bookings;
+        
+    } catch (PDOException $e) {
+        error_log("Error fetching expiring tentative bookings: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Get expired tentative bookings
+ * Returns array of expired bookings
+ */
+function getExpiredTentativeBookings() {
+    global $pdo;
+    
+    try {
+        $now = date('Y-m-d H:i:s');
+        
+        $stmt = $pdo->prepare("
+            SELECT
+                b.*,
+                r.name as room_name,
+                TIMESTAMPDIFF(HOUR, b.tentative_expires_at, NOW()) as hours_since_expiration
+            FROM bookings b
+            LEFT JOIN rooms r ON b.room_id = r.id
+            WHERE b.is_tentative = 1
+            AND b.status = 'tentative'
+            AND b.tentative_expires_at < ?
+            ORDER BY b.tentative_expires_at ASC
+        ");
+        $stmt->execute([$now]);
+        $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        return $bookings;
+        
+    } catch (PDOException $e) {
+        error_log("Error fetching expired tentative bookings: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Mark a tentative booking as expired
+ * Returns true on success, false on failure
+ */
+function markTentativeBookingExpired($booking_id) {
+    global $pdo;
+    
+    try {
+        // Start transaction
+        $pdo->beginTransaction();
+        
+        // Get current booking details
+        $stmt = $pdo->prepare("SELECT * FROM bookings WHERE id = ? AND status = 'tentative'");
+        $stmt->execute([$booking_id]);
+        $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$booking) {
+            $pdo->rollBack();
+            return false;
+        }
+        
+        // Update booking status to expired
+        $update_stmt = $pdo->prepare("
+            UPDATE bookings
+            SET status = 'expired',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ");
+        $update_stmt->execute([$booking_id]);
+        
+        // Log the action
+        logTentativeBookingAction($booking_id, 'expired', [
+            'previous_status' => 'tentative',
+            'new_status' => 'expired',
+            'expired_at' => date('Y-m-d H:i:s')
+        ]);
+        
+        $pdo->commit();
+        return true;
+        
+    } catch (PDOException $e) {
+        $pdo->rollBack();
+        error_log("Error marking tentative booking as expired: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Log an action for a tentative booking
+ * Returns true on success, false on failure
+ */
+function logTentativeBookingAction($booking_id, $action, $details = []) {
+    global $pdo;
+    
+    try {
+        // Check if tentative_booking_log table exists
+        $table_exists = $pdo->query("SHOW TABLES LIKE 'tentative_booking_log'")->rowCount() > 0;
+        
+        if (!$table_exists) {
+            // Table doesn't exist, skip logging
+            return true;
+        }
+        
+        $stmt = $pdo->prepare("
+            INSERT INTO tentative_booking_log (booking_id, action, details, created_at)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+        ");
+        $stmt->execute([$booking_id, $action, json_encode($details)]);
+        
+        return true;
+        
+    } catch (PDOException $e) {
+        error_log("Error logging tentative booking action: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Get tentative booking statistics
+ * Returns array with statistics
+ */
+function getTentativeBookingStatistics() {
+    global $pdo;
+    
+    try {
+        $now = date('Y-m-d H:i:s');
+        $reminder_cutoff = date('Y-m-d H:i:s', strtotime("+24 hours"));
+        
+        // Get total tentative bookings
+        $stmt = $pdo->query("
+            SELECT COUNT(*) as total
+            FROM bookings
+            WHERE is_tentative = 1
+            AND status = 'tentative'
+        ");
+        $total = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        
+        // Get expiring soon (within 24 hours)
+        $stmt = $pdo->prepare("
+            SELECT COUNT(*) as expiring_soon
+            FROM bookings
+            WHERE is_tentative = 1
+            AND status = 'tentative'
+            AND tentative_expires_at >= ?
+            AND tentative_expires_at <= ?
+        ");
+        $stmt->execute([$now, $reminder_cutoff]);
+        $expiring_soon = $stmt->fetch(PDO::FETCH_ASSOC)['expiring_soon'];
+        
+        // Get expired
+        $stmt = $pdo->prepare("
+            SELECT COUNT(*) as expired
+            FROM bookings
+            WHERE is_tentative = 1
+            AND status = 'tentative'
+            AND tentative_expires_at < ?
+        ");
+        $stmt->execute([$now]);
+        $expired = $stmt->fetch(PDO::FETCH_ASSOC)['expired'];
+        
+        // Get converted (standard bookings that were tentative)
+        $stmt = $pdo->query("
+            SELECT COUNT(*) as converted
+            FROM bookings
+            WHERE is_tentative = 0
+            AND status IN ('pending', 'confirmed', 'checked-in', 'checked-out')
+            AND tentative_expires_at IS NOT NULL
+        ");
+        $converted = $stmt->fetch(PDO::FETCH_ASSOC)['converted'];
+        
+        return [
+            'total' => (int)$total,
+            'expiring_soon' => (int)$expiring_soon,
+            'expired' => (int)$expired,
+            'converted' => (int)$converted,
+            'active' => (int)($total - $expired)
+        ];
+        
+    } catch (PDOException $e) {
+        error_log("Error fetching tentative booking statistics: " . $e->getMessage());
+        return [
+            'total' => 0,
+            'expiring_soon' => 0,
+            'expired' => 0,
+            'converted' => 0,
+            'active' => 0
+        ];
+    }
+}
+
+/**
+ * Check if a booking can be converted (is tentative and not expired)
+ * Returns array with status and message
+ */
+function canConvertTentativeBooking($booking_id) {
+    global $pdo;
+    
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM bookings WHERE id = ?");
+        $stmt->execute([$booking_id]);
+        $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$booking) {
+            return [
+                'can_convert' => false,
+                'reason' => 'Booking not found'
+            ];
+        }
+        
+        if ($booking['is_tentative'] != 1) {
+            return [
+                'can_convert' => false,
+                'reason' => 'This is not a tentative booking'
+            ];
+        }
+        
+        if ($booking['status'] === 'expired') {
+            return [
+                'can_convert' => false,
+                'reason' => 'This booking has expired'
+            ];
+        }
+        
+        if ($booking['status'] === 'cancelled') {
+            return [
+                'can_convert' => false,
+                'reason' => 'This booking has been cancelled'
+            ];
+        }
+        
+        if ($booking['status'] !== 'tentative') {
+            return [
+                'can_convert' => false,
+                'reason' => 'Booking has already been converted'
+            ];
+        }
+        
+        // Check if expired
+        if ($booking['tentative_expires_at'] && $booking['tentative_expires_at'] < date('Y-m-d H:i:s')) {
+            return [
+                'can_convert' => false,
+                'reason' => 'This booking has expired'
+            ];
+        }
+        
+        return [
+            'can_convert' => true,
+            'expires_at' => $booking['tentative_expires_at']
+        ];
+        
+    } catch (PDOException $e) {
+        error_log("Error checking if booking can be converted: " . $e->getMessage());
+        return [
+            'can_convert' => false,
+            'reason' => 'Database error'
+        ];
+    }
+}

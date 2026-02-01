@@ -78,6 +78,10 @@ $payment_policy = getSetting('payment_policy');
             border-radius: 50%;
             box-shadow: 0 10px 40px rgba(40, 167, 69, 0.3);
         }
+        .success-icon.tentative i {
+            color: var(--gold);
+            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.3);
+        }
         @keyframes scaleIn {
             from {
                 transform: scale(0);
@@ -247,6 +251,72 @@ $payment_policy = getSetting('payment_policy');
         .next-steps ol li {
             margin-bottom: 10px;
         }
+
+        /* Tentative Booking Styles */
+        .tentative-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--gold) 0%, #c49b2e 100%);
+            color: var(--deep-navy);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .tentative-info-box {
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            border-left: 4px solid var(--gold);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        .tentative-info-box h3 {
+            margin: 0 0 12px 0;
+            color: var(--navy);
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tentative-info-box p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .tentative-info-box .expires-at {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
+            font-weight: 600;
+            color: var(--navy);
+        }
+        .tentative-info-box .expires-at i {
+            color: #dc3545;
+            margin-right: 6px;
+        }
+        .booking-type-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-left: 10px;
+        }
+        .booking-type-indicator.standard {
+            background: #d4edda;
+            color: #155724;
+        }
+        .booking-type-indicator.tentative {
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            color: var(--navy);
+        }
+
         @media (max-width: 768px) {
             .confirmation-card {
                 padding: 30px 24px;
@@ -275,14 +345,35 @@ $payment_policy = getSetting('payment_policy');
         </div>
     </div>
     <?php else: ?>
+    <?php
+        $is_tentative = ($booking['status'] === 'tentative' || $booking['is_tentative'] == 1);
+        $icon_class = $is_tentative ? 'fa-clock' : 'fa-check-circle';
+        $icon_class_wrapper = $is_tentative ? 'tentative' : '';
+        $heading = $is_tentative ? 'Tentative Booking Received!' : 'Booking Confirmed!';
+        $subtitle = $is_tentative
+            ? 'Your room has been placed on temporary hold. We\'ll send you a reminder before expiration.'
+            : 'Thank you for choosing ' . htmlspecialchars($site_name) . '. Your reservation has been received.';
+    ?>
     <div class="confirmation-container">
-        <div class="success-icon">
-            <i class="fas fa-check-circle"></i>
+        <div class="success-icon <?php echo $icon_class_wrapper; ?>">
+            <i class="fas <?php echo $icon_class; ?>"></i>
         </div>
 
         <div class="confirmation-card">
-            <h1>Booking Confirmed!</h1>
-            <p class="subtitle">Thank you for choosing <?php echo htmlspecialchars($site_name); ?>. Your reservation has been received.</p>
+            <h1>
+                <?php echo $heading; ?>
+                <span class="booking-type-indicator <?php echo $is_tentative ? 'tentative' : 'standard'; ?>">
+                    <?php echo $is_tentative ? 'Tentative' : 'Standard'; ?>
+                </span>
+            </h1>
+            <p class="subtitle"><?php echo $subtitle; ?></p>
+
+            <?php if ($is_tentative && $booking['tentative_expires_at']): ?>
+            <div class="tentative-badge">
+                <i class="fas fa-hourglass-half"></i>
+                Room on Hold
+            </div>
+            <?php endif; ?>
 
             <div class="booking-reference-box">
                 <label>Booking Reference</label>
@@ -326,10 +417,31 @@ $payment_policy = getSetting('payment_policy');
                 </div>
             </div>
 
-            <div class="payment-info">
-                <h3><i class="fas fa-info-circle"></i> Payment Information</h3>
+            <?php if ($is_tentative && $booking['tentative_expires_at']): ?>
+            <div class="tentative-info-box">
+                <h3><i class="fas fa-clock"></i> Tentative Booking Details</h3>
                 <p>
-                    <?php echo getSetting('payment_policy', 'Payment will be made at the hotel upon arrival.<br>We accept cash payments only. Please bring the total amount of <strong>' . $currency_symbol . number_format($booking['total_amount'], 0) . '</strong> with you.'); ?>
+                    Your room has been placed on temporary hold. You'll receive a reminder email before expiration.
+                    To confirm this booking, please contact us before the expiration time.
+                </p>
+                <div class="expires-at">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Expires: <?php echo date('M j, Y \a\t g:i A', strtotime($booking['tentative_expires_at'])); ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <div class="payment-info">
+                <h3><i class="fas fa-info-circle"></i> <?php echo $is_tentative ? 'Next Steps' : 'Payment Information'; ?></h3>
+                <p>
+                    <?php if ($is_tentative): ?>
+                        <strong>1. Confirm your booking:</strong> Contact us before expiration to convert this to a confirmed reservation.<br>
+                        <strong>2. Payment:</strong> Once confirmed, payment of <?php echo $currency_symbol . number_format($booking['total_amount'], 0); ?> will be collected at check-in.<br>
+                        <strong>3. Reminder:</strong> You'll receive a reminder email <?php echo (int)getSetting('tentative_reminder_hours', 24); ?> hours before expiration.<br>
+                        <strong>4. Questions?</strong> Contact us anytime at <?php echo htmlspecialchars($phone_main); ?>.
+                    <?php else: ?>
+                        <?php echo getSetting('payment_policy', 'Payment will be made at the hotel upon arrival.<br>We accept cash payments only. Please bring the total amount of <strong>' . $currency_symbol . number_format($booking['total_amount'], 0) . '</strong> with you.'); ?>
+                    <?php endif; ?>
                 </p>
             </div>
 
@@ -348,38 +460,24 @@ $payment_policy = getSetting('payment_policy');
                 </a>
             </div>
 
-            <?php
-            // Check if PHPMailer is installed
-            $phpmailer_installed = file_exists(__DIR__ . '/vendor/autoload.php');
-            ?>
             
             <div class="next-steps">
                 <h3>What Happens Next?</h3>
                 <ol>
-                    <?php if ($phpmailer_installed): ?>
-                        <li> <strong>Confirmation email sent</strong> to <?php echo htmlspecialchars($booking['guest_email']); ?></li>
+                    <?php if ($is_tentative): ?>
+                        <li><strong>Tentative booking email sent</strong> to <?php echo htmlspecialchars($booking['guest_email']); ?> - please check your inbox</li>
+                        <li><strong>Room is on hold</strong> until <?php echo date('M j, Y \a\t g:i A', strtotime($booking['tentative_expires_at'])); ?></li>
+                        <li>You'll receive a <strong>reminder email</strong> <?php echo (int)getSetting('tentative_reminder_hours', 24); ?> hours before expiration</li>
+                        <li><strong>Contact us</strong> before expiration to confirm your booking and secure your reservation</li>
+                        <li>Once confirmed, payment of <strong><?php echo $currency_symbol; ?><?php echo number_format($booking['total_amount'], 0); ?></strong> will be collected at check-in</li>
                     <?php else: ?>
-                        <li>� <strong>Email notification pending</strong> - System will send confirmation once email service is configured</li>
+                        <li><strong>Confirmation email sent</strong> to <?php echo htmlspecialchars($booking['guest_email']); ?> - please check your inbox</li>
+                        <li>Our reception team will review your booking and may contact you to confirm details</li>
+                        <li>Please save your booking reference: <strong><?php echo $booking['booking_reference']; ?></strong></li>
+                        <li>Arrive on your check-in date and present your booking reference at reception</li>
+                        <li>Payment of <strong><?php echo $currency_symbol; ?><?php echo number_format($booking['total_amount'], 0); ?></strong> will be collected at check-in</li>
                     <?php endif; ?>
-                    <li>Our reception team will review your booking and may contact you to confirm details</li>
-                    <li>Please save your booking reference: <strong><?php echo $booking['booking_reference']; ?></strong></li>
-                    <li>Arrive on your check-in date and present your booking reference at reception</li>
-                    <li>Payment of <strong><?php echo $currency_symbol; ?><?php echo number_format($booking['total_amount'], 0); ?></strong> will be collected at check-in</li>
                 </ol>
-                
-                <?php if (!$phpmailer_installed): ?>
-                    <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px;">
-                        <h4 style="margin: 0 0 10px 0; color: #856404;">
-                            <i class="fas fa-info-circle"></i> Email Notifications
-                        </h4>
-                        <p style="margin: 0; color: #856404; font-size: 14px;">
-                            Email notifications are currently not configured. To enable automatic email confirmations, 
-                            please install PHPMailer. Contact your website administrator or visit 
-                            <a href="install-phpmailer.php" style="color: #856404; text-decoration: underline;">install-phpmailer.php</a> 
-                            for instructions.
-                        </p>
-                    </div>
-                <?php endif; ?>
             </div>
 
             <p style="text-align: center; margin-top: 32px; color: #999; font-size: 13px;">

@@ -17,7 +17,8 @@
  *   "number_of_guests": 2,
  *   "check_in_date": "2026-02-01",
  *   "check_out_date": "2026-02-03",
- *   "special_requests": "Early check-in please"
+ *   "special_requests": "Early check-in please",
+ *   "booking_type": "standard" // Optional: "standard" or "tentative" (default: "standard")
  * }
  *
  * SECURITY: This file must only be accessed through api/index.php
@@ -61,6 +62,12 @@ try {
         'room_id', 'guest_name', 'guest_email', 'guest_phone',
         'number_of_guests', 'check_in_date', 'check_out_date'
     ];
+    
+    // Validate booking type (optional, defaults to 'standard')
+    $bookingType = isset($input['booking_type']) ? trim($input['booking_type']) : 'standard';
+    if (!in_array($bookingType, ['standard', 'tentative'])) {
+        ApiResponse::validationError(['booking_type' => 'Invalid booking type. Must be "standard" or "tentative"']);
+    }
     
     $missingFields = [];
     foreach ($requiredFields as $field) {
@@ -152,6 +159,17 @@ try {
         $refExists = $refCheck->fetch(PDO::FETCH_ASSOC)['count'] > 0;
     } while ($refExists);
     
+    // Determine status and tentative expiration
+    $bookingStatus = ($bookingType === 'tentative') ? 'tentative' : 'pending';
+    $isTentative = ($bookingType === 'tentative') ? 1 : 0;
+    $tentativeExpiresAt = null;
+    
+    if ($bookingType === 'tentative') {
+        // Get tentative duration from settings (default 48 hours)
+        $tentativeDurationHours = (int)getSetting('tentative_duration_hours', 48);
+        $tentativeExpiresAt = date('Y-m-d H:i:s', strtotime("+{$tentativeDurationHours} hours"));
+    }
+    
     // Start transaction
     $pdo->beginTransaction();
     
@@ -161,8 +179,9 @@ try {
             INSERT INTO bookings (
                 booking_reference, room_id, guest_name, guest_email, guest_phone,
                 guest_country, guest_address, number_of_guests, check_in_date,
-                check_out_date, number_of_nights, total_amount, special_requests, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+                check_out_date, number_of_nights, total_amount, special_requests, status,
+                is_tentative, tentative_expires_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $insertStmt->execute([
@@ -178,7 +197,10 @@ try {
             $bookingData['check_out_date'],
             $nights,
             $totalAmount,
-            $bookingData['special_requests']
+            $bookingData['special_requests'],
+            $bookingStatus,
+            $isTentative,
+            $tentativeExpiresAt
         ]);
         
         $bookingId = $pdo->lastInsertId();
@@ -200,11 +222,19 @@ try {
             'number_of_guests' => $bookingData['number_of_guests'],
             'total_amount' => $totalAmount,
             'special_requests' => $bookingData['special_requests'],
-            'status' => 'pending'
+            'status' => $bookingStatus,
+            'is_tentative' => $isTentative,
+            'tentative_expires_at' => $tentativeExpiresAt
         ];
         
-        // Send booking received email to guest
-        $emailResult = sendBookingReceivedEmail($bookingForEmail);
+        // Send appropriate email based on booking type
+        if ($bookingType === 'tentative') {
+            // Send tentative booking confirmation email
+            $emailResult = sendTentativeBookingConfirmedEmail($bookingForEmail);
+        } else {
+            // Send standard booking received email
+            $emailResult = sendBookingReceivedEmail($bookingForEmail);
+        }
         
         // Send notification to admin
         $adminResult = sendAdminNotificationEmail($bookingForEmail);
@@ -229,6 +259,7 @@ try {
                 'id' => (int)$booking['id'],
                 'booking_reference' => $booking['booking_reference'],
                 'status' => $booking['status'],
+                'is_tentative' => (bool)$booking['is_tentative'],
                 'room' => [
                     'id' => (int)$booking['room_id'],
                     'name' => $booking['room_name'],
@@ -261,7 +292,25 @@ try {
                 'guest_email_message' => $emailResult['message'],
                 'admin_email_message' => $adminResult['message']
             ],
-            'next_steps' => [
+            'next_steps' => []
+        ];
+        
+        // Add tentative booking specific information
+        if ($bookingType === 'tentative' && $tentativeExpiresAt) {
+            $response['booking']['tentative_expires_at'] = $tentativeExpiresAt;
+            $response['next_steps'] = [
+                'booking_status' => 'Your room has been placed on tentative hold. You will receive a confirmation email with expiration details.',
+                'email_notification' => $emailResult['success']
+                    ? 'A tentative booking confirmation email has been sent to ' . $booking['guest_email']
+                    : 'Email notification pending - System will send confirmation once email service is configured',
+                'expiration' => 'This tentative booking will expire on ' . date('F j, Y \a\t g:i A', strtotime($tentativeExpiresAt)) . '. Please confirm your booking before this time.',
+                'reminder' => 'You will receive a reminder email 24 hours before expiration.',
+                'confirmation' => 'Your booking reference is ' . $bookingReference . '. Use this reference when confirming your booking.',
+                'contact' => 'To confirm your booking, please contact us at ' . getSetting('email_reservations') . ' or call us.',
+                'payment' => 'Payment will be required when you confirm your tentative booking.'
+            ];
+        } else {
+            $response['next_steps'] = [
                 'booking_status' => 'Your booking has been created successfully and is now in the system.',
                 'email_notification' => $emailResult['success']
                     ? 'A confirmation email has been sent to ' . $booking['guest_email']
@@ -269,8 +318,8 @@ try {
                 'payment' => getSetting('payment_policy'),
                 'confirmation' => 'Your booking reference is ' . $bookingReference . '. Keep this reference for check-in.',
                 'contact' => 'If you have any questions, please contact us at ' . getSetting('email_reservations')
-            ]
-        ];
+            ];
+        }
         
         ApiResponse::success($response, 'Booking created successfully', 201);
         

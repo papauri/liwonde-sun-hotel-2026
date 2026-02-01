@@ -60,7 +60,7 @@ function generateInvoicePDF($booking_id) {
     try {
         // Get booking details
         $stmt = $pdo->prepare("
-            SELECT b.*, r.name as room_name, r.image_url, 
+            SELECT b.*, r.name as room_name, r.image_url,
                    s.setting_value as site_name
             FROM bookings b
             JOIN rooms r ON b.room_id = r.id
@@ -89,8 +89,17 @@ function generateInvoicePDF($booking_id) {
             mkdir($invoiceDir, 0755, true);
         }
         
-        // Generate unique invoice filename
-        $invoice_number = 'INV-' . date('Y') . '-' . str_pad($booking_id, 6, '0', STR_PAD_LEFT);
+        // Generate unique invoice filename - use sequential invoice number from settings
+        $invoice_prefix = getSetting('invoice_prefix', 'INV');
+        $invoice_start = (int)getSetting('invoice_start_number', 1000);
+        
+        // Get the next invoice number
+        $stmt = $pdo->prepare("SELECT MAX(CAST(SUBSTRING_INDEX(invoice_number, '-', -1) AS UNSIGNED)) as max_inv FROM payments WHERE invoice_number LIKE ?");
+        $stmt->execute([$invoice_prefix . '-' . date('Y') . '%']);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $next_number = max($invoice_start, ($result['max_inv'] ?? 0) + 1);
+        
+        $invoice_number = $invoice_prefix . '-' . date('Y') . '-' . str_pad($next_number, 6, '0', STR_PAD_LEFT);
         $filename = $invoice_number . '.pdf';
         $filepath = $invoiceDir . '/' . $filename;
         
@@ -152,13 +161,23 @@ function generateInvoicePDF($booking_id) {
 <body>' . $html . '</body></html>';
             
             // Save as HTML (can be opened in browser and printed as PDF)
-            file_put_contents(str_replace('.pdf', '.html', $filepath), $fullHtml);
+            $htmlFilepath = str_replace('.pdf', '.html', $filepath);
+            file_put_contents($htmlFilepath, $fullHtml);
             
-            // Return HTML path as fallback
-            return str_replace('.pdf', '.html', $filepath);
+            // Return array with both paths and invoice number
+            return [
+                'filepath' => $htmlFilepath,
+                'invoice_number' => $invoice_number,
+                'relative_path' => 'invoices/' . basename($htmlFilepath)
+            ];
         }
         
-        return $filepath;
+        // Return array with both paths and invoice number
+        return [
+            'filepath' => $filepath,
+            'invoice_number' => $invoice_number,
+            'relative_path' => 'invoices/' . $filename
+        ];
         
     } catch (Exception $e) {
         error_log("Generate Invoice PDF Error: " . $e->getMessage());
@@ -343,10 +362,23 @@ function sendPaymentInvoiceEmail($booking_id) {
         }
         
         // Generate invoice PDF/HTML
-        $invoice_file = generateInvoicePDF($booking_id);
-        if (!$invoice_file) {
+        $invoice_result = generateInvoicePDF($booking_id);
+        if (!$invoice_result) {
             throw new Exception("Failed to generate invoice");
         }
+        
+        $invoice_file = $invoice_result['filepath'];
+        $invoice_number = $invoice_result['invoice_number'];
+        $invoice_path = $invoice_result['relative_path'];
+        
+        // Update the payment record with invoice path and invoice number
+        $update_stmt = $pdo->prepare("
+            UPDATE payments
+            SET invoice_path = ?, invoice_number = ?, invoice_generated = 1
+            WHERE booking_type = 'room' AND booking_id = ?
+            ORDER BY id DESC LIMIT 1
+        ");
+        $update_stmt->execute([$invoice_path, $invoice_number, $booking_id]);
         
         // Get invoice recipients (comma-separated)
         $invoice_recipients = getEmailSetting('invoice_recipients', '');
@@ -367,11 +399,79 @@ function sendPaymentInvoiceEmail($booking_id) {
             'success' => $result['success'],
             'message' => $result['message'],
             'invoice_file' => $invoice_file,
+            'invoice_number' => $invoice_number,
+            'invoice_path' => $invoice_path,
             'cc_recipients' => $cc_recipients
         ];
         
     } catch (Exception $e) {
         error_log("Send Payment Invoice Email Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Send payment invoice email with custom CC recipients
+ *
+ * @param int $booking_id Booking ID
+ * @param array $ccRecipients Array of CC email addresses
+ * @return array Result array with success status and message
+ */
+function sendPaymentInvoiceEmailWithCC($booking_id, $ccRecipients = []) {
+    global $pdo;
+    
+    try {
+        // Check if invoice emails are enabled
+        $send_invoices = (bool)getEmailSetting('send_invoice_emails', 0);
+        if (!$send_invoices) {
+            return ['success' => true, 'message' => 'Invoice emails disabled'];
+        }
+        
+        // Get booking details
+        $stmt = $pdo->prepare("SELECT * FROM bookings WHERE id = ?");
+        $stmt->execute([$booking_id]);
+        $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$booking) {
+            throw new Exception("Booking not found");
+        }
+        
+        // Generate invoice PDF/HTML
+        $invoice_result = generateInvoicePDF($booking_id);
+        if (!$invoice_result) {
+            throw new Exception("Failed to generate invoice");
+        }
+        
+        $invoice_file = $invoice_result['filepath'];
+        $invoice_number = $invoice_result['invoice_number'];
+        $invoice_path = $invoice_result['relative_path'];
+        
+        // Update the payment record with invoice path and invoice number
+        $update_stmt = $pdo->prepare("
+            UPDATE payments
+            SET invoice_path = ?, invoice_number = ?, invoice_generated = 1
+            WHERE booking_type = 'room' AND booking_id = ?
+            ORDER BY id DESC LIMIT 1
+        ");
+        $update_stmt->execute([$invoice_path, $invoice_number, $booking_id]);
+        
+        // Send invoice to guest with custom CC recipients
+        $result = sendInvoiceEmailToGuestWithCC($booking, $invoice_file, $ccRecipients);
+        
+        return [
+            'success' => $result['success'],
+            'message' => $result['message'],
+            'invoice_file' => $invoice_file,
+            'invoice_number' => $invoice_number,
+            'invoice_path' => $invoice_path,
+            'cc_recipients' => $ccRecipients
+        ];
+        
+    } catch (Exception $e) {
+        error_log("Send Payment Invoice Email with CC Error: " . $e->getMessage());
         return [
             'success' => false,
             'message' => $e->getMessage()
@@ -683,8 +783,17 @@ function generateConferenceInvoicePDF($enquiry_id) {
             mkdir($invoiceDir, 0755, true);
         }
         
-        // Generate unique invoice filename
-        $invoice_number = 'CONF-INV-' . date('Y') . '-' . str_pad($enquiry_id, 6, '0', STR_PAD_LEFT);
+        // Generate unique invoice filename - use sequential invoice number from settings
+        $invoice_prefix = getSetting('invoice_prefix', 'INV');
+        $invoice_start = (int)getSetting('invoice_start_number', 1000);
+        
+        // Get the next invoice number for conference invoices
+        $stmt = $pdo->prepare("SELECT MAX(CAST(SUBSTRING_INDEX(invoice_number, '-', -1) AS UNSIGNED)) as max_inv FROM payments WHERE invoice_number LIKE ?");
+        $stmt->execute(['CONF-' . $invoice_prefix . '-' . date('Y') . '%']);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $next_number = max($invoice_start, ($result['max_inv'] ?? 0) + 1);
+        
+        $invoice_number = 'CONF-' . $invoice_prefix . '-' . date('Y') . '-' . str_pad($next_number, 6, '0', STR_PAD_LEFT);
         $filename = $invoice_number . '.pdf';
         $filepath = $invoiceDir . '/' . $filename;
         
@@ -746,13 +855,23 @@ function generateConferenceInvoicePDF($enquiry_id) {
 <body>' . $html . '</body></html>';
             
             // Save as HTML (can be opened in browser and printed as PDF)
-            file_put_contents(str_replace('.pdf', '.html', $filepath), $fullHtml);
+            $htmlFilepath = str_replace('.pdf', '.html', $filepath);
+            file_put_contents($htmlFilepath, $fullHtml);
             
-            // Return HTML path as fallback
-            return str_replace('.pdf', '.html', $filepath);
+            // Return array with both paths and invoice number
+            return [
+                'filepath' => $htmlFilepath,
+                'invoice_number' => $invoice_number,
+                'relative_path' => 'invoices/' . basename($htmlFilepath)
+            ];
         }
         
-        return $filepath;
+        // Return array with both paths and invoice number
+        return [
+            'filepath' => $filepath,
+            'invoice_number' => $invoice_number,
+            'relative_path' => 'invoices/' . $filename
+        ];
         
     } catch (Exception $e) {
         error_log("Generate Conference Invoice PDF Error: " . $e->getMessage());
@@ -967,10 +1086,23 @@ function sendConferenceInvoiceEmail($enquiry_id) {
         }
         
         // Generate invoice PDF/HTML
-        $invoice_file = generateConferenceInvoicePDF($enquiry_id);
-        if (!$invoice_file) {
+        $invoice_result = generateConferenceInvoicePDF($enquiry_id);
+        if (!$invoice_result) {
             throw new Exception("Failed to generate invoice");
         }
+        
+        $invoice_file = $invoice_result['filepath'];
+        $invoice_number = $invoice_result['invoice_number'];
+        $invoice_path = $invoice_result['relative_path'];
+        
+        // Update the payment record with invoice path and invoice number
+        $update_stmt = $pdo->prepare("
+            UPDATE payments
+            SET invoice_path = ?, invoice_number = ?, invoice_generated = 1
+            WHERE booking_type = 'conference' AND booking_id = ?
+            ORDER BY id DESC LIMIT 1
+        ");
+        $update_stmt->execute([$invoice_path, $invoice_number, $enquiry_id]);
         
         // Get invoice recipients (comma-separated)
         $invoice_recipients = getEmailSetting('invoice_recipients', '');
@@ -991,11 +1123,79 @@ function sendConferenceInvoiceEmail($enquiry_id) {
             'success' => $result['success'],
             'message' => $result['message'],
             'invoice_file' => $invoice_file,
+            'invoice_number' => $invoice_number,
+            'invoice_path' => $invoice_path,
             'cc_recipients' => $cc_recipients
         ];
         
     } catch (Exception $e) {
         error_log("Send Conference Invoice Email Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Send conference payment invoice email with custom CC recipients
+ *
+ * @param int $enquiry_id Conference enquiry ID
+ * @param array $ccRecipients Array of CC email addresses
+ * @return array Result array with success status and message
+ */
+function sendConferenceInvoiceEmailWithCC($enquiry_id, $ccRecipients = []) {
+    global $pdo;
+    
+    try {
+        // Check if invoice emails are enabled
+        $send_invoices = (bool)getEmailSetting('send_invoice_emails', 0);
+        if (!$send_invoices) {
+            return ['success' => true, 'message' => 'Invoice emails disabled'];
+        }
+        
+        // Get enquiry details
+        $stmt = $pdo->prepare("SELECT * FROM conference_inquiries WHERE id = ?");
+        $stmt->execute([$enquiry_id]);
+        $enquiry = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$enquiry) {
+            throw new Exception("Conference enquiry not found");
+        }
+        
+        // Generate invoice PDF/HTML
+        $invoice_result = generateConferenceInvoicePDF($enquiry_id);
+        if (!$invoice_result) {
+            throw new Exception("Failed to generate invoice");
+        }
+        
+        $invoice_file = $invoice_result['filepath'];
+        $invoice_number = $invoice_result['invoice_number'];
+        $invoice_path = $invoice_result['relative_path'];
+        
+        // Update the payment record with invoice path and invoice number
+        $update_stmt = $pdo->prepare("
+            UPDATE payments
+            SET invoice_path = ?, invoice_number = ?, invoice_generated = 1
+            WHERE booking_type = 'conference' AND booking_id = ?
+            ORDER BY id DESC LIMIT 1
+        ");
+        $update_stmt->execute([$invoice_path, $invoice_number, $enquiry_id]);
+        
+        // Send invoice to client with custom CC recipients
+        $result = sendConferenceInvoiceEmailToClient($enquiry, $invoice_file, $ccRecipients);
+        
+        return [
+            'success' => $result['success'],
+            'message' => $result['message'],
+            'invoice_file' => $invoice_file,
+            'invoice_number' => $invoice_number,
+            'invoice_path' => $invoice_path,
+            'cc_recipients' => $ccRecipients
+        ];
+        
+    } catch (Exception $e) {
+        error_log("Send Conference Invoice Email with CC Error: " . $e->getMessage());
         return [
             'success' => false,
             'message' => $e->getMessage()

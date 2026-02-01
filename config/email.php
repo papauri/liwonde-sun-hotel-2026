@@ -219,6 +219,73 @@ function logEmail($to, $toName, $subject, $status, $error = '') {
 }
 
 /**
+ * Log cancellation to database
+ *
+ * @param int $booking_id The booking ID
+ * @param string $booking_reference The booking reference
+ * @param string $booking_type Type of booking (room/conference)
+ * @param string $guest_email Guest email address
+ * @param int $cancelled_by Admin user ID who cancelled
+ * @param string $cancellation_reason Reason for cancellation
+ * @param bool $email_sent Whether email was sent successfully
+ * @param string $email_status Email status message
+ * @return bool Success status
+ */
+function logCancellationToDatabase($booking_id, $booking_reference, $booking_type, $guest_email, $cancelled_by, $cancellation_reason = '', $email_sent = false, $email_status = '') {
+    global $pdo;
+    
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO cancellation_log
+            (booking_id, booking_reference, booking_type, guest_email, cancelled_by, cancellation_reason, email_sent, email_status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $booking_id,
+            $booking_reference,
+            $booking_type,
+            $guest_email,
+            $cancelled_by,
+            $cancellation_reason,
+            $email_sent ? 1 : 0,
+            $email_status
+        ]);
+        return true;
+    } catch (Exception $e) {
+        error_log("Failed to log cancellation to database: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Log cancellation to file
+ *
+ * @param string $booking_reference The booking reference
+ * @param string $booking_type Type of booking (room/conference)
+ * @param string $guest_email Guest email address
+ * @param string $cancelled_by_name Name of admin who cancelled
+ * @param string $cancellation_reason Reason for cancellation
+ * @param bool $email_sent Whether email was sent successfully
+ * @param string $email_status Email status message
+ * @return bool Success status
+ */
+function logCancellationToFile($booking_reference, $booking_type, $guest_email, $cancelled_by_name, $cancellation_reason = '', $email_sent = false, $email_status = '') {
+    $logDir = __DIR__ . '/../logs';
+    if (!file_exists($logDir)) {
+        mkdir($logDir, 0755, true);
+    }
+    
+    $logFile = $logDir . '/cancellations.log';
+    $timestamp = date('Y-m-d H:i:s');
+    $emailStatus = $email_sent ? 'SENT' : 'FAILED';
+    
+    $logEntry = "[$timestamp] CANCELLATION - Ref: $booking_reference | Type: $booking_type | Email: $guest_email | Cancelled by: $cancelled_by_name | Reason: $cancellation_reason | Email: $emailStatus ($email_status)\n";
+    
+    $result = file_put_contents($logFile, $logEntry, FILE_APPEND);
+    return $result !== false;
+}
+
+/**
  * Send booking received email (sent immediately when user submits booking)
  */
 function sendBookingReceivedEmail($booking) {
@@ -1148,4 +1215,616 @@ function sendConferenceCancelledEmail($enquiry) {
                 'message' => $e->getMessage()
             ];
         }
+}
+
+/**
+ * Send booking cancelled email
+ */
+function sendBookingCancelledEmail($booking, $cancellation_reason = '') {
+    global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    
+    try {
+        // Get room details
+        $stmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ?");
+        $stmt->execute([$booking['room_id']]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$room) {
+            throw new Exception("Room not found");
+        }
+        
+        // Prepare email content
+        $htmlBody = '
+        <h1 style="color: #dc3545; text-align: center;">Booking Cancelled</h1>
+        <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
+        <p>We regret to inform you that your booking with <strong>' . htmlspecialchars($email_site_name) . '</strong> has been cancelled.</p>
+        
+        <div style="background: #f8f9fa; border: 2px solid #dc3545; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #dc3545; margin-top: 0;">Cancelled Booking Details</h2>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="color: #dc3545; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Number of Nights:</span>
+                <span style="color: #333;">' . $booking['number_of_nights'] . ' night' . ($booking['number_of_nights'] != 1 ? 's' : '') . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="color: #333;">' . $booking['number_of_guests'] . ' guest' . ($booking['number_of_guests'] != 1 ? 's' : '') . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+            </div>
+        </div>';
+        
+        if ($cancellation_reason) {
+            $htmlBody .= '
+            <div style="background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #856404; margin-top: 0;">Cancellation Reason</h3>
+                <p style="color: #856404; margin: 0;">' . htmlspecialchars($cancellation_reason) . '</p>
+            </div>';
+        }
+        
+        $htmlBody .= '
+        <div style="background: #f8d7da; padding: 15px; border-left: 4px solid #dc3545; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #721c24; margin-top: 0;">❌ Booking Status: Cancelled</h3>
+            <p style="color: #721c24; margin: 0;">
+                <strong>This booking has been cancelled.</strong><br>
+                If you believe this is an error, please contact us immediately.
+            </p>
+        </div>
+        
+        <p>If you have any questions or would like to make a new booking, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
+        
+        <p>We hope to have the opportunity to serve you in the future.</p>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+            <p style="color: #666; font-size: 14px;">
+                <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
+                <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
+            </p>
+        </div>';
+        
+        // Get CC emails for invoice recipients
+        $ccEmails = getCCEmails();
+        
+        // Send email with CC to admin/invoice recipients
+        return sendEmailWithCC(
+            $booking['guest_email'],
+            $booking['guest_name'],
+            'Booking Cancelled - ' . htmlspecialchars($email_site_name) . ' [' . $booking['booking_reference'] . ']',
+            $htmlBody,
+            '',
+            $ccEmails
+        );
+        
+    } catch (Exception $e) {
+        error_log("Send Booking Cancelled Email Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Send email with CC recipients
+ */
+function sendEmailWithCC($to, $toName, $subject, $htmlBody, $textBody = '', $ccEmails = []) {
+    global $email_from_name, $email_from_email, $email_admin_email;
+    global $smtp_host, $smtp_port, $smtp_username, $smtp_password, $smtp_secure, $smtp_timeout, $smtp_debug;
+    global $email_bcc_admin, $development_mode, $email_log_enabled, $email_preview_enabled;
+    
+    // If in development mode and no password or preview enabled, show preview
+    if ($development_mode && (empty($smtp_password) || $email_preview_enabled)) {
+        return createEmailPreview($to, $toName, $subject, $htmlBody, $textBody);
+    }
+    
+    try {
+        // Create PHPMailer instance
+        $mail = new PHPMailer(true);
+        
+        // Server settings
+        $mail->isSMTP();
+        $mail->Host = $smtp_host;
+        $mail->SMTPAuth = true;
+        $mail->Username = $smtp_username;
+        $mail->Password = $smtp_password;
+        $mail->SMTPSecure = $smtp_secure;
+        $mail->Port = $smtp_port;
+        $mail->Timeout = $smtp_timeout;
+        
+        if ($smtp_debug > 0) {
+            $mail->SMTPDebug = $smtp_debug;
+        }
+        
+        // Recipients
+        $mail->setFrom($smtp_username, $email_from_name);
+        $mail->addAddress($to, $toName);
+        $mail->addReplyTo($email_from_email, $email_from_name);
+        
+        // Add CC recipients
+        if (!empty($ccEmails)) {
+            foreach ($ccEmails as $ccEmail) {
+                $mail->addCC($ccEmail);
+            }
+        }
+        
+        // Add BCC for admin if enabled
+        if ($email_bcc_admin && !empty($email_admin_email)) {
+            $mail->addBCC($email_admin_email);
+        }
+        
+        // Content
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body = $htmlBody;
+        $mail->AltBody = $textBody ?: strip_tags($htmlBody);
+        
+        $mail->send();
+        
+        // Log email if enabled
+        if ($email_log_enabled) {
+            logEmail($to, $toName, $subject, 'sent');
+        }
+        
+        return [
+            'success' => true,
+            'message' => 'Email sent successfully via SMTP'
+        ];
+        
+    } catch (Exception $e) {
+        error_log("PHPMailer Error: " . $e->getMessage());
+        
+        // Log error if enabled
+        if ($email_log_enabled) {
+            logEmail($to, $toName, $subject, 'failed', $e->getMessage());
+        }
+        
+        // If development mode, show preview instead of failing
+        if ($development_mode) {
+            return createEmailPreview($to, $toName, $subject, $htmlBody, $textBody);
+        }
+        
+        return [
+            'success' => false,
+            'message' => 'Failed to send email: ' . $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Get CC emails from settings
+ */
+function getCCEmails() {
+    global $pdo;
+    
+    try {
+        $stmt = $pdo->query("SELECT email_value FROM email_settings WHERE email_key = 'cc_emails' LIMIT 1");
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result && !empty($result['email_value'])) {
+            $emails = json_decode($result['email_value'], true);
+            if (is_array($emails) && !empty($emails)) {
+                return array_filter($emails, function($email) {
+                    return filter_var($email, FILTER_VALIDATE_EMAIL);
+                });
+            }
+        }
+    } catch (Exception $e) {
+        error_log("Error getting CC emails: " . $e->getMessage());
+    }
+    
+    return [];
+}
+
+/**
+ * Generate WhatsApp link with pre-filled message
+ */
+function generateWhatsAppLink($booking, $room) {
+    $whatsapp_number = getSetting('whatsapp_number', getSetting('phone_main', ''));
+    
+    // Remove any non-numeric characters except +
+    $whatsapp_number = preg_replace('/[^0-9+]/', '', $whatsapp_number);
+    
+    // Remove + if present (WhatsApp API format doesn't use +)
+    $whatsapp_number = ltrim($whatsapp_number, '+');
+    
+    // Create pre-filled message
+    $message = "Hello! I would like to confirm my tentative booking:\n\n";
+    $message .= "📅 Booking Reference: " . $booking['booking_reference'] . "\n";
+    $message .= "👤 Guest Name: " . $booking['guest_name'] . "\n";
+    $message .= "🏨 Room: " . $room['name'] . "\n";
+    $message .= "📆 Check-in: " . date('F j, Y', strtotime($booking['check_in_date'])) . "\n";
+    $message .= "📆 Check-out: " . date('F j, Y', strtotime($booking['check_out_date'])) . "\n";
+    $message .= "💰 Total Amount: " . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . "\n\n";
+    $message .= "Please confirm my booking. Thank you!";
+    
+    return 'https://wa.me/' . $whatsapp_number . '?text=' . urlencode($message);
+}
+
+/**
+ * Send tentative booking confirmed email (sent when tentative booking is created)
+ */
+function sendTentativeBookingConfirmedEmail($booking) {
+    global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    
+    try {
+        // Get room details
+        $stmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ?");
+        $stmt->execute([$booking['room_id']]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$room) {
+            throw new Exception("Room not found");
+        }
+        
+        // Get tentative settings
+        $tentative_duration_hours = (int)getSetting('tentative_duration_hours', 48);
+        $expires_at = new DateTime($booking['tentative_expires_at']);
+        $hours_until_expiry = (new DateTime())->diff($expires_at)->h + ((new DateTime())->diff($expires_at)->days * 24);
+        
+        // Generate WhatsApp link
+        $whatsapp_link = generateWhatsAppLink($booking, $room);
+        
+        // Prepare email content
+        $htmlBody = '
+        <h1 style="color: #0A1929; text-align: center;">Tentative Booking Confirmed</h1>
+        <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
+        <p>Thank you for your interest in <strong>' . htmlspecialchars($email_site_name) . '</strong>. Your room has been placed on tentative hold.</p>
+        
+        <div style="background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #856404; margin-top: 0;">⏰ Tentative Hold Period</h3>
+            <p style="color: #856404; margin: 0;">
+                <strong>Your room is reserved until:</strong><br>
+                ' . $expires_at->format('F j, Y') . ' at ' . $expires_at->format('g:i A') . '<br><br>
+                You will receive a reminder email 24 hours before expiration.
+            </p>
+        </div>
+        
+        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Number of Nights:</span>
+                <span style="color: #333;">' . $booking['number_of_nights'] . ' night' . ($booking['number_of_nights'] != 1 ? 's' : '') . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="color: #333;">' . $booking['number_of_guests'] . ' guest' . ($booking['number_of_guests'] != 1 ? 's' : '') . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+            </div>
+        </div>
+        
+        <div style="background: #d4edda; padding: 15px; border-left: 4px solid #28a745; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #155724; margin-top: 0;">What Happens Next?</h3>
+            <p style="color: #155724; margin: 0;">
+                <strong>1.</strong> You will receive a reminder 24 hours before expiration<br>
+                <strong>2.</strong> Confirm your booking anytime before expiration via WhatsApp<br>
+                <strong>3.</strong> No penalty if you decide not to book
+            </p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="' . htmlspecialchars($whatsapp_link) . '"
+               style="display: inline-block; background: #25D366; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;"
+               target="_blank">
+                💬 Confirm My Booking Now via WhatsApp
+            </a>
+        </div>';
+        
+        if (!empty($booking['special_requests'])) {
+            $htmlBody .= '
+            <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #0d6efd; margin-top: 0;">Special Requests</h3>
+                <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($booking['special_requests']) . '</p>
+            </div>';
+        }
+        
+        $htmlBody .= '
+        <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
+        
+        <p>Thank you for considering ' . htmlspecialchars($email_site_name) . '!</p>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+            <p style="color: #666; font-size: 14px;">
+                <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
+                <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
+            </p>
+        </div>';
+        
+        // Send email
+        return sendEmail(
+            $booking['guest_email'],
+            $booking['guest_name'],
+            'Tentative Booking Confirmed - ' . htmlspecialchars($email_site_name) . ' [' . $booking['booking_reference'] . ']',
+            $htmlBody
+        );
+        
+    } catch (Exception $e) {
+        error_log("Send Tentative Booking Confirmed Email Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Send tentative booking reminder email (24 hours before expiration)
+ */
+function sendTentativeBookingReminderEmail($booking) {
+    global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    
+    try {
+        // Get room details
+        $stmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ?");
+        $stmt->execute([$booking['room_id']]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$room) {
+            throw new Exception("Room not found");
+        }
+        
+        $expires_at = new DateTime($booking['tentative_expires_at']);
+        
+        // Prepare email content
+        $htmlBody = '
+        <h1 style="color: #dc3545; text-align: center;">⏰ Your Tentative Booking Expires Soon</h1>
+        <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
+        <p>This is a friendly reminder that your tentative booking at <strong>' . htmlspecialchars($email_site_name) . '</strong> will expire in 24 hours.</p>
+        
+        <div style="background: #f8d7da; padding: 15px; border-left: 4px solid #dc3545; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #721c24; margin-top: 0;">Expiration Details</h3>
+            <p style="color: #721c24; margin: 0;">
+                <strong>Expires:</strong> ' . $expires_at->format('F j, Y') . ' at ' . $expires_at->format('g:i A') . '<br>
+                <strong>Booking Reference:</strong> ' . htmlspecialchars($booking['booking_reference']) . '<br>
+                <strong>Room:</strong> ' . htmlspecialchars($room['name']) . '
+            </p>
+        </div>
+        
+        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #0A1929; margin-top: 0;">Your Booking</h2>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-in:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-out:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="' . htmlspecialchars(generateWhatsAppLink($booking, $room)) . '"
+               style="display: inline-block; background: #25D366; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;"
+               target="_blank">
+                💬 Confirm My Booking Now via WhatsApp
+            </a>
+        </div>
+        
+        <p style="margin-top: 20px;">If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+            <p style="color: #666; font-size: 14px;">
+                <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
+                <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
+            </p>
+        </div>';
+        
+        // Send email
+        return sendEmail(
+            $booking['guest_email'],
+            $booking['guest_name'],
+            'Reminder: Tentative Booking Expiring Soon - ' . $booking['booking_reference'],
+            $htmlBody
+        );
+        
+    } catch (Exception $e) {
+        error_log("Send Tentative Booking Reminder Email Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Send tentative booking expired email (when booking expires)
+ */
+function sendTentativeBookingExpiredEmail($booking) {
+    global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    
+    try {
+        // Get room details
+        $stmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ?");
+        $stmt->execute([$booking['room_id']]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Prepare email content
+        $htmlBody = '
+        <h1 style="color: #6c757d; text-align: center;">Tentative Booking Expired</h1>
+        <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
+        <p>Your tentative booking at <strong>' . htmlspecialchars($email_site_name) . '</strong> has expired.</p>
+        
+        <div style="background: #e2e3e5; padding: 15px; border-left: 4px solid #6c757d; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #383d41; margin-top: 0;">What This Means</h3>
+            <p style="color: #383d41; margin: 0;">
+                Your room hold has been released and is now available for other guests.<br>
+                There is no penalty for an expired tentative booking.
+            </p>
+        </div>
+        
+        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #0A1929; margin-top: 0;">Expired Booking Details</h2>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="color: #6c757d; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="color: #333;">' . htmlspecialchars($room['name'] ?? 'N/A') . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
+            </div>
+        </div>
+        
+        <p>If you are still interested in booking with us, please visit our website to check availability and make a new booking.</p>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="' . htmlspecialchars($email_site_url) . '/booking.php"
+               style="display: inline-block; background: #D4AF37; color: #0A1929; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                Make a New Booking
+            </a>
+        </div>
+        
+        <p style="margin-top: 20px;">If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+            <p style="color: #666; font-size: 14px;">
+                <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
+                <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
+            </p>
+        </div>';
+        
+        // Send email
+        return sendEmail(
+            $booking['guest_email'],
+            $booking['guest_name'],
+            'Tentative Booking Expired - ' . $booking['booking_reference'],
+            $htmlBody
+        );
+        
+    } catch (Exception $e) {
+        error_log("Send Tentative Booking Expired Email Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Send tentative booking converted email (when converted to confirmed)
+ */
+function sendTentativeBookingConvertedEmail($booking) {
+    // First send the standard booking confirmed email
+    $result = sendBookingConfirmedEmail($booking);
+    
+    // If the standard email succeeded, add a note about conversion
+    if ($result['success']) {
+        global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+        
+        try {
+            // Get room details
+            $stmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ?");
+            $stmt->execute([$booking['room_id']]);
+            $room = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Prepare conversion note email
+            $htmlBody = '
+            <div style="background: #d4edda; padding: 15px; border-left: 4px solid #28a745; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #155724; margin-top: 0;">✅ Converted from Tentative</h3>
+                <p style="color: #155724; margin: 0;">
+                    <strong>Great news!</strong> Your tentative booking has been successfully converted to a confirmed booking.<br>
+                    Your reservation is now guaranteed and we look forward to welcoming you.
+                </p>
+            </div>
+            
+            <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+                <h2 style="color: #0A1929; margin-top: 0;">Booking Summary</h2>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                    <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                    <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                    <span style="font-weight: bold; color: #0A1929;">Status:</span>
+                    <span style="color: #28a745; font-weight: bold;">CONFIRMED</span>
+                </div>
+            </div>';
+            
+            // Send conversion note as a follow-up
+            sendEmail(
+                $booking['guest_email'],
+                $booking['guest_name'],
+                'Booking Confirmed - ' . htmlspecialchars($email_site_name) . ' [' . $booking['booking_reference'] . ']',
+                $htmlBody
+            );
+            
+        } catch (Exception $e) {
+            error_log("Send Tentative Booking Converted Email Error: " . $e->getMessage());
+        }
+    }
+    
+    return $result;
 }

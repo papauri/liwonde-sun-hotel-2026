@@ -309,7 +309,7 @@ function getPayment($pdo, $paymentId) {
     $payment = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$payment) {
-        ApiResponse::error('Payment not found', 404);
+        ApiResponse::error('Payment not found. It may have been deleted or does not exist.', 404);
     }
     
     // Get booking details
@@ -600,7 +600,7 @@ function updatePayment($pdo, $paymentId) {
     $existingPayment = $checkStmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$existingPayment) {
-        ApiResponse::error('Payment not found', 404);
+        ApiResponse::error('Payment not found. It may have been deleted or does not exist.', 404);
     }
     
     // Get request body
@@ -722,7 +722,7 @@ function deletePayment($pdo, $paymentId) {
     $payment = $checkStmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$payment) {
-        ApiResponse::error('Payment not found', 404);
+        ApiResponse::error('Payment not found. It may have been deleted or does not exist.', 404);
     }
     
     // Start transaction

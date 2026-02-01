@@ -16,7 +16,12 @@ if (!isset($_SESSION['admin_user'])) {
 }
 
 require_once '../config/database.php';
-require_once '../includes/alert.php';
+
+// Only include alert.php for non-AJAX requests to prevent HTML output in JSON responses
+$is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+if (!$is_ajax) {
+    require_once '../includes/alert.php';
+}
 
 // Helpers
 function ini_bytes($val) {
@@ -46,31 +51,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
 
         if ($action === 'update') {
-            // Update existing room
-            $stmt = $pdo->prepare("
-                UPDATE rooms 
-                SET name = ?, description = ?, short_description = ?, price_per_night = ?, 
-                    size_sqm = ?, max_guests = ?, rooms_available = ?, total_rooms = ?, 
-                    bed_type = ?, amenities = ?, is_featured = ?, is_active = ?, display_order = ?
-                WHERE id = ?
-            ");
-            $stmt->execute([
-                $_POST['name'],
-                $_POST['description'] ?? $_POST['short_description'],
-                $_POST['short_description'],
-                $_POST['price_per_night'],
-                $_POST['size_sqm'],
-                $_POST['max_guests'],
-                $_POST['rooms_available'] ?? 0,
-                $_POST['total_rooms'] ?? 0,
-                $_POST['bed_type'],
-                $_POST['amenities'] ?? '',
-                isset($_POST['is_featured']) ? 1 : 0,
-                isset($_POST['is_active']) ? 1 : 0,
-                $_POST['display_order'] ?? 0,
-                $_POST['id']
-            ]);
-            $message = 'Room updated successfully!';
+            // Validate availability cannot exceed total_rooms
+            $rooms_available = (int)($_POST['rooms_available'] ?? 0);
+            $total_rooms = (int)($_POST['total_rooms'] ?? 0);
+            
+            if ($rooms_available > $total_rooms) {
+                $error = 'Availability cannot exceed total rooms. Please adjust your values.';
+                if (is_ajax_request()) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => $error]);
+                    exit;
+                }
+            } else {
+                // Update existing room
+                $stmt = $pdo->prepare("
+                    UPDATE rooms
+                    SET name = ?, description = ?, short_description = ?, price_per_night = ?,
+                        size_sqm = ?, max_guests = ?, rooms_available = ?, total_rooms = ?,
+                        bed_type = ?, amenities = ?, is_featured = ?, is_active = ?, display_order = ?
+                    WHERE id = ?
+                ");
+                $stmt->execute([
+                    $_POST['name'],
+                    $_POST['description'] ?? $_POST['short_description'],
+                    $_POST['short_description'],
+                    $_POST['price_per_night'],
+                    $_POST['size_sqm'],
+                    $_POST['max_guests'],
+                    $rooms_available,
+                    $total_rooms,
+                    $_POST['bed_type'],
+                    $_POST['amenities'] ?? '',
+                    isset($_POST['is_featured']) ? 1 : 0,
+                    isset($_POST['is_active']) ? 1 : 0,
+                    $_POST['display_order'] ?? 0,
+                    $_POST['id']
+                ]);
+                $message = 'Room updated successfully!';
+                
+                if (is_ajax_request()) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => $message]);
+                    exit;
+                }
+            }
 
         } elseif ($action === 'toggle_active') {
             $stmt = $pdo->prepare("UPDATE rooms SET is_active = NOT is_active WHERE id = ?");
@@ -1042,9 +1066,10 @@ try {
                                 <td>
                                     <span class="cell-view"><?php echo ($room['rooms_available'] ?? 0) . '/' . ($room['total_rooms'] ?? 0); ?></span>
                                     <div class="cell-edit" style="display: flex; gap: 10px; align-items: center; height: 100%;">
-                                        <input type="number" min="0" style="width: 80px;" value="<?php echo $room['rooms_available'] ?? 0; ?>" data-field="rooms_available" title="Available">
+                                        <input type="number" min="0" style="width: 80px;" value="<?php echo $room['rooms_available'] ?? 0; ?>" data-field="rooms_available" title="Available" class="availability-input">
                                         <span style="color: #666; font-weight: 500;">/</span>
-                                        <input type="number" min="1" style="width: 80px;" value="<?php echo $room['total_rooms'] ?? 0; ?>" data-field="total_rooms" title="Total">
+                                        <input type="number" min="1" style="width: 80px;" value="<?php echo $room['total_rooms'] ?? 0; ?>" data-field="total_rooms" title="Total" class="total-rooms-input">
+                                        <span class="availability-status" style="font-size: 11px; margin-left: 5px;"></span>
                                     </div>
                                 </td>
                                 <td>
@@ -1224,6 +1249,42 @@ try {
     <script>
         let currentEditingId = null;
 
+        // Validate availability vs total rooms
+        function validateAvailability(row) {
+            const availableInput = row.querySelector('[data-field="rooms_available"]');
+            const totalInput = row.querySelector('[data-field="total_rooms"]');
+            const statusSpan = row.querySelector('.availability-status');
+            
+            if (!availableInput || !totalInput) return true;
+            
+            const available = parseInt(availableInput.value) || 0;
+            const total = parseInt(totalInput.value) || 0;
+            
+            // Clear previous validation styles
+            availableInput.style.borderColor = '';
+            totalInput.style.borderColor = '';
+            
+            if (available > total) {
+                // Invalid: availability exceeds total
+                availableInput.style.borderColor = '#dc3545';
+                totalInput.style.borderColor = '#dc3545';
+                if (statusSpan) {
+                    statusSpan.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> <span style="color: #dc3545;">Cannot exceed total</span>';
+                }
+                return false;
+            } else {
+                // Valid: show visual indicator
+                if (statusSpan) {
+                    const percentage = total > 0 ? Math.round((available / total) * 100) : 0;
+                    let color = '#28a745';
+                    if (percentage > 80) color = '#ffc107';
+                    if (percentage >= 90) color = '#fd7e14';
+                    statusSpan.innerHTML = `<span style="color: ${color}; font-weight: 600;">${available} of ${total}</span>`;
+                }
+                return true;
+            }
+        }
+
         function escapeHtml(str) {
             if (str === undefined || str === null) return '';
             return String(str)
@@ -1391,6 +1452,22 @@ try {
             row.querySelector('[data-cancel-btn]').style.display = 'block';
             
             row.classList.add('edit-mode');
+            
+            // Add real-time validation listeners for availability fields
+            const availableInput = row.querySelector('[data-field="rooms_available"]');
+            const totalInput = row.querySelector('[data-field="total_rooms"]');
+            
+            if (availableInput) {
+                availableInput.addEventListener('input', () => validateAvailability(row));
+                availableInput.addEventListener('change', () => validateAvailability(row));
+            }
+            if (totalInput) {
+                totalInput.addEventListener('input', () => validateAvailability(row));
+                totalInput.addEventListener('change', () => validateAvailability(row));
+            }
+            
+            // Initial validation
+            validateAvailability(row);
         }
 
         function cancelEdit(id) {
@@ -1405,19 +1482,34 @@ try {
             
             row.classList.remove('edit-mode');
             currentEditingId = null;
+            
+            // Clear validation styles
+            const availableInput = row.querySelector('[data-field="rooms_available"]');
+            const totalInput = row.querySelector('[data-field="total_rooms"]');
+            if (availableInput) availableInput.style.borderColor = '';
+            if (totalInput) totalInput.style.borderColor = '';
         }
 
         function saveRow(id) {
             const row = document.getElementById(`row-${id}`);
+            
+            // Validate availability before saving
+            if (!validateAvailability(row)) {
+                alert('Availability cannot exceed total rooms. Please correct the values before saving.');
+                return;
+            }
+            
             const formData = new FormData();
             
             formData.append('action', 'update');
             formData.append('id', id);
             
-            // Collect all edited values
-            row.querySelectorAll('.cell-edit.active').forEach(input => {
-                const field = input.getAttribute('data-field');
-                formData.append(field, input.value);
+            // Collect all edited values - include inputs inside .cell-edit containers
+            row.querySelectorAll('.cell-edit.active, .cell-edit.active input, .cell-edit.active textarea, .cell-edit.active select').forEach(el => {
+                const field = el.getAttribute('data-field');
+                if (field) {
+                    formData.append(field, el.value);
+                }
             });
             
             // Add description (full text, not editable inline but needed)
@@ -1428,13 +1520,17 @@ try {
             
             fetch(window.location.href, {
                 method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: formData
             })
-            .then(response => {
-                if (response.ok) {
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.success) {
                     window.location.reload();
                 } else {
-                    alert('Error saving room');
+                    alert(data && data.message ? data.message : 'Error saving room');
                 }
             })
             .catch(error => {

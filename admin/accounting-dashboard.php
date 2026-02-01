@@ -7,9 +7,11 @@ if (!isset($_SESSION['admin_user'])) {
     exit;
 }
 
-require_once '../../config/database.php';
-require_once '../../includes/modal.php';
-require_once '../../includes/alert.php';
+// Include admin-header first to get database connection and settings
+include 'admin-header.php';
+
+require_once '../includes/modal.php';
+require_once '../includes/alert.php';
 
 $user = $_SESSION['admin_user'];
 $today = date('Y-m-d');
@@ -24,7 +26,7 @@ $endDate = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-t');
 try {
     // Overall financial summary
     $financialStmt = $pdo->prepare("
-        SELECT 
+        SELECT
             COUNT(*) as total_payments,
             SUM(CASE WHEN payment_status = 'completed' THEN total_amount ELSE 0 END) as total_collected,
             SUM(CASE WHEN payment_status = 'completed' THEN payment_amount ELSE 0 END) as total_collected_excl_vat,
@@ -33,23 +35,21 @@ try {
             SUM(CASE WHEN payment_status = 'refunded' THEN total_amount ELSE 0 END) as total_refunded,
             SUM(CASE WHEN payment_status = 'partially_refunded' THEN total_amount ELSE 0 END) as total_partially_refunded
         FROM payments
-        WHERE deleted_at IS NULL
-        AND payment_date BETWEEN ? AND ?
+        WHERE payment_date BETWEEN ? AND ?
     ");
     $financialStmt->execute([$startDate, $endDate]);
     $financialSummary = $financialStmt->fetch(PDO::FETCH_ASSOC);
 
     // Room bookings financial summary
     $roomStmt = $pdo->prepare("
-        SELECT 
+        SELECT
             COUNT(DISTINCT p.booking_id) as total_bookings_with_payments,
             SUM(CASE WHEN p.payment_status = 'completed' THEN p.total_amount ELSE 0 END) as room_collected,
             SUM(CASE WHEN p.payment_status = 'completed' THEN p.vat_amount ELSE 0 END) as room_vat_collected,
             SUM(b.amount_due) as total_room_outstanding
         FROM payments p
         LEFT JOIN bookings b ON p.booking_type = 'room' AND p.booking_id = b.id
-        WHERE p.deleted_at IS NULL
-        AND p.booking_type = 'room'
+        WHERE p.booking_type = 'room'
         AND p.payment_date BETWEEN ? AND ?
     ");
     $roomStmt->execute([$startDate, $endDate]);
@@ -57,15 +57,14 @@ try {
 
     // Conference bookings financial summary
     $confStmt = $pdo->prepare("
-        SELECT 
+        SELECT
             COUNT(DISTINCT p.booking_id) as total_conferences_with_payments,
             SUM(CASE WHEN p.payment_status = 'completed' THEN p.total_amount ELSE 0 END) as conf_collected,
             SUM(CASE WHEN p.payment_status = 'completed' THEN p.vat_amount ELSE 0 END) as conf_vat_collected,
             SUM(ci.amount_due) as total_conf_outstanding
         FROM payments p
         LEFT JOIN conference_inquiries ci ON p.booking_type = 'conference' AND p.booking_id = ci.id
-        WHERE p.deleted_at IS NULL
-        AND p.booking_type = 'conference'
+        WHERE p.booking_type = 'conference'
         AND p.payment_date BETWEEN ? AND ?
     ");
     $confStmt->execute([$startDate, $endDate]);
@@ -73,13 +72,12 @@ try {
 
     // Payment method breakdown
     $methodStmt = $pdo->prepare("
-        SELECT 
+        SELECT
             payment_method,
             COUNT(*) as count,
             SUM(CASE WHEN payment_status = 'completed' THEN total_amount ELSE 0 END) as total
         FROM payments
-        WHERE deleted_at IS NULL
-        AND payment_date BETWEEN ? AND ?
+        WHERE payment_date BETWEEN ? AND ?
         GROUP BY payment_method
         ORDER BY total DESC
     ");
@@ -88,9 +86,9 @@ try {
 
     // Recent payments (last 20)
     $recentStmt = $pdo->prepare("
-        SELECT 
+        SELECT
             p.*,
-            CASE 
+            CASE
                 WHEN p.booking_type = 'room' THEN CONCAT(b.guest_name, ' (', b.booking_reference, ')')
                 WHEN p.booking_type = 'conference' THEN CONCAT(ci.organization_name, ' (', ci.enquiry_reference, ')')
                 ELSE 'Unknown'
@@ -98,7 +96,6 @@ try {
         FROM payments p
         LEFT JOIN bookings b ON p.booking_type = 'room' AND p.booking_id = b.id
         LEFT JOIN conference_inquiries ci ON p.booking_type = 'conference' AND p.booking_id = ci.id
-        WHERE p.deleted_at IS NULL
         ORDER BY p.payment_date DESC, p.created_at DESC
         LIMIT 20
     ");
@@ -132,8 +129,6 @@ try {
     $error = "Unable to load accounting data.";
 }
 
-$site_name = getSetting('site_name');
-$currency_symbol = getSetting('currency_symbol');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -146,8 +141,8 @@ $currency_symbol = getSetting('currency_symbol');
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../../css/style.css">
-    <link rel="stylesheet" href="../css/admin-styles.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/admin-styles.css">
     
     <style>
         .accounting-header {
@@ -420,8 +415,6 @@ $currency_symbol = getSetting('currency_symbol');
 </head>
 <body>
 
-    <?php include '../admin-header.php'; ?>
-
     <div class="content">
         <div class="accounting-header">
             <div>
@@ -439,7 +432,7 @@ $currency_symbol = getSetting('currency_symbol');
                 <button type="submit">
                     <i class="fas fa-filter"></i> Apply Filter
                 </button>
-                <a href="dashboard.php" style="color: var(--navy); text-decoration: none; font-size: 14px;">Reset</a>
+                <a href="accounting-dashboard.php" style="color: var(--navy); text-decoration: none; font-size: 14px;">Reset</a>
             </form>
         </div>
 
@@ -454,7 +447,7 @@ $currency_symbol = getSetting('currency_symbol');
             <a href="reports.php" class="secondary">
                 <i class="fas fa-chart-bar"></i> Financial Reports
             </a>
-            <a href="../booking-settings.php#vat" class="secondary">
+            <a href="booking-settings.php#vat" class="secondary">
                 <i class="fas fa-cog"></i> VAT Settings
             </a>
         </div>
