@@ -482,7 +482,7 @@ try {
 
             <div class="schedule-cta text-center">
                 <button class="btn btn-primary" data-open-booking><i class="fas fa-calendar-plus"></i> Book a Class</button>
-                <a href="#contact" class="btn btn-outline"><i class="fas fa-download"></i> Download Full Schedule</a>
+                <a href="#" onclick="alert('Full schedule download will be available soon. Please contact us for the complete class schedule.'); return false;" class="btn btn-outline"><i class="fas fa-download"></i> Download Full Schedule</a>
             </div>
         </div>
     </section>
@@ -611,7 +611,7 @@ try {
     </section>
 
     <!-- Booking Modal -->
-    <div class="booking-modal" data-booking-modal>
+    <div class="booking-modal" id="bookingModal" data-booking-modal>
         <div class="booking-modal__overlay" data-close-booking></div>
         <div class="booking-modal__content">
             <button class="booking-modal__close" aria-label="Close booking form" data-close-booking>&times;</button>
@@ -692,17 +692,23 @@ try {
             }
         });
 
-        // Booking modal
+        // Booking modal - custom implementation for booking-modal structure
         const bookingModal = document.querySelector('[data-booking-modal]');
         const openButtons = document.querySelectorAll('[data-open-booking]');
         const closeButtons = document.querySelectorAll('[data-close-booking]');
 
         function openModal() {
-            if (bookingModal) Modal.open('bookingModal');
+            if (bookingModal) {
+                bookingModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
         }
 
         function closeModal() {
-            if (bookingModal) Modal.close('bookingModal');
+            if (bookingModal) {
+                bookingModal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
         }
 
         openButtons.forEach(btn => btn.addEventListener('click', openModal));

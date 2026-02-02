@@ -118,6 +118,31 @@ function validateCsrfToken($token) {
 }
 
 /**
+ * Generate CSRF field HTML for forms
+ *
+ * @return string HTML hidden input field with CSRF token
+ */
+function getCsrfField() {
+    $token = generateCsrfToken();
+    return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars($token) . '">';
+}
+
+/**
+ * Require CSRF validation for POST requests
+ * Throws an exception if validation fails
+ *
+ * @throws Exception if CSRF token is invalid or missing
+ */
+function requireCsrfValidation() {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $token = $_POST['csrf_token'] ?? '';
+        if (!validateCsrfToken($token)) {
+            throw new Exception('CSRF token validation failed. Please refresh the page and try again.');
+        }
+    }
+}
+
+/**
  * ============================================================================
  * SECURITY EVENT LOGGING (Optional)
  * ============================================================================

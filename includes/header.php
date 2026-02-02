@@ -63,6 +63,7 @@
                     <li class="nav-item"><a href="/" class="nav-link <?php echo is_nav_active('/', $current_page) ? 'active' : ''; ?>"><span class="link-text">Home</span></a></li>
                     <li class="nav-item"><a href="/rooms-gallery.php" class="nav-link <?php echo is_nav_active('/rooms-gallery.php', $current_page) ? 'active' : ''; ?>"><span class="link-text">Rooms</span></a></li>
                     <li class="nav-item"><a href="/restaurant.php" class="nav-link <?php echo is_nav_active('/restaurant.php', $current_page) ? 'active' : ''; ?>"><span class="link-text">Restaurant</span></a></li>
+                    <li class="nav-item"><a href="/gym.php" class="nav-link <?php echo is_nav_active('/gym.php', $current_page) ? 'active' : ''; ?>"><span class="link-text">Gym</span></a></li>
                     <li class="nav-item"><a href="/conference.php" class="nav-link <?php echo is_nav_active('/conference.php', $current_page) ? 'active' : ''; ?>"><span class="link-text">Conference</span></a></li>
                     <li class="nav-item"><a href="/events.php" class="nav-link <?php echo is_nav_active('/events.php', $current_page) ? 'active' : ''; ?>"><span class="link-text">Events</span></a></li>
                     <li class="nav-item"><a href="#contact" class="nav-link contact-link"><span class="link-text">Contact</span></a></li>
