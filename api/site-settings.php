@@ -63,7 +63,7 @@ try {
                 'linkedin' => $settingsArray['linkedin_url'] ?? ''
             ],
             'legal' => [
-                'copyright_text' => $settingsArray['copyright_text'] ?? date('Y') . ' Liwonde Sun Hotel. All rights reserved.'
+                'copyright_text' => $settingsArray['footer_credits'] ?? $settingsArray['copyright_text'] ?? (date('Y') . ' ' . ($settingsArray['site_name'] ?? 'Liwonde Sun Hotel') . '. All rights reserved.')
             ],
             'all_settings' => $settingsArray
         ]

@@ -320,7 +320,7 @@ try {
         case '':
             // API documentation/info
             ApiResponse::success([
-                'api' => 'Liwonde Sun Hotel Booking API',
+                'api' => getSetting('site_name', 'Liwonde Sun Hotel') . ' Booking API',
                 'version' => '1.0.0',
                 'endpoints' => [
                     'GET /api/rooms' => 'List available rooms',

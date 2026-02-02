@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Feb 01, 2026 at 09:16 PM
+-- Generation Time: Feb 02, 2026 at 12:35 AM
 -- Server version: 8.0.44-cll-lve
 -- PHP Version: 8.4.16
 
@@ -84,16 +84,17 @@ CREATE TABLE `admin_users` (
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `last_login` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `failed_login_attempts` int DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `admin_users`
 --
 
-INSERT INTO `admin_users` (`id`, `username`, `email`, `password_hash`, `full_name`, `role`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'admin@liwondesunhotel.com', '$2y$10$kHKXltLQhR3JuVFtHQ7mZ.KhVjTNKJf7tEU0IwD8HKzKdvyG1Cy/W', 'System Administrator', 'admin', 1, NULL, '2026-01-20 19:08:40', '2026-01-20 19:08:40'),
-(2, 'receptionist', 'reception@liwondesunhotel.com', '$2y$10$OFHlFcgoqltOd7X6Z3IqVeg0961Adk9LxyfW8UBBfENSawMRZ3fF6', 'Front Desk', 'receptionist', 1, '2026-01-30 00:40:07', '2026-01-20 19:08:40', '2026-01-30 00:40:07');
+INSERT INTO `admin_users` (`id`, `username`, `email`, `password_hash`, `full_name`, `role`, `is_active`, `last_login`, `created_at`, `updated_at`, `failed_login_attempts`) VALUES
+(1, 'admin', 'admin@liwondesunhotel.com', '$2y$10$kHKXltLQhR3JuVFtHQ7mZ.KhVjTNKJf7tEU0IwD8HKzKdvyG1Cy/W', 'System Administrator', 'admin', 1, NULL, '2026-01-20 19:08:40', '2026-01-20 19:08:40', 0),
+(2, 'receptionist', 'reception@liwondesunhotel.com', '$2y$10$OFHlFcgoqltOd7X6Z3IqVeg0961Adk9LxyfW8UBBfENSawMRZ3fF6', 'Front Desk', 'receptionist', 1, '2026-02-01 22:11:04', '2026-01-20 19:08:40', '2026-02-01 22:11:04', 0);
 
 -- --------------------------------------------------------
 
@@ -1212,7 +1213,13 @@ INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_grou
 (80, 'tentative_deposit_percent', '20', 'bookings', '2026-02-01 16:32:10'),
 (81, 'tentative_deposit_required', '0', 'bookings', '2026-02-01 16:32:10'),
 (82, 'tentative_block_availability', '1', 'bookings', '2026-02-01 16:32:10'),
-(90, 'whatsapp_number', '+265888860670', 'contact', '2026-02-01 19:09:42');
+(90, 'whatsapp_number', '+265888860670', 'contact', '2026-02-01 19:09:42'),
+(102, 'footer_credits', '© 2026 Liwonde Sun Hotel.', 'general', '2026-02-02 00:33:02'),
+(103, 'footer_design_credit', 'Powered by ProManaged IT', 'general', '2026-02-02 00:33:08'),
+(104, 'footer_share_title', 'Share', 'general', '2026-02-02 00:32:07'),
+(105, 'footer_connect_title', 'Connect With Us', 'general', '2026-02-02 00:32:07'),
+(106, 'footer_contact_title', 'Contact Information', 'general', '2026-02-02 00:32:07'),
+(107, 'footer_policies_title', 'Policies', 'general', '2026-02-02 00:32:07');
 
 -- --------------------------------------------------------
 
@@ -1851,7 +1858,7 @@ ALTER TABLE `room_blocked_dates`
 -- AUTO_INCREMENT for table `site_settings`
 --
 ALTER TABLE `site_settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
 
 --
 -- AUTO_INCREMENT for table `tentative_booking_log`

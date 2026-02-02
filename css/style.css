@@ -675,7 +675,7 @@ button {
     .hero-widget-mobile {
         display: flex;
         position: absolute;
-        top: calc(100px + env(safe-area-inset-top));
+        top: calc(130px + env(safe-area-inset-top));
         right: 14px;
         z-index: 120;
         pointer-events: auto;
@@ -873,7 +873,7 @@ button {
     /* Mobile widget - larger and more prominent */
     .hero-widget-mobile {
         position: absolute;
-        top: calc(78px + env(safe-area-inset-top));
+        top: calc(110px + env(safe-area-inset-top));
         right: 14px;
         z-index: 100;
         display: flex;

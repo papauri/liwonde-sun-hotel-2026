@@ -157,11 +157,11 @@
 
         <div class="minimalist-footer-bottom">
             <div class="minimalist-footer-copyright">
-                <p>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars(getSetting('site_name')); ?>. All Rights Reserved.</p>
+                <p><?php echo htmlspecialchars(getSetting('footer_credits', '&copy; ' . date('Y') . ' ' . getSetting('site_name', 'Liwonde Sun Hotel') . '. Powered by ProManaged IT')); ?></p>
             </div>
 
             <div class="minimalist-footer-credits">
-                <p>Designed with <i class="fas fa-heart"></i> for Luxury Excellence</p>
+                <p><?php echo htmlspecialchars(getSetting('footer_design_credit', 'Designed with <i class="fas fa-heart"></i> for Luxury Excellence')); ?></p>
             </div>
         </div>
     </div>
