@@ -2,6 +2,7 @@
 require_once 'config/database.php';
 require_once 'config/email.php';
 require_once 'includes/validation.php';
+require_once 'includes/modal.php';
 
 // Start session for any session-based functionality
 if (session_status() === PHP_SESSION_NONE) {
@@ -103,20 +104,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gym_booking_form'])) 
         $sanitized_data['phone'] = $phone_validation['sanitized'];
     }
     
-    // Validate preferred_date
-    $date_validation = validateDate($_POST['preferred_date'] ?? '', false, true);
-    if (!$date_validation['valid']) {
-        $validation_errors['preferred_date'] = $date_validation['error'];
-    } else {
-        $sanitized_data['preferred_date'] = $date_validation['date']->format('Y-m-d');
-    }
+    // Get booking time buffer from settings (default to 60 minutes if not set)
+    $booking_buffer = (int)getSetting('booking_time_buffer_minutes', 60);
     
-    // Validate preferred_time
-    $time_validation = validateTime($_POST['preferred_time'] ?? '');
-    if (!$time_validation['valid']) {
-        $validation_errors['preferred_time'] = $time_validation['error'];
+    // Validate preferred_date and preferred_time together
+    $datetime_validation = validateDateTime(
+        $_POST['preferred_date'] ?? '',
+        $_POST['preferred_time'] ?? '',
+        false,  // Don't allow past dates
+        $booking_buffer  // Use configurable buffer
+    );
+    
+    if (!$datetime_validation['valid']) {
+        $validation_errors['preferred_date'] = $datetime_validation['error'];
     } else {
-        $sanitized_data['preferred_time'] = $time_validation['time'];
+        $sanitized_data['preferred_date'] = $datetime_validation['datetime']->format('Y-m-d');
+        $sanitized_data['preferred_time'] = $datetime_validation['datetime']->format('H:i');
     }
     
     // Validate package_choice
@@ -169,23 +172,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gym_booking_form'])) 
             'goals' => $sanitized_data['goals'] ?? ''
         ];
         
+        // Log booking data for diagnostics
+        error_log("Gym booking data prepared: " . print_r($booking_data, true));
+        
+        // Set success and generate reference after validation passes
+        $bookingSuccess = true;
+        $bookingReference = 'GYM-' . strtoupper(substr(uniqid(), -8));
+        
+        // Save inquiry to database
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO gym_inquiries (
+                    reference_number, name, email, phone, membership_type,
+                    preferred_date, preferred_time, guests, message, consent, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')
+            ");
+            $stmt->execute([
+                $bookingReference,
+                $sanitized_data['full_name'],
+                $sanitized_data['email'],
+                $sanitized_data['phone'],
+                $sanitized_data['package_choice'],
+                $sanitized_data['preferred_date'],
+                $sanitized_data['preferred_time'],
+                $sanitized_data['guests'] ?? 1,
+                $sanitized_data['goals'] ?? '',
+                $consent ? 1 : 0
+            ]);
+            error_log("Gym inquiry saved to database with reference: " . $bookingReference);
+        } catch (PDOException $e) {
+            error_log("Failed to save gym inquiry to database: " . $e->getMessage());
+            // Continue with email sending even if database save fails
+        }
+        
         // Send confirmation email to customer
         $customer_result = sendGymBookingEmail($booking_data);
         if (!$customer_result['success']) {
             error_log("Failed to send gym booking confirmation email: " . $customer_result['message']);
+        } else {
+            error_log("Gym customer email sent successfully to: " . $sanitized_data['email']);
         }
         
         // Send notification email to admin
         $admin_result = sendGymAdminNotificationEmail($booking_data);
-        if ($admin_result['success']) {
-            $bookingSuccess = true;
-            // Generate a reference number for the customer
-            $bookingReference = 'GYM-' . strtoupper(substr(uniqid(), -8));
-            error_log("Gym booking submitted successfully from: " . $sanitized_data['email'] . " with reference: " . $bookingReference);
+        if (!$admin_result['success']) {
+            error_log("Failed to send gym admin notification: " . $admin_result['message']);
         } else {
-            $bookingError = 'Unable to send your request. Please try again or contact front desk directly.';
-            error_log("Gym booking admin notification failed. Error: " . $admin_result['message']);
+            error_log("Gym admin notification sent successfully");
         }
+        
+        error_log("Gym booking submitted successfully from: " . $sanitized_data['email'] . " with reference: " . $bookingReference);
     }
 }
 
@@ -267,28 +303,49 @@ try {
         </div>
     </div>
 
-    <?php if ($bookingSuccess): ?>
-    <div class="alert-banner success" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border-left: 5px solid #155724; padding: 20px 0;">
-        <div class="container" style="display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center;">
-            <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 15px;"></i>
-            <h2 style="color: #fff; margin: 0 0 10px 0; font-size: 28px;">Booking Request Submitted Successfully!</h2>
-            <p style="color: #fff; margin: 0 0 15px 0; font-size: 18px;">Thank you for your gym booking request. Our team will contact you within 24 hours to confirm your booking.</p>
-            <div style="background: rgba(255,255,255,0.2); padding: 12px 25px; border-radius: 8px; margin-top: 10px;">
-                <strong style="color: #fff; font-size: 16px;">Reference Number: <span style="background: #fff; color: #28a745; padding: 5px 15px; border-radius: 5px; font-weight: bold;"><?php echo htmlspecialchars($bookingReference); ?></span></strong>
+    <?php
+    // Prepare modal content based on form submission result
+    $gymModalContent = '';
+    
+    if ($bookingSuccess) {
+        $gymModalContent = '<div style="text-align: center; padding: 20px;">
+            <div style="margin-bottom: 20px;">
+                <i class="fas fa-check-circle" style="font-size: 64px; color: #28a745;"></i>
             </div>
-            <p style="color: #fff; margin: 15px 0 0 0; font-size: 14px; opacity: 0.9;">Please save this reference number for your records. A confirmation email has been sent to your email address.</p>
-        </div>
-    </div>
-    <?php elseif (!empty($bookingError)): ?>
-    <div class="alert-banner error" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border-left: 5px solid #721c24; padding: 20px 0;">
-        <div class="container" style="display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center;">
-            <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px;"></i>
-            <h2 style="color: #fff; margin: 0 0 10px 0; font-size: 28px;">Booking Request Failed</h2>
-            <p style="color: #fff; margin: 0; font-size: 18px;"><?php echo htmlspecialchars($bookingError); ?></p>
-            <p style="color: #fff; margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">Please try again or contact our front desk directly for assistance.</p>
-        </div>
-    </div>
-    <?php endif; ?>
+            <h2 style="color: #28a745; margin: 0 0 15px 0; font-size: 28px;">Booking Request Submitted Successfully!</h2>
+            <p style="color: #666; margin: 0 0 20px 0; font-size: 16px;">Thank you for your gym booking request. Our team will contact you within 24 hours to confirm your booking.</p>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #28a745;">
+                <p style="color: #666; margin: 0 0 10px 0; font-size: 14px;">Your Reference Number:</p>
+                <p style="color: #28a745; margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 1px;">' . htmlspecialchars($bookingReference) . '</p>
+            </div>
+            <p style="color: #666; margin: 20px 0 0 0; font-size: 14px; line-height: 1.6;">
+                <i class="fas fa-envelope" style="color: #28a745;"></i> A confirmation email has been sent to your email address.<br>
+                <i class="fas fa-info-circle" style="color: #28a745;"></i> Please save this reference number for your records.
+            </p>
+        </div>';
+    } elseif (!empty($bookingError)) {
+        $gymModalContent = '<div style="text-align: center; padding: 20px;">
+            <div style="margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #dc3545;"></i>
+            </div>
+            <h2 style="color: #dc3545; margin: 0 0 15px 0; font-size: 28px;">Booking Request Failed</h2>
+            <p style="color: #666; margin: 0 0 20px 0; font-size: 16px;">' . htmlspecialchars($bookingError) . '</p>
+            <p style="color: #666; margin: 20px 0 0 0; font-size: 14px;">
+                <i class="fas fa-phone" style="color: #dc3545;"></i> Please try again or contact our front desk directly for assistance.
+            </p>
+        </div>';
+    }
+    
+    // Render modal if there's content to show
+    if (!empty($gymModalContent)) {
+        renderModal('gymBookingResult', '', $gymModalContent, [
+            'size' => 'md',
+            'show_close' => true,
+            'close_on_overlay' => true,
+            'close_on_escape' => true
+        ]);
+    }
+    ?>
     
     <?php include 'includes/header.php'; ?>
     
@@ -639,11 +696,13 @@ try {
                     </div>
                     <div class="form-group">
                         <label for="preferred_date">Preferred Date *</label>
-                        <input type="date" id="preferred_date" name="preferred_date" required>
+                        <input type="date" id="preferred_date" name="preferred_date" min="<?php echo date('Y-m-d'); ?>" required>
+                        <small class="field-error" id="preferred_date_error" style="color: #dc3545; display: none;"></small>
                     </div>
                     <div class="form-group">
                         <label for="preferred_time">Preferred Time *</label>
                         <input type="time" id="preferred_time" name="preferred_time" required>
+                        <small class="field-error" id="preferred_time_error" style="color: #dc3545; display: none;"></small>
                     </div>
                     <div class="form-group full">
                         <label for="package_choice">Select Package *</label>
@@ -670,7 +729,7 @@ try {
                         </label>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary full-width">Send Booking Request</button>
+                <button type="submit" class="btn btn-primary full-width" id="gymSubmitBtn" disabled>Send Booking Request</button>
                 <p class="privacy-note">We send bookings to: <?php echo htmlspecialchars($email_main); ?>. We respect your privacy.</p>
             </form>
         </div>
@@ -688,7 +747,41 @@ try {
                 loader.classList.add('fade-out');
                 setTimeout(() => { loader.style.display = 'none'; }, 500);
             }
+            
+            // Open result modal if present (after form submission)
+            const resultModal = document.getElementById('gymBookingResult');
+            if (resultModal) {
+                // Small delay to ensure page is fully loaded
+                setTimeout(function() {
+                    resultModal.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }, 600);
+            }
         });
+        
+        // Modal close functionality for result modal
+        const resultModal = document.getElementById('gymBookingResult');
+        const resultModalOverlay = document.getElementById('gymBookingResult-overlay');
+        
+        function closeResultModal() {
+            if (resultModal) {
+                resultModal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        if (resultModalOverlay) {
+            resultModalOverlay.addEventListener('click', closeResultModal);
+        }
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Escape' && resultModal && resultModal.classList.contains('active')) {
+                closeResultModal();
+            }
+        });
+        
+        const resultCloseButtons = document.querySelectorAll('#gymBookingResult [data-modal-close]');
+        resultCloseButtons.forEach(btn => btn.addEventListener('click', closeResultModal));
 
         // Booking modal - custom implementation for booking-modal structure
         const bookingModal = document.querySelector('[data-booking-modal]');
@@ -714,6 +807,113 @@ try {
         document.addEventListener('keyup', (e) => {
             if (e.key === 'Escape') closeModal();
         });
+
+        // Consent checkbox validation - grey out submit button until consent is checked
+        const consentCheckbox = document.querySelector('input[name="consent"]');
+        const gymSubmitBtn = document.getElementById('gymSubmitBtn');
+        
+        if (consentCheckbox && gymSubmitBtn) {
+            // Initialize button state
+            gymSubmitBtn.disabled = !consentCheckbox.checked;
+            gymSubmitBtn.style.opacity = consentCheckbox.checked ? '1' : '0.6';
+            gymSubmitBtn.style.cursor = consentCheckbox.checked ? 'pointer' : 'not-allowed';
+            
+            // Handle checkbox change
+            consentCheckbox.addEventListener('change', function() {
+                gymSubmitBtn.disabled = !this.checked;
+                gymSubmitBtn.style.opacity = this.checked ? '1' : '0.6';
+                gymSubmitBtn.style.cursor = this.checked ? 'pointer' : 'not-allowed';
+            });
+        }
+
+        // Form submission handling - grey out submit button
+        const gymForm = document.querySelector('.booking-form');
+        
+        if (gymForm && gymSubmitBtn) {
+            gymForm.addEventListener('submit', function() {
+                // Disable and grey out the submit button
+                gymSubmitBtn.disabled = true;
+                gymSubmitBtn.style.opacity = '0.6';
+                gymSubmitBtn.style.cursor = 'not-allowed';
+                gymSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            });
+        }
+
+        // Date/Time validation - ensure selected time is not in the past for today's date
+        const preferredDate = document.getElementById('preferred_date');
+        const preferredTime = document.getElementById('preferred_time');
+        const dateError = document.getElementById('preferred_date_error');
+        const timeError = document.getElementById('preferred_time_error');
+        
+        // Booking buffer in minutes (default 60, should match PHP setting)
+        const bookingBufferMinutes = 60;
+        
+        function validateDateTime() {
+            if (!preferredDate.value || !preferredTime.value) {
+                dateError.style.display = 'none';
+                timeError.style.display = 'none';
+                return true;
+            }
+            
+            const selectedDate = new Date(preferredDate.value + 'T' + preferredTime.value);
+            const now = new Date();
+            const minAllowed = new Date(now.getTime() + bookingBufferMinutes * 60000);
+            
+            // Clear previous errors
+            dateError.style.display = 'none';
+            timeError.style.display = 'none';
+            
+            if (selectedDate < minAllowed) {
+                // Check if it's a past date
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const selectedDayOnly = new Date(preferredDate.value);
+                selectedDayOnly.setHours(0, 0, 0, 0);
+                
+                if (selectedDayOnly < today) {
+                    dateError.textContent = 'Date cannot be in the past';
+                    dateError.style.display = 'block';
+                    preferredDate.style.borderColor = '#dc3545';
+                } else {
+                    // It's today but time is too soon
+                    const bufferHours = Math.floor(bookingBufferMinutes / 60);
+                    const bufferMins = bookingBufferMinutes % 60;
+                    let timeMsg = 'For today, please select a time at least ';
+                    if (bufferHours > 0 && bufferMins > 0) {
+                        timeMsg += bufferHours + ' hour(s) and ' + bufferMins + ' minutes from now';
+                    } else if (bufferHours > 0) {
+                        timeMsg += bufferHours + ' hour(s) from now';
+                    } else {
+                        timeMsg += bookingBufferMinutes + ' minutes from now';
+                    }
+                    timeError.textContent = timeMsg;
+                    timeError.style.display = 'block';
+                    preferredTime.style.borderColor = '#dc3545';
+                }
+                return false;
+            }
+            
+            // Valid - reset borders
+            preferredDate.style.borderColor = '';
+            preferredTime.style.borderColor = '';
+            return true;
+        }
+        
+        // Add event listeners for real-time validation
+        if (preferredDate && preferredTime) {
+            preferredDate.addEventListener('change', validateDateTime);
+            preferredTime.addEventListener('change', validateDateTime);
+            
+            // Also validate on form submission
+            if (gymForm) {
+                gymForm.addEventListener('submit', function(e) {
+                    if (!validateDateTime()) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            }
+        }
     </script>
 
     <?php include 'includes/scroll-to-top.php'; ?>

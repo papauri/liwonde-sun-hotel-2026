@@ -164,6 +164,75 @@ function validateTime($time, $format = 'H:i') {
 }
 
 /**
+ * Validate a combined date and time (for bookings, appointments, etc.)
+ *
+ * @param string $date The date string (Y-m-d format)
+ * @param string $time The time string (H:i format)
+ * @param bool $allow_past Whether to allow past date/times (default: false)
+ * @param int $buffer_minutes Minimum minutes in advance required (default: 0)
+ * @return array ['valid' => bool, 'error' => string|null, 'datetime' => DateTime|null]
+ */
+function validateDateTime($date, $time, $allow_past = false, $buffer_minutes = 0) {
+    // First validate the date
+    $date_result = validateDate($date, $allow_past, true, 'Y-m-d');
+    if (!$date_result['valid']) {
+        return ['valid' => false, 'error' => $date_result['error'], 'datetime' => null];
+    }
+    
+    // Then validate the time
+    $time_result = validateTime($time, 'H:i');
+    if (!$time_result['valid']) {
+        return ['valid' => false, 'error' => $time_result['error'], 'datetime' => null];
+    }
+    
+    // Combine date and time into a single DateTime object
+    $datetime = DateTime::createFromFormat('Y-m-d H:i', $date . ' ' . $time);
+    if ($datetime === false) {
+        return ['valid' => false, 'error' => 'Invalid date or time format', 'datetime' => null];
+    }
+    
+    // Get current time
+    $now = new DateTime();
+    
+    // Calculate the minimum allowed datetime (now + buffer)
+    $min_allowed = clone $now;
+    if ($buffer_minutes > 0) {
+        $min_allowed->modify("+{$buffer_minutes} minutes");
+    }
+    
+    // Check if the datetime is in the past (before minimum allowed)
+    if (!$allow_past && $datetime < $min_allowed) {
+        // Check if it's just a date issue (past date)
+        $date_only = DateTime::createFromFormat('Y-m-d', $date);
+        $date_only->setTime(0, 0, 0);
+        $today = clone $now;
+        $today->setTime(0, 0, 0);
+        
+        if ($date_only < $today) {
+            return ['valid' => false, 'error' => 'Date cannot be in the past', 'datetime' => $datetime];
+        }
+        
+        // It's today but time is too soon
+        if ($buffer_minutes > 0) {
+            $buffer_hours = floor($buffer_minutes / 60);
+            $buffer_mins = $buffer_minutes % 60;
+            
+            if ($buffer_hours > 0 && $buffer_mins > 0) {
+                return ['valid' => false, 'error' => "For today, please select a time at least {$buffer_hours} hours and {$buffer_mins} minutes from now", 'datetime' => $datetime];
+            } elseif ($buffer_hours > 0) {
+                return ['valid' => false, 'error' => "For today, please select a time at least {$buffer_hours} hour(s) from now", 'datetime' => $datetime];
+            } else {
+                return ['valid' => false, 'error' => "For today, please select a time at least {$buffer_minutes} minutes from now", 'datetime' => $datetime];
+            }
+        } else {
+            return ['valid' => false, 'error' => 'Selected time has already passed. Please choose a future time', 'datetime' => $datetime];
+        }
+    }
+    
+    return ['valid' => true, 'error' => null, 'datetime' => $datetime];
+}
+
+/**
  * Validate that end time is after start time
  * 
  * @param string $start_time Start time

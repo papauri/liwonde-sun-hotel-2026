@@ -32,6 +32,7 @@
         <li><a href="blocked-dates.php" class="<?php echo $current_page === 'blocked-dates.php' ? 'active' : ''; ?>"><i class="fas fa-ban"></i> Blocked Dates</a></li>
         <li><a href="room-management.php" class="<?php echo $current_page === 'room-management.php' ? 'active' : ''; ?>"><i class="fas fa-bed"></i> Rooms</a></li>
         <li><a href="conference-management.php" class="<?php echo $current_page === 'conference-management.php' ? 'active' : ''; ?>"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
+        <li><a href="gym-inquiries.php" class="<?php echo $current_page === 'gym-inquiries.php' ? 'active' : ''; ?>"><i class="fas fa-dumbbell"></i> Gym Inquiries</a></li>
         <li><a href="menu-management.php" class="<?php echo $current_page === 'menu-management.php' ? 'active' : ''; ?>"><i class="fas fa-utensils"></i> Menu</a></li>
         <li><a href="events-management.php" class="<?php echo $current_page === 'events-management.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
         <li><a href="reviews.php" class="<?php echo $current_page === 'reviews.php' ? 'active' : ''; ?>"><i class="fas fa-star"></i> Reviews</a></li>

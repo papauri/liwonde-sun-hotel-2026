@@ -18,7 +18,6 @@ require_once 'config/security.php';
 require_once 'config/database.php';
 require_once 'config/email.php';
 require_once 'includes/modal.php';
-require_once 'includes/alert.php';
 require_once 'includes/validation.php';
 
 // Send security headers
@@ -98,23 +97,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sanitized_data['phone'] = $phone_validation['sanitized'];
         }
         
-        // Validate event_date
-        $date_validation = validateDate($_POST['event_date'] ?? '', false, true);
-        if (!$date_validation['valid']) {
-            $validation_errors['event_date'] = $date_validation['error'];
+        // Get booking time buffer from settings (default to 60 minutes if not set)
+        $booking_buffer = (int)getSetting('booking_time_buffer_minutes', 60);
+        
+        // Validate event_date and start_time together
+        $datetime_validation = validateDateTime(
+            $_POST['event_date'] ?? '',
+            $_POST['start_time'] ?? '',
+            false,  // Don't allow past dates
+            $booking_buffer  // Use configurable buffer
+        );
+        
+        if (!$datetime_validation['valid']) {
+            $validation_errors['event_date'] = $datetime_validation['error'];
         } else {
-            $sanitized_data['event_date'] = $date_validation['date']->format('Y-m-d');
+            $sanitized_data['event_date'] = $datetime_validation['datetime']->format('Y-m-d');
+            $sanitized_data['start_time'] = $datetime_validation['datetime']->format('H:i');
         }
         
-        // Validate start_time
-        $start_time_validation = validateTime($_POST['start_time'] ?? '');
-        if (!$start_time_validation['valid']) {
-            $validation_errors['start_time'] = $start_time_validation['error'];
-        } else {
-            $sanitized_data['start_time'] = $start_time_validation['time'];
-        }
-        
-        // Validate end_time
+        // Validate end_time separately
         $end_time_validation = validateTime($_POST['end_time'] ?? '');
         if (!$end_time_validation['valid']) {
             $validation_errors['end_time'] = $end_time_validation['error'];
@@ -175,6 +176,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception(implode('; ', $error_messages));
         }
         
+        // Prepare booking data for email functions
+        $booking_data = [
+            'conference_room_id' => $sanitized_data['conference_room_id'],
+            'company_name' => $sanitized_data['company_name'],
+            'contact_person' => $sanitized_data['contact_person'],
+            'email' => $sanitized_data['email'],
+            'phone' => $sanitized_data['phone'],
+            'event_date' => $sanitized_data['event_date'],
+            'start_time' => $sanitized_data['start_time'],
+            'end_time' => $sanitized_data['end_time'],
+            'number_of_attendees' => $sanitized_data['number_of_attendees'],
+            'event_type' => $sanitized_data['event_type'],
+            'special_requirements' => $sanitized_data['special_requirements'],
+            'catering_required' => $sanitized_data['catering_required'],
+            'av_equipment' => $sanitized_data['av_equipment']
+        ];
+        
+        // Log booking data for diagnostics
+        error_log("Conference enquiry data prepared: " . print_r($booking_data, true));
+        
         $room_id = $sanitized_data['conference_room_id'];
         $company_name = $sanitized_data['company_name'];
         $contact_person = $sanitized_data['contact_person'];
@@ -214,8 +235,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Insert inquiry
         $insert_stmt = $pdo->prepare("
             INSERT INTO conference_inquiries (
-                inquiry_reference, conference_room_id, company_name, contact_person, 
-                email, phone, event_date, start_time, end_time, number_of_attendees, 
+                inquiry_reference, conference_room_id, company_name, contact_person,
+                email, phone, event_date, start_time, end_time, number_of_attendees,
                 event_type, special_requirements, catering_required, av_equipment, total_amount
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
@@ -226,10 +247,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $event_type, $special_requirements, $catering, $av_equipment, $total_amount
         ]);
 
+        // Set success and generate reference after validation passes
         $inquiry_success = true;
         $success_reference = $inquiry_reference;
 
-        // Send email notifications
+        // Prepare enquiry data for email functions
         $enquiry_data = [
             'id' => $pdo->lastInsertId(),
             'inquiry_reference' => $inquiry_reference,
@@ -249,29 +271,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'total_amount' => $total_amount
         ];
 
-        // Send enquiry confirmation email to customer
-        $email_result = sendConferenceEnquiryEmail($enquiry_data);
-        if (!$email_result['success']) {
-            error_log("Failed to send conference enquiry email: " . $email_result['message']);
+        // Send confirmation email to customer
+        $customer_result = sendConferenceEnquiryEmail($enquiry_data);
+        if (!$customer_result['success']) {
+            error_log("Failed to send conference enquiry confirmation email: " . $customer_result['message']);
         } else {
-            $logMsg = "Conference enquiry email processed";
-            if (isset($email_result['preview_url'])) {
-                $logMsg .= " - Preview: " . $email_result['preview_url'];
-            }
-            error_log($logMsg);
+            error_log("Conference customer email sent successfully to: " . $sanitized_data['email']);
         }
-
+        
         // Send notification email to admin
         $admin_result = sendConferenceAdminNotificationEmail($enquiry_data);
         if (!$admin_result['success']) {
             error_log("Failed to send conference admin notification: " . $admin_result['message']);
         } else {
-            $logMsg = "Conference admin notification processed";
-            if (isset($admin_result['preview_url'])) {
-                $logMsg .= " - Preview: " . $admin_result['preview_url'];
-            }
-            error_log($logMsg);
+            error_log("Conference admin notification sent successfully");
         }
+        
+        error_log("Conference enquiry submitted successfully from: " . $sanitized_data['email'] . " with reference: " . $inquiry_reference);
 
     } catch (Exception $e) {
         $inquiry_error = $e->getMessage();
@@ -820,37 +836,7 @@ function resolveConferenceImage(?string $imagePath): string
 
     <!-- Inquiry Modal -->
     <?php
-    $modalContent = '';
-    if ($inquiry_success) {
-        $modalContent = '<div class="success-message" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: #fff; padding: 40px 30px; border-radius: 16px; margin-bottom: 20px; border: none; text-align: center; box-shadow: 0 10px 40px rgba(40, 167, 69, 0.3);">
-            <div style="margin-bottom: 20px;">
-                <i class="fas fa-check-circle" style="font-size: 64px; color: #fff; opacity: 0.9;"></i>
-            </div>
-            <h2 style="color: #fff; margin: 0 0 15px 0; font-size: 32px; font-weight: 700;">Conference Enquiry Submitted Successfully!</h2>
-            <p style="color: #fff; margin: 0 0 25px 0; font-size: 18px; opacity: 0.95;">Thank you for your conference enquiry. Our events team will review your request and contact you within 24 hours to confirm availability and finalize details.</p>
-            <div style="background: rgba(255,255,255,0.2); padding: 20px 30px; border-radius: 12px; margin: 25px 0; border: 2px solid rgba(255,255,255,0.3);">
-                <p style="color: #fff; margin: 0; font-size: 16px; font-weight: 500;">Your Reference Number:</p>
-                <p style="color: #fff; margin: 8px 0 0 0; font-size: 28px; font-weight: 700; letter-spacing: 1px;">' . htmlspecialchars($success_reference) . '</p>
-            </div>
-            <p style="color: #fff; margin: 20px 0 0 0; font-size: 15px; opacity: 0.9; line-height: 1.6;">
-                <i class="fas fa-envelope"></i> A confirmation email has been sent to your email address.<br>
-                <i class="fas fa-info-circle"></i> Please save this reference number for your records.
-            </p>
-        </div>';
-    } elseif ($inquiry_error) {
-        $modalContent = '<div class="error-message" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #fff; padding: 40px 30px; border-radius: 16px; margin-bottom: 20px; border: none; text-align: center; box-shadow: 0 10px 40px rgba(220, 53, 69, 0.3);">
-            <div style="margin-bottom: 20px;">
-                <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #fff; opacity: 0.9;"></i>
-            </div>
-            <h2 style="color: #fff; margin: 0 0 15px 0; font-size: 32px; font-weight: 700;">Enquiry Submission Failed</h2>
-            <p style="color: #fff; margin: 0 0 25px 0; font-size: 18px; opacity: 0.95;">' . htmlspecialchars($inquiry_error) . '</p>
-            <p style="color: #fff; margin: 20px 0 0 0; font-size: 15px; opacity: 0.9;">
-                <i class="fas fa-phone"></i> Please try again or contact our events team directly for assistance.
-            </p>
-        </div>';
-    }
-    
-    $modalContent .= '
+    $modalContent = '
         <form method="POST" action="" id="inquiryForm">
             ' . getCsrfField() . '
             <input type="hidden" name="conference_room_id" id="selectedRoomId">
@@ -884,17 +870,19 @@ function resolveConferenceImage(?string $imagePath): string
  
             <div class="form-group">
                 <label>Event Date *</label>
-                <input type="date" name="event_date" min="' . date('Y-m-d') . '" required>
+                <input type="date" name="event_date" id="event_date" min="' . date('Y-m-d') . '" required>
+                <small class="field-error" id="event_date_error" style="color: #dc3545; display: none;"></small>
             </div>
- 
+  
             <div class="form-row">
                 <div class="form-group">
                     <label>Start Time *</label>
-                    <input type="time" name="start_time" required>
+                    <input type="time" name="start_time" id="start_time" required>
+                    <small class="field-error" id="start_time_error" style="color: #dc3545; display: none;"></small>
                 </div>
                 <div class="form-group">
                     <label>End Time *</label>
-                    <input type="time" name="end_time" required>
+                    <input type="time" name="end_time" id="end_time" required>
                 </div>
             </div>
  
@@ -926,10 +914,15 @@ function resolveConferenceImage(?string $imagePath): string
                 <input type="checkbox" name="catering_required" id="catering">
                 <label for="catering" style="margin-bottom: 0;">Catering Required</label>
             </div>
- 
+  
             <div class="form-group">
                 <label>Special Requirements</label>
                 <textarea name="special_requirements" rows="4" placeholder="Any additional requests or requirements..."></textarea>
+            </div>
+            
+            <div class="form-group checkbox-group">
+                <input type="checkbox" name="consent" id="consentCheckbox" required>
+                <label for="consentCheckbox" style="margin-bottom: 0;">I agree to be contacted about this enquiry request.</label>
             </div>
         </form>
     ';
@@ -937,11 +930,42 @@ function resolveConferenceImage(?string $imagePath): string
     renderModal('inquiryModal', 'Conference Room Inquiry', $modalContent, [
         'size' => 'lg',
         'footer' => '
-            <button type="submit" form="inquiryForm" class="btn-inquire" style="width: 100%;">
+            <button type="submit" form="inquiryForm" id="conferenceSubmitBtn" class="btn-inquire" style="width: 100%;" disabled>
                 <i class="fas fa-paper-plane"></i> Submit Inquiry
             </button>
         '
     ]);
+    ?>
+
+    <!-- Result Modal for Success/Error Messages -->
+    <?php
+    $resultModalContent = '';
+    if ($inquiry_success) {
+        $resultModalContent = '<div style="text-align: center; padding: 20px;">
+            <i class="fas fa-check-circle" style="font-size: 64px; color: #28a745;"></i>
+            <h2 style="color: var(--navy); margin: 20px 0 15px 0; font-size: 28px; font-weight: 700;">Conference Enquiry Submitted Successfully!</h2>
+            <p style="color: #666; margin: 0 0 25px 0; font-size: 16px; line-height: 1.6;">Thank you for your conference enquiry. Our events team will review your request and contact you within 24 hours to confirm availability and finalize details.</p>
+            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05)); padding: 20px 30px; border-radius: 12px; margin: 25px 0; border: 2px solid rgba(212, 175, 55, 0.35);">
+                <p style="color: var(--navy); margin: 0; font-size: 14px; font-weight: 600;">Your Reference Number:</p>
+                <p style="color: var(--navy); margin: 8px 0 0 0; font-size: 24px; font-weight: 700; letter-spacing: 1px;">' . htmlspecialchars($success_reference) . '</p>
+            </div>
+            <p style="color: #666; margin: 20px 0 0 0; font-size: 14px; line-height: 1.6;">
+                <i class="fas fa-envelope" style="color: var(--gold);"></i> A confirmation email has been sent to your email address.<br>
+                <i class="fas fa-info-circle" style="color: var(--gold);"></i> Please save this reference number for your records.
+            </p>
+        </div>';
+    } elseif ($inquiry_error) {
+        $resultModalContent = '<div style="text-align: center; padding: 20px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #dc3545;"></i>
+            <h2 style="color: var(--navy); margin: 20px 0 15px 0; font-size: 28px; font-weight: 700;">Enquiry Submission Failed</h2>
+            <p style="color: #666; margin: 0 0 25px 0; font-size: 16px; line-height: 1.6;">' . htmlspecialchars($inquiry_error) . '</p>
+            <p style="color: #666; margin: 20px 0 0 0; font-size: 14px;">
+                <i class="fas fa-phone" style="color: var(--gold);"></i> Please try again or contact our events team directly for assistance.
+            </p>
+        </div>';
+    }
+    
+    renderModal('conferenceBookingResult', '', $resultModalContent, ['size' => 'md']);
     ?>
 
     <?php include 'includes/footer.php'; ?>
@@ -982,8 +1006,129 @@ function resolveConferenceImage(?string $imagePath): string
         const closeButtons = document.querySelectorAll('[data-modal-close]');
         closeButtons.forEach(btn => btn.addEventListener('click', closeInquiryModal));
 
-        <?php if ($inquiry_success): ?>
-            openInquiryModal(0, '');
+        // Consent checkbox validation - grey out submit button until consent is checked
+        const consentCheckbox = document.getElementById('consentCheckbox');
+        const conferenceSubmitBtn = document.getElementById('conferenceSubmitBtn');
+        
+        if (consentCheckbox && conferenceSubmitBtn) {
+            // Initialize button state
+            conferenceSubmitBtn.disabled = !consentCheckbox.checked;
+            conferenceSubmitBtn.style.opacity = consentCheckbox.checked ? '1' : '0.6';
+            conferenceSubmitBtn.style.cursor = consentCheckbox.checked ? 'pointer' : 'not-allowed';
+            
+            // Handle checkbox change
+            consentCheckbox.addEventListener('change', function() {
+                conferenceSubmitBtn.disabled = !this.checked;
+                conferenceSubmitBtn.style.opacity = this.checked ? '1' : '0.6';
+                conferenceSubmitBtn.style.cursor = this.checked ? 'pointer' : 'not-allowed';
+            });
+        }
+        
+        // Form submission handling - grey out submit button
+        const inquiryForm = document.getElementById('inquiryForm');
+        
+        if (inquiryForm && conferenceSubmitBtn) {
+            inquiryForm.addEventListener('submit', function() {
+                // Disable and grey out the submit button
+                conferenceSubmitBtn.disabled = true;
+                conferenceSubmitBtn.style.opacity = '0.6';
+                conferenceSubmitBtn.style.cursor = 'not-allowed';
+                conferenceSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            });
+        }
+
+        // Date/Time validation - ensure selected time is not in the past for today's date
+        const eventDate = document.getElementById('event_date');
+        const startTime = document.getElementById('start_time');
+        const dateError = document.getElementById('event_date_error');
+        const timeError = document.getElementById('start_time_error');
+        
+        // Booking buffer in minutes (default 60, should match PHP setting)
+        const bookingBufferMinutes = 60;
+        
+        function validateConferenceDateTime() {
+            if (!eventDate || !startTime) return true;
+            if (!eventDate.value || !startTime.value) {
+                if (dateError) dateError.style.display = 'none';
+                if (timeError) timeError.style.display = 'none';
+                return true;
+            }
+            
+            const selectedDateTime = new Date(eventDate.value + 'T' + startTime.value);
+            const now = new Date();
+            const minAllowed = new Date(now.getTime() + bookingBufferMinutes * 60000);
+            
+            // Clear previous errors
+            if (dateError) dateError.style.display = 'none';
+            if (timeError) timeError.style.display = 'none';
+            
+            if (selectedDateTime < minAllowed) {
+                // Check if it's a past date
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const selectedDayOnly = new Date(eventDate.value);
+                selectedDayOnly.setHours(0, 0, 0, 0);
+                
+                if (selectedDayOnly < today) {
+                    if (dateError) {
+                        dateError.textContent = 'Event date cannot be in the past';
+                        dateError.style.display = 'block';
+                    }
+                    if (eventDate) eventDate.style.borderColor = '#dc3545';
+                } else {
+                    // It's today but time is too soon
+                    const bufferHours = Math.floor(bookingBufferMinutes / 60);
+                    const bufferMins = bookingBufferMinutes % 60;
+                    let timeMsg = 'For today, please select a start time at least ';
+                    if (bufferHours > 0 && bufferMins > 0) {
+                        timeMsg += bufferHours + ' hour(s) and ' + bufferMins + ' minutes from now';
+                    } else if (bufferHours > 0) {
+                        timeMsg += bufferHours + ' hour(s) from now';
+                    } else {
+                        timeMsg += bookingBufferMinutes + ' minutes from now';
+                    }
+                    if (timeError) {
+                        timeError.textContent = timeMsg;
+                        timeError.style.display = 'block';
+                    }
+                    if (startTime) startTime.style.borderColor = '#dc3545';
+                }
+                return false;
+            }
+            
+            // Valid - reset borders
+            if (eventDate) eventDate.style.borderColor = '';
+            if (startTime) startTime.style.borderColor = '';
+            return true;
+        }
+        
+        // Add event listeners for real-time validation
+        if (eventDate && startTime) {
+            eventDate.addEventListener('change', validateConferenceDateTime);
+            startTime.addEventListener('change', validateConferenceDateTime);
+            
+            // Also validate on form submission
+            if (inquiryForm) {
+                inquiryForm.addEventListener('submit', function(e) {
+                    if (!validateConferenceDateTime()) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            }
+        }
+
+        <?php if ($inquiry_success || $inquiry_error): ?>
+            // Auto-open result modal on page load when there's a result
+            window.addEventListener('load', function() {
+                const resultModal = document.getElementById('conferenceBookingResult');
+                if (resultModal) {
+                    setTimeout(function() {
+                        resultModal.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                    }, 600);
+                }
+            });
         <?php endif; ?>
     </script>
 

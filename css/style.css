@@ -236,16 +236,28 @@ button {
 
 @media (max-width: 768px) {
     .navbar {
-        justify-content: space-between;
+        justify-content: center;
+        position: relative;
     }
 
     .logo {
         position: static;
         z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex: 1;
+    }
+
+    .logo-hotel-icon {
+        display: none;
     }
 
     .mobile-menu-btn {
-        margin-left: 12px;
+        position: absolute;
+        right: 0;
+        margin-left: 0;
         z-index: 2;
     }
 }
@@ -1038,6 +1050,13 @@ button {
     left: 100%;
 }
 
+/* Disabled button state for consent checkbox validation */
+button:disabled,
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
 
 /* Hero carousel controls - single style for all devices */
 .hero-controls {
