@@ -613,102 +613,124 @@ function sendConferenceEnquiryEmail($data) {
         $currency_symbol = getSetting('currency_symbol');
         $total_amount = $data['total_amount'] ? number_format($data['total_amount'], 0) : 'To be determined';
         
-        // Prepare email content
-        $htmlBody = '
-        <h1 style="color: #0A1929; text-align: center;">Conference Enquiry Received</h1>
-        <p>Dear ' . htmlspecialchars($data['contact_person']) . ',</p>
-        <p>Thank you for your conference enquiry with <strong>' . htmlspecialchars($email_site_name) . '</strong>. We have received your request and it is currently being reviewed by our team.</p>
+        // Prepare template data
+        $template_data = [
+            'contact_person' => $data['contact_person'],
+            'inquiry_reference' => $data['inquiry_reference'],
+            'company_name' => $data['company_name'],
+            'room_name' => $room['name'],
+            'event_date' => date('F j, Y', strtotime($data['event_date'])),
+            'start_time' => date('H:i', strtotime($data['start_time'])),
+            'end_time' => date('H:i', strtotime($data['end_time'])),
+            'number_of_attendees' => (int)$data['number_of_attendees'],
+            'total_amount' => $total_amount,
+            'event_type' => $data['event_type'] ?? '',
+            'catering_required' => $data['catering_required'] ?? false,
+            'av_equipment' => $data['av_equipment'] ?? '',
+            'special_requirements' => $data['special_requirements'] ?? ''
+        ];
         
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Enquiry Details</h2>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Enquiry Reference:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($data['inquiry_reference']) . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Company:</span>
-                <span style="color: #333;">' . htmlspecialchars($data['company_name']) . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Conference Room:</span>
-                <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Event Date:</span>
-                <span style="color: #333;">' . date('F j, Y', strtotime($data['event_date'])) . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Event Time:</span>
-                <span style="color: #333;">' . date('H:i', strtotime($data['start_time'])) . ' - ' . date('H:i', strtotime($data['end_time'])) . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Attendees:</span>
-                <span style="color: #333;">' . (int) $data['number_of_attendees'] . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                <span style="font-weight: bold; color: #0A1929;">Estimated Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . $currency_symbol . ' ' . $total_amount . '</span>
-            </div>
-        </div>
+        // Try to load template, fall back to hardcoded HTML if template not found
+        $htmlBody = loadEmailTemplate('conference-enquiry-customer.html', $template_data);
         
-        <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
-            <h3 style="color: #0d6efd; margin-top: 0;">What Happens Next?</h3>
-            <p style="color: #0d6efd; margin: 0;">
-                <strong>Our team will review your enquiry and contact you within 24 hours to confirm availability and finalize details.</strong><br>
-                Once confirmed, you will receive a second email with final confirmation and payment instructions.
-            </p>
-        </div>';
-        
-        if (!empty($data['event_type'])) {
-            $htmlBody .= '
+        if (empty($htmlBody)) {
+            // Fallback to hardcoded HTML if template fails
+            $htmlBody = '
+            <h1 style="color: #0A1929; text-align: center;">Conference Enquiry Received</h1>
+            <p>Dear ' . htmlspecialchars($data['contact_person']) . ',</p>
+            <p>Thank you for your conference enquiry with <strong>' . htmlspecialchars($email_site_name) . '</strong>. We have received your request and it is currently being reviewed by our team.</p>
+            
+            <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+                <h2 style="color: #0A1929; margin-top: 0;">Enquiry Details</h2>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Enquiry Reference:</span>
+                    <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($data['inquiry_reference']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Company:</span>
+                    <span style="color: #333;">' . htmlspecialchars($data['company_name']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Conference Room:</span>
+                    <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Event Date:</span>
+                    <span style="color: #333;">' . date('F j, Y', strtotime($data['event_date'])) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Event Time:</span>
+                    <span style="color: #333;">' . date('H:i', strtotime($data['start_time'])) . ' - ' . date('H:i', strtotime($data['end_time'])) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Number of Attendees:</span>
+                    <span style="color: #333;">' . (int) $data['number_of_attendees'] . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                    <span style="font-weight: bold; color: #0A1929;">Estimated Amount:</span>
+                    <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . $currency_symbol . ' ' . $total_amount . '</span>
+                </div>
+            </div>
+            
             <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
-                <h3 style="color: #0d6efd; margin-top: 0;">Event Type</h3>
-                <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($data['event_type']) . '</p>
+                <h3 style="color: #0d6efd; margin-top: 0;">What Happens Next?</h3>
+                <p style="color: #0d6efd; margin: 0;">
+                    <strong>Our team will review your enquiry and contact you within 24 hours to confirm availability and finalize details.</strong><br>
+                    Once confirmed, you will receive a second email with final confirmation and payment instructions.
+                </p>
+            </div>';
+            
+            if (!empty($data['event_type'])) {
+                $htmlBody .= '
+                <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                    <h3 style="color: #0d6efd; margin-top: 0;">Event Type</h3>
+                    <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($data['event_type']) . '</p>
+                </div>';
+            }
+            
+            if ($data['catering_required']) {
+                $htmlBody .= '
+                <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                    <h3 style="color: #0d6efd; margin-top: 0;">Catering</h3>
+                    <p style="color: #0d6efd; margin: 0;">Catering services have been requested for your event.</p>
+                </div>';
+            }
+            
+            if (!empty($data['av_equipment'])) {
+                $htmlBody .= '
+                <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                    <h3 style="color: #0d6efd; margin-top: 0;">AV Equipment Requirements</h3>
+                    <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($data['av_equipment']) . '</p>
+                </div>';
+            }
+            
+            if (!empty($data['special_requirements'])) {
+                $htmlBody .= '
+                <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                    <h3 style="color: #0d6efd; margin-top: 0;">Special Requirements</h3>
+                    <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($data['special_requirements']) . '</p>
+                </div>';
+            }
+            
+            $htmlBody .= '
+            <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
+            
+            <p>Thank you for considering ' . htmlspecialchars($email_site_name) . ' for your event!</p>
+            
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+                <p style="color: #666; font-size: 14px;">
+                    <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
+                    <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
+                </p>
             </div>';
         }
-        
-        if ($data['catering_required']) {
-            $htmlBody .= '
-            <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
-                <h3 style="color: #0d6efd; margin-top: 0;">Catering</h3>
-                <p style="color: #0d6efd; margin: 0;">Catering services have been requested for your event.</p>
-            </div>';
-        }
-        
-        if (!empty($data['av_equipment'])) {
-            $htmlBody .= '
-            <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
-                <h3 style="color: #0d6efd; margin-top: 0;">AV Equipment Requirements</h3>
-                <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($data['av_equipment']) . '</p>
-            </div>';
-        }
-        
-        if (!empty($data['special_requirements'])) {
-            $htmlBody .= '
-            <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
-                <h3 style="color: #0d6efd; margin-top: 0;">Special Requirements</h3>
-                <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($data['special_requirements']) . '</p>
-            </div>';
-        }
-        
-        $htmlBody .= '
-        <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
-        
-        <p>Thank you for considering ' . htmlspecialchars($email_site_name) . ' for your event!</p>
-        
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
-            <p style="color: #666; font-size: 14px;">
-                <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
-                <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
-            </p>
-        </div>';
         
         // Send email
         return sendEmail(
@@ -742,104 +764,137 @@ function sendConferenceAdminNotificationEmail($data) {
         $currency_symbol = getSetting('currency_symbol');
         $total_amount = $data['total_amount'] ? number_format($data['total_amount'], 0) : 'To be determined';
         
-        // Prepare email content
-        $htmlBody = '
-        <h1 style="color: #0A1929; text-align: center;">📋 New Conference Enquiry Received</h1>
-        <p>A new conference enquiry has been submitted on the website.</p>
-        
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Enquiry Details</h2>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Enquiry Reference:</span>
-                <span style="color: #D4AF37; font-weight: bold;">' . htmlspecialchars($data['inquiry_reference']) . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Company:</span>
-                <span style="color: #333;">' . htmlspecialchars($data['company_name']) . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Contact Person:</span>
-                <span style="color: #333;">' . htmlspecialchars($data['contact_person']) . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Email:</span>
-                <span style="color: #333;">' . htmlspecialchars($data['email']) . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Phone:</span>
-                <span style="color: #333;">' . htmlspecialchars($data['phone']) . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Conference Room:</span>
-                <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Event Date:</span>
-                <span style="color: #333;">' . date('F j, Y', strtotime($data['event_date'])) . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Event Time:</span>
-                <span style="color: #333;">' . date('H:i', strtotime($data['start_time'])) . ' - ' . date('H:i', strtotime($data['end_time'])) . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Attendees:</span>
-                <span style="color: #333;">' . (int) $data['number_of_attendees'] . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Event Type:</span>
-                <span style="color: #333;">' . htmlspecialchars($data['event_type'] ?: 'Not specified') . '</span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                <span style="font-weight: bold; color: #0A1929;">Estimated Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold;">' . $currency_symbol . ' ' . $total_amount . '</span>
-            </div>
-        </div>';
-        
-        if ($data['catering_required']) {
-            $htmlBody .= '
-            <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
-                <h3 style="color: #0d6efd; margin-top: 0;">Catering Required</h3>
-                <p style="color: #0d6efd; margin: 0;">Yes - catering services requested</p>
-            </div>';
+        // Get conference email with fallback to main contact email
+        $conference_email = getSetting('conference_email');
+        if (empty($conference_email) || !filter_var($conference_email, FILTER_VALIDATE_EMAIL)) {
+            $conference_email = getSetting('email_main');
+        }
+        if (empty($conference_email) || !filter_var($conference_email, FILTER_VALIDATE_EMAIL)) {
+            $conference_email = $email_admin_email;
         }
         
-        if (!empty($data['av_equipment'])) {
+        // Prepare template data
+        $template_data = [
+            'inquiry_reference' => $data['inquiry_reference'],
+            'company_name' => $data['company_name'],
+            'contact_person' => $data['contact_person'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+            'room_name' => $room['name'],
+            'event_date' => date('F j, Y', strtotime($data['event_date'])),
+            'start_time' => date('H:i', strtotime($data['start_time'])),
+            'end_time' => date('H:i', strtotime($data['end_time'])),
+            'number_of_attendees' => (int)$data['number_of_attendees'],
+            'event_type' => $data['event_type'] ?: 'Not specified',
+            'total_amount' => $total_amount,
+            'catering_required' => $data['catering_required'] ?? false,
+            'av_equipment' => $data['av_equipment'] ?? '',
+            'special_requirements' => $data['special_requirements'] ?? ''
+        ];
+        
+        // Try to load template, fall back to hardcoded HTML if template not found
+        $htmlBody = loadEmailTemplate('conference-enquiry-admin.html', $template_data);
+        
+        if (empty($htmlBody)) {
+            // Fallback to hardcoded HTML if template fails
+            $htmlBody = '
+            <h1 style="color: #0A1929; text-align: center;">📋 New Conference Enquiry Received</h1>
+            <p>A new conference enquiry has been submitted on the website.</p>
+            
+            <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+                <h2 style="color: #0A1929; margin-top: 0;">Enquiry Details</h2>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Enquiry Reference:</span>
+                    <span style="color: #D4AF37; font-weight: bold;">' . htmlspecialchars($data['inquiry_reference']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Company:</span>
+                    <span style="color: #333;">' . htmlspecialchars($data['company_name']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Contact Person:</span>
+                    <span style="color: #333;">' . htmlspecialchars($data['contact_person']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Email:</span>
+                    <span style="color: #333;">' . htmlspecialchars($data['email']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Phone:</span>
+                    <span style="color: #333;">' . htmlspecialchars($data['phone']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Conference Room:</span>
+                    <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Event Date:</span>
+                    <span style="color: #333;">' . date('F j, Y', strtotime($data['event_date'])) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Event Time:</span>
+                    <span style="color: #333;">' . date('H:i', strtotime($data['start_time'])) . ' - ' . date('H:i', strtotime($data['end_time'])) . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Number of Attendees:</span>
+                    <span style="color: #333;">' . (int) $data['number_of_attendees'] . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                    <span style="font-weight: bold; color: #0A1929;">Event Type:</span>
+                    <span style="color: #333;">' . htmlspecialchars($data['event_type'] ?: 'Not specified') . '</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                    <span style="font-weight: bold; color: #0A1929;">Estimated Amount:</span>
+                    <span style="color: #D4AF37; font-weight: bold;">' . $currency_symbol . ' ' . $total_amount . '</span>
+                </div>
+            </div>';
+            
+            if ($data['catering_required']) {
+                $htmlBody .= '
+                <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                    <h3 style="color: #0d6efd; margin-top: 0;">Catering Required</h3>
+                    <p style="color: #0d6efd; margin: 0;">Yes - catering services requested</p>
+                </div>';
+            }
+            
+            if (!empty($data['av_equipment'])) {
+                $htmlBody .= '
+                <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                    <h3 style="color: #0d6efd; margin-top: 0;">AV Equipment Requirements</h3>
+                    <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($data['av_equipment']) . '</p>
+                </div>';
+            }
+            
+            if (!empty($data['special_requirements'])) {
+                $htmlBody .= '
+                <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                    <h3 style="color: #0d6efd; margin-top: 0;">Special Requirements</h3>
+                    <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($data['special_requirements']) . '</p>
+                </div>';
+            }
+            
             $htmlBody .= '
-            <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
-                <h3 style="color: #0d6efd; margin-top: 0;">AV Equipment Requirements</h3>
-                <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($data['av_equipment']) . '</p>
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="' . htmlspecialchars($email_site_url) . '/admin/conference-management.php" style="display: inline-block; background: #D4AF37; color: #0A1929; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+                    View Enquiry in Admin Panel
+                </a>
             </div>';
         }
-        
-        if (!empty($data['special_requirements'])) {
-            $htmlBody .= '
-            <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
-                <h3 style="color: #0d6efd; margin-top: 0;">Special Requirements</h3>
-                <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($data['special_requirements']) . '</p>
-            </div>';
-        }
-        
-        $htmlBody .= '
-        <div style="text-align: center; margin-top: 30px;">
-            <a href="' . htmlspecialchars($email_site_url) . '/admin/conference-management.php" style="display: inline-block; background: #D4AF37; color: #0A1929; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
-                View Enquiry in Admin Panel
-            </a>
-        </div>';
         
         // Send email
         return sendEmail(
-            $email_admin_email,
+            $conference_email,
             'Conference Team',
             'New Conference Enquiry - ' . htmlspecialchars($email_site_name) . ' [' . $data['inquiry_reference'] . ']',
             $htmlBody
@@ -1827,4 +1882,494 @@ function sendTentativeBookingConvertedEmail($booking) {
     }
     
     return $result;
+}
+
+/**
+ * Send pending booking expired email (when pending booking expires)
+ */
+function sendPendingBookingExpiredEmail($booking, $room = null) {
+    global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    
+    try {
+        // Get room details if not provided
+        if (!$room) {
+            $stmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ?");
+            $stmt->execute([$booking['room_id']]);
+            $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+        
+        // Prepare email content
+        $htmlBody = '
+        <h1 style="color: #6c757d; text-align: center;">Pending Booking Expired</h1>
+        <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
+        <p>Your pending booking at <strong>' . htmlspecialchars($email_site_name) . '</strong> has expired due to lack of confirmation.</p>
+        
+        <div style="background: #e2e3e5; padding: 15px; border-left: 4px solid #6c757d; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #383d41; margin-top: 0;">What This Means</h3>
+            <p style="color: #383d41; margin: 0;">
+                Your booking request was not confirmed within the required time period.<br>
+                The room has been released and is now available for other guests.<br>
+                There is no penalty for an expired pending booking.
+            </p>
+        </div>
+        
+        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #0A1929; margin-top: 0;">Expired Booking Details</h2>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="color: #6c757d; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="color: #333;">' . htmlspecialchars($room['name'] ?? 'N/A') . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+            </div>
+        </div>
+        
+        <p>If you are still interested in booking with us, please visit our website to check availability and make a new booking.</p>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="' . htmlspecialchars($email_site_url) . '/booking.php"
+               style="display: inline-block; background: #D4AF37; color: #0A1929; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                Make a New Booking
+            </a>
+        </div>
+        
+        <p style="margin-top: 20px;">If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+            <p style="color: #666; font-size: 14px;">
+                <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
+                <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
+            </p>
+        </div>';
+        
+        // Send email
+        return sendEmail(
+            $booking['guest_email'],
+            $booking['guest_name'],
+            'Pending Booking Expired - ' . $booking['booking_reference'],
+            $htmlBody
+        );
+        
+    } catch (Exception $e) {
+        error_log("Send Pending Booking Expired Email Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Send admin notification for expired booking
+ */
+function sendAdminBookingExpiredNotification($booking, $booking_type = 'tentative') {
+    global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    
+    try {
+        // Get room details
+        $stmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ?");
+        $stmt->execute([$booking['room_id']]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Get admin notification email with fallback
+        $admin_notification_email = getSetting('admin_notification_email');
+        if (empty($admin_notification_email) || !filter_var($admin_notification_email, FILTER_VALIDATE_EMAIL)) {
+            $admin_notification_email = $email_admin_email;
+        }
+        
+        // Determine reason based on booking type
+        $reason = $booking_type === 'tentative'
+            ? 'Tentative booking expired (not confirmed within time limit)'
+            : 'Pending booking expired (not confirmed within time limit)';
+        
+        $type_label = $booking_type === 'tentative' ? 'Tentative' : 'Pending';
+        
+        // Prepare email content
+        $htmlBody = '
+        <h1 style="color: #dc3545; text-align: center;">🔔 Booking Auto-Expired</h1>
+        <p>A ' . strtolower($type_label) . ' booking has been automatically expired by the system.</p>
+        
+        <div style="background: #f8d7da; padding: 15px; border-left: 4px solid #dc3545; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #721c24; margin-top: 0;">Expiration Details</h3>
+            <p style="color: #721c24; margin: 0;">
+                <strong>Booking Type:</strong> ' . htmlspecialchars($type_label) . '<br>
+                <strong>Reason:</strong> ' . htmlspecialchars($reason) . '<br>
+                <strong>Expired At:</strong> ' . date('F j, Y g:i A') . '
+            </p>
+        </div>
+        
+        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="color: #dc3545; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Guest Name:</span>
+                <span style="color: #333;">' . htmlspecialchars($booking['guest_name']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Guest Email:</span>
+                <span style="color: #333;">' . htmlspecialchars($booking['guest_email']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Guest Phone:</span>
+                <span style="color: #333;">' . htmlspecialchars($booking['guest_phone']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="color: #333;">' . htmlspecialchars($room['name'] ?? 'N/A') . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+            </div>
+        </div>
+        
+        <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #0d6efd; margin-top: 0;">Actions Taken</h3>
+            <p style="color: #0d6efd; margin: 0;">
+                <strong>✓</strong> Booking status changed to "expired"<br>
+                <strong>✓</strong> Room availability restored<br>
+                <strong>✓</strong> Expiration email sent to guest<br>
+                <strong>✓</strong> Logged to tentative_booking_log
+            </p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="' . htmlspecialchars($email_site_url) . '/admin/tentative-bookings.php?status=expired"
+               style="display: inline-block; background: #D4AF37; color: #0A1929; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+                View Expired Bookings
+            </a>
+        </div>';
+        
+        // Send email
+        return sendEmail(
+            $admin_notification_email,
+            'Admin Team',
+            'Booking Auto-Expired: ' . $booking['booking_reference'] . ' - ' . $booking['guest_name'],
+            $htmlBody
+        );
+        
+    } catch (Exception $e) {
+        error_log("Send Admin Booking Expired Notification Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Send gym booking confirmation email to customer
+ *
+ * @param array $data Booking data with keys: name, email, phone, preferred_date, preferred_time, package_choice, guests, goals
+ * @return array Result array with success status and message
+ */
+function sendGymBookingEmail($data) {
+    global $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    
+    try {
+        $site_name = getSetting('site_name');
+        
+        // Prepare email content
+        $htmlBody = '
+        <h1 style="color: #0A1929; text-align: center;">Gym Booking Request Received</h1>
+        <p>Dear ' . htmlspecialchars($data['name']) . ',</p>
+        <p>Thank you for your gym booking request with <strong>' . htmlspecialchars($site_name) . '</strong>. We have received your submission and will confirm your booking shortly.</p>
+        
+        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Name:</span>
+                <span style="color: #333;">' . htmlspecialchars($data['name']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Email:</span>
+                <span style="color: #333;">' . htmlspecialchars($data['email']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Phone:</span>
+                <span style="color: #333;">' . htmlspecialchars($data['phone']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Preferred Date:</span>
+                <span style="color: #333;">' . htmlspecialchars($data['preferred_date']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Preferred Time:</span>
+                <span style="color: #333;">' . htmlspecialchars($data['preferred_time']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Package:</span>
+                <span style="color: #333;">' . htmlspecialchars($data['package_choice']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0;">';
+        
+        if (!empty($data['guests']) && $data['guests'] > 1) {
+            $htmlBody .= '
+                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="color: #333;">' . (int)$data['guests'] . '</span>
+            </div>';
+        } else {
+            $htmlBody .= '
+                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="color: #333;">1</span>
+            </div>';
+        }
+        
+        $htmlBody .= '
+        </div>';
+        
+        if (!empty($data['goals'])) {
+            $htmlBody .= '
+            <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #0d6efd; margin-top: 0;">Fitness Goals / Notes</h3>
+                <p style="color: #0d6efd; margin: 0;">' . nl2br(htmlspecialchars($data['goals'])) . '</p>
+            </div>';
+        }
+        
+        $htmlBody .= '
+        <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #0d6efd; margin-top: 0;">What Happens Next?</h3>
+            <p style="color: #0d6efd; margin: 0;">
+                <strong>Our team will contact you within 24 hours to confirm your booking.</strong><br>
+                If you have any questions in the meantime, please contact us.
+            </p>
+        </div>
+        
+        <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
+        
+        <p>Thank you for choosing ' . htmlspecialchars($site_name) . '!</p>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+            <p style="color: #666; font-size: 14px;">
+                <strong>The ' . htmlspecialchars($site_name) . ' Team</strong><br>
+                <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
+            </p>
+        </div>';
+        
+        // Send email
+        return sendEmail(
+            $data['email'],
+            $data['name'],
+            'Gym Booking Request Received - ' . htmlspecialchars($site_name),
+            $htmlBody
+        );
+        
+    } catch (Exception $e) {
+        error_log("Send Gym Booking Email Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Send gym booking notification email to admin
+ *
+ * @param array $data Booking data with keys: name, email, phone, preferred_date, preferred_time, package_choice, guests, goals
+ * @return array Result array with success status and message
+ */
+function sendGymAdminNotificationEmail($data) {
+    global $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    
+    try {
+        $site_name = getSetting('site_name');
+        
+        // Get gym email with fallback to main contact email
+        $gym_email = getSetting('gym_email');
+        if (empty($gym_email) || !filter_var($gym_email, FILTER_VALIDATE_EMAIL)) {
+            $gym_email = getSetting('email_main');
+        }
+        if (empty($gym_email) || !filter_var($gym_email, FILTER_VALIDATE_EMAIL)) {
+            $gym_email = $email_admin_email;
+        }
+        
+        // Prepare email content
+        $htmlBody = '
+        <h1 style="color: #0A1929; text-align: center;">📋 New Gym Booking Request</h1>
+        <p>A new gym booking request has been submitted on the website.</p>
+        
+        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Name:</span>
+                <span style="color: #333;">' . htmlspecialchars($data['name']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Email:</span>
+                <span style="color: #333;">' . htmlspecialchars($data['email']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Phone:</span>
+                <span style="color: #333;">' . htmlspecialchars($data['phone']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Preferred Date:</span>
+                <span style="color: #333;">' . htmlspecialchars($data['preferred_date']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Preferred Time:</span>
+                <span style="color: #333;">' . htmlspecialchars($data['preferred_time']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Package:</span>
+                <span style="color: #333;">' . htmlspecialchars($data['package_choice']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0;">';
+        
+        if (!empty($data['guests']) && $data['guests'] > 1) {
+            $htmlBody .= '
+                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="color: #333;">' . (int)$data['guests'] . '</span>
+            </div>';
+        } else {
+            $htmlBody .= '
+                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="color: #333;">1</span>
+            </div>';
+        }
+        
+        $htmlBody .= '
+        </div>';
+        
+        if (!empty($data['goals'])) {
+            $htmlBody .= '
+            <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #0d6efd; margin-top: 0;">Fitness Goals / Notes</h3>
+                <p style="color: #0d6efd; margin: 0;">' . nl2br(htmlspecialchars($data['goals'])) . '</p>
+            </div>';
+        }
+        
+        $htmlBody .= '
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="mailto:' . htmlspecialchars($data['email']) . '"
+               style="display: inline-block; background: #D4AF37; color: #0A1929; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+                Reply to Customer
+            </a>
+        </div>';
+        
+        // Send email
+        return sendEmail(
+            $gym_email,
+            'Gym Team',
+            'New Gym Booking Request - ' . htmlspecialchars($data['name']),
+            $htmlBody
+        );
+        
+    } catch (Exception $e) {
+        error_log("Send Gym Admin Notification Email Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Load and populate an email template
+ *
+ * @param string $template Template filename (without path)
+ * @param array $data Data to populate template with
+ * @return string Populated HTML content
+ */
+function loadEmailTemplate($template, $data) {
+    $template_path = __DIR__ . '/../templates/emails/' . $template;
+    
+    // Check if template exists
+    if (!file_exists($template_path)) {
+        error_log("Email template not found: $template_path");
+        return '';
+    }
+    
+    $html = file_get_contents($template_path);
+    
+    // Add common data
+    $site_name = getSetting('site_name');
+    $site_url = getSetting('site_url');
+    $contact_email = getSetting('email_main');
+    $phone = getSetting('phone_main');
+    $currency_symbol = getSetting('currency_symbol');
+    
+    $common_data = [
+        'site_name' => $site_name,
+        'site_url' => $site_url,
+        'contact_email' => $contact_email,
+        'phone' => $phone,
+        'currency_symbol' => $currency_symbol,
+        'submission_source' => $_SERVER['HTTP_HOST'] ?? 'localhost',
+        'admin_url' => $site_url . '/admin/conference-management.php'
+    ];
+    
+    // Merge user data with common data
+    $data = array_merge($common_data, $data);
+    
+    // Replace simple placeholders {{key}}
+    $html = preg_replace_callback('/\{\{(\w+)\}\}/', function($matches) use ($data) {
+        $key = $matches[1];
+        return $data[$key] ?? '';
+    }, $html);
+    
+    // Handle conditional blocks {{#if key}}...{{/if}}
+    $html = preg_replace_callback('/\{\{#if\s+(\w+)\}\}(.*?)\{\{\/if\}\}/s', function($matches) use ($data) {
+        $key = $matches[1];
+        $content = $matches[2];
+        // Show content if key exists and is not empty
+        if (!empty($data[$key])) {
+            return $content;
+        }
+        return '';
+    }, $html);
+    
+    return $html;
 }

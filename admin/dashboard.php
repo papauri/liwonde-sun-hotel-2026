@@ -37,6 +37,10 @@ try {
     $pending_conf_stmt = $pdo->query("SELECT COUNT(*) as count FROM conference_inquiries WHERE status = 'pending'");
     $pending_conference = $pending_conf_stmt->fetch(PDO::FETCH_ASSOC)['count'];
 
+    // Expired bookings (last 24 hours)
+    $expired_stmt = $pdo->query("SELECT COUNT(*) as count FROM bookings WHERE status = 'expired' AND expired_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)");
+    $expired_bookings = $expired_stmt->fetch(PDO::FETCH_ASSOC)['count'];
+
     // Today's conference events
     $today_conf_stmt = $pdo->prepare("SELECT COUNT(*) as count FROM conference_inquiries WHERE event_date = ? AND status IN ('confirmed', 'pending')");
     $today_conf_stmt->execute([$today]);
@@ -181,6 +185,21 @@ $currency_symbol = getSetting('currency_symbol');
             background: #f8d7da;
             color: #721c24;
         }
+
+        /* Warning stat card for expired bookings */
+        .stat-card-warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffe9a8 100%);
+            border-left: 4px solid #ffc107;
+        }
+
+        .stat-card-warning .stat-icon {
+            background: #ffc107;
+            color: #856404;
+        }
+
+        .stat-card-warning .stat-value {
+            color: #856404;
+        }
     </style>
 </head>
 <body>
@@ -237,6 +256,14 @@ $currency_symbol = getSetting('currency_symbol');
                     </div>
                     <div class="stat-value"><?php echo $today_conferences; ?></div>
                     <div class="stat-label">Today's Conference Events</div>
+                </div>
+
+                <div class="stat-card stat-card-warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-value"><?php echo $expired_bookings; ?></div>
+                    <div class="stat-label">Expired (24h)</div>
                 </div>
             </div>
 

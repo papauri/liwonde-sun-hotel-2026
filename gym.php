@@ -3,6 +3,11 @@ require_once 'config/database.php';
 require_once 'config/email.php';
 require_once 'includes/validation.php';
 
+// Start session for any session-based functionality
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Fetch site settings
 $site_name = getSetting('site_name');
 $site_logo = getSetting('site_logo');
@@ -67,6 +72,7 @@ try {
 // Handle booking form submission
 $bookingSuccess = false;
 $bookingError = '';
+$bookingReference = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gym_booking_form'])) {
     // Initialize validation errors array
     $validation_errors = [];
@@ -85,7 +91,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gym_booking_form'])) 
     if (!$email_validation['valid']) {
         $validation_errors['email'] = $email_validation['error'];
     } else {
-        $sanitized_data['email'] = sanitizeString($email_validation['value'], 254);
+        // Use validated email directly - no need to sanitize as validation already ensures it's safe
+        $sanitized_data['email'] = $_POST['email'];
     }
     
     // Validate phone
@@ -149,51 +156,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gym_booking_form'])) 
             $error_messages[] = ucfirst(str_replace('_', ' ', $field)) . ': ' . $message;
         }
         $bookingError = implode('; ', $error_messages);
-    } elseif (!filter_var($email_main, FILTER_VALIDATE_EMAIL)) {
-        $bookingError = 'Configuration error: Hotel email not properly set. Please contact front desk.';
-        error_log("Gym Booking Error: email_main is invalid: $email_main");
     } else {
-        // Email to hotel admin
-        $to = $email_main;
-        $subject = 'New Gym Booking Request - ' . htmlspecialchars($site_name);
-        
-        $body = "A new gym booking request has been submitted:\n\n" .
-                "Name: " . htmlspecialchars($sanitized_data['full_name']) . "\n" .
-                "Email: " . htmlspecialchars($sanitized_data['email']) . "\n" .
-                "Phone: " . htmlspecialchars($sanitized_data['phone']) . "\n" .
-                "Preferred Date: " . htmlspecialchars($sanitized_data['preferred_date']) . "\n" .
-                "Preferred Time: " . htmlspecialchars($sanitized_data['preferred_time']) . "\n" .
-                "Package: " . htmlspecialchars($sanitized_data['package_choice']) . "\n" .
-                "Number of Guests: " . htmlspecialchars($sanitized_data['guests'] ?? 1) . "\n" .
-                "Goals/Notes:\n" . htmlspecialchars($sanitized_data['goals'] ?? '') . "\n\n" .
-                "---\n" .
-                "This booking request was submitted from: " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\n" .
-                "Reply-To: " . htmlspecialchars($sanitized_data['email']) . "\n";
-
-        $headers = [
-            'Reply-To' => htmlspecialchars($sanitized_data['email'])
+        // Prepare booking data for email functions
+        $booking_data = [
+            'name' => $sanitized_data['full_name'],
+            'email' => $sanitized_data['email'],
+            'phone' => $sanitized_data['phone'],
+            'preferred_date' => $sanitized_data['preferred_date'],
+            'preferred_time' => $sanitized_data['preferred_time'],
+            'package_choice' => $sanitized_data['package_choice'],
+            'guests' => $sanitized_data['guests'] ?? 1,
+            'goals' => $sanitized_data['goals'] ?? ''
         ];
-
-        // Send email using SMTP (or mail() as fallback)
-        if ($emailer->send($to, $subject, $body, $headers)) {
+        
+        // Send confirmation email to customer
+        $customer_result = sendGymBookingEmail($booking_data);
+        if (!$customer_result['success']) {
+            error_log("Failed to send gym booking confirmation email: " . $customer_result['message']);
+        }
+        
+        // Send notification email to admin
+        $admin_result = sendGymAdminNotificationEmail($booking_data);
+        if ($admin_result['success']) {
             $bookingSuccess = true;
-            error_log("Gym booking submitted successfully from: " . $sanitized_data['email'] . " | Method: " . $emailer->get_email_method());
-            
-            // Send confirmation email to customer
-            $customer_subject = 'Booking Request Received - ' . htmlspecialchars($site_name);
-            $customer_body = "Hi " . htmlspecialchars($sanitized_data['full_name']) . ",\n\n" .
-                           "Thank you for your gym booking request. We have received your submission and will confirm shortly.\n\n" .
-                           "Details:\n" .
-                           "Package: " . htmlspecialchars($sanitized_data['package_choice']) . "\n" .
-                           "Preferred Date: " . htmlspecialchars($sanitized_data['preferred_date']) . "\n" .
-                           "Preferred Time: " . htmlspecialchars($sanitized_data['preferred_time']) . "\n\n" .
-                           "We will contact you at: " . htmlspecialchars($sanitized_data['phone']) . "\n\n" .
-                           "Best regards,\n" . htmlspecialchars($site_name) . " Team";
-            
-            $emailer->send($sanitized_data['email'], $customer_subject, $customer_body);
+            // Generate a reference number for the customer
+            $bookingReference = 'GYM-' . strtoupper(substr(uniqid(), -8));
+            error_log("Gym booking submitted successfully from: " . $sanitized_data['email'] . " with reference: " . $bookingReference);
         } else {
             $bookingError = 'Unable to send your request. Please try again or contact front desk directly.';
-            error_log("Gym booking email failed. To: $to | From: " . $sanitized_data['email'] . " | Subject: $subject | Error: " . $emailer->get_last_error());
+            error_log("Gym booking admin notification failed. Error: " . $admin_result['message']);
         }
     }
 }
@@ -277,17 +268,24 @@ try {
     </div>
 
     <?php if ($bookingSuccess): ?>
-    <div class="alert-banner success">
-        <div class="container">
-            <i class="fas fa-check-circle"></i>
-            <span>Thank you! Your gym booking request has been sent. We will confirm shortly.</span>
+    <div class="alert-banner success" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border-left: 5px solid #155724; padding: 20px 0;">
+        <div class="container" style="display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center;">
+            <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 15px;"></i>
+            <h2 style="color: #fff; margin: 0 0 10px 0; font-size: 28px;">Booking Request Submitted Successfully!</h2>
+            <p style="color: #fff; margin: 0 0 15px 0; font-size: 18px;">Thank you for your gym booking request. Our team will contact you within 24 hours to confirm your booking.</p>
+            <div style="background: rgba(255,255,255,0.2); padding: 12px 25px; border-radius: 8px; margin-top: 10px;">
+                <strong style="color: #fff; font-size: 16px;">Reference Number: <span style="background: #fff; color: #28a745; padding: 5px 15px; border-radius: 5px; font-weight: bold;"><?php echo htmlspecialchars($bookingReference); ?></span></strong>
+            </div>
+            <p style="color: #fff; margin: 15px 0 0 0; font-size: 14px; opacity: 0.9;">Please save this reference number for your records. A confirmation email has been sent to your email address.</p>
         </div>
     </div>
     <?php elseif (!empty($bookingError)): ?>
-    <div class="alert-banner error">
-        <div class="container">
-            <i class="fas fa-exclamation-triangle"></i>
-            <span><?php echo htmlspecialchars($bookingError); ?></span>
+    <div class="alert-banner error" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border-left: 5px solid #721c24; padding: 20px 0;">
+        <div class="container" style="display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px;"></i>
+            <h2 style="color: #fff; margin: 0 0 10px 0; font-size: 28px;">Booking Request Failed</h2>
+            <p style="color: #fff; margin: 0; font-size: 18px;"><?php echo htmlspecialchars($bookingError); ?></p>
+            <p style="color: #fff; margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">Please try again or contact our front desk directly for assistance.</p>
         </div>
     </div>
     <?php endif; ?>

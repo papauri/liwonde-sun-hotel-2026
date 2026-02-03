@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Feb 02, 2026 at 12:35 AM
+-- Generation Time: Feb 03, 2026 at 12:35 AM
 -- Server version: 8.0.44-cll-lve
 -- PHP Version: 8.4.16
 
@@ -270,6 +270,13 @@ CREATE TABLE `conference_inquiries` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `conference_inquiries`
+--
+
+INSERT INTO `conference_inquiries` (`id`, `inquiry_reference`, `conference_room_id`, `company_name`, `contact_person`, `email`, `phone`, `event_date`, `start_time`, `end_time`, `number_of_attendees`, `event_type`, `special_requirements`, `catering_required`, `av_equipment`, `status`, `total_amount`, `amount_paid`, `amount_due`, `vat_rate`, `vat_amount`, `total_with_vat`, `last_payment_date`, `deposit_required`, `deposit_amount`, `deposit_paid`, `payment_status`, `total_paid`, `notes`, `created_at`, `updated_at`) VALUES
+(2, 'CONF-2026-92538', 4, 'ProManaged', 'JOHN-PAUL CHIRWA', '', '0860081635', '2026-02-05', '11:14:00', '12:16:00', 22, 'Meeting', '', 0, '', 'confirmed', 15500.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, 0, NULL, 0, 'pending', 0.00, NULL, '2026-02-03 00:15:08', '2026-02-03 00:16:03');
 
 -- --------------------------------------------------------
 
@@ -1175,7 +1182,7 @@ CREATE TABLE `site_settings` (
 --
 
 INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_group`, `updated_at`) VALUES
-(1, 'site_name', 'Liwonde Sun Hotel', 'general', '2026-01-19 20:22:49'),
+(1, 'site_name', 'Liwonde Hotel', 'general', '2026-02-02 00:39:08'),
 (2, 'site_tagline', 'Where Luxury Meets Nature', 'general', '2026-01-19 20:22:49'),
 (3, 'hero_title', 'Experience Unparalleled Luxury', 'hero', '2026-01-19 20:22:49'),
 (4, 'hero_subtitle', 'Discover the perfect blend of comfort, elegance, and exceptional service at Malawi\'s premier destination', 'hero', '2026-01-19 20:22:49'),
@@ -1219,7 +1226,12 @@ INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_grou
 (104, 'footer_share_title', 'Share', 'general', '2026-02-02 00:32:07'),
 (105, 'footer_connect_title', 'Connect With Us', 'general', '2026-02-02 00:32:07'),
 (106, 'footer_contact_title', 'Contact Information', 'general', '2026-02-02 00:32:07'),
-(107, 'footer_policies_title', 'Policies', 'general', '2026-02-02 00:32:07');
+(107, 'footer_policies_title', 'Policies', 'general', '2026-02-02 00:32:07'),
+(108, 'conference_email', 'johnpaulchira@gmail.com', 'contact', '2026-02-03 00:06:33'),
+(109, 'gym_email', 'johnpaulchira@gmail.com', 'contact', '2026-02-03 00:06:38'),
+(112, 'pending_duration_hours', '24', 'booking', '2026-02-03 00:29:35'),
+(113, 'tentative_grace_period_hours', '0', 'booking', '2026-02-03 00:29:35'),
+(114, 'admin_notification_email', '', 'email', '2026-02-03 00:29:35');
 
 -- --------------------------------------------------------
 
@@ -1690,7 +1702,7 @@ ALTER TABLE `cancellation_log`
 -- AUTO_INCREMENT for table `conference_inquiries`
 --
 ALTER TABLE `conference_inquiries`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `conference_rooms`
@@ -1858,7 +1870,7 @@ ALTER TABLE `room_blocked_dates`
 -- AUTO_INCREMENT for table `site_settings`
 --
 ALTER TABLE `site_settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=115;
 
 --
 -- AUTO_INCREMENT for table `tentative_booking_log`

@@ -7,6 +7,11 @@
  * - Input validation
  */
 
+// Start session BEFORE loading security configuration (required for CSRF)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Load security configuration first
 require_once 'config/security.php';
 
@@ -81,7 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$email_validation['valid']) {
             $validation_errors['email'] = $email_validation['error'];
         } else {
-            $sanitized_data['email'] = sanitizeString($email_validation['value'], 254);
+            // Use validated email directly - no need to sanitize as validation already ensures it's safe
+            $sanitized_data['email'] = $_POST['email'];
         }
         
         // Validate phone
@@ -816,16 +822,31 @@ function resolveConferenceImage(?string $imagePath): string
     <?php
     $modalContent = '';
     if ($inquiry_success) {
-        $modalContent = '<div class="success-message" style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); color: #155724; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #c3e6cb;">
-            <i class="fas fa-check-circle"></i>
-            <strong>Inquiry Submitted Successfully!</strong><br>
-            Your reference number is: <strong>' . htmlspecialchars($success_reference) . '</strong><br>
-            We will contact you within 24 hours to confirm your booking.
+        $modalContent = '<div class="success-message" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: #fff; padding: 40px 30px; border-radius: 16px; margin-bottom: 20px; border: none; text-align: center; box-shadow: 0 10px 40px rgba(40, 167, 69, 0.3);">
+            <div style="margin-bottom: 20px;">
+                <i class="fas fa-check-circle" style="font-size: 64px; color: #fff; opacity: 0.9;"></i>
+            </div>
+            <h2 style="color: #fff; margin: 0 0 15px 0; font-size: 32px; font-weight: 700;">Conference Enquiry Submitted Successfully!</h2>
+            <p style="color: #fff; margin: 0 0 25px 0; font-size: 18px; opacity: 0.95;">Thank you for your conference enquiry. Our events team will review your request and contact you within 24 hours to confirm availability and finalize details.</p>
+            <div style="background: rgba(255,255,255,0.2); padding: 20px 30px; border-radius: 12px; margin: 25px 0; border: 2px solid rgba(255,255,255,0.3);">
+                <p style="color: #fff; margin: 0; font-size: 16px; font-weight: 500;">Your Reference Number:</p>
+                <p style="color: #fff; margin: 8px 0 0 0; font-size: 28px; font-weight: 700; letter-spacing: 1px;">' . htmlspecialchars($success_reference) . '</p>
+            </div>
+            <p style="color: #fff; margin: 20px 0 0 0; font-size: 15px; opacity: 0.9; line-height: 1.6;">
+                <i class="fas fa-envelope"></i> A confirmation email has been sent to your email address.<br>
+                <i class="fas fa-info-circle"></i> Please save this reference number for your records.
+            </p>
         </div>';
     } elseif ($inquiry_error) {
-        $modalContent = '<div class="error-message" style="background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); color: #721c24; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #f5c6cb;">
-            <i class="fas fa-exclamation-circle"></i>
-            ' . htmlspecialchars($inquiry_error) . '
+        $modalContent = '<div class="error-message" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #fff; padding: 40px 30px; border-radius: 16px; margin-bottom: 20px; border: none; text-align: center; box-shadow: 0 10px 40px rgba(220, 53, 69, 0.3);">
+            <div style="margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #fff; opacity: 0.9;"></i>
+            </div>
+            <h2 style="color: #fff; margin: 0 0 15px 0; font-size: 32px; font-weight: 700;">Enquiry Submission Failed</h2>
+            <p style="color: #fff; margin: 0 0 25px 0; font-size: 18px; opacity: 0.95;">' . htmlspecialchars($inquiry_error) . '</p>
+            <p style="color: #fff; margin: 20px 0 0 0; font-size: 15px; opacity: 0.9;">
+                <i class="fas fa-phone"></i> Please try again or contact our events team directly for assistance.
+            </p>
         </div>';
     }
     
@@ -926,15 +947,40 @@ function resolveConferenceImage(?string $imagePath): string
     <?php include 'includes/footer.php'; ?>
     <script src="js/main.js"></script>
     <script>
+        // Modal functionality - similar to gym.php pattern
+        const inquiryModal = document.querySelector('[data-modal]');
+        const inquiryModalOverlay = document.querySelector('[data-modal-overlay]');
+
         function openInquiryModal(roomId, roomName) {
             document.getElementById('selectedRoomId').value = roomId;
             document.getElementById('selectedRoomName').value = roomName;
-            Modal.open('inquiryModal');
+            
+            if (inquiryModal) {
+                inquiryModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
         }
 
         function closeInquiryModal() {
-            Modal.close('inquiryModal');
+            if (inquiryModal) {
+                inquiryModal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
         }
+
+        // Close modal on overlay click
+        if (inquiryModalOverlay) {
+            inquiryModalOverlay.addEventListener('click', closeInquiryModal);
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Escape') closeInquiryModal();
+        });
+
+        // Close modal on close button click
+        const closeButtons = document.querySelectorAll('[data-modal-close]');
+        closeButtons.forEach(btn => btn.addEventListener('click', closeInquiryModal));
 
         <?php if ($inquiry_success): ?>
             openInquiryModal(0, '');
