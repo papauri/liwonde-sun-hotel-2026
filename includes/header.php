@@ -1,6 +1,29 @@
+    <?php
+    ?>
     <header class="header">
         <div class="container">
             <nav class="navbar">
+                <!-- Mobile: Hotel icon on far left (separate element) -->
+                <a href="/" class="logo-hotel-icon-link" aria-label="Go to home">
+                    <svg class="logo-hotel-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 22V6L12 2L22 6V22H14V16C14 15.4696 13.7893 14.9609 13.4142 14.5858C13.0391 14.2107 12.5304 14 12 14C11.4696 14 10.9609 14.2107 10.5858 14.5858C10.2107 14.9609 10 15.4696 10 16V22H2Z" stroke="url(#logoGradient)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M6 10H8M6 14H8M16 10H18M16 14H18" stroke="url(#logoGradient)" stroke-width="1.5" stroke-linecap="round"/>
+                        <defs>
+                            <linearGradient id="logoGradient" x1="2" y1="2" x2="22" y2="22">
+                                <stop offset="0%" stop-color="#D4AF37"/>
+                                <stop offset="50%" stop-color="#FFD700"/>
+                                <stop offset="100%" stop-color="#B8860B"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </a>
+                
+                <!-- Mobile: Logo text in middle (separate element) -->
+                <a href="/" class="logo-text-link" aria-label="Go to home">
+                    <span class="logo-text"><?php echo htmlspecialchars($site_name); ?></span>
+                </a>
+                
+                <!-- Desktop: Original logo structure (hidden on mobile) -->
                 <a href="/" class="logo" aria-label="Go to home">
                     <?php if (!empty($site_logo)): ?>
                     <img src="<?php echo htmlspecialchars($site_logo); ?>" alt="<?php echo htmlspecialchars($site_name); ?>" class="logo-image" />
@@ -10,7 +33,7 @@
                         <path d="M2 22V6L12 2L22 6V22H14V16C14 15.4696 13.7893 14.9609 13.4142 14.5858C13.0391 14.2107 12.5304 14 12 14C11.4696 14 10.9609 14.2107 10.5858 14.5858C10.2107 14.9609 10 15.4696 10 16V22H2Z" stroke="url(#logoGradient)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M6 10H8M6 14H8M16 10H18M16 14H18" stroke="url(#logoGradient)" stroke-width="1.5" stroke-linecap="round"/>
                         <defs>
-                            <linearGradient id="logoGradient" x1="2" y1="2" x2="22" y2="22">
+                            <linearGradient id="logoGradient2" x1="2" y1="2" x2="22" y2="22">
                                 <stop offset="0%" stop-color="#D4AF37"/>
                                 <stop offset="50%" stop-color="#FFD700"/>
                                 <stop offset="100%" stop-color="#B8860B"/>
@@ -44,15 +67,6 @@
                     // Normalise common slug variants (e.g. room_gallery vs rooms-gallery)
                     $link_page = str_replace('_', '-', $link_page);
                     $current = str_replace('_', '-', strtolower($current));
-                    
-                    // If the nav link relates to Rooms, treat any room-related page as active.
-                    // This covers variations like: rooms-gallery, rooms-showcase, room (detail), rooms_gallery, room_gallery, etc.
-                    if (strpos($link_page, 'room') !== false) {
-                        // consider it active if current page contains 'room' (covers room, rooms, room-gallery, rooms-showcase, etc.)
-                        if (strpos($current, 'room') !== false) {
-                            return true;
-                        }
-                    }
                     
                     // Default: exact match (with home special-case)
                     return $current === $link_page || ($current === 'index' && $link === '/');

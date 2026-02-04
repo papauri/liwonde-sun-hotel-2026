@@ -80,7 +80,9 @@ try {
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=yes">
     <title>Upcoming Events - <?php echo htmlspecialchars($site_name); ?></title>
+    <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/footer.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .events-section {
@@ -509,6 +511,7 @@ try {
     <!-- Footer -->
     <?php include 'includes/footer.php'; ?>
 
+    <script src="js/modal.js"></script>
     <script src="js/main.js"></script>
 
     <?php include 'includes/scroll-to-top.php'; ?>

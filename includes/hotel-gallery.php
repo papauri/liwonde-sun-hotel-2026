@@ -1,0 +1,110 @@
+<?php
+/**
+ * Hotel Gallery Section - Reusable Include
+ * Displays a carousel of hotel gallery images with navigation controls
+ * 
+ * Required Variables:
+ * - $gallery_images: Array of gallery image data with keys: image_url, title, description, category
+ * - $site_name: Site name for context (optional)
+ */
+
+// If gallery_images is not available, try to fetch it
+if (!isset($gallery_images) || empty($gallery_images)) {
+    try {
+        require_once __DIR__ . '/../config/database.php';
+        
+        // Check if getCachedGalleryImages function exists
+        if (function_exists('getCachedGalleryImages')) {
+            $gallery_images = getCachedGalleryImages();
+        } else {
+            // Fallback to direct query
+            $stmt = $pdo->query("
+                SELECT image_url, title, description, category 
+                FROM gallery_images 
+                WHERE is_active = 1 
+                ORDER BY display_order ASC
+            ");
+            $gallery_images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    } catch (Exception $e) {
+        $gallery_images = [];
+        error_log("Error fetching gallery images: " . $e->getMessage());
+    }
+}
+
+// Helper function to resolve image URLs
+if (!function_exists('resolveImageUrl')) {
+    function resolveImageUrl($path) {
+        if (!$path) return '';
+        $trimmed = trim($path);
+        if (stripos($trimmed, 'http://') === 0 || stripos($trimmed, 'https://') === 0) {
+            return $trimmed;
+        }
+        return $trimmed;
+    }
+}
+?>
+
+<!-- Hotel Gallery Carousel Section -->
+<?php if (!empty($gallery_images)): ?>
+<section class="section hotel-gallery-section" id="gallery">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-subtitle">Visual Journey</span>
+            <h2 class="section-title">Explore Our Hotel</h2>
+            <p class="section-description">
+                <?php 
+                echo isset($site_name) 
+                    ? 'Immerse yourself in the beauty and luxury of ' . htmlspecialchars($site_name) 
+                    : 'Immerse yourself in the beauty and luxury of our hotel'; 
+                ?>
+            </p>
+        </div>
+        
+        <div class="gallery-carousel-wrapper">
+            <button class="gallery-nav-btn gallery-nav-prev" aria-label="Previous">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <div class="gallery-carousel-container">
+                <div class="gallery-carousel-track">
+                    <?php foreach ($gallery_images as $index => $image): ?>
+                    <div class="gallery-carousel-item" data-index="<?php echo $index; ?>">
+                        <div class="gallery-item-inner">
+                            <img src="<?php echo htmlspecialchars(resolveImageUrl($image['image_url'])); ?>" 
+                                 alt="<?php echo htmlspecialchars($image['title']); ?>" 
+                                 loading="lazy">
+                            <div class="gallery-item-overlay">
+                                <div class="gallery-item-content">
+                                    <h4><?php echo htmlspecialchars($image['title']); ?></h4>
+                                    <?php if (!empty($image['description'])): ?>
+                                    <p><?php echo htmlspecialchars($image['description']); ?></p>
+                                    <?php endif; ?>
+                                    <?php if (!empty($image['category'])): ?>
+                                    <span class="gallery-category-badge">
+                                        <i class="fas fa-tag"></i> <?php echo htmlspecialchars($image['category']); ?>
+                                    </span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            
+            <button class="gallery-nav-btn gallery-nav-next" aria-label="Next">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        
+        <div class="gallery-dots">
+            <?php foreach ($gallery_images as $index => $image): ?>
+            <button class="gallery-dot <?php echo $index === 0 ? 'active' : ''; ?>" 
+                    data-index="<?php echo $index; ?>" 
+                    aria-label="Go to image <?php echo $index + 1; ?>"></button>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>

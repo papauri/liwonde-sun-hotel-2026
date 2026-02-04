@@ -148,6 +148,9 @@ foreach ($footer_links_raw as $link) {
     <!-- Session Handler -->
     <script src="js/session-handler.js" defer></script>
     
+    <!-- Modal Component -->
+    <script src="js/modal.js" defer></script>
+    
     <!-- JavaScript -->
     <script src="js/main.js" defer></script>
     
@@ -158,8 +161,9 @@ foreach ($footer_links_raw as $link) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     
     <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/footer-fixes.css">
+    <link rel="stylesheet" href="css/footer.css">
     
     <!-- Structured Data - Local Business -->
     <script type="application/ld+json">
@@ -484,58 +488,7 @@ foreach ($footer_links_raw as $link) {
     </section>
 
     <!-- Hotel Gallery Carousel Section -->
-    <section class="section hotel-gallery-section" id="gallery">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-subtitle">Visual Journey</span>
-                <h2 class="section-title">Explore Our Hotel</h2>
-                <p class="section-description">Immerse yourself in the beauty and luxury of <?php echo htmlspecialchars($site_name); ?></p>
-            </div>
-            
-            <div class="gallery-carousel-wrapper">
-                <button class="gallery-nav-btn gallery-nav-prev" aria-label="Previous">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                
-                <div class="gallery-carousel-container">
-                    <div class="gallery-carousel-track">
-                        <?php foreach ($gallery_images as $index => $image): ?>
-                        <div class="gallery-carousel-item" data-index="<?php echo $index; ?>">
-                            <div class="gallery-item-inner">
-                                <img src="<?php echo htmlspecialchars(resolveImageUrl($image['image_url'])); ?>" 
-                                     alt="<?php echo htmlspecialchars($image['title']); ?>" 
-                                     loading="lazy">
-                                <div class="gallery-item-overlay">
-                                    <div class="gallery-item-content">
-                                        <h4><?php echo htmlspecialchars($image['title']); ?></h4>
-                                        <?php if (!empty($image['description'])): ?>
-                                        <p><?php echo htmlspecialchars($image['description']); ?></p>
-                                        <?php endif; ?>
-                                        <span class="gallery-category-badge">
-                                            <i class="fas fa-tag"></i> <?php echo htmlspecialchars($image['category']); ?>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                
-                <button class="gallery-nav-btn gallery-nav-next" aria-label="Next">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-            
-            <div class="gallery-dots">
-                <?php foreach ($gallery_images as $index => $image): ?>
-                <button class="gallery-dot <?php echo $index === 0 ? 'active' : ''; ?>" 
-                        data-index="<?php echo $index; ?>" 
-                        aria-label="Go to image <?php echo $index + 1; ?>"></button>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </section>
+    <?php include 'includes/hotel-gallery.php'; ?>
 
     <!-- Hotel Reviews Section -->
     <?php include 'includes/reviews-section.php'; ?>

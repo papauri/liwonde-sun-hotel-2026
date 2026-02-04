@@ -109,7 +109,9 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/footer.css">
 </head>
 <body class="rooms-page">
     <?php include 'includes/loader.php'; ?>
@@ -126,10 +128,6 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
                     <div class="pill">Signature Stay</div>
                     <h1><?php echo htmlspecialchars($room['name']); ?></h1>
                     <p><?php echo htmlspecialchars($room['short_description'] ?? $site_tagline); ?></p>
-                    <div class="rooms-hero__actions">
-                        <a class="btn btn-primary" href="booking.php?room_id=<?php echo $room['id']; ?>">Book This Room</a>
-                        <a class="btn btn-outline" href="index.php#rooms">View All Rooms</a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -217,8 +215,10 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
         <div class="container">
             <div class="reviews-section__header">
                 <h2 class="reviews-section__title">Guest Reviews</h2>
-                <a class="btn btn-outline btn-sm" href="submit-review.php?room_id=<?php echo $room['id']; ?>">
-                    <i class="fas fa-pen"></i> Write a Review
+                <a class="btn-write-review" href="submit-review.php?room_id=<?php echo $room['id']; ?>">
+                    <i class="fas fa-pen-fancy"></i>
+                    <span>Write a Review</span>
+                    <i class="fas fa-arrow-right btn-arrow"></i>
                 </a>
             </div>
 
@@ -270,9 +270,6 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
                 <i class="fas fa-comment-slash"></i>
                 <h3>No Reviews Yet</h3>
                 <p>Be the first to share your experience!</p>
-                <a class="btn btn-primary" href="submit-review.php?room_id=<?php echo $room['id']; ?>">
-                    <i class="fas fa-pen"></i> Write a Review
-                </a>
             </div>
         </div>
     </section>
@@ -280,6 +277,7 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
     <!-- Footer -->
     <?php include 'includes/footer.php'; ?>
 
+    <script src="js/modal.js"></script>
     <script src="js/main.js"></script>
     <script>
     // Reviews functionality

@@ -108,6 +108,7 @@ foreach ($rooms as $room) {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/footer.css">
 </head>
 <body class="rooms-page">
     <?php include 'includes/loader.php'; ?>
@@ -442,6 +443,7 @@ foreach ($rooms as $room) {
     <!-- Footer -->
     <?php include 'includes/footer.php'; ?>
 
+    <script src="js/modal.js"></script>
     <script src="js/main.js"></script>
 
     <?php include 'includes/scroll-to-top.php'; ?>

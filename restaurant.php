@@ -170,7 +170,9 @@ try {
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
     
     <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/footer.css">
     
     <!-- Structured Data - Restaurant Schema -->
     <script type="application/ld+json">
@@ -624,6 +626,7 @@ try {
     <?php include 'includes/footer.php'; ?>
 
     <!-- Scripts -->
+    <script src="js/modal.js"></script>
     <script src="js/main.js"></script>
     <script>
         // Currency settings (from PHP)

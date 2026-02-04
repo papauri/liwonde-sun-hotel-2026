@@ -167,30 +167,71 @@
     </div>
 </footer>
 
-<?php if (!empty($policies)): ?>
+<?php
+// Always render policy overlay and modals - either from database or fallback defaults
+?>
 <div class="policy-overlay" data-policy-overlay></div>
 <div class="policy-modals">
-    <?php foreach ($policies as $policy): ?>
-        <?php
-        $policyContent = '';
-        if (!empty($policy['summary'])) {
-            $policyContent = '<p class="policy-summary" style="margin-bottom: 16px; color: #666; font-style: italic;">' . htmlspecialchars($policy['summary']) . '</p>';
-        }
-        $policyContent .= '<p>' . nl2br(htmlspecialchars($policy['content'])) . '</p>';
+    <?php if (!empty($policies)): ?>
+        <?php foreach ($policies as $policy): ?>
+            <?php
+            $policyContent = '';
+            if (!empty($policy['summary'])) {
+                $policyContent = '<p class="policy-summary" style="margin-bottom: 16px; color: #666; font-style: italic;">' . htmlspecialchars($policy['summary']) . '</p>';
+            }
+            $policyContent .= '<p>' . nl2br(htmlspecialchars($policy['content'])) . '</p>';
 
-        renderModal(
-            'policy-' . htmlspecialchars($policy['slug']),
-            htmlspecialchars($policy['title']),
-            $policyContent,
+            renderModal(
+                'policy-' . htmlspecialchars($policy['slug']),
+                htmlspecialchars($policy['title']),
+                $policyContent,
+                [
+                    'size' => 'md',
+                    'show_close' => true
+                ]
+            );
+            ?>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <?php
+        // Fallback default policies when database is empty
+        $defaultPolicies = [
             [
-                'size' => 'md',
-                'show_close' => true
+                'slug' => 'booking-policy',
+                'title' => 'Booking Policy',
+                'content' => "To make a reservation, we require a valid credit card or advance payment equal to the first night's stay.\n\nCancellations must be made at least 48 hours prior to check-in for a full refund. Late cancellations or no-shows will be charged for the first night.\n\nCheck-in time is 2:00 PM and check-out time is 11:00 AM. Early check-in or late check-out may be available upon request and subject to availability.\n\nGuests must be at least 18 years old to book a room and check in.\n\nWe reserve the right to refuse service to anyone at our discretion."
+            ],
+            [
+                'slug' => 'cancellation-policy',
+                'title' => 'Cancellation Policy',
+                'content' => "Free cancellation up to 48 hours before check-in.\n\nCancellations made within 48 hours of check-in will be charged for the first night.\n\nNo-shows will be charged for the full reservation.\n\nRefunds will be processed to the original payment method within 5-7 business days.\n\nFor group bookings (5+ rooms) or special events, different cancellation terms may apply. Please contact us directly for details.\n\nIn case of unforeseen circumstances or force majeure events, we may offer flexible cancellation options."
+            ],
+            [
+                'slug' => 'dining-policy',
+                'title' => 'Dining Policy',
+                'content' => "Our on-site restaurant serves breakfast, lunch, and dinner daily.\n\nBreakfast hours: 6:30 AM - 10:00 AM\nLunch hours: 12:00 PM - 2:30 PM\nDinner hours: 6:30 PM - 10:00 PM\n\nReservations are recommended for dinner, especially on weekends.\n\nDress code: Smart casual for dinner. No beachwear or flip-flops in the dining room.\n\nWe accommodate dietary restrictions and food allergies. Please inform us when making your reservation.\n\nRoom service is available from 7:00 AM to 10:00 PM.\n\nAlcoholic beverages will only be served to guests aged 18 and above."
+            ],
+            [
+                'slug' => 'faqs',
+                'title' => 'Frequently Asked Questions',
+                'content' => "<strong>Q: Is parking available?</strong><br>A: Yes, we offer complimentary secure parking for all guests.\n\n<strong>Q: Do you offer airport transfers?</strong><br>A: Yes, airport transfers can be arranged at an additional cost. Please contact us in advance.\n\n<strong>Q: Is WiFi available?</strong><br>A: Complimentary high-speed WiFi is available throughout the hotel.\n\n<strong>Q: Are pets allowed?</strong><br>A: Unfortunately, we do not allow pets except for registered service animals.\n\n<strong>Q: What payment methods do you accept?</strong><br>A: We accept cash, credit cards (Visa, MasterCard, American Express), and mobile money.\n\n<strong>Q: Do you have a gym or fitness center?</strong><br>A: Yes, our fully equipped fitness center is available 24/7 for all guests.\n\n<strong>Q: Can I host events at the hotel?</strong><br>A: Yes, we have conference and event facilities. Please contact our events team for more information.\n\n<strong>Q: Is the hotel wheelchair accessible?</strong><br>A: Yes, we have wheelchair-accessible rooms and facilities. Please specify your requirements when booking."
             ]
-        );
+        ];
+
+        foreach ($defaultPolicies as $policy) {
+            renderModal(
+                'policy-' . $policy['slug'],
+                $policy['title'],
+                '<p>' . nl2br(htmlspecialchars($policy['content'])) . '</p>',
+                [
+                    'size' => 'md',
+                    'show_close' => true
+                ]
+            );
+        }
         ?>
-    <?php endforeach; ?>
+    <?php endif; ?>
 </div>
-<?php endif; ?>
 
 <!-- Share Script -->
 <script>
