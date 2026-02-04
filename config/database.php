@@ -16,12 +16,17 @@ if (file_exists(__DIR__ . '/database.local.php')) {
     include __DIR__ . '/database.local.php';
 } else {
     // Option 2: Use environment variables (for development)
-    $db_host = getenv('DB_HOST') ?: 'promanaged-it.com';
-    $db_name = getenv('DB_NAME') ?: 'p601229_hotels';
-    $db_user = getenv('DB_USER') ?: 'p601229_hotel_admin';
-    $db_pass = getenv('DB_PASS') ?: '2:p2WpmX[0YTs7';
+    $db_host = getenv('DB_HOST') ?: 'localhost';
+    $db_name = getenv('DB_NAME') ?: '';
+    $db_user = getenv('DB_USER') ?: '';
+    $db_pass = getenv('DB_PASS') ?: '';
     $db_port = getenv('DB_PORT') ?: '3306';
     $db_charset = 'utf8mb4';
+}
+
+// Validate that credentials are set
+if (empty($db_host) || empty($db_name) || empty($db_user)) {
+    die('Database credentials not configured. Please create config/database.local.php with your database credentials.');
 }
 
 // Define database constants
