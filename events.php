@@ -9,9 +9,9 @@ require_once 'config/database.php';
 // Fetch upcoming events (future and today)
 try {
     $stmt = $pdo->prepare("
-        SELECT * FROM events 
-        WHERE is_active = 1 
-        AND event_date >= CURDATE() 
+        SELECT * FROM events
+        WHERE is_active = 1
+        AND event_date >= CURDATE()
         ORDER BY event_date ASC, start_time ASC
     ");
     $stmt->execute();
@@ -20,6 +20,9 @@ try {
     $upcoming_events = [];
     error_log("Events fetch error: " . $e->getMessage());
 }
+
+// Include video display helper for renderVideoEmbed function
+require_once 'includes/video-display.php';
 
 $currency_symbol = getSetting('currency_symbol');
 $site_name = getSetting('site_name');
@@ -128,11 +131,19 @@ try {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
             transition: transform 0.4s ease;
         }
 
         .event-card:hover .event-image {
             transform: scale(1.1);
+        }
+
+        /* Video styling to match images */
+        .event-image-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .event-date-badge {
@@ -436,16 +447,29 @@ try {
                         ?>
                         <div class="event-card <?php echo $event['is_featured'] ? 'featured' : ''; ?>">
                             <div class="event-image-container">
-                                <?php 
-                                // Use event image if exists, otherwise fallback to hero image
-                                $event_image = !empty($event['image_path']) && file_exists($event['image_path']) 
-                                    ? $event['image_path'] 
-                                    : 'images/hero/slide2.jpg';
-                                ?>
-                                <img src="<?php echo htmlspecialchars($event_image); ?>" 
-                                     alt="<?php echo htmlspecialchars($event['title']); ?>" 
-                                     class="event-image"
-                                     onerror="this.src='images/hero/slide2.jpg'">
+                                <?php if (!empty($event['video_path'])): ?>
+                                    <!-- Display video if available -->
+                                    <?php echo renderVideoEmbed($event['video_path'], $event['video_type'], [
+                                        'autoplay' => true,
+                                        'muted' => true,
+                                        'controls' => true,
+                                        'loop' => true,
+                                        'class' => 'event-image',
+                                        'style' => 'width: 100%; height: 100%; object-fit: cover; display: block;'
+                                    ]); ?>
+                                <?php else: ?>
+                                    <!-- Display image if no video -->
+                                    <?php
+                                    // Use event image if exists, otherwise fallback to hero image
+                                    $event_image = !empty($event['image_path']) && file_exists($event['image_path'])
+                                        ? $event['image_path']
+                                        : 'images/hero/slide2.jpg';
+                                    ?>
+                                    <img src="<?php echo htmlspecialchars($event_image); ?>"
+                                         alt="<?php echo htmlspecialchars($event['title']); ?>"
+                                         class="event-image"
+                                         onerror="this.src='images/hero/slide2.jpg'">
+                                <?php endif; ?>
                                 
                                 <div class="event-date-badge">
                                     <span class="event-date-day"><?php echo $day; ?></span>

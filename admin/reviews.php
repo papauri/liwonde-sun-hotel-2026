@@ -466,6 +466,9 @@ $pending_count = $pending_stmt->fetch(PDO::FETCH_ASSOC)['count'];
             }
         }
     </style>
+    
+    <!-- Admin Components (Alert, Modal) -->
+    <script src="js/admin-components.js"></script>
 </head>
 <body>
 
@@ -726,7 +729,15 @@ $pending_count = $pending_stmt->fetch(PDO::FETCH_ASSOC)['count'];
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    Alert.show('Response added successfully', 'success');
+                    let message = 'Response added successfully';
+                    if (data.email_sent) {
+                        message += '. Email notification sent to guest.';
+                    } else if (data.email_status === 'failed') {
+                        message += '. Email could not be sent: ' + (data.email_error || 'Check email configuration');
+                    } else if (data.email_status === 'no_guest_email') {
+                        message += '. No guest email on file.';
+                    }
+                    Alert.show(message, data.email_sent ? 'success' : 'warning');
                     location.reload();
                 } else {
                     Alert.show('Error: ' + (data.message || 'Failed to add response'), 'error');

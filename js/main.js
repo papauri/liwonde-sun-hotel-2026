@@ -279,30 +279,10 @@ document.addEventListener('DOMContentLoaded', function() {
         lastScroll = currentScroll;
     });
     
-    // Active nav link on scroll
-    const sections = document.querySelectorAll('section[id]');
-    const navItems = document.querySelectorAll('.nav-link');
-    
-    function highlightNavigation() {
-        const scrollPos = window.pageYOffset + 100;
-        
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            const sectionHeight = section.offsetHeight;
-            const sectionId = section.getAttribute('id');
-            
-            if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
-                navItems.forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href') === '#' + sectionId) {
-                        link.classList.add('active');
-                    }
-                });
-            }
-        });
-    }
-    
-    window.addEventListener('scroll', highlightNavigation);
+    // Active nav link on scroll - DISABLED
+    // PHP now handles active states server-side based on current page
+    // JavaScript scroll-based highlighting disabled to prevent conflicts
+    // The is_nav_active() function in header.php sets the correct active class
     
     // Intersection Observer for fade-in animations
     const observerOptions = {

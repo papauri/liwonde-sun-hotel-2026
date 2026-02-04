@@ -441,3 +441,214 @@ body.modal-open {
         font-size: 18px;
     }
 }
+
+/* ============================================
+   320px SCREEN OPTIMIZATIONS
+   ============================================ */
+
+/* Modal 320px Optimizations */
+@media (max-width: 320px) {
+    /* Modal Overlay - Full Screen */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+    
+    /* Modal Wrapper - Full Screen */
+    .modal-wrapper {
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        transform: none;
+        position: fixed;
+    }
+    
+    .modal-wrapper.active {
+        transform: none;
+    }
+    
+    /* All modal sizes become full screen */
+    .modal-sm .modal-container,
+    .modal-md .modal-container,
+    .modal-lg .modal-container,
+    .modal-xl .modal-container {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        border-radius: 0;
+        margin: 0;
+    }
+    
+    /* Modal Header - Compact */
+    .modal-header {
+        padding: 12px 16px;
+        background: var(--modal-header-bg);
+    }
+    
+    .modal-title {
+        font-size: 16px;
+        line-height: 1.3;
+        padding-right: 40px; /* Space for close button */
+    }
+    
+    /* Modal Close Button - Adjusted Position */
+    .modal-close {
+        top: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+    
+    .modal-close:focus {
+        outline-width: 2px;
+    }
+    
+    /* Modal Body - Scrollable */
+    .modal-body {
+        padding: 12px 16px;
+        font-size: 12px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Modal Footer - Stacked Buttons */
+    .modal-footer {
+        padding: 12px 16px;
+        flex-direction: column;
+        gap: 8px;
+        background: #f8f9fa;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .modal-footer button,
+    .modal-footer a,
+    .modal-footer .btn {
+        width: 100%;
+        padding: 10px 16px;
+        font-size: 12px;
+        margin: 0;
+        text-align: center;
+    }
+    
+    /* Form elements in modals */
+    .modal-body .form-group {
+        margin-bottom: 16px;
+    }
+    
+    .modal-body .form-control {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    
+    .modal-body label {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+    
+    /* Tables in modals */
+    .modal-body .table {
+        font-size: 10px;
+    }
+    
+    .modal-body .table th,
+    .modal-body .table td {
+        padding: 6px 8px;
+    }
+}
+
+/* Alert 320px Optimizations */
+@media (max-width: 320px) {
+    /* Alert Wrapper - Full Width */
+    .alert-wrapper {
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-width: none;
+        transform: none;
+        padding: 0 8px;
+    }
+    
+    .alert-wrapper.alert-top {
+        top: 8px;
+    }
+    
+    .alert-wrapper.alert-bottom {
+        bottom: 8px;
+    }
+    
+    /* All alert positions become centered full-width */
+    .alert-wrapper.alert-top-left,
+    .alert-wrapper.alert-top-right,
+    .alert-wrapper.alert-bottom-left,
+    .alert-wrapper.alert-bottom-right {
+        left: 0;
+        right: 0;
+        max-width: none;
+        padding: 0 8px;
+        transform: none;
+    }
+    
+    /* Alert Container - Compact */
+    .alert {
+        padding: 10px 12px;
+        font-size: 11px;
+        line-height: 1.4;
+        border-radius: 8px;
+    }
+    
+    /* Alert Icon - Smaller */
+    .alert-icon {
+        font-size: 16px;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+    
+    /* Alert Content - Compact */
+    .alert-content {
+        font-size: 11px;
+        line-height: 1.4;
+    }
+    
+    /* Alert Close Button - Compact */
+    .alert-close {
+        width: 20px;
+        height: 20px;
+        font-size: 14px;
+        margin-top: -2px;
+    }
+    
+    /* Multiple alerts spacing */
+    .alert-wrapper .alert + .alert {
+        margin-top: 8px;
+    }
+    
+    /* Animation adjustments */
+    .alert.show {
+        animation: alertSlideIn 0.25s ease-out forwards;
+    }
+    
+    .alert.hide {
+        animation: alertSlideOut 0.25s ease-out forwards;
+    }
+}
+
+/* Touch-friendly targets on 320px */
+@media (max-width: 320px) {
+    /* Increase tap targets for buttons */
+    .modal-close,
+    .alert-close {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    .modal-footer button,
+    .modal-footer a {
+        min-height: 44px;
+    }
+}

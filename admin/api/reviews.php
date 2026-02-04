@@ -21,6 +21,9 @@ header('Content-Type: application/json');
 // Include database configuration
 require_once __DIR__ . '/../../config/database.php';
 
+// Include cache configuration
+require_once __DIR__ . '/../../config/cache.php';
+
 // Start session for admin authentication
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -337,6 +340,26 @@ try {
             // Update status
             $stmt = $pdo->prepare("UPDATE reviews SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
             $stmt->execute([$status, $review_id]);
+            
+            // Clear review caches when status changes to approved
+            if ($status === 'approved') {
+                // Clear hotel-wide review caches
+                deleteCache('hotel_reviews_6');
+                deleteCache('hotel_reviews_10');
+                
+                // Clear room-specific cache if this is a room review
+                $stmt = $pdo->prepare("SELECT room_id FROM reviews WHERE id = ?");
+                $stmt->execute([$review_id]);
+                $review_data = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($review_data && $review_data['room_id']) {
+                    deleteCache('room_reviews_' . $review_data['room_id']);
+                }
+                
+                // Clear all review-related caches with wildcard pattern
+                deleteCache('reviews_count_*');
+                deleteCache('avg_rating_*');
+            }
             
             // Fetch updated review
             $stmt = $pdo->prepare("SELECT * FROM reviews WHERE id = ?");

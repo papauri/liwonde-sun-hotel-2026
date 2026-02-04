@@ -94,4 +94,7 @@ Options -Indexes
     RewriteEngine On
     RewriteCond %{HTTPS} off
     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    
+    # Dynamic Sitemap
+    RewriteRule ^sitemap\.xml$ generate-sitemap.php [L]
 </IfModule>

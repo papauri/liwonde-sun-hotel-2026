@@ -1,6 +1,7 @@
 <?php
 require_once 'config/database.php';
 require_once 'includes/reviews-display.php';
+require_once 'includes/video-display.php';
 
 $room_slug = isset($_GET['room']) ? trim($_GET['room']) : null;
 if (!$room_slug) {
@@ -92,18 +93,97 @@ if (empty($room_images) && !empty($room['image_url'])) {
 
 $hero_image = resolveImageUrl($room_images[0]['image_url'] ?? $room['image_url']);
 $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '')));
+
+// Build SEO data for room page
+$seo_data = [
+    'title' => $room['name'],
+    'description' => $room['short_description'] ?? $site_tagline,
+    'image' => $hero_image,
+    'type' => 'hotel',
+    'tags' => 'luxury room, ' . $room['name'] . ', ' . implode(', ', array_slice($amenities, 0, 5)),
+    'breadcrumbs' => [
+        ['name' => 'Home', 'url' => $base_url . '/'],
+        ['name' => 'Rooms', 'url' => $base_url . '/rooms-gallery.php'],
+        ['name' => $room['name'], 'url' => $base_url . '/room.php?room=' . urlencode($room['slug'])]
+    ],
+    'structured_data' => [
+        '@context' => 'https://schema.org',
+        '@type' => 'HotelRoom',
+        'name' => $room['name'],
+        'description' => $room['short_description'] ?? $site_tagline,
+        'image' => $base_url . $hero_image,
+        'numberOfBeds' => 1,
+        'bed' => [
+            '@type' => 'BedType',
+            'name' => $room['bed_type']
+        ],
+        'amenityFeature' => array_map(function($amenity) {
+            return [
+                '@type' => 'LocationFeatureSpecification',
+                'name' => $amenity,
+                'value' => true
+            ];
+        }, array_slice($amenities, 0, 10)),
+        'occupancy' => [
+            '@type' => 'QuantitativeValue',
+            'maxValue' => $room['max_guests'] ?? 2
+        ],
+        'floorSize' => [
+            '@type' => 'QuantitativeValue',
+            'value' => $room['size_sqm'] ?? 40,
+            'unitCode' => 'MTK'
+        ],
+        'offers' => [
+            '@type' => 'Offer',
+            'price' => $room['price_per_night'],
+            'priceCurrency' => 'MWK',
+            'availability' => $room['rooms_available'] > 0 ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
+            'url' => $base_url . '/booking.php?room_id=' . $room['id']
+        ],
+        'containedInPlace' => [
+            '@type' => 'Hotel',
+            'name' => $site_name,
+            'address' => [
+                '@type' => 'PostalAddress',
+                'addressLocality' => 'Liwonde',
+                'addressCountry' => 'MW'
+            ]
+        ]
+    ]
+];
+
+// Fetch room reviews for structured data
+try {
+    $reviews_stmt = $pdo->prepare("
+        SELECT rating, comment, guest_name, created_at 
+        FROM reviews 
+        WHERE room_id = ? AND status = 'approved' 
+        LIMIT 5
+    ");
+    $reviews_stmt->execute([$room['id']]);
+    $room_reviews = $reviews_stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    if (!empty($room_reviews)) {
+        $seo_data['structured_data']['aggregateRating'] = [
+            '@type' => 'AggregateRating',
+            'ratingValue' => array_sum(array_column($room_reviews, 'rating')) / count($room_reviews),
+            'reviewCount' => count($room_reviews),
+            'bestRating' => 5,
+            'worstRating' => 1
+        ];
+    }
+} catch (PDOException $e) {
+    // Ignore review errors
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#0A1929">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="format-detection" content="telephone=yes">
-    <title><?php echo htmlspecialchars($room['name']); ?> | <?php echo htmlspecialchars($site_name); ?></title>
-    <meta name="description" content="<?php echo htmlspecialchars($room['short_description'] ?? $site_tagline); ?>">
+    
+    <!-- SEO Meta Tags -->
+    <?php require_once 'includes/seo-meta.php'; ?>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -121,11 +201,31 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" role="presentation"></div>
 
-    <section class="rooms-hero" style="background-image: linear-gradient(135deg, rgba(5, 9, 15, 0.76), rgba(10, 25, 41, 0.75)), url('<?php echo htmlspecialchars($hero_image); ?>');">
+    <section class="rooms-hero">
+        <?php if (!empty($room['video_path'])): ?>
+            <!-- Display video if available -->
+            <div class="rooms-hero__video">
+                <?php echo renderVideoEmbed($room['video_path'], $room['video_type'], [
+                    'autoplay' => true,
+                    'muted' => true,
+                    'controls' => false,
+                    'loop' => true,
+                    'class' => 'rooms-hero-video-embed',
+                    'style' => 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;'
+                ]); ?>
+            </div>
+        <?php else: ?>
+            <!-- Display image background if no video -->
+            <div class="rooms-hero__image" style="background-image: linear-gradient(135deg, rgba(5, 9, 15, 0.76), rgba(10, 25, 41, 0.75)), url('<?php echo htmlspecialchars($hero_image); ?>');"></div>
+        <?php endif; ?>
+        
+        <div class="rooms-hero__overlay"></div>
         <div class="container">
             <div class="rooms-hero__grid">
                 <div class="rooms-hero__content">
-                    <div class="pill">Signature Stay</div>
+                    <?php if (!empty($room['badge'])): ?>
+                    <div class="pill"><?php echo htmlspecialchars($room['badge']); ?></div>
+                    <?php endif; ?>
                     <h1><?php echo htmlspecialchars($room['name']); ?></h1>
                     <p><?php echo htmlspecialchars($room['short_description'] ?? $site_tagline); ?></p>
                 </div>
@@ -136,9 +236,32 @@ $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '
     <section class="section room-detail-below" style="padding-top: 30px; padding-bottom: 40px;">
         <div class="container">
 
-            <?php if (!empty($room_images)): ?>
+            <?php 
+            // Check if room has a video
+            $room_has_video = !empty($room['video_path']);
+            $has_gallery_content = !empty($room_images) || $room_has_video;
+            
+            if ($has_gallery_content): 
+            ?>
             <h3 style="font-size: 24px; color: var(--navy); margin: 40px 0 24px 0; font-weight: 700;">Room Gallery</h3>
             <div class="room-gallery-grid">
+                <?php 
+                // Display room video first if available
+                if ($room_has_video): 
+                ?>
+                <div class="gallery-item gallery-item-video">
+                    <?php echo renderVideoEmbed($room['video_path'], $room['video_type'], [
+                        'autoplay' => false,
+                        'muted' => false,
+                        'controls' => true,
+                        'loop' => false,
+                        'class' => 'room-gallery-video',
+                        'style' => 'width: 100%; height: 100%; object-fit: cover; border-radius: 8px;'
+                    ]); ?>
+                    <div class="gallery-item-label">Room Video Tour</div>
+                </div>
+                <?php endif; ?>
+                
                 <?php foreach ($room_images as $img): ?>
                 <div class="gallery-item">
                     <img src="<?php echo htmlspecialchars(resolveImageUrl($img['image_url'])); ?>" alt="<?php echo htmlspecialchars($img['title']); ?>">

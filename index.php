@@ -4,6 +4,7 @@ require_once 'config/security.php';
 
 require_once 'config/database.php';
 require_once 'includes/reviews-display.php';
+require_once 'includes/video-display.php';
 
 // Send security headers
 sendSecurityHeaders();
@@ -202,7 +203,23 @@ foreach ($footer_links_raw as $link) {
     <section class="hero" id="home">
         <div class="hero-carousel">
             <?php foreach ($hero_slides as $index => $slide): ?>
-            <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?>" data-index="<?php echo $index; ?>" style="background-image: url('<?php echo htmlspecialchars($slide['image_path']); ?>');">
+            <div class="hero-slide <?php echo $index === 0 ? 'active' : ''; ?>" data-index="<?php echo $index; ?>">
+                <?php if (!empty($slide['video_path'])): ?>
+                    <!-- Display video if available -->
+                    <div class="hero-slide-video">
+                        <?php echo renderVideoEmbed($slide['video_path'], $slide['video_type'], [
+                            'autoplay' => true,
+                            'muted' => true,
+                            'controls' => false,
+                            'loop' => true,
+                            'class' => 'hero-slide-video-embed',
+                            'style' => 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;'
+                        ]); ?>
+                    </div>
+                <?php else: ?>
+                    <!-- Display image background if no video -->
+                    <div class="hero-slide-image" style="background-image: url('<?php echo htmlspecialchars($slide['image_path']); ?>'); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center;"></div>
+                <?php endif; ?>
                 <div class="hero-overlay"></div>
                 <div class="hero-content fade-in-up">
                     <span class="hero-subtitle"><?php echo htmlspecialchars($slide['subtitle']); ?></span>

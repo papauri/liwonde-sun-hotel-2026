@@ -159,10 +159,12 @@ $site_name = getSetting('site_name');
             transform: translateY(-50%);
             color: #999;
             font-size: 16px;
+            z-index: 2;
+            pointer-events: none;
         }
         .form-control {
             width: 100%;
-            padding: 14px 16px 14px 48px;
+            padding: 14px 16px 14px 90px;
             border: 2px solid #e0e0e0;
             border-radius: 10px;
             font-size: 15px;

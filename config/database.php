@@ -486,7 +486,8 @@ function getCachedHeroSlides() {
     try {
         $stmt = $pdo->query("
             SELECT title, subtitle, description, primary_cta_text, primary_cta_link, 
-                   secondary_cta_text, secondary_cta_link, image_path 
+                   secondary_cta_text, secondary_cta_link, image_path, 
+                   video_path, video_type
             FROM hero_slides 
             WHERE is_active = 1 
             ORDER BY display_order ASC

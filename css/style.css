@@ -301,6 +301,22 @@ button {
     }
 }
 
+/* Very large screens (1500px+) - Move hero-content down but keep within bounds */
+@media (min-width: 1500px) {
+    .hero {
+        height: 800px; /* Further increase height for very large screens */
+    }
+
+    .hero-carousel {
+        height: 800px; /* Match the increased height */
+    }
+
+    .hero-content {
+        padding-top: 15%; /* Move content down slightly */
+        max-width: 85%; /* Keep content centered and readable */
+    }
+}
+
 .hero-slide {
     position: absolute;
     inset: 0;
@@ -722,6 +738,12 @@ button:disabled,
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
+
+/* ============================================
+   MOBILE PERFORMANCE OPTIMIZATIONS
+   Disable expensive effects on mobile for smooth scrolling
+   ============================================ */
+
 
 .hero-indicator.active::before {
     content: '';
@@ -8485,3 +8507,4 @@ body.modal-open {
         padding: 6px 10px;
     }
 }
+

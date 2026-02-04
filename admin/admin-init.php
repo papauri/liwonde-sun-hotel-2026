@@ -21,6 +21,9 @@ if (session_status() === PHP_SESSION_NONE) {
 // Load security configuration first
 require_once '../config/security.php';
 
+// Define admin access constant (for security checks in included files)
+define('ADMIN_ACCESS', true);
+
 // Check authentication
 if (!isset($_SESSION['admin_user_id'])) {
     header('Location: login.php');

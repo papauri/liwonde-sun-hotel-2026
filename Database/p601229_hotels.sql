@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Feb 03, 2026 at 12:35 AM
+-- Generation Time: Feb 04, 2026 at 04:08 PM
 -- Server version: 8.0.44-cll-lve
 -- PHP Version: 8.4.16
 
@@ -190,13 +190,6 @@ CREATE TABLE `bookings` (
   `converted_from_tentative` tinyint(1) DEFAULT '0' COMMENT 'Whether this booking was converted from tentative status (1=yes, 0=no)'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `bookings`
---
-
-INSERT INTO `bookings` (`id`, `booking_reference`, `room_id`, `guest_name`, `guest_email`, `guest_phone`, `guest_country`, `guest_address`, `number_of_guests`, `check_in_date`, `check_out_date`, `number_of_nights`, `total_amount`, `amount_paid`, `amount_due`, `vat_rate`, `vat_amount`, `total_with_vat`, `last_payment_date`, `special_requests`, `status`, `is_tentative`, `tentative_expires_at`, `deposit_required`, `deposit_amount`, `deposit_paid`, `deposit_paid_at`, `reminder_sent`, `reminder_sent_at`, `converted_to_confirmed_at`, `expired_at`, `tentative_notes`, `payment_status`, `payment_amount`, `payment_date`, `created_at`, `updated_at`, `expires_at`, `converted_from_tentative`) VALUES
-(23, 'LSH20262626', 3, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-02-02', '2026-02-06', 4, 120080.00, 139893.20, 0.00, 16.50, 19813.20, 139893.20, '2026-02-01', '', 'checked-in', 0, '2026-02-03 19:11:28', 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, 'paid', 0.00, NULL, '2026-02-01 19:11:28', '2026-02-01 19:35:14', NULL, 0);
-
 -- --------------------------------------------------------
 
 --
@@ -270,13 +263,6 @@ CREATE TABLE `conference_inquiries` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `conference_inquiries`
---
-
-INSERT INTO `conference_inquiries` (`id`, `inquiry_reference`, `conference_room_id`, `company_name`, `contact_person`, `email`, `phone`, `event_date`, `start_time`, `end_time`, `number_of_attendees`, `event_type`, `special_requirements`, `catering_required`, `av_equipment`, `status`, `total_amount`, `amount_paid`, `amount_due`, `vat_rate`, `vat_amount`, `total_with_vat`, `last_payment_date`, `deposit_required`, `deposit_amount`, `deposit_paid`, `payment_status`, `total_paid`, `notes`, `created_at`, `updated_at`) VALUES
-(2, 'CONF-2026-92538', 4, 'ProManaged', 'JOHN-PAUL CHIRWA', '', '0860081635', '2026-02-05', '11:14:00', '12:16:00', 22, 'Meeting', '', 0, '', 'confirmed', 15500.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, 0, NULL, 0, 'pending', 0.00, NULL, '2026-02-03 00:15:08', '2026-02-03 00:16:03');
 
 -- --------------------------------------------------------
 
@@ -436,24 +422,17 @@ CREATE TABLE `events` (
   `is_active` tinyint(1) DEFAULT '1',
   `display_order` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `video_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Path to event video file',
+  `video_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Video MIME type (video/mp4, video/webm, etc.)'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `events`
 --
 
-INSERT INTO `events` (`id`, `title`, `description`, `event_date`, `start_time`, `end_time`, `location`, `image_path`, `ticket_price`, `capacity`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'New Year Gala Dinner', 'Ring in the New Year with an elegant five-course dinner, live entertainment, and spectacular fireworks display over the lake. Dress code: Black tie.', '2026-12-31', '19:00:00', '01:00:00', 'Grand Conference Hall', 'images/events/gala-dinner.jpg', 50000.00, 150, 1, 1, 1, '2026-01-20 22:35:58', '2026-01-20 22:35:58'),
-(2, 'Wine Tasting Evening', 'Join our sommelier for an exclusive tasting of premium South African wines paired with artisan cheeses and canapés. Learn about wine regions, varietals, and perfect food pairings.', '2026-02-14', '18:00:00', '21:00:00', 'Lakeside Terrace', 'images/events/event_1769125595_5057.png', 25000.00, 40, 1, 1, 2, '2026-01-20 22:35:58', '2026-01-22 23:46:35'),
-(3, 'Business Networking Breakfast', 'Monthly networking event for local business leaders and entrepreneurs. Complimentary breakfast buffet with opportunities to connect and collaborate.', '2026-02-28', '07:00:00', '09:30:00', 'Executive Boardroom', 'images/events/business-breakfast.jpg', 0.00, 30, 0, 1, 3, '2026-01-20 22:35:58', '2026-01-20 22:35:58'),
-(4, 'Easter Sunday Brunch', 'Celebrate Easter with a lavish buffet brunch featuring international cuisines, live cooking stations, and entertainment for children. Perfect for the whole family.', '2026-04-05', '11:00:00', '15:00:00', 'Restaurant & Terrace', 'images/events/easter-brunch.jpg', 35000.00, 100, 1, 1, 4, '2026-01-20 22:35:58', '2026-01-20 22:35:58'),
-(5, 'Lake Festival Cultural Night', 'Experience traditional Malawian culture with live music, dance performances, and authentic local cuisine. Supporting local artists and community initiatives.', '2026-05-15', '17:00:00', '22:00:00', 'Outdoor Grounds', 'images/events/cultural-night.jpg', 15000.00, 200, 1, 1, 5, '2026-01-20 22:35:58', '2026-01-20 22:35:58'),
-(6, 'New Year Gala Dinner', 'Ring in the New Year with an elegant five-course dinner, live entertainment, and spectacular fireworks display over the lake. Dress code: Black tie.', '2026-12-31', '19:00:00', '01:00:00', 'Grand Conference Hall', 'images/events/gala-dinner.jpg', 50000.00, 150, 1, 1, 1, '2026-01-20 22:36:31', '2026-01-20 22:36:31'),
-(7, 'Breakfast Morning', '', '2026-02-14', '18:00:00', '21:00:00', 'Lakeside Terrace', 'images/events/wine-tasting.jpg', 25000.00, 40, 1, 1, 0, '2026-01-20 22:36:31', '2026-01-26 23:24:56'),
-(8, 'Business Networking Breakfast', 'Monthly networking event for local business leaders and entrepreneurs. Complimentary breakfast buffet with opportunities to connect and collaborate.', '2026-02-28', '07:00:00', '09:30:00', 'Executive Boardroom', 'images/events/business-breakfast.jpg', 0.00, 30, 0, 1, 3, '2026-01-20 22:36:31', '2026-01-20 22:36:31'),
-(9, 'Easter Sunday Brunch', 'Celebrate Easter with a lavish buffet brunch featuring international cuisines, live cooking stations, and entertainment for children. Perfect for the whole family.', '2026-04-05', '11:00:00', '15:00:00', 'Restaurant & Terrace', 'images/events/easter-brunch.jpg', 35000.00, 100, 1, 1, 4, '2026-01-20 22:36:31', '2026-01-20 22:36:31'),
-(10, 'Lake Festival Cultural Night', 'Experience traditional Malawian culture with live music, dance performances, and authentic local cuisine. Supporting local artists and community initiatives.', '2026-05-15', '17:00:00', '22:00:00', 'Outdoor Grounds', 'images/events/cultural-night.jpg', 15000.00, 200, 1, 1, 5, '2026-01-20 22:36:31', '2026-01-20 22:36:31');
+INSERT INTO `events` (`id`, `title`, `description`, `event_date`, `start_time`, `end_time`, `location`, `image_path`, `ticket_price`, `capacity`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`, `video_path`, `video_type`) VALUES
+(7, '10th Annivesary', '', '2026-02-14', '18:00:00', '21:00:00', 'Zest Garden Lodge', 'images/events/event_1770204143_6436.png', 30000.00, 40, 1, 1, 0, '2026-01-20 22:36:31', '2026-02-04 13:44:46', 'https://media.gettyimages.com/id/1161129424/video/cheerful-entrepreneurs-shaking-hands-during-break.mp4?s=mp4-640x640-gi&k=20&c=8jeMCO1pMfOVYPDB8aSbOfRqvqyVWWjwfb0BK9xiF-w=', NULL);
 
 -- --------------------------------------------------------
 
@@ -747,6 +726,40 @@ INSERT INTO `gym_features` (`id`, `icon_class`, `title`, `description`, `display
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `gym_inquiries`
+--
+
+CREATE TABLE `gym_inquiries` (
+  `id` int NOT NULL,
+  `reference_number` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `membership_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `preferred_date` date DEFAULT NULL,
+  `preferred_time` time DEFAULT NULL,
+  `guests` int DEFAULT '1',
+  `message` text COLLATE utf8mb4_unicode_ci,
+  `consent` tinyint(1) NOT NULL DEFAULT '0',
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'new',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `gym_inquiries`
+--
+
+INSERT INTO `gym_inquiries` (`id`, `reference_number`, `name`, `email`, `phone`, `membership_type`, `preferred_date`, `preferred_time`, `guests`, `message`, `consent`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'GYM-4365EEF2', 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ultimate Wellness', '2026-02-07', '04:45:00', 1, '', 1, 'closed', '2026-02-03 17:45:24', '2026-02-03 17:47:55'),
+(2, 'GYM-4E34D49A', 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ultimate Wellness', '2026-02-07', '04:45:00', 1, '', 1, 'new', '2026-02-03 17:48:17', '2026-02-03 17:48:17'),
+(3, 'GYM-73274088', 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ultimate Wellness', '2026-02-07', '04:45:00', 1, '', 1, 'new', '2026-02-03 17:58:08', '2026-02-03 17:58:08'),
+(4, 'GYM-772CA27A', 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Fitness Kickstart', '2026-02-07', '04:59:00', 1, '', 1, 'new', '2026-02-03 17:59:12', '2026-02-03 17:59:12'),
+(5, 'GYM-8E165506', 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ultimate Wellness', '2026-02-04', '18:05:00', 1, '', 1, 'new', '2026-02-03 18:05:19', '2026-02-03 18:05:19');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `gym_packages`
 --
 
@@ -786,6 +799,8 @@ CREATE TABLE `hero_slides` (
   `subtitle` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `video_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Path to video file or URL',
+  `video_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Video MIME type',
   `primary_cta_text` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `primary_cta_link` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `secondary_cta_text` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -800,11 +815,11 @@ CREATE TABLE `hero_slides` (
 -- Dumping data for table `hero_slides`
 --
 
-INSERT INTO `hero_slides` (`id`, `title`, `subtitle`, `description`, `image_path`, `primary_cta_text`, `primary_cta_link`, `secondary_cta_text`, `secondary_cta_link`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'Experience Unparalleled Luxury', 'Where Luxury Meets Nature', 'Discover the perfect blend of comfort, elegance, and exceptional service at Malawi\'s premier destination', 'images/hero/slide1.jpg', 'Book a Suite', '#book', 'View Rooms', '#rooms', 1, 1, '2026-01-20 07:55:39', '2026-01-20 07:55:39'),
-(2, 'Sunrise Over the Shire River', 'Golden hours above pristine waters', 'Wake to breathtaking Malawian sunrises framed by elegant interiors and world-class amenities', 'images/hero/slide2.jpg', 'See Gallery', '#gallery', 'Plan Your Stay', '#contact', 1, 2, '2026-01-20 07:55:39', '2026-01-20 07:55:39'),
-(3, 'Award-Winning Dining', 'Michelin-Star Culinary Excellence', 'Savor exceptional cuisine crafted by our renowned chefs using the finest local and international ingredients', 'images/hero/slide3.jpg', 'View Menu', '#facilities', 'Reserve a Table', '#contact', 1, 3, '2026-01-20 07:55:39', '2026-01-20 07:55:39'),
-(4, 'Ultimate Relaxation & Wellness', 'Your sanctuary of serenity', 'Indulge in our luxury spa, Olympic pool, and state-of-the-art fitness facilities designed for your well-being', 'images/hero/slide4.jpg', 'Explore Spa', '#facilities', 'Book Treatment', '#book', 1, 4, '2026-01-20 07:55:39', '2026-01-20 07:55:39');
+INSERT INTO `hero_slides` (`id`, `title`, `subtitle`, `description`, `image_path`, `video_path`, `video_type`, `primary_cta_text`, `primary_cta_link`, `secondary_cta_text`, `secondary_cta_link`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'Experience Unparalleled Luxury', 'Where Luxury Meets Nature', 'Discover the perfect blend of comfort, elegance, and exceptional service at Malawi\'s premier destination', '', 'https://media.gettyimages.com/id/2219019953/video/group-of-mature-adult-friends-quickly-booking-a-hotel-on-smartphone-while-exploring-the-temple.mp4?s=mp4-640x640-gi&k=20&c=AklHmBkwIrOueUSYHFDoVY2nN7tD4xkV3QAFYCzG4ts=', NULL, 'Book a Suite', '#book', 'View Rooms', '#rooms', 1, 1, '2026-01-20 07:55:39', '2026-02-04 15:56:32'),
+(2, 'Sunrise Over the Shire River', 'Golden hours above pristine waters', 'Wake to breathtaking Malawian sunrises framed by elegant interiors and world-class amenities', 'images/hero/slide2.jpg', NULL, NULL, 'See Gallery', '#gallery', 'Plan Your Stay', '#contact', 1, 2, '2026-01-20 07:55:39', '2026-01-20 07:55:39'),
+(3, 'Award-Winning Dining', 'Michelin-Star Culinary Excellence', 'Savor exceptional cuisine crafted by our renowned chefs using the finest local and international ingredients', 'images/hero/slide3.jpg', NULL, NULL, 'View Menu', '#facilities', 'Reserve a Table', '#contact', 1, 3, '2026-01-20 07:55:39', '2026-01-20 07:55:39'),
+(4, 'Ultimate Relaxation & Wellness', 'Your sanctuary of serenity', 'Indulge in our luxury spa, Olympic pool, and state-of-the-art fitness facilities designed for your well-being', 'images/hero/slide4.jpg', NULL, NULL, 'Explore Spa', '#facilities', 'Book Treatment', '#book', 1, 4, '2026-01-20 07:55:39', '2026-01-20 07:55:39');
 
 -- --------------------------------------------------------
 
@@ -923,7 +938,7 @@ CREATE TABLE `page_heroes` (
 --
 
 INSERT INTO `page_heroes` (`id`, `page_slug`, `page_url`, `hero_title`, `hero_subtitle`, `hero_description`, `hero_image_path`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'restaurant', '/restaurant.php', 'Fine Dining Restaurant & Bars', 'Culinary Excellences', 'Savor exceptional cuisine crafted from finest local and international ingredients', 'https://media.gettyimages.com/id/662284115/photo/fresh-dish-ready-to-be-served-at-restaurant.jpg?s=612x612&w=0&k=20&c=joJR03nqnpZ_ZBxU8aRHX2Qz657W_xAcftrjknIsc0c=', 1, 1, '2026-01-25 18:03:42', '2026-01-25 19:32:37'),
+(1, 'restaurant', '/restaurant.php', 'Fine Dining Restaurant & Bars', 'Culinary Excellences', 'Savor exceptional cuisine crafted from finest local and international ingredients', 'https://media.gettyimages.com/id/1413260731/photo/a-journalist-team-writing-or-working-on-a-story-together-at-a-media-company-in-a-boardroom.jpg?s=612x612&w=0&k=20&c=EFu8OY0uCLKrtGIGCZ6tHZpUGXJa1gHimC4pf5Iim40=', 1, 1, '2026-01-25 18:03:42', '2026-02-04 13:52:09'),
 (2, 'conference', '/conference.php', 'Conference & Meetings Facilities', 'Business Excellence', 'Businsess-ready venues with premium technology, flexibles layouts, and tailored service for every executive gathering.', 'https://media.gettyimages.com/id/1413260731/photo/a-journalist-team-writing-or-working-on-a-story-together-at-a-media-company-in-a-boardroom.jpg?s=612x612&w=0&k=20&c=EFu8OY0uCLKrtGIGCZ6tHZpUGXJa1gHimC4pf5Iim40=', 1, 2, '2026-01-25 18:03:42', '2026-01-25 19:57:55'),
 (3, 'events', '/events.php', 'Events & Experiences', 'Celebrations & Gathering', 'From exclusive wine tastings to cultural nights—discover moments worth remembering at Liwonde Sun Hotel.', 'https://media.gettyimages.com/id/1434116601/photo/zoom-of-hands-laptop-search-or-business-meeting-for-teamwork-marketing-planning-or-target.jpg?s=612x612&w=0&k=20&c=oIngQBqrLY43jKRMhSlTs9xxtGx1YJdrFHXeXchCssg=', 1, 3, '2026-01-25 18:03:42', '2026-01-25 19:52:02'),
 (4, 'rooms-showcase', '/rooms-showcase.php', 'Rooms & Suites', 'Riverfront Luxury', 'Explore contemporary rooms and suites with panoramic views of the Shire River, featuring premium amenities and seamless booking integration.', 'https://media.gettyimages.com/id/1382975780/photo/businessman-with-cardkey-unlocking-door-in-hotel.jpg?s=612x612&w=0&k=20&c=yltGZmc_7emEGkP1UAPndO25Iih48zGnVJsqVp38Me8=', 1, 4, '2026-01-25 19:08:32', '2026-01-25 19:54:57'),
@@ -1002,7 +1017,9 @@ CREATE TABLE `payments` (
 --
 
 INSERT INTO `payments` (`id`, `payment_reference`, `booking_type`, `booking_id`, `conference_id`, `booking_reference`, `payment_date`, `payment_amount`, `vat_rate`, `vat_amount`, `total_amount`, `payment_method`, `payment_type`, `payment_reference_number`, `payment_status`, `invoice_generated`, `invoice_number`, `amount`, `status`, `transaction_id`, `invoice_path`, `notes`, `recorded_by`, `created_at`, `updated_at`, `cc_emails`, `receipt_number`, `processed_by`, `deleted_at`) VALUES
-(3, 'PAY-2026-000023', 'room', 23, NULL, 'LSH20262626', '2026-02-01', 120080.00, 16.50, 19813.20, 139893.20, 'cash', 'full_payment', NULL, 'completed', 1, 'INV-2026-001001', 0.00, 'completed', NULL, 'invoices/INV-2026-001001.html', NULL, 2, '2026-02-01 19:18:53', '2026-02-01 20:07:15', NULL, NULL, NULL, NULL);
+(3, 'PAY-2026-000023', 'room', 23, NULL, 'LSH20262626', '2026-02-01', 120080.00, 16.50, 19813.20, 139893.20, 'cash', 'full_payment', NULL, 'completed', 1, 'INV-2026-001001', 0.00, 'completed', NULL, 'invoices/INV-2026-001001.html', NULL, 2, '2026-02-01 19:18:53', '2026-02-01 20:07:15', NULL, NULL, NULL, NULL),
+(4, 'PAY-2026-000004', 'conference', 4, NULL, 'CONF-2026-71072', '2026-02-03', 250.00, 16.50, 41.25, 291.25, 'cash', 'full_payment', NULL, 'completed', 1, 'CONF-INV-2026-001001', 0.00, 'completed', NULL, 'invoices/CONF-INV-2026-001001.html', NULL, 2, '2026-02-03 17:20:37', '2026-02-03 17:20:38', NULL, NULL, NULL, NULL),
+(5, 'PAY-2026-000003', 'conference', 3, NULL, 'CONF-2026-30298', '2026-02-03', 750.00, 16.50, 123.75, 873.75, 'cash', 'full_payment', NULL, 'completed', 1, 'CONF-INV-2026-001002', 0.00, 'completed', NULL, 'invoices/CONF-INV-2026-001002.html', NULL, 2, '2026-02-03 17:20:42', '2026-02-03 17:20:43', NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1054,7 +1071,7 @@ CREATE TABLE `restaurant_gallery` (
 INSERT INTO `restaurant_gallery` (`id`, `image_path`, `caption`, `category`, `display_order`, `is_active`, `created_at`) VALUES
 (2, 'https://media.gettyimages.com/id/2076075171/photo/abstract-defocused-background-of-restaurant.jpg?s=612x612&w=0&k=20&c=_KsEUAChBiOQDEMP6bumoJPoHkD5WTFmPBh1R1oeTz8=', 'Intimate indoor seating', 'dining-area', 2, 1, '2026-01-20 14:17:17'),
 (3, 'https://media.gettyimages.com/id/1758301432/photo/luxury-cocktails-dark-mood-dark-delicious-cocktails-for-brunch-delight.jpg?s=612x612&w=0&k=20&c=UO2273jUYp1WvoWFbJklxEZDjtHKQwVDcKe8ziDqo5A=', 'Premium bar with signature cocktails', 'bar', 3, 1, '2026-01-20 14:17:17'),
-(4, 'https://media.gettyimages.com/id/2183697442/photo/a-seafood-platter-with-crabs-yabbies-prawns-and-mussels.jpg?s=612x612&w=0&k=20&c=zPMIG91apQkIcQTpUjr_8DH84enJydwO_0SLiCCNMCk=', 'Fresh seafood platter', 'food', 4, 1, '2026-01-20 14:17:17'),
+(4, 'https://art.whisk.com/image/upload/fl_progressive,h_560,w_560,c_fill,dpr_2/v1650641489/v3/user-recipes/zurh6pbpesx0f3nzbil7.jpg', 'Fresh seafood platter', 'food', 4, 1, '2026-01-20 14:17:17'),
 (13, 'https://media.gettyimages.com/id/1400584557/photo/happy-woman-toasting-with-a-glass-of-wine-during-a-dinner-celebration.jpg?s=612x612&w=0&k=20&c=FXRZHwaTK0iIj3sntl0v5GokMf57dB1jVOn9h7zkUR8=', 'Elegant dining area with panoramic views', 'dining-area', 1, 1, '2026-01-20 15:22:41'),
 (17, 'https://media.gettyimages.com/id/1494508942/photo/chef.jpg?s=612x612&w=0&k=20&c=bQGrV0fE-q-mynbVI1DOunZdwte9cyQ0dBf4_m8TUmQ=', 'Fine dining experience', 'restaurant', 5, 1, '2026-01-20 15:22:41'),
 (18, 'https://media.gettyimages.com/id/1272158224/photo/using-a-bbq-blower-to-stoke-coal-on-a-simple-barbecue-grill.jpg?s=612x612&w=0&k=20&c=BugTQ1FTnUH7nAdJc4PKNM0YJcgVF8a3Y44Zqv50kqs=', 'Alfresco dining terrace', 'dining-area', 6, 1, '2026-01-20 15:22:41');
@@ -1091,7 +1108,8 @@ CREATE TABLE `reviews` (
 INSERT INTO `reviews` (`id`, `booking_id`, `room_id`, `review_type`, `guest_name`, `guest_email`, `rating`, `title`, `comment`, `service_rating`, `cleanliness_rating`, `location_rating`, `value_rating`, `status`, `created_at`, `updated_at`) VALUES
 (1, NULL, NULL, 'general', 'Test User', 'test@example.com', 5, 'Excellent Stay', 'This was a wonderful experience at the hotel. The service was outstanding and the room was very clean.', NULL, NULL, NULL, NULL, 'approved', '2026-01-27 14:47:18', '2026-01-27 22:45:26'),
 (2, NULL, 1, 'general', 'John Doe', 'john@example.com', 4, 'Great Room', 'The room was spacious and comfortable. Staff was very helpful.', 5, 5, 4, 4, 'approved', '2026-01-27 14:48:28', '2026-01-27 15:29:21'),
-(3, NULL, NULL, 'general', 'Test User', 'test@example.com', 5, 'Great Stay', 'This is a test review submission to verify the form works without cURL', NULL, NULL, NULL, NULL, 'approved', '2026-01-27 16:10:19', '2026-01-27 22:44:47');
+(3, NULL, NULL, 'general', 'Test User', 'test@example.com', 5, 'Great Stay', 'This is a test review submission to verify the form works without cURL', NULL, NULL, NULL, NULL, 'approved', '2026-01-27 16:10:19', '2026-01-27 22:44:47'),
+(6, NULL, 3, 'room', 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', 4, 'tessssssssssssssssssssssssss', 'tessssssssssssssssssssssssss', 1, 3, 3, 2, 'approved', '2026-02-04 02:20:53', '2026-02-04 02:22:16');
 
 -- --------------------------------------------------------
 
@@ -1106,6 +1124,13 @@ CREATE TABLE `review_responses` (
   `response` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Admin response content',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Response date'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Admin responses to guest reviews';
+
+--
+-- Dumping data for table `review_responses`
+--
+
+INSERT INTO `review_responses` (`id`, `review_id`, `admin_id`, `response`, `created_at`) VALUES
+(2, 6, 2, 'Okay thank yo very much', '2026-02-04 02:21:37');
 
 -- --------------------------------------------------------
 
@@ -1132,20 +1157,22 @@ CREATE TABLE `rooms` (
   `is_active` tinyint(1) DEFAULT '1',
   `display_order` int DEFAULT '0',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `video_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Path to room video file',
+  `video_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Video MIME type'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `rooms`
 --
 
-INSERT INTO `rooms` (`id`, `name`, `slug`, `description`, `short_description`, `price_per_night`, `size_sqm`, `max_guests`, `rooms_available`, `total_rooms`, `bed_type`, `image_url`, `badge`, `amenities`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'Presidential Suite', 'presidential-suite', 'Ultimate luxury with private terrace and exclusive service', 'Ultimate luxury with private terrace and exclusive service', 50000.00, 110, 4, 3, 5, 'King Bed', 'images/rooms/room_1_1768949756.png', 'Luxury', 'King Bed,Private Terrace,Jacuzzi,Butler Service,Living Area,Dining Area,Full Kitchen,Smart TV,Premium WiFi,Climate Control', 1, 1, 1, '2026-01-19 20:22:49', '2026-02-01 12:31:01'),
-(2, 'Executive Suite', 'executive-suite', 'Premium executive suite with work area and butler service', 'Premium executive suite with work area and butler service', 30050.00, 60, 3, 4, 5, 'King Bed', 'images\\rooms\\Deluxe Room.jpg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-02-01 12:38:20'),
-(3, 'Family Suite', 'family-suite', 'Spacious two-bedroom suite perfect for families, featuring two king beds, dual bathrooms, and separate living area. Create lasting memories in ultimate comfort.', 'Spacious family accommodation with 2 bedrooms', 30020.00, 55, 6, 5, 5, '2 King Beds', 'images\\rooms\\family_suite.jpg', 'Family', '2 King Beds,2 Bathrooms,Living Area,Kitchenette,Smart TV,Kids Welcome,Free WiFi,Climate Control', 1, 1, 3, '2026-01-19 20:22:49', '2026-01-20 17:01:46'),
-(4, 'Deluxe Suite', 'deluxe-suite', 'Luxurious suite with marble bathroom featuring jacuzzi tub, separate living area, and premium bedding. Experience sophistication and indulgence.', 'Luxury suite with jacuzzi and separate living area', 28000.00, 45, 2, 4, 5, 'King Bed', 'images/rooms/room_4_featured_1769093172.png', 'Popular', 'King Bed,Jacuzzi Tub,Living Area,Marble Bathroom,Premium Bedding,Smart TV,Mini Bar,Free WiFi', 1, 1, 4, '2026-01-19 20:22:49', '2026-01-30 07:42:24'),
-(5, 'Superior Room', 'superior-room', 'Spacious room with premium furnishings, stunning views, and modern amenities. Enjoy comfort and elegance in every detail.', 'Spacious room with premium amenities and views', 21000.00, 35, 2, 5, 5, 'King Bed', 'https://source.unsplash.com/1600x900/?superior,hotel,room,view,interior', NULL, 'King Bed,City View,Balcony,Smart TV,Free WiFi,Coffee Machine,Safe,Climate Control', 0, 0, 5, '2026-01-19 20:22:49', '2026-01-22 23:45:09'),
-(6, 'Standard Room', 'standard-room', 'Comfortable and well-appointed room with all essential amenities for a pleasant stay. Perfect for travelers seeking quality at exceptional value.', 'Comfortable room with essential amenities', 15000.00, 25, 2, 5, 5, 'Queen Bed', 'https://source.unsplash.com/1600x900/?standard,hotel,room,interior', 'Value', 'Queen Bed,Free WiFi,Smart TV,Daily Breakfast,Climate Control,Safe,Coffee Machine', 0, 0, 6, '2026-01-19 20:22:49', '2026-01-22 23:45:13');
+INSERT INTO `rooms` (`id`, `name`, `slug`, `description`, `short_description`, `price_per_night`, `size_sqm`, `max_guests`, `rooms_available`, `total_rooms`, `bed_type`, `image_url`, `badge`, `amenities`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`, `video_path`, `video_type`) VALUES
+(1, 'Presidential Suite', 'presidential-suite', 'Ultimate luxury with private terrace and exclusive service', 'Ultimate luxury with private terrace and exclusive service', 50000.00, 110, 4, 3, 5, 'King Bed', 'images/rooms/room_1_1768949756.png', 'Luxury', 'King Bed,Private Terrace,Jacuzzi,Butler Service,Living Area,Dining Area,Full Kitchen,Smart TV,Premium WiFi,Climate Control', 1, 1, 1, '2026-01-19 20:22:49', '2026-02-04 15:59:23', 'https://www.youtube.com/watch?v=3aTnsFOFq4w&list=RD3aTnsFOFq4w&start_radio=1', NULL),
+(2, 'Executive Suite', 'executive-suite', 'Premium executive suite with work area and butler service', 'Premium executive suite with work area and butler service', 30050.00, 60, 3, 4, 5, 'King Bed', 'images\\rooms\\Deluxe Room.jpg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-02-01 12:38:20', NULL, NULL),
+(3, 'Family Suite', 'family-suite', 'Spacious two-bedroom suite perfect for families, featuring two king beds, dual bathrooms, and separate living area. Create lasting memories in ultimate comfort.', 'Spacious family accommodation with 2 bedrooms', 30020.00, 55, 6, 5, 5, '2 King Beds', 'images\\rooms\\family_suite.jpg', 'Family', '2 King Beds,2 Bathrooms,Living Area,Kitchenette,Smart TV,Kids Welcome,Free WiFi,Climate Control', 1, 1, 3, '2026-01-19 20:22:49', '2026-01-20 17:01:46', NULL, NULL),
+(4, 'Deluxe Suite', 'deluxe-suite', 'Luxurious suite with marble bathroom featuring jacuzzi tub, separate living area, and premium bedding. Experience sophistication and indulgence.', 'Luxury suite with jacuzzi and separate living area', 28000.00, 45, 2, 4, 5, 'King Bed', 'images/rooms/room_4_featured_1769093172.png', 'Popular', 'King Bed,Jacuzzi Tub,Living Area,Marble Bathroom,Premium Bedding,Smart TV,Mini Bar,Free WiFi', 1, 1, 4, '2026-01-19 20:22:49', '2026-01-30 07:42:24', NULL, NULL),
+(5, 'Superior Room', 'superior-room', 'Spacious room with premium furnishings, stunning views, and modern amenities. Enjoy comfort and elegance in every detail.', 'Spacious room with premium amenities and views', 21000.00, 35, 2, 5, 5, 'King Bed', 'https://source.unsplash.com/1600x900/?superior,hotel,room,view,interior', NULL, 'King Bed,City View,Balcony,Smart TV,Free WiFi,Coffee Machine,Safe,Climate Control', 0, 0, 5, '2026-01-19 20:22:49', '2026-01-22 23:45:09', NULL, NULL),
+(6, 'Standard Room', 'standard-room', 'Comfortable and well-appointed room with all essential amenities for a pleasant stay. Perfect for travelers seeking quality at exceptional value.', 'Comfortable room with essential amenities', 15000.00, 25, 2, 5, 5, 'Queen Bed', 'https://source.unsplash.com/1600x900/?standard,hotel,room,interior', 'Value', 'Queen Bed,Free WiFi,Smart TV,Daily Breakfast,Climate Control,Safe,Coffee Machine', 0, 0, 6, '2026-01-19 20:22:49', '2026-01-22 23:45:13', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1174,64 +1201,69 @@ CREATE TABLE `site_settings` (
   `setting_key` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `setting_value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `setting_group` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `hero_video_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Path to hero section video',
+  `hero_video_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Video MIME type'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `site_settings`
 --
 
-INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_group`, `updated_at`) VALUES
-(1, 'site_name', 'Liwonde Hotel', 'general', '2026-02-02 00:39:08'),
-(2, 'site_tagline', 'Where Luxury Meets Nature', 'general', '2026-01-19 20:22:49'),
-(3, 'hero_title', 'Experience Unparalleled Luxury', 'hero', '2026-01-19 20:22:49'),
-(4, 'hero_subtitle', 'Discover the perfect blend of comfort, elegance, and exceptional service at Malawi\'s premier destination', 'hero', '2026-01-19 20:22:49'),
-(5, 'phone_main', '+265 123 456 785', 'contact', '2026-01-20 07:43:44'),
-(6, 'phone_reservations', '+265 987 654 321', 'contact', '2026-01-19 20:22:49'),
-(9, 'address_line1', 'Liwonde National Park Road', 'contact', '2026-01-19 20:22:49'),
-(10, 'address_line2', 'Liwonde, Southern Region', 'contact', '2026-01-19 20:22:49'),
-(11, 'address_country', 'Malawi', 'contact', '2026-01-19 20:22:49'),
-(12, 'facebook_url', 'https://facebook.com/liwondesunhotel', 'social', '2026-01-19 20:22:49'),
-(13, 'instagram_url', 'https://instagram.com/liwondesunhotel', 'social', '2026-01-19 20:22:49'),
-(14, 'twitter_url', 'https://twitter.com/liwondesunhotel', 'social', '2026-01-19 20:22:49'),
-(15, 'linkedin_url', 'https://linkedin.com/company/liwondesunhotel', 'social', '2026-01-19 20:22:49'),
-(16, 'working_hours', '24/7 Available', 'contact', '2026-01-19 20:22:49'),
-(17, 'copyright_text', '2026 Liwonde Sun Hotel. All rights reserved.', 'general', '2026-01-19 20:22:49'),
-(18, 'currency_symbol', 'MWK', 'general', '2026-01-20 10:16:28'),
-(19, 'currency_code', 'MWK', 'general', '2026-01-20 10:16:13'),
-(20, 'site_logo', '', 'general', '2026-01-21 23:24:01'),
-(23, 'site_url', 'http://liwondesunhotel.com', 'general', '2026-01-27 07:20:42'),
-(27, 'check_in_time', '2:00 PM', 'booking', '2026-01-27 12:02:11'),
-(28, 'check_out_time', '11:00 AM', 'booking', '2026-01-27 12:02:11'),
-(29, 'booking_change_policy', 'If you need to make any changes, please contact us at least 48 hours before your arrival.', 'booking', '2026-01-27 12:02:11'),
-(30, 'email_main', 'test@liwondesunhotel.com', 'contact', '2026-01-28 01:12:46'),
-(32, 'vat_enabled', '1', 'accounting', '2026-01-30 00:09:59'),
-(33, 'vat_rate', '16.5', 'accounting', '2026-01-30 00:09:59'),
-(34, 'vat_number', 'MW123456789', 'accounting', '2026-01-30 00:09:59'),
-(35, 'payment_terms', 'Payment due upon check-in', 'accounting', '2026-01-30 00:09:59'),
-(36, 'invoice_prefix', 'INV', 'accounting', '2026-01-30 00:09:59'),
-(37, 'invoice_start_number', '1001', 'accounting', '2026-01-30 00:09:59'),
-(44, 'max_advance_booking_days', '22', 'booking', '2026-01-30 00:40:21'),
-(45, 'payment_policy', 'Full payment is required upon check-in. We accept cash, credit cards, and bank transfers.', 'booking', '2026-01-30 00:36:10'),
-(76, 'tentative_enabled', '1', 'bookings', '2026-02-01 16:32:10'),
-(77, 'tentative_duration_hours', '48', 'bookings', '2026-02-01 16:32:10'),
-(78, 'tentative_reminder_hours', '24', 'bookings', '2026-02-01 16:32:10'),
-(79, 'tentative_max_extensions', '2', 'bookings', '2026-02-01 16:32:10'),
-(80, 'tentative_deposit_percent', '20', 'bookings', '2026-02-01 16:32:10'),
-(81, 'tentative_deposit_required', '0', 'bookings', '2026-02-01 16:32:10'),
-(82, 'tentative_block_availability', '1', 'bookings', '2026-02-01 16:32:10'),
-(90, 'whatsapp_number', '+265888860670', 'contact', '2026-02-01 19:09:42'),
-(102, 'footer_credits', '© 2026 Liwonde Sun Hotel.', 'general', '2026-02-02 00:33:02'),
-(103, 'footer_design_credit', 'Powered by ProManaged IT', 'general', '2026-02-02 00:33:08'),
-(104, 'footer_share_title', 'Share', 'general', '2026-02-02 00:32:07'),
-(105, 'footer_connect_title', 'Connect With Us', 'general', '2026-02-02 00:32:07'),
-(106, 'footer_contact_title', 'Contact Information', 'general', '2026-02-02 00:32:07'),
-(107, 'footer_policies_title', 'Policies', 'general', '2026-02-02 00:32:07'),
-(108, 'conference_email', 'johnpaulchira@gmail.com', 'contact', '2026-02-03 00:06:33'),
-(109, 'gym_email', 'johnpaulchira@gmail.com', 'contact', '2026-02-03 00:06:38'),
-(112, 'pending_duration_hours', '24', 'booking', '2026-02-03 00:29:35'),
-(113, 'tentative_grace_period_hours', '0', 'booking', '2026-02-03 00:29:35'),
-(114, 'admin_notification_email', '', 'email', '2026-02-03 00:29:35');
+INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_group`, `updated_at`, `hero_video_path`, `hero_video_type`) VALUES
+(1, 'site_name', 'Liwonde Sun Hotel', 'general', '2026-02-04 02:27:15', NULL, NULL),
+(2, 'site_tagline', 'Where Luxury Meets Nature', 'general', '2026-01-19 20:22:49', NULL, NULL),
+(3, 'hero_title', 'Experience Unparalleled Luxury', 'hero', '2026-01-19 20:22:49', NULL, NULL),
+(4, 'hero_subtitle', 'Discover the perfect blend of comfort, elegance, and exceptional service at Malawi\'s premier destination', 'hero', '2026-01-19 20:22:49', NULL, NULL),
+(5, 'phone_main', '+265 123 456 785', 'contact', '2026-01-20 07:43:44', NULL, NULL),
+(6, 'phone_reservations', '+265 987 654 321', 'contact', '2026-01-19 20:22:49', NULL, NULL),
+(9, 'address_line1', 'Liwonde National Park Road', 'contact', '2026-01-19 20:22:49', NULL, NULL),
+(10, 'address_line2', 'Liwonde, Southern Region', 'contact', '2026-01-19 20:22:49', NULL, NULL),
+(11, 'address_country', 'Malawi', 'contact', '2026-01-19 20:22:49', NULL, NULL),
+(12, 'facebook_url', 'https://facebook.com/liwondesunhotel', 'social', '2026-01-19 20:22:49', NULL, NULL),
+(13, 'instagram_url', 'https://instagram.com/liwondesunhotel', 'social', '2026-01-19 20:22:49', NULL, NULL),
+(14, 'twitter_url', 'https://twitter.com/liwondesunhotel', 'social', '2026-01-19 20:22:49', NULL, NULL),
+(15, 'linkedin_url', 'https://linkedin.com/company/liwondesunhotel', 'social', '2026-01-19 20:22:49', NULL, NULL),
+(16, 'working_hours', '24/7 Available', 'contact', '2026-01-19 20:22:49', NULL, NULL),
+(17, 'copyright_text', '2026 Liwonde Sun Hotel. All rights reserved.', 'general', '2026-01-19 20:22:49', NULL, NULL),
+(18, 'currency_symbol', 'MWK', 'general', '2026-01-20 10:16:28', NULL, NULL),
+(19, 'currency_code', 'MWK', 'general', '2026-01-20 10:16:13', NULL, NULL),
+(20, 'site_logo', '', 'general', '2026-01-21 23:24:01', NULL, NULL),
+(23, 'site_url', 'https://www.liwondesunhotel.com', 'general', '2026-02-04 13:56:24', NULL, NULL),
+(27, 'check_in_time', '2:00 PM', 'booking', '2026-01-27 12:02:11', NULL, NULL),
+(28, 'check_out_time', '11:00 AM', 'booking', '2026-01-27 12:02:11', NULL, NULL),
+(29, 'booking_change_policy', 'If you need to make any changes, please contact us at least 48 hours before your arrival.', 'booking', '2026-01-27 12:02:11', NULL, NULL),
+(30, 'email_main', 'test@liwondesunhotel.com', 'contact', '2026-01-28 01:12:46', NULL, NULL),
+(32, 'vat_enabled', '1', 'accounting', '2026-01-30 00:09:59', NULL, NULL),
+(33, 'vat_rate', '16.5', 'accounting', '2026-01-30 00:09:59', NULL, NULL),
+(34, 'vat_number', 'MW123456789', 'accounting', '2026-01-30 00:09:59', NULL, NULL),
+(35, 'payment_terms', 'Payment due upon check-in', 'accounting', '2026-01-30 00:09:59', NULL, NULL),
+(36, 'invoice_prefix', 'INV', 'accounting', '2026-01-30 00:09:59', NULL, NULL),
+(37, 'invoice_start_number', '1001', 'accounting', '2026-01-30 00:09:59', NULL, NULL),
+(44, 'max_advance_booking_days', '22', 'booking', '2026-01-30 00:40:21', NULL, NULL),
+(45, 'payment_policy', 'Full payment is required upon check-in. We accept cash, credit cards, and bank transfers.', 'booking', '2026-01-30 00:36:10', NULL, NULL),
+(76, 'tentative_enabled', '1', 'bookings', '2026-02-01 16:32:10', NULL, NULL),
+(77, 'tentative_duration_hours', '48', 'bookings', '2026-02-01 16:32:10', NULL, NULL),
+(78, 'tentative_reminder_hours', '24', 'bookings', '2026-02-01 16:32:10', NULL, NULL),
+(79, 'tentative_max_extensions', '2', 'bookings', '2026-02-01 16:32:10', NULL, NULL),
+(80, 'tentative_deposit_percent', '20', 'bookings', '2026-02-01 16:32:10', NULL, NULL),
+(81, 'tentative_deposit_required', '0', 'bookings', '2026-02-01 16:32:10', NULL, NULL),
+(82, 'tentative_block_availability', '1', 'bookings', '2026-02-01 16:32:10', NULL, NULL),
+(90, 'whatsapp_number', '+265888860670', 'contact', '2026-02-01 19:09:42', NULL, NULL),
+(102, 'footer_credits', '© 2026 Liwonde Sun Hotel.', 'general', '2026-02-02 00:33:02', NULL, NULL),
+(103, 'footer_design_credit', 'Powered by ProManaged IT', 'general', '2026-02-02 00:33:08', NULL, NULL),
+(104, 'footer_share_title', 'Share', 'general', '2026-02-02 00:32:07', NULL, NULL),
+(105, 'footer_connect_title', 'Connect With Us', 'general', '2026-02-02 00:32:07', NULL, NULL),
+(106, 'footer_contact_title', 'Contact Information', 'general', '2026-02-02 00:32:07', NULL, NULL),
+(107, 'footer_policies_title', 'Policies', 'general', '2026-02-02 00:32:07', NULL, NULL),
+(108, 'conference_email', 'johnpaulchira@gmail.com', 'contact', '2026-02-03 00:06:33', NULL, NULL),
+(109, 'gym_email', 'johnpaulchira@gmail.com', 'contact', '2026-02-03 00:06:38', NULL, NULL),
+(112, 'pending_duration_hours', '24', 'booking', '2026-02-03 00:29:35', NULL, NULL),
+(113, 'tentative_grace_period_hours', '0', 'booking', '2026-02-03 00:29:35', NULL, NULL),
+(114, 'admin_notification_email', '', 'email', '2026-02-03 00:29:35', NULL, NULL),
+(115, 'booking_time_buffer_minutes', '60', 'booking', '2026-02-03 17:49:20', NULL, NULL),
+(117, 'theme_color', '#0A1929', 'general', '2026-02-04 13:56:24', NULL, NULL),
+(118, 'default_keywords', 'luxury hotel malawi, liwonde accommodation, premium resort, lake malawi hotel, 5-star hotel malawi', 'general', '2026-02-04 13:56:24', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1504,6 +1536,16 @@ ALTER TABLE `gym_features`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `gym_inquiries`
+--
+ALTER TABLE `gym_inquiries`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `ref_number` (`reference_number`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_created_at` (`created_at`),
+  ADD KEY `idx_email` (`email`);
+
+--
 -- Indexes for table `gym_packages`
 --
 ALTER TABLE `gym_packages`
@@ -1702,7 +1744,7 @@ ALTER TABLE `cancellation_log`
 -- AUTO_INCREMENT for table `conference_inquiries`
 --
 ALTER TABLE `conference_inquiries`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `conference_rooms`
@@ -1777,6 +1819,12 @@ ALTER TABLE `gym_features`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
+-- AUTO_INCREMENT for table `gym_inquiries`
+--
+ALTER TABLE `gym_inquiries`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
 -- AUTO_INCREMENT for table `gym_packages`
 --
 ALTER TABLE `gym_packages`
@@ -1828,7 +1876,7 @@ ALTER TABLE `page_loaders`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `policies`
@@ -1846,13 +1894,13 @@ ALTER TABLE `restaurant_gallery`
 -- AUTO_INCREMENT for table `reviews`
 --
 ALTER TABLE `reviews`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `review_responses`
 --
 ALTER TABLE `review_responses`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `rooms`
@@ -1870,7 +1918,7 @@ ALTER TABLE `room_blocked_dates`
 -- AUTO_INCREMENT for table `site_settings`
 --
 ALTER TABLE `site_settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=115;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=119;
 
 --
 -- AUTO_INCREMENT for table `tentative_booking_log`

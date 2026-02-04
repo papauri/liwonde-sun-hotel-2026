@@ -1756,5 +1756,6 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
         }
     </script>
     <script src="js/admin-components.js"></script>
+    <script src="js/admin-mobile.js"></script>
 </body>
 </html>

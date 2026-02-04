@@ -43,43 +43,38 @@
                 </a>
                 
                 <?php
-                // Determine current page for active nav highlighting
-                $request_uri = $_SERVER['REQUEST_URI'];
-                // Remove query string and anchors
-                $path = parse_url($request_uri, PHP_URL_PATH);
-                $current_page = basename($path, '.php');
-                if (empty($current_page) || $current_page === '') {
-                    $current_page = 'index';
-                }
-                $current_page = strtolower($current_page);
-                // Normalise common slug variants (e.g. room_gallery vs rooms-gallery)
-                $current_page = str_replace('_', '-', $current_page);
+                // Determine current page for active nav highlighting - SIMPLE VERSION
+                $current_file = basename($_SERVER['PHP_SELF']);
                 
                 // Function to check if nav link is active
-                function is_nav_active($link, $current) {
-                    // Extract page name from link
-                    $link_page = basename($link, '.php');
-                    if (empty($link_page) || $link_page === '' || $link === '/') {
-                        $link_page = 'index';
+                function is_nav_active($link) {
+                    global $current_file;
+                    
+                    // Home link
+                    if ($link === '/') {
+                        return $current_file === 'index.php';
                     }
-                    $link_page = strtolower($link_page);
                     
-                    // Normalise common slug variants (e.g. room_gallery vs rooms-gallery)
-                    $link_page = str_replace('_', '-', $link_page);
-                    $current = str_replace('_', '-', strtolower($current));
+                    // Extract filename from link
+                    $link_file = basename($link);
                     
-                    // Default: exact match (with home special-case)
-                    return $current === $link_page || ($current === 'index' && $link === '/');
+                    // Special case: room.php should activate "Rooms" nav link
+                    if ($current_file === 'room.php' && $link_file === 'rooms-gallery.php') {
+                        return true;
+                    }
+                    
+                    // Direct comparison for all other pages
+                    return $current_file === $link_file;
                 }
                 ?>
                 
                 <ul class="nav-menu" id="primary-nav">
-                    <li class="nav-item"><a href="/" class="nav-link <?php echo is_nav_active('/', $current_page) ? 'active' : ''; ?>"><span class="link-text">Home</span></a></li>
-                    <li class="nav-item"><a href="/rooms-gallery.php" class="nav-link <?php echo is_nav_active('/rooms-gallery.php', $current_page) ? 'active' : ''; ?>"><span class="link-text">Rooms</span></a></li>
-                    <li class="nav-item"><a href="/restaurant.php" class="nav-link <?php echo is_nav_active('/restaurant.php', $current_page) ? 'active' : ''; ?>"><span class="link-text">Restaurant</span></a></li>
-                    <li class="nav-item"><a href="/gym.php" class="nav-link <?php echo is_nav_active('/gym.php', $current_page) ? 'active' : ''; ?>"><span class="link-text">Gym</span></a></li>
-                    <li class="nav-item"><a href="/conference.php" class="nav-link <?php echo is_nav_active('/conference.php', $current_page) ? 'active' : ''; ?>"><span class="link-text">Conference</span></a></li>
-                    <li class="nav-item"><a href="/events.php" class="nav-link <?php echo is_nav_active('/events.php', $current_page) ? 'active' : ''; ?>"><span class="link-text">Events</span></a></li>
+                    <li class="nav-item"><a href="/" class="nav-link <?php echo is_nav_active('/') ? 'active' : ''; ?>"><span class="link-text">Home</span></a></li>
+                    <li class="nav-item"><a href="/rooms-gallery.php" class="nav-link <?php echo is_nav_active('/rooms-gallery.php') ? 'active' : ''; ?>"><span class="link-text">Rooms</span></a></li>
+                    <li class="nav-item"><a href="/restaurant.php" class="nav-link <?php echo is_nav_active('/restaurant.php') ? 'active' : ''; ?>"><span class="link-text">Restaurant</span></a></li>
+                    <li class="nav-item"><a href="/gym.php" class="nav-link <?php echo is_nav_active('/gym.php') ? 'active' : ''; ?>"><span class="link-text">Gym</span></a></li>
+                    <li class="nav-item"><a href="/conference.php" class="nav-link <?php echo is_nav_active('/conference.php') ? 'active' : ''; ?>"><span class="link-text">Conference</span></a></li>
+                    <li class="nav-item"><a href="/events.php" class="nav-link <?php echo is_nav_active('/events.php') ? 'active' : ''; ?>"><span class="link-text">Events</span></a></li>
                     <li class="nav-item"><a href="#contact" class="nav-link contact-link"><span class="link-text">Contact</span></a></li>
                     <li class="nav-item nav-item-cta"><a href="/booking.php" class="nav-cta"><i class="fas fa-calendar-check"></i> Book Now</a></li>
                 </ul>

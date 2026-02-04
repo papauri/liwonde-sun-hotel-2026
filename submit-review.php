@@ -9,6 +9,9 @@
  * - Input validation
  */
 
+// Start session first
+session_start();
+
 // Load security configuration first
 require_once 'config/security.php';
 
@@ -66,11 +69,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Validate guest_email
-    $email_validation = validateEmail($_POST['guest_email'] ?? '');
+    $guest_email_input = trim($_POST['guest_email'] ?? '');
+    $email_validation = validateEmail($guest_email_input);
     if (!$email_validation['valid']) {
         $validation_errors['guest_email'] = $email_validation['error'];
     } else {
-        $sanitized_data['guest_email'] = sanitizeString($email_validation['value'], 254);
+        $sanitized_data['guest_email'] = sanitizeString($guest_email_input, 254);
     }
     
     // Validate overall_rating
@@ -205,18 +209,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $sanitized_data['value_rating']
             ]);
             
-            // Set success message
-            $_SESSION['alert'] = [
-                'type' => 'success',
-                'message' => 'Thank you for your review! Your feedback has been submitted successfully.'
+            // Store review details for confirmation page
+            $_SESSION['review_details'] = [
+                'guest_name' => $sanitized_data['guest_name'],
+                'review_title' => $sanitized_data['review_title'],
+                'overall_rating' => $sanitized_data['overall_rating'],
+                'room_id' => $room_id
             ];
             
-            // Redirect to room page or home page
-            if ($room_id > 0) {
-                header('Location: room.php?id=' . $room_id);
-            } else {
-                header('Location: index.php');
-            }
+            // Redirect to confirmation page
+            header('Location: review-confirmation.php');
             exit;
             
         } catch (PDOException $e) {

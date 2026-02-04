@@ -2,6 +2,11 @@
 // Include admin initialization (PHP-only, no HTML output)
 require_once 'admin-init.php';
 
+// Include modal and alert helpers
+require_once '../includes/modal.php';
+require_once '../includes/alert.php';
+require_once 'video-upload-handler.php';
+
 $user = [
     'id' => $_SESSION['admin_user_id'],
     'username' => $_SESSION['admin_username'],
@@ -43,10 +48,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'add') {
             $imagePath = uploadEventImage($_FILES['image'] ?? null);
+            $videoUpload = uploadVideo($_FILES['video'] ?? null, 'events');
+            $videoPath = $videoUpload['path'] ?? null;
+            $videoType = $videoUpload['type'] ?? null;
 
             $stmt = $pdo->prepare("
-                INSERT INTO events (title, description, event_date, start_time, end_time, location, ticket_price, capacity, is_featured, is_active, display_order, image_path)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO events (title, description, event_date, start_time, end_time, location, ticket_price, capacity, is_featured, is_active, display_order, image_path, video_path, video_type)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $_POST['title'],
@@ -60,57 +68,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 isset($_POST['is_featured']) ? 1 : 0,
                 isset($_POST['is_active']) ? 1 : 0,
                 $_POST['display_order'] ?? 0,
-                $imagePath
+                $imagePath,
+                $videoPath,
+                $videoType
             ]);
             $message = 'Event added successfully!';
 
         } elseif ($action === 'update') {
             $imagePath = uploadEventImage($_FILES['image'] ?? null);
+            $videoUpload = uploadVideo($_FILES['video'] ?? null, 'events');
+            $videoPath = $videoUpload['path'] ?? null;
+            $videoType = $videoUpload['type'] ?? null;
+
+            // Build the update query dynamically based on what's being updated
+            $updateFields = [
+                'title = ?', 'description = ?', 'event_date = ?', 'start_time = ?', 'end_time = ?',
+                'location = ?', 'ticket_price = ?', 'capacity = ?', 'is_featured = ?', 'is_active = ?', 'display_order = ?'
+            ];
+            $updateValues = [
+                $_POST['title'],
+                $_POST['description'],
+                $_POST['event_date'],
+                $_POST['start_time'],
+                $_POST['end_time'],
+                $_POST['location'],
+                $_POST['ticket_price'] ?? 0,
+                $_POST['capacity'],
+                isset($_POST['is_featured']) ? 1 : 0,
+                isset($_POST['is_active']) ? 1 : 0,
+                $_POST['display_order'] ?? 0
+            ];
 
             if ($imagePath) {
-                $stmt = $pdo->prepare("
-                    UPDATE events 
-                    SET title = ?, description = ?, event_date = ?, start_time = ?, end_time = ?, 
-                        location = ?, ticket_price = ?, capacity = ?, is_featured = ?, is_active = ?, display_order = ?, image_path = ?
-                    WHERE id = ?
-                ");
-                $stmt->execute([
-                    $_POST['title'],
-                    $_POST['description'],
-                    $_POST['event_date'],
-                    $_POST['start_time'],
-                    $_POST['end_time'],
-                    $_POST['location'],
-                    $_POST['ticket_price'] ?? 0,
-                    $_POST['capacity'],
-                    isset($_POST['is_featured']) ? 1 : 0,
-                    isset($_POST['is_active']) ? 1 : 0,
-                    $_POST['display_order'] ?? 0,
-                    $imagePath,
-                    $_POST['id']
-                ]);
-            } else {
-                $stmt = $pdo->prepare("
-                    UPDATE events 
-                    SET title = ?, description = ?, event_date = ?, start_time = ?, end_time = ?, 
-                        location = ?, ticket_price = ?, capacity = ?, is_featured = ?, is_active = ?, display_order = ?
-                    WHERE id = ?
-                ");
-                $stmt->execute([
-                    $_POST['title'],
-                    $_POST['description'],
-                    $_POST['event_date'],
-                    $_POST['start_time'],
-                    $_POST['end_time'],
-                    $_POST['location'],
-                    $_POST['ticket_price'] ?? 0,
-                    $_POST['capacity'],
-                    isset($_POST['is_featured']) ? 1 : 0,
-                    isset($_POST['is_active']) ? 1 : 0,
-                    $_POST['display_order'] ?? 0,
-                    $_POST['id']
-                ]);
+                $updateFields[] = 'image_path = ?';
+                $updateValues[] = $imagePath;
             }
+
+            if ($videoPath) {
+                $updateFields[] = 'video_path = ?';
+                $updateValues[] = $videoPath;
+                $updateFields[] = 'video_type = ?';
+                $updateValues[] = $videoType;
+            }
+
+            $updateValues[] = $_POST['id'];
+
+            $sql = "UPDATE events SET " . implode(', ', $updateFields) . " WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($updateValues);
             $message = 'Event updated successfully!';
 
         } elseif ($action === 'delete') {
@@ -1147,6 +1152,24 @@ try {
                     </div>
                 </div>
             </div>
+
+            <div class="form-group">
+                <label>Event Video (Optional)</label>
+                <div class="video-upload-wrapper">
+                    <div class="image-upload-area" onclick="document.getElementById(\'eventVideo\').click()" style="border-color: #9b59b6;">
+                        <i class="fas fa-video" style="color: #9b59b6;"></i>
+                        <div style="font-weight: 600; margin-bottom: 4px;">Click to Upload Event Video</div>
+                        <div style="font-size: 12px; color: #999;">MP4, WebM, OGG (Max 100MB)</div>
+                    </div>
+                    <input type="file" name="video" id="eventVideo" accept="video/*" style="display: none;" onchange="previewModalVideo(this)">
+                    <div id="videoPreviewContainer" style="margin-top: 16px; display: none;">
+                        <div style="background: #f3e5f5; padding: 12px; border-radius: 8px; border: 1px solid #9b59b6;">
+                            <i class="fas fa-check-circle" style="color: #9b59b6;"></i>
+                            <span id="videoFileName" style="font-size: 14px; color: #4a148c;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <div class="form-group checkbox-group">
                 <input type="checkbox" name="is_featured" id="eventFeatured">
@@ -1170,105 +1193,27 @@ try {
         '
     ]);
     ?>
-                <input type="hidden" name="action" id="formAction" value="add">
-                <input type="hidden" name="id" id="eventId">
-                
-                <div class="form-group">
-                    <label>Event Title *</label>
-                    <input type="text" name="title" id="eventTitle" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Description *</label>
-                    <textarea name="description" id="eventDescription" required></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Event Date *</label>
-                    <input type="date" name="event_date" id="eventDate" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Start Time</label>
-                    <input type="time" name="start_time" id="eventStartTime">
-                </div>
-                
-                <div class="form-group">
-                    <label>End Time</label>
-                    <input type="time" name="end_time" id="eventEndTime">
-                </div>
-                
-                <div class="form-group">
-                    <label>Location</label>
-                    <input type="text" name="location" id="eventLocation" placeholder="e.g., Grand Conference Hall">
-                </div>
-                
-                <div class="form-group">
-                    <label>Ticket Price (<?php echo htmlspecialchars(getSetting('currency_symbol')); ?>)</label>
-                    <input type="number" name="ticket_price" id="eventPrice" step="0.01" value="0">
-                    <small style="color: #666;">Enter 0 for free events</small>
-                </div>
-                
-                <div class="form-group">
-                    <label>Capacity</label>
-                    <input type="number" name="capacity" id="eventCapacity">
-                </div>
-                
-                <div class="form-group">
-                    <label>Display Order</label>
-                    <input type="number" name="display_order" id="eventOrder" value="0">
-                </div>
 
-                <div class="form-group">
-                    <label>Event Image</label>
-                    <div class="image-upload-wrapper">
-                        <div class="image-upload-area" onclick="document.getElementById('eventImage').click()">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <div style="font-weight: 600; margin-bottom: 4px;">Click to Upload Event Image</div>
-                            <div style="font-size: 12px; color: #999;">Recommended: 1200x800px (JPG, PNG, WebP)</div>
-                        </div>
-                        <input type="file" name="image" id="eventImage" accept="image/jpeg,image/png,image/jpg,image/webp" style="display: none;" onchange="previewModalImage(this)">
-                        <div id="imagePreviewContainer" style="margin-top: 16px; display: none;">
-                            <img id="imagePreview" class="current-image-preview" alt="Preview">
-                            <div style="font-size: 12px; color: #666; margin-top: 8px;">
-                                <i class="fas fa-check-circle" style="color: #28a745;"></i> 
-                                <span id="imageFileName"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" name="is_featured" id="eventFeatured">
-                    <label for="eventFeatured">Feature this event</label>
-                </div>
-                
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" name="is_active" id="eventActive" checked>
-                    <label for="eventActive">Active (visible on website)</label>
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn-action btn-cancel" onclick="closeModal()">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn-action btn-save">
-                        <i class="fas fa-save"></i> Save
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+    <script src="js/admin-components.js"></script>
     <script>
         let currentEditingId = null;
 
         function openAddModal() {
-            document.getElementById('modalTitle').textContent = 'Add New Event';
             document.getElementById('formAction').value = 'add';
             document.getElementById('eventForm').reset();
             document.getElementById('eventActive').checked = true;
             document.getElementById('imagePreviewContainer').style.display = 'none';
+            // Update the modal header by finding the modal and changing its header text
+            const modalHeader = document.querySelector('#eventModal .modal-header');
+            if (modalHeader) {
+                const titleElement = modalHeader.querySelector('span');
+                if (titleElement) {
+                    titleElement.textContent = 'Add New Event';
+                } else {
+                    // If there's no span, create one
+                    modalHeader.innerHTML = '<span>Add New Event</span><span class="modal-close" data-modal-close>&times;</span>';
+                }
+            }
             Modal.open('eventModal');
         }
 
@@ -1279,27 +1224,27 @@ try {
 
             currentEditingId = id;
             const row = document.getElementById(`row-${id}`);
-            
+
             row.querySelectorAll('.cell-view').forEach(el => el.classList.add('hidden'));
             row.querySelectorAll('.cell-edit').forEach(el => el.classList.add('active'));
-            
+
             row.querySelector('[data-edit-btn]').style.display = 'none';
             row.querySelector('[data-save-btn]').style.display = 'block';
             row.querySelector('[data-cancel-btn]').style.display = 'block';
-            
+
             row.classList.add('edit-mode');
         }
 
         function cancelEdit(id) {
             const row = document.getElementById(`row-${id}`);
-            
+
             row.querySelectorAll('.cell-view').forEach(el => el.classList.remove('hidden'));
             row.querySelectorAll('.cell-edit').forEach(el => el.classList.remove('active'));
-            
+
             row.querySelector('[data-edit-btn]').style.display = 'block';
             row.querySelector('[data-save-btn]').style.display = 'none';
             row.querySelector('[data-cancel-btn]').style.display = 'none';
-            
+
             row.classList.remove('edit-mode');
             currentEditingId = null;
         }
@@ -1307,18 +1252,18 @@ try {
         function saveRow(id) {
             const row = document.getElementById(`row-${id}`);
             const formData = new FormData();
-            
+
             formData.append('action', 'update');
             formData.append('id', id);
             formData.append('description', ''); // Not editable inline
             formData.append('is_featured', 0);
             formData.append('display_order', 0);
-            
+
             row.querySelectorAll('.cell-edit.active').forEach(input => {
                 const field = input.getAttribute('data-field');
                 formData.append(field, input.value);
             });
-            
+
             fetch(window.location.href, {
                 method: 'POST',
                 body: formData
@@ -1340,7 +1285,7 @@ try {
             const formData = new FormData();
             formData.append('action', 'delete');
             formData.append('id', id);
-            
+
             fetch(window.location.href, {
                 method: 'POST',
                 body: formData
@@ -1362,7 +1307,7 @@ try {
             const formData = new FormData();
             formData.append('action', 'toggle_active');
             formData.append('id', id);
-            
+
             fetch(window.location.href, {
                 method: 'POST',
                 body: formData
@@ -1384,7 +1329,7 @@ try {
             const formData = new FormData();
             formData.append('action', 'toggle_featured');
             formData.append('id', id);
-            
+
             fetch(window.location.href, {
                 method: 'POST',
                 body: formData
@@ -1405,17 +1350,37 @@ try {
         function previewModalImage(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                
+
                 reader.onload = function(e) {
                     document.getElementById('imagePreview').src = e.target.result;
                     document.getElementById('imageFileName').textContent = input.files[0].name;
                     document.getElementById('imagePreviewContainer').style.display = 'block';
                 };
-                
+
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
+        function previewModalVideo(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                document.getElementById('videoFileName').textContent = file.name + ' (' + formatBytes(file.size) + ')';
+                document.getElementById('videoPreviewContainer').style.display = 'block';
+            }
+        }
+
+        function formatBytes(bytes) {
+            const units = ['B', 'KB', 'MB', 'GB'];
+            let size = bytes;
+            let unitIndex = 0;
+            
+            while (size >= 1024 && unitIndex < units.length - 1) {
+                size /= 1024;
+                unitIndex++;
+            }
+            
+            return size.toFixed(2) + ' ' + units[unitIndex];
+        }
     </script>
 </body>
 </html>

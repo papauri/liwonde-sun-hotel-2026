@@ -583,6 +583,7 @@ $currency_symbol = getSetting('currency_symbol');
     </div>
 
     <script src="js/admin-components.js"></script>
+    <script src="js/admin-mobile.js"></script>
     <script>
         function processCheckIn(bookingId, guestName) {
             if (!confirm(`Check in ${guestName}?`)) {
