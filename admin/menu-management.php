@@ -132,10 +132,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch all menu items grouped by category
 try {
-    // Fetch food items from food_menu
+    // Simple approach: just use food_menu table
     $stmt = $pdo->query("
         SELECT * FROM food_menu
-        ORDER BY category, display_order ASC, item_name ASC
+        ORDER BY category ASC, display_order ASC, item_name ASC
     ");
     $food_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -170,8 +170,8 @@ try {
 
 } catch (PDOException $e) {
     $error = 'Error fetching menu items: ' . $e->getMessage();
-    $grouped_food = [];
     $food_categories = [];
+    $grouped_food = [];
     $grouped_drinks = [];
     $drink_categories = [];
 }

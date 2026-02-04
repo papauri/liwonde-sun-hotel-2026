@@ -39,7 +39,8 @@ function sendSecurityHeaders() {
     
     // Content Security Policy with Font Awesome fix and video support
     // This allows Font Awesome to load properly and enables video embeds from popular platforms
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self'; frame-src 'self' https://www.youtube.com https://youtube.com https://player.vimeo.com https://vimeo.com https://www.dailymotion.com https://dai.ly https://media.gettyimages.com https://*.gettyimages.com;");
+    // Added media-src for Getty Images videos and other external media
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self'; media-src 'self' https: blob:; frame-src 'self' https://www.youtube.com https://youtube.com https://player.vimeo.com https://vimeo.com https://www.dailymotion.com https://dai.ly https://media.gettyimages.com https://*.gettyimages.com;");
     
     // Referrer Policy
     header('Referrer-Policy: strict-origin-when-cross-origin');

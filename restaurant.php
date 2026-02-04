@@ -21,20 +21,23 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'menu') {
     
     try {
         if ($menu_type === 'food') {
-            $stmt = $pdo->query("SELECT * FROM food_menu ORDER BY category, display_order ASC, id ASC");
+            // Simple approach: just use food_menu table
+            $stmt = $pdo->query("SELECT * FROM food_menu WHERE is_available = 1 ORDER BY category ASC, display_order ASC, id ASC");
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Group by category
+            // Group by category name (category column contains the name)
             foreach ($items as $item) {
                 $category = $item['category'];
-                if (!isset($response['categories'][$category])) {
-                    $response['categories'][$category] = [
+                $slug = strtolower(str_replace(' ', '-', $category));
+                
+                if (!isset($response['categories'][$slug])) {
+                    $response['categories'][$slug] = [
                         'name' => $category,
-                        'slug' => strtolower(str_replace(' ', '-', $category)),
+                        'slug' => $slug,
                         'items' => []
                     ];
                 }
-                $response['categories'][$category]['items'][] = [
+                $response['categories'][$slug]['items'][] = [
                     'id' => $item['id'],
                     'name' => $item['item_name'],
                     'description' => $item['description'] ?? '',

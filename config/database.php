@@ -455,7 +455,8 @@ function getCachedGalleryImages() {
     
     try {
         $stmt = $pdo->query("
-            SELECT * FROM hotel_gallery 
+            SELECT id, title, description, image_url, video_path, video_type, category, display_order 
+            FROM hotel_gallery 
             WHERE is_active = 1 
             ORDER BY display_order ASC
         ");

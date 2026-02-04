@@ -2,6 +2,7 @@
 require_once 'config/database.php';
 require_once 'includes/reviews-display.php';
 require_once 'includes/video-display.php';
+require_once 'includes/image-proxy-helper.php';
 
 $room_slug = isset($_GET['room']) ? trim($_GET['room']) : null;
 if (!$room_slug) {
@@ -91,7 +92,7 @@ if (empty($room_images) && !empty($room['image_url'])) {
     ];
 }
 
-$hero_image = resolveImageUrl($room_images[0]['image_url'] ?? $room['image_url']);
+$hero_image = proxyImageUrl(resolveImageUrl($room_images[0]['image_url'] ?? $room['image_url']));
 $amenities = array_filter(array_map('trim', explode(',', $room['amenities'] ?? '')));
 
 // Build SEO data for room page
@@ -264,7 +265,7 @@ try {
                 
                 <?php foreach ($room_images as $img): ?>
                 <div class="gallery-item">
-                    <img src="<?php echo htmlspecialchars(resolveImageUrl($img['image_url'])); ?>" alt="<?php echo htmlspecialchars($img['title']); ?>">
+                    <img src="<?php echo htmlspecialchars(proxyImageUrl(resolveImageUrl($img['image_url']))); ?>" alt="<?php echo htmlspecialchars($img['title']); ?>">
                     <div class="gallery-item-label"><?php echo htmlspecialchars($img['title']); ?></div>
                 </div>
                 <?php endforeach; ?>

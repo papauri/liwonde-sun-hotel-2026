@@ -68,12 +68,31 @@ if (!function_exists('resolveImageUrl')) {
             
             <div class="gallery-carousel-container">
                 <div class="gallery-carousel-track">
-                    <?php foreach ($gallery_images as $index => $image): ?>
+                    <?php 
+// Include video display helper
+require_once __DIR__ . '/video-display.php';
+
+foreach ($gallery_images as $index => $image): ?>
                     <div class="gallery-carousel-item" data-index="<?php echo $index; ?>">
                         <div class="gallery-item-inner">
-                            <img src="<?php echo htmlspecialchars(resolveImageUrl($image['image_url'])); ?>" 
-                                 alt="<?php echo htmlspecialchars($image['title']); ?>" 
-                                 loading="lazy">
+                            <?php if (!empty($image['video_path'])): ?>
+                                <!-- Display video if available -->
+                                <div class="gallery-video">
+                                    <?php echo renderVideoEmbed($image['video_path'], $image['video_type'], [
+                                        'autoplay' => true,
+                                        'muted' => true,
+                                        'controls' => false,
+                                        'loop' => true,
+                                        'class' => 'gallery-video-embed',
+                                        'style' => 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;'
+                                    ]); ?>
+                                </div>
+                            <?php else: ?>
+                                <!-- Display image if no video -->
+                                <img src="<?php echo htmlspecialchars(resolveImageUrl($image['image_url'])); ?>" 
+                                     alt="<?php echo htmlspecialchars($image['title']); ?>" 
+                                     loading="lazy">
+                            <?php endif; ?>
                             <div class="gallery-item-overlay">
                                 <div class="gallery-item-content">
                                     <h4><?php echo htmlspecialchars($image['title']); ?></h4>

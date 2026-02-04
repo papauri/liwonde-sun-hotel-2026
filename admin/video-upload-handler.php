@@ -136,19 +136,21 @@ function getVideoInfo($videoPath) {
 
 /**
  * Format bytes to human readable format
- * 
+ *
  * @param int $bytes File size in bytes
  * @param int $precision Decimal precision
  * @return string Formatted size string
  */
-function formatBytes($bytes, $precision = 2) {
-    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    
-    for ($i = 0; $bytes > 1024; $i++) {
-        $bytes /= 1024;
+if (!function_exists('formatBytes')) {
+    function formatBytes($bytes, $precision = 2) {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        
+        for ($i = 0; $bytes > 1024; $i++) {
+            $bytes /= 1024;
+        }
+        
+        return round($bytes, $precision) . ' ' . $units[$i];
     }
-    
-    return round($bytes, $precision) . ' ' . $units[$i];
 }
 
 /**

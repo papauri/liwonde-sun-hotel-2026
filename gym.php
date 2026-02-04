@@ -3,6 +3,7 @@ require_once 'config/database.php';
 require_once 'config/email.php';
 require_once 'includes/validation.php';
 require_once 'includes/modal.php';
+require_once 'includes/image-proxy-helper.php';
 
 // Start session for any session-based functionality
 if (session_status() === PHP_SESSION_NONE) {
@@ -411,7 +412,7 @@ try {
                 </div>
                 
                 <div class="wellness-image" data-aos="fade-left">
-                    <img src="<?php echo htmlspecialchars($gymContent['wellness_image_path']); ?>" alt="Modern Fitness Center" loading="lazy">
+                    <img src="<?php echo htmlspecialchars(proxyImageUrl($gymContent['wellness_image_path'])); ?>" alt="Modern Fitness Center" loading="lazy">
                     <div class="image-badge">
                         <i class="fas fa-trophy"></i>
                         <span><?php echo htmlspecialchars($gymContent['badge_text']); ?></span>
@@ -549,7 +550,7 @@ try {
         <div class="container">
             <div class="training-content-grid">
                 <div class="training-image" data-aos="fade-right">
-                    <img src="<?php echo htmlspecialchars($gymContent['personal_training_image_path']); ?>" alt="Personal Training" loading="lazy">
+                    <img src="<?php echo htmlspecialchars(proxyImageUrl($gymContent['personal_training_image_path'])); ?>" alt="Personal Training" loading="lazy">
                 </div>
                 
                 <div class="training-text" data-aos="fade-left">

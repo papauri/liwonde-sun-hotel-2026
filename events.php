@@ -4,6 +4,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 require_once 'config/database.php';
+require_once 'includes/image-proxy-helper.php';
 
 
 // Fetch upcoming events (future and today)
@@ -464,6 +465,8 @@ try {
                                     $event_image = !empty($event['image_path']) && file_exists($event['image_path'])
                                         ? $event['image_path']
                                         : 'images/hero/slide2.jpg';
+                                    // Apply proxy for external images (Facebook, etc.)
+                                    $event_image = proxyImageUrl($event_image);
                                     ?>
                                     <img src="<?php echo htmlspecialchars($event_image); ?>"
                                          alt="<?php echo htmlspecialchars($event['title']); ?>"
