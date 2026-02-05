@@ -402,7 +402,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
     <meta name="theme-color" content="#0A1929">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=yes">
     <title>Book Your Stay | <?php echo htmlspecialchars($site_name); ?></title>
@@ -792,6 +792,13 @@ try {
                 selectedRoomMaxGuests = preselectedRoomMaxGuests;
                 updateGuestOptions(preselectedRoomMaxGuests);
                 updateOccupancyPrices(preselectedRoomId);
+                
+                // Set number of guests to max capacity for pre-selected room
+                const guestSelect = document.getElementById('number_of_guests');
+                guestSelect.value = preselectedRoomMaxGuests;
+                
+                // Update price based on current occupancy selection
+                updatePriceBasedOnOccupancy();
             }
             
             // Add occupancy type change listeners
@@ -800,6 +807,16 @@ try {
                 radio.addEventListener('change', function() {
                     updatePriceBasedOnOccupancy();
                     updateSummary();
+                    
+                    // Update visual styling for selected occupancy
+                    document.getElementById('singleOccupancyLabel').style.borderColor = 
+                        this.value === 'single' ? 'var(--gold)' : '#ddd';
+                    document.getElementById('singleOccupancyLabel').style.background = 
+                        this.value === 'single' ? 'rgba(212, 175, 55, 0.1)' : 'white';
+                    document.getElementById('doubleOccupancyLabel').style.borderColor = 
+                        this.value === 'double' ? 'var(--gold)' : '#ddd';
+                    document.getElementById('doubleOccupancyLabel').style.background = 
+                        this.value === 'double' ? 'rgba(212, 175, 55, 0.1)' : 'white';
                 });
             });
         });
@@ -884,6 +901,10 @@ try {
             
             // Update guest options based on room capacity
             updateGuestOptions(selectedRoomMaxGuests);
+            
+            // Set number of guests to max capacity for this room
+            const guestSelect = document.getElementById('number_of_guests');
+            guestSelect.value = selectedRoomMaxGuests;
             
             // Update occupancy prices for this room
             updateOccupancyPrices(roomId);
