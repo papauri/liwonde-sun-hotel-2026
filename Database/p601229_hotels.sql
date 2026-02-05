@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Feb 04, 2026 at 04:08 PM
+-- Generation Time: Feb 05, 2026 at 12:06 PM
 -- Server version: 8.0.44-cll-lve
 -- PHP Version: 8.4.16
 
@@ -325,42 +325,122 @@ CREATE TABLE `drink_menu` (
 --
 
 INSERT INTO `drink_menu` (`id`, `category`, `item_name`, `description`, `price`, `currency_code`, `image_path`, `is_available`, `is_featured`, `tags`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'Coffee', 'Espresso', 'Rich Italian espresso', 600.00, 'MWK', NULL, 1, 0, 'Hot, Premium', 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(2, 'Coffee', 'Cappuccino', 'Creamy cappuccino with artistic latte art', 850.00, 'MWK', NULL, 1, 1, 'Hot, Classic', 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(3, 'Coffee', 'Cortado', 'Perfect balance of espresso and steamed milk', 750.00, 'MWK', NULL, 1, 0, 'Hot, Balanced', 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(4, 'Coffee', 'Latte', 'Smooth latte with your choice of milk', 800.00, 'MWK', NULL, 1, 0, 'Hot, Creamy', 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(5, 'Coffee', 'Macchiato', 'Espresso marked with a touch of foam', 700.00, 'MWK', NULL, 1, 0, 'Hot, Strong', 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(6, 'Coffee', 'Americano', 'Bold americano with hot water', 650.00, 'MWK', NULL, 1, 0, 'Hot, Classic', 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(7, 'Coffee', 'Mocha', 'Rich espresso with chocolate and steamed milk', 950.00, 'MWK', NULL, 1, 1, 'Hot, Chocolate', 7, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(8, 'Coffee', 'Iced Coffee', 'Cold brew coffee served over ice', 750.00, 'MWK', NULL, 1, 0, 'Cold, Refreshing', 8, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(9, 'Coffee', 'Flat White', 'Espresso with velvety microfoam milk', 900.00, 'MWK', NULL, 1, 0, 'Hot, Premium', 9, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(10, 'Coffee', 'Irish Coffee', 'Coffee with whiskey, sugar, and whipped cream', 1400.00, 'MWK', NULL, 1, 1, 'Hot, Alcohol', 10, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(11, 'Wine', 'Château Margaux 2015', 'Bordeaux blend, full-bodied with dark fruit notes', 18500.00, 'MWK', NULL, 1, 1, 'Red Wine, Bordeaux', 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(12, 'Wine', 'Opus One 2019', 'California Cabernet blend, elegant and balanced', 16500.00, 'MWK', NULL, 1, 0, 'Red Wine, California', 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(13, 'Wine', 'Chablis Grand Cru', 'Crisp and mineral, perfect for seafood pairing', 6500.00, 'MWK', NULL, 1, 0, 'White Wine, French', 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(14, 'Wine', 'Champagne Cristal', 'Prestige cuvée with fine bubbles and complexity', 27500.00, 'MWK', NULL, 1, 1, 'Champagne, Premium', 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(15, 'Wine', 'Pinot Noir Reserve', 'Elegant red with notes of cherry and oak', 8500.00, 'MWK', NULL, 1, 0, 'Red Wine, Light', 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(16, 'Wine', 'Sauvignon Blanc', 'Crisp white with citrus and tropical fruit notes', 5500.00, 'MWK', NULL, 1, 0, 'White Wine, Fresh', 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(17, 'Cocktails', 'Margarita', 'Classic tequila, lime, and triple sec', 1200.00, 'MWK', NULL, 1, 0, 'Tequila, Classic', 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(18, 'Cocktails', 'Mojito', 'Rum with fresh mint, lime, and soda', 1350.00, 'MWK', NULL, 1, 1, 'Rum, Refreshing', 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(19, 'Cocktails', 'Manhattan', 'Whiskey, vermouth, and bitters', 1400.00, 'MWK', NULL, 1, 0, 'Whiskey, Classic', 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(20, 'Cocktails', 'Espresso Martini', 'Vodka, coffee liqueur, and fresh espresso', 1500.00, 'MWK', NULL, 1, 1, 'Vodka, Coffee', 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(21, 'Cocktails', 'Old Fashioned', 'Whiskey, sugar, bitters, and orange twist', 1450.00, 'MWK', NULL, 1, 0, 'Whiskey, Classic', 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(22, 'Cocktails', 'Cosmopolitan', 'Vodka, cranberry, lime, and triple sec', 1300.00, 'MWK', NULL, 1, 0, 'Vodka, Fruity', 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(23, 'Cocktails', 'Piña Colada', 'Rum, coconut cream, and pineapple', 1250.00, 'MWK', NULL, 1, 0, 'Rum, Tropical', 7, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(24, 'Cocktails', 'Daiquiri', 'White rum, fresh lime juice, and sugar', 1150.00, 'MWK', NULL, 1, 0, 'Rum, Classic', 8, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(25, 'Beer', 'Craft Beer - IPA', 'Bold hoppy India Pale Ale', 850.00, 'MWK', NULL, 1, 1, 'IPA, Craft', 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(26, 'Beer', 'Craft Beer - Stout', 'Rich and creamy stout with chocolate notes', 900.00, 'MWK', NULL, 1, 0, 'Stout, Craft', 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(27, 'Beer', 'Craft Beer - Lager', 'Crisp and refreshing lager', 750.00, 'MWK', NULL, 1, 0, 'Lager, Craft', 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(28, 'Beer', 'Carlsberg', 'Premium Danish lager', 1200.00, 'MWK', NULL, 1, 0, 'Lager, Imported', 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(29, 'Beer', 'Kuche Kuche', 'Local Malawian lager', 1000.00, 'MWK', NULL, 1, 1, 'Lager, Local', 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(30, 'Beer', 'Guinness', 'Irish dry stout', 1300.00, 'MWK', NULL, 1, 0, 'Stout, Irish', 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(31, 'Non-Alcoholic', 'Fresh Orange Juice', 'Freshly squeezed orange juice', 800.00, 'MWK', NULL, 1, 1, 'Fresh, Juice', 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(32, 'Non-Alcoholic', 'Sparkling Water', 'Perrier or San Pellegrino', 700.00, 'MWK', NULL, 1, 0, 'Sparkling, Refreshing', 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(33, 'Non-Alcoholic', 'Fresh Tropical Juice', 'Mango, pineapple, or passion fruit - freshly squeezed', 800.00, 'MWK', NULL, 1, 0, 'Fresh, Juice', 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(34, 'Non-Alcoholic', 'Malawian Masala Tea', 'Spiced tea with ginger, cardamom, and cinnamon', 600.00, 'MWK', NULL, 1, 1, 'Hot, Tea', 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(35, 'Non-Alcoholic', 'Smoothie Bowl', 'Blended fruits with granola, coconut, and honey', 1800.00, 'MWK', NULL, 1, 0, 'Fresh, Healthy', 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(36, 'Non-Alcoholic', 'Lemonade', 'Fresh lemonade with mint', 650.00, 'MWK', NULL, 1, 0, 'Fresh, Cold', 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33');
+(76, 'Non-Alcoholic', 'Lime Cordial', 'Refreshing lime cordial', 1500.00, 'MWK', NULL, 1, 0, NULL, 1, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(77, 'Non-Alcoholic', 'Coke/Fanta Can', 'Soft drink can', 6000.00, 'MWK', NULL, 1, 0, NULL, 2, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(78, 'Non-Alcoholic', 'Bottled Water', 'Pure bottled water', 2000.00, 'MWK', NULL, 1, 1, NULL, 3, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(79, 'Non-Alcoholic', 'Mineral Drinks', 'Premium mineral water', 2000.00, 'MWK', NULL, 1, 0, NULL, 4, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(80, 'Non-Alcoholic', 'Ginger Ale', 'Classic ginger ale', 5500.00, 'MWK', NULL, 1, 0, NULL, 5, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(81, 'Non-Alcoholic', 'Indian Tonic', 'Premium tonic water', 5500.00, 'MWK', NULL, 1, 0, NULL, 6, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(82, 'Non-Alcoholic', 'Soda Water', 'Fresh soda water', 5500.00, 'MWK', NULL, 1, 0, NULL, 7, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(83, 'Non-Alcoholic', 'Appletiser', 'Sparkling apple juice', 12000.00, 'MWK', NULL, 1, 1, NULL, 8, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(84, 'Non-Alcoholic', 'Grapetiser', 'Sparkling grape juice', 12000.00, 'MWK', NULL, 1, 1, NULL, 9, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(85, 'Non-Alcoholic', 'Fruitcana Juice', 'Fresh fruit juice', 5000.00, 'MWK', NULL, 1, 0, NULL, 10, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(86, 'Non-Alcoholic', 'Enjoy 250ml', 'Premium juice drink', 2500.00, 'MWK', NULL, 1, 0, NULL, 11, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(87, 'Non-Alcoholic', 'Enjoy 500ml', 'Premium juice drink', 6000.00, 'MWK', NULL, 1, 0, NULL, 12, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(88, 'Non-Alcoholic', 'Dragon Energy Drink', 'Energy booster drink', 7000.00, 'MWK', NULL, 1, 1, NULL, 13, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(89, 'Non-Alcoholic', 'Azam Ukwaju', 'Tamarind juice', 4000.00, 'MWK', NULL, 1, 0, NULL, 14, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(90, 'Non-Alcoholic', 'Azam Ukwaju 500ml', 'Tamarind juice large', 5000.00, 'MWK', NULL, 1, 0, NULL, 15, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(91, 'Non-Alcoholic', 'Ceres Juice Glass', 'Fresh juice by glass', 7000.00, 'MWK', NULL, 1, 0, NULL, 16, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(92, 'Non-Alcoholic', 'Redbull', 'Energy drink', 8000.00, 'MWK', NULL, 1, 1, NULL, 17, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(93, 'Non-Alcoholic', 'Embe Juice', 'Fresh fruit juice', 4000.00, 'MWK', NULL, 1, 0, NULL, 18, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(94, 'Non-Alcoholic', 'Embe Juice 500ml', 'Fresh fruit juice large', 5000.00, 'MWK', NULL, 1, 0, NULL, 19, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(95, 'Non-Alcoholic', 'Ceres Juice 250ml Bottle', 'Premium juice bottle', 8000.00, 'MWK', NULL, 1, 0, NULL, 20, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(96, 'Non-Alcoholic', 'Ceres 200ml', 'Premium juice small', 4000.00, 'MWK', NULL, 1, 0, NULL, 21, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(97, 'Non-Alcoholic', 'Fruitree', 'Fresh fruit drink', 8000.00, 'MWK', NULL, 1, 0, NULL, 22, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(98, 'Cocktails', 'Rockshandy', 'Classic rockshandy cocktail', 7000.00, 'MWK', NULL, 1, 0, NULL, 23, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(99, 'Cocktails', 'Chapman', 'Chapman cocktail blend', 6500.00, 'MWK', NULL, 1, 1, NULL, 24, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(100, 'Coffee', 'Mzuzu Coffee', 'Premium Malawian coffee', 6000.00, 'MWK', NULL, 1, 1, NULL, 25, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(101, 'Coffee', 'Espresso Single Shot', 'Rich single shot espresso', 3000.00, 'MWK', NULL, 1, 0, NULL, 26, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(102, 'Coffee', 'Espresso Double Shot', 'Bold double shot espresso', 5000.00, 'MWK', NULL, 1, 0, NULL, 27, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(103, 'Coffee', 'Cappuccino', 'Creamy cappuccino with foam', 8000.00, 'MWK', NULL, 1, 1, NULL, 28, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(104, 'Coffee', 'Coffee Latte', 'Smooth latte with steamed milk', 8000.00, 'MWK', NULL, 1, 1, NULL, 29, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(105, 'Coffee', 'Mocachinno', 'Chocolate coffee blend', 10000.00, 'MWK', NULL, 1, 1, NULL, 30, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(106, 'Coffee', 'Cup of Ricoffy', 'Classic ricoffy coffee', 7500.00, 'MWK', NULL, 1, 0, NULL, 31, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(107, 'Coffee', 'Hot Chocolate', 'Rich hot chocolate', 10000.00, 'MWK', NULL, 1, 1, NULL, 32, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(108, 'Coffee', 'Cup of Cocoa', 'Pure cocoa beverage', 9000.00, 'MWK', NULL, 1, 0, NULL, 33, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(109, 'Coffee', 'Cup of Malawi Tea', 'Traditional Malawian tea', 6500.00, 'MWK', NULL, 1, 1, NULL, 34, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(110, 'Coffee', 'Rooibos Tea', 'Premium rooibos tea', 6000.00, 'MWK', NULL, 1, 0, NULL, 35, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(111, 'Desserts', 'Ice Cream Cone', 'Creamy ice cream in cone', 4000.00, 'MWK', NULL, 1, 0, NULL, 36, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(112, 'Desserts', 'Ice Cream Cup', 'Ice cream served in cup', 5000.00, 'MWK', NULL, 1, 0, NULL, 37, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(113, 'Desserts', 'Milk Shakes', 'Thick creamy milkshake', 8500.00, 'MWK', NULL, 1, 1, NULL, 38, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(114, 'Desserts', 'Smoothies', 'Fresh fruit smoothie', 8500.00, 'MWK', NULL, 1, 1, NULL, 39, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(115, 'Whisky', 'Glenfiddich 15 Years', 'Premium 15-year-old single malt', 140000.00, 'MWK', NULL, 1, 1, NULL, 40, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(116, 'Whisky', 'Glenfiddich 12 Years', 'Classic 12-year-old single malt', 9000.00, 'MWK', NULL, 1, 1, NULL, 41, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(117, 'Whisky', 'Johnnie Walker Black Label', 'Premium blended Scotch whisky', 7000.00, 'MWK', NULL, 1, 1, NULL, 42, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(118, 'Whisky', 'Johnnie Walker Red Label', 'Classic blended Scotch whisky', 4500.00, 'MWK', NULL, 1, 0, NULL, 43, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(119, 'Whisky', 'Jameson Select Reserve', 'Premium Irish whiskey', 9000.00, 'MWK', NULL, 1, 1, NULL, 44, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(120, 'Whisky', 'Jameson Triple Distilled', 'Smooth Irish whiskey', 5500.00, 'MWK', NULL, 1, 0, NULL, 45, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(121, 'Whisky', 'J&B Whiskey', 'Classic blended Scotch whisky', 3600.00, 'MWK', NULL, 1, 0, NULL, 46, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(122, 'Whisky', 'Grants', 'Smooth blended Scotch whisky', 4000.00, 'MWK', NULL, 1, 0, NULL, 47, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(123, 'Whisky', 'Bells', 'Classic blended Scotch whisky', 5500.00, 'MWK', NULL, 1, 0, NULL, 48, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(124, 'Whisky', 'Chivas Regal', 'Premium blended Scotch whisky', 6000.00, 'MWK', NULL, 1, 1, NULL, 49, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(125, 'Whisky', 'Jack Daniels', 'Tennessee whiskey', 6500.00, 'MWK', NULL, 1, 1, NULL, 50, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(126, 'Whisky', 'Best Whisky', 'Premium blended whisky', 3400.00, 'MWK', NULL, 1, 0, NULL, 51, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(127, 'Brandy', 'Hennessey', 'Premium cognac', 9000.00, 'MWK', NULL, 1, 1, NULL, 52, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(128, 'Brandy', 'KWV 10 Years', 'Aged 10-year brandy', 5500.00, 'MWK', NULL, 1, 0, NULL, 53, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(129, 'Brandy', 'KWV 5 Years', 'Aged 5-year brandy', 3000.00, 'MWK', NULL, 1, 0, NULL, 54, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(130, 'Brandy', 'KWV 3 Years', 'Aged 3-year brandy', 2500.00, 'MWK', NULL, 1, 0, NULL, 55, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(131, 'Brandy', 'Klipdrift', 'Classic South African brandy', 2200.00, 'MWK', NULL, 1, 0, NULL, 56, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(132, 'Brandy', 'Richelieu', 'Premium brandy', 2600.00, 'MWK', NULL, 1, 0, NULL, 57, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(133, 'Brandy', 'Premier Brandy', 'Quality brandy', 3000.00, 'MWK', NULL, 1, 0, NULL, 58, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(134, 'Gin', 'Malawi Gin', 'Local gin', 2500.00, 'MWK', NULL, 1, 0, NULL, 59, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(135, 'Gin', 'Whitley Nerry Gin', 'Premium gin', 3000.00, 'MWK', NULL, 1, 0, NULL, 60, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(136, 'Gin', 'Beefeater Gin', 'Classic London dry gin', 3000.00, 'MWK', NULL, 1, 1, NULL, 61, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(137, 'Gin', 'Cruxland Gin', 'Premium gin', 2500.00, 'MWK', NULL, 1, 0, NULL, 62, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(138, 'Gin', 'Have A Rock Dry Gin', 'Dry gin', 2500.00, 'MWK', NULL, 1, 0, NULL, 63, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(139, 'Gin', 'Have A Rock Rose Gin', 'Rose gin', 2500.00, 'MWK', NULL, 1, 0, NULL, 64, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(140, 'Gin', 'Stretton\'s Gin', 'Premium gin', 2000.00, 'MWK', NULL, 1, 0, NULL, 65, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(141, 'Vodka', 'Malawi Vodka', 'Local vodka', 2000.00, 'MWK', NULL, 1, 0, NULL, 66, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(142, 'Vodka', '1818 S/Vodka', 'Premium vodka', 3200.00, 'MWK', NULL, 1, 0, NULL, 67, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(143, 'Vodka', 'Ciroc Vodka', 'Premium French vodka', 2200.00, 'MWK', NULL, 1, 1, NULL, 68, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(144, 'Vodka', 'Cruz Infusion Vodka', 'Infused vodka', 2200.00, 'MWK', NULL, 1, 0, NULL, 69, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(145, 'Vodka', 'Cruz Vodka', 'Premium vodka', 2900.00, 'MWK', NULL, 1, 0, NULL, 70, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(146, 'Rum', 'Malibu', 'Caribbean rum with coconut', 5000.00, 'MWK', NULL, 1, 1, NULL, 71, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(147, 'Rum', 'Captain Morgan Rum', 'Classic spiced rum', 4000.00, 'MWK', NULL, 1, 0, NULL, 72, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(148, 'Rum', 'Captain Morgan Spiced Gold', 'Premium spiced rum', 4000.00, 'MWK', NULL, 1, 1, NULL, 73, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(149, 'Tequila', 'Tequila Gold', 'Gold tequila', 5000.00, 'MWK', NULL, 1, 0, NULL, 74, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(150, 'Tequila', 'Tequila Silver', 'Silver tequila', 5000.00, 'MWK', NULL, 1, 0, NULL, 75, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(151, 'Tequila', 'Cactus Jack & Ponchos Tequila', 'Premium tequila', 5000.00, 'MWK', NULL, 1, 0, NULL, 76, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(152, 'Liqueur', 'Zappa', 'Premium liqueur', 5000.00, 'MWK', NULL, 1, 0, NULL, 77, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(153, 'Liqueur', 'Potency', 'Strong liqueur', 5000.00, 'MWK', NULL, 1, 0, NULL, 78, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(154, 'Liqueur', 'Amarula Cream', 'Cream liqueur', 5000.00, 'MWK', NULL, 1, 1, NULL, 79, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(155, 'Liqueur', 'Best Cream', 'Cream liqueur', 3500.00, 'MWK', NULL, 1, 0, NULL, 80, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(156, 'Liqueur', 'Strawberry Lips', 'Strawberry liqueur', 5000.00, 'MWK', NULL, 1, 0, NULL, 81, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(157, 'Liqueur', 'Kahlua', 'Coffee liqueur', 5000.00, 'MWK', NULL, 1, 1, NULL, 82, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(158, 'Liqueur', 'Southern Comfort', 'American liqueur', 3200.00, 'MWK', NULL, 1, 0, NULL, 83, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(159, 'Liqueur', 'Jagermeister', 'Herbal liqueur', 5000.00, 'MWK', NULL, 1, 1, NULL, 84, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(160, 'Liqueur', 'Sour Monkey', 'Sour liqueur', 4000.00, 'MWK', NULL, 1, 0, NULL, 85, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(161, 'Beer', 'Carlsberg Green', 'Premium Danish lager', 4000.00, 'MWK', NULL, 1, 0, NULL, 86, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(162, 'Beer', 'Carlsberg Special', 'Special brew', 4000.00, 'MWK', NULL, 1, 0, NULL, 87, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(163, 'Beer', 'Carlsberg Chill', 'Chilled lager', 5000.00, 'MWK', NULL, 1, 0, NULL, 88, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(164, 'Beer', 'Castel Beer', 'Local beer', 4000.00, 'MWK', NULL, 1, 0, NULL, 89, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(165, 'Beer', 'Kuche-Kuche', 'Malawian beer', 4000.00, 'MWK', NULL, 1, 1, NULL, 90, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(166, 'Beer', 'Doppel', 'Premium beer', 4000.00, 'MWK', NULL, 1, 0, NULL, 91, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(167, 'Beer', 'Pomme Breeze', 'Fruit beer', 4000.00, 'MWK', NULL, 1, 0, NULL, 92, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(168, 'Beer', 'Hunters Gold/Dry', 'South African cider', 10000.00, 'MWK', NULL, 1, 1, NULL, 93, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(169, 'Beer', 'Savanna Dry', 'Premium cider', 10000.00, 'MWK', NULL, 1, 1, NULL, 94, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(170, 'Beer', 'Smirnoff Guarana', 'Energy beer', 10000.00, 'MWK', NULL, 1, 0, NULL, 95, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(171, 'Beer', 'Amstel Beers', 'Dutch lager', 10000.00, 'MWK', NULL, 1, 0, NULL, 96, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(172, 'Beer', 'Windhoek Lager/Draft', 'Namibian beer', 10000.00, 'MWK', NULL, 1, 1, NULL, 97, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(173, 'Beer', 'Breezer/Brutol', 'Premium beer mix', 10000.00, 'MWK', NULL, 1, 0, NULL, 98, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(174, 'Beer', 'Flying Fish', 'Premium cider', 10000.00, 'MWK', NULL, 1, 0, NULL, 99, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(175, 'Beer', 'Heineken Beer', 'Dutch lager', 10000.00, 'MWK', NULL, 1, 1, NULL, 100, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(176, 'Beer', 'Budweiser Beer', 'American lager', 10000.00, 'MWK', NULL, 1, 1, NULL, 101, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(177, 'Beer', '2M Beer', 'Imported beer', 10000.00, 'MWK', NULL, 1, 0, NULL, 102, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(178, 'Beer', 'Cane Ciders & Beers', 'Premium ciders', 12000.00, 'MWK', NULL, 1, 1, NULL, 103, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(179, 'Wine', 'All Cask Wines', 'House wines', 7500.00, 'MWK', NULL, 1, 0, NULL, 104, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(180, 'Wine', 'Nederburg Red Wines', 'Premium South African red wine', 58000.00, 'MWK', NULL, 1, 1, NULL, 105, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(181, 'Wine', 'Four Cousins Bottle', 'Sweet wine', 30000.00, 'MWK', NULL, 1, 0, NULL, 106, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(182, 'Wine', 'Four Cousins 1.5L', 'Large format sweet wine', 40000.00, 'MWK', NULL, 1, 0, NULL, 107, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(183, 'Tobacco', 'Peter Stuyvesant', 'Premium cigarettes', 6000.00, 'MWK', NULL, 1, 0, NULL, 108, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(184, 'Tobacco', 'Dunhill Blue', 'Premium cigarettes', 6000.00, 'MWK', NULL, 1, 0, NULL, 109, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(185, 'Tobacco', 'Pall Mall Red', 'Classic cigarettes', 4500.00, 'MWK', NULL, 1, 0, NULL, 110, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(186, 'Tobacco', 'Pall Mall Green', 'Classic cigarettes', 4500.00, 'MWK', NULL, 1, 0, NULL, 111, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(187, 'Coffee', 'Cappuccino', 'Fresh cappuccino', 5000.00, 'MWK', NULL, 1, 0, NULL, 112, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(188, 'Coffee', 'Hot Chocolate', 'Rich hot chocolate', 7000.00, 'MWK', NULL, 1, 0, NULL, 113, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(189, 'Coffee', 'Jacobs', 'Premium coffee', 5000.00, 'MWK', NULL, 1, 0, NULL, 114, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(190, 'Coffee', 'Mzuzu Coffee', 'Malawian coffee', 5000.00, 'MWK', NULL, 1, 0, NULL, 115, '2026-02-05 11:59:22', '2026-02-05 11:59:22'),
+(191, 'Coffee', 'Malawi Tea', 'Local tea', 2500.00, 'MWK', NULL, 1, 0, NULL, 116, '2026-02-05 11:59:22', '2026-02-05 11:59:22');
 
 -- --------------------------------------------------------
 
@@ -432,7 +512,7 @@ CREATE TABLE `events` (
 --
 
 INSERT INTO `events` (`id`, `title`, `description`, `event_date`, `start_time`, `end_time`, `location`, `image_path`, `ticket_price`, `capacity`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`, `video_path`, `video_type`) VALUES
-(7, '10th Annivesary', '', '2026-02-14', '18:00:00', '21:00:00', 'Zest Garden Lodge', 'images/events/event_1770204143_6436.png', 30000.00, 40, 1, 1, 0, '2026-01-20 22:36:31', '2026-02-04 13:44:46', 'https://media.gettyimages.com/id/1161129424/video/cheerful-entrepreneurs-shaking-hands-during-break.mp4?s=mp4-640x640-gi&k=20&c=8jeMCO1pMfOVYPDB8aSbOfRqvqyVWWjwfb0BK9xiF-w=', NULL);
+(7, '10th Annivesary', '', '2026-02-14', '18:00:00', '21:00:00', 'Zest Garden Lodge', 'images/events/event_1770204143_6436.png', 30000.00, 40, 1, 1, 0, '2026-01-20 22:36:31', '2026-02-04 22:57:19', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -497,30 +577,77 @@ CREATE TABLE `food_menu` (
 --
 
 INSERT INTO `food_menu` (`id`, `category`, `item_name`, `description`, `price`, `currency_code`, `image_path`, `is_available`, `is_featured`, `is_vegetarian`, `is_vegan`, `allergens`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'Breakfast', 'Continental Breakfast', 'Assorted pastries, fresh fruits, yogurt, cereals, and freshly brewed coffee', 2500.00, 'MWK', NULL, 1, 1, 1, 1, NULL, 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(2, 'Breakfast', 'Full English Breakfast', 'Eggs, bacon, sausages, grilled tomatoes, mushrooms, beans, and toast', 3500.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(3, 'Breakfast', 'Malawian Breakfast Platter', 'Nsima with traditional relish, fresh mandasi, and masala tea', 2800.00, 'MWK', NULL, 1, 1, 0, 0, NULL, 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(4, 'Breakfast', 'Pancake Stack', 'Fluffy pancakes with maple syrup, fresh berries, and whipped cream', 2200.00, 'MWK', NULL, 1, 0, 1, 0, NULL, 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(5, 'Breakfast', 'Avocado Toast', 'Sourdough bread with smashed avocado, poached eggs, and chili flakes', 3000.00, 'MWK', NULL, 1, 0, 1, 0, NULL, 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(6, 'Breakfast', 'Oatmeal Bowl', 'Steel-cut oats with honey, fresh berries, and nuts', 1800.00, 'MWK', NULL, 1, 0, 1, 1, NULL, 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(7, 'Lunch', 'Chambo Fish & Chips', 'Fresh chambo from Lake Malawi, crispy chips, and tartar sauce', 4500.00, 'MWK', NULL, 1, 1, 0, 0, NULL, 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(8, 'Lunch', 'Grilled Chicken Caesar Salad', 'Tender chicken breast, crisp romaine, parmesan, croutons, and Caesar dressing', 3800.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(9, 'Lunch', 'Vegetable Curry with Rice', 'Aromatic curry with seasonal vegetables, served with basmati rice', 3200.00, 'MWK', NULL, 1, 1, 1, 1, NULL, 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(10, 'Lunch', 'Club Sandwich Deluxe', 'Triple-decker with turkey, bacon, lettuce, tomato, and fries', 3500.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(11, 'Lunch', 'Beef Burger', 'Juicy beef patty with cheese, lettuce, tomato, and house sauce', 4000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(12, 'Lunch', 'Quinoa Salad', 'Fresh quinoa with roasted vegetables, feta cheese, and lemon vinaigrette', 2800.00, 'MWK', NULL, 1, 0, 1, 1, NULL, 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(13, 'Dinner', 'Grilled T-Bone Steak', 'Premium aged beef, herb butter, roasted vegetables, and choice of sides', 8500.00, 'MWK', NULL, 1, 1, 0, 0, NULL, 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(14, 'Dinner', 'Pan-Seared Chambo', 'Lake Malawi chambo with lemon butter sauce, seasonal vegetables', 6500.00, 'MWK', NULL, 1, 1, 0, 0, NULL, 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(15, 'Dinner', 'Slow-Roasted Lamb Shank', 'Tender lamb with red wine jus, creamy mashed potatoes, and greens', 7800.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(16, 'Dinner', 'Vegetarian Risotto', 'Creamy mushroom and truffle risotto with parmesan and fresh herbs', 4500.00, 'MWK', NULL, 1, 0, 1, 0, NULL, 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(17, 'Dinner', 'Seafood Platter', 'Grilled prawns, calamari, fish fillet, and mussels with garlic butter', 9500.00, 'MWK', NULL, 1, 1, 0, 0, NULL, 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(18, 'Dinner', 'Grilled Chicken Breast', 'Herb-marinated chicken with roasted potatoes and seasonal vegetables', 5500.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(19, 'Desserts', 'Chocolate Lava Cake', 'Warm chocolate cake with molten center, vanilla ice cream', 2200.00, 'MWK', NULL, 1, 1, 1, 0, NULL, 1, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(20, 'Desserts', 'Malawian Banana Fritters', 'Sweet fried bananas with honey and cinnamon', 1500.00, 'MWK', NULL, 1, 0, 1, 1, NULL, 2, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(21, 'Desserts', 'Cheesecake Selection', 'Classic, strawberry, or chocolate cheesecake', 2000.00, 'MWK', NULL, 1, 0, 1, 0, NULL, 3, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(22, 'Desserts', 'Fresh Fruit Platter', 'Seasonal tropical fruits with passion fruit coulis', 1800.00, 'MWK', NULL, 1, 1, 1, 1, NULL, 4, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(23, 'Desserts', 'Crème Brûlée', 'Classic vanilla bean crème brûlée with torched sugar crust', 2500.00, 'MWK', NULL, 1, 0, 1, 0, NULL, 5, '2026-01-25 11:22:33', '2026-01-25 11:22:33'),
-(24, 'Desserts', 'Tiramisu', 'Traditional Italian tiramisu with layers of mascarpone and espresso', 2300.00, 'MWK', NULL, 1, 0, 1, 0, NULL, 6, '2026-01-25 11:22:33', '2026-01-25 11:22:33');
+(25, 'Breakfast', 'English Breakfast', 'A glass of home-made juice or orange squash, boiled oats or rice porridge, seasonal fruits, two farm fresh eggs done on your perfection. Sunnyside up, full house omelette or scrambled, poached, egg white only, grilled beef sausages, grilled tomato and chef garden vegetables toasted bread with butter, zitumbuwa, pancakes, doughnuts or mandasi. Sweet potatoes or Cassava tea or coffee.', 35000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 1, '2026-02-04 21:23:54', '2026-02-04 21:54:14'),
+(26, 'Starter', 'Mushroom Soup', 'Classic French style cream of mushroom soup served with garlic butter toasted panin', 15000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 1, '2026-02-04 21:23:54', '2026-02-04 21:38:34'),
+(27, 'Starter', 'Italian Style Tomato Soup', 'Slow roasted puree of tomatoes and a touch of cream and balsamic vinegar with garlic buttered toasted panin.', 15000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-02-04 21:23:55', '2026-02-04 21:38:34'),
+(28, 'Starter', 'Green Salad', 'Fresh and crispy lettuce with fresh onion, tomato & cucumber', 10000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 3, '2026-02-04 21:23:55', '2026-02-04 21:38:34'),
+(29, 'Starter', 'Sun Hotel Greek Salad', 'Fresh from the garden with calamata, olives, feta cheese, tomato wedges, sliced red onions rings, crispy cucumbers, oregano and merange of lettuce with an Italian herb-based dressing', 12000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 4, '2026-02-04 21:23:55', '2026-02-04 21:38:34'),
+(30, 'Starter', 'Tempura Prawns', 'Fried prawns in a crispy butter served on Asian -style vegetables with branched noodles and accompanied with mustard cream reduction.', 17000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 5, '2026-02-04 21:23:55', '2026-02-04 21:38:34'),
+(31, 'Starter', 'Chicken liver Masala', 'Stew cooked in authentic Indian spices served with garlic butter, naan bread with deep fried onion and fresh onion.', 17000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 6, '2026-02-04 21:23:55', '2026-02-04 21:38:34'),
+(32, 'Starter', 'Hot Snack Platter', 'Two beef samosa & two chicken wingless, two beef meatballs, served with sambay cele apricot chili chutney and cajun potato.', 20500.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 7, '2026-02-04 21:23:55', '2026-02-04 21:38:34'),
+(33, 'Chicken Corner', 'Chicken peri-peri', 'Juicy and Tender grilled 1/4-chicken marinated in a peri-peri sauce, served with a choice of green salads or mixed vegetables. Served with a choice of French fries/baked Potatoes/Mashed Potatoes/Rice and Seasonal Vegetables', 22000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 1, '2026-02-04 21:23:56', '2026-02-04 21:38:34'),
+(34, 'Chicken Corner', 'Boiled Chicken Curry', 'Tender and succulent pieces of chicken swimming in a super flavourful & delicious curry sauce. Served with a choice of French fries/baked Potatoes/Mashed Potatoes/Rice and Seasonal Vegetables', 22000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-02-04 21:23:56', '2026-02-04 21:38:34'),
+(35, 'Chicken Corner', 'Chicken Stir-fry', 'Incredibly tender, juicy, moist and outrageously delicious pan fried chicken breast. Served with a choice of French fries/baked Potatoes/Mashed Potatoes/Rice and Seasonal Vegetables', 22000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 3, '2026-02-04 21:23:56', '2026-02-04 21:38:34'),
+(36, 'Chicken Corner', 'Grilled ¼ Chicken', 'Quarter of a delicious tender grilled chicken pairs perfectly with your choice of flavour and sides. Served with a choice of French fries/baked Potatoes/Mashed Potatoes/Rice and Seasonal Vegetables', 22000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 4, '2026-02-04 21:23:56', '2026-02-04 21:38:34'),
+(37, 'Chicken Corner', 'Chicken Khwasu', 'Well grilled chicken pieces and pan fried with garlic, green pepper, onions finshed with mango archer sauce. Served with a choice of French fries/baked Potatoes/Mashed Potatoes/Rice and Seasonal Vegetables', 22000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 5, '2026-02-04 21:23:56', '2026-02-04 21:38:34'),
+(38, 'Chicken Corner', 'Local Chicken', 'Grandmothers favourite stewed road runner chicken. Served with a choice of French fries/baked Potatoes/Mashed Potatoes/Rice and Seasonal Vegetables', 22000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 6, '2026-02-04 21:23:56', '2026-02-04 21:38:34'),
+(39, 'Meat Corner', 'T Bone Steak', 'Well marinated and seasoned T Bone steak grilled to your choice', 28000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 1, '2026-02-04 21:23:57', '2026-02-04 21:38:34'),
+(40, 'Meat Corner', 'Beef Strips', 'Beef strips marinated in various spices and finshed in stroganoff sauce', 20000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-02-04 21:23:57', '2026-02-04 21:38:34'),
+(41, 'Meat Corner', 'Sirloin Steak', 'Tender sirloin steak grilled to your request served with homemade French fries', 24000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 3, '2026-02-04 21:23:57', '2026-02-04 21:38:34'),
+(42, 'Meat Corner', 'Goat Stew', 'Goat meat cutlets marinated and finshed in its own juice, finished with thick gravy sauce.', 18000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 4, '2026-02-04 21:23:57', '2026-02-04 21:38:34'),
+(43, 'Meat Corner', 'Beef Stew', 'Stewed beef well cooked in garlic and soy sauce finished with kick of mango acher.', 19000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 5, '2026-02-04 21:23:57', '2026-02-04 21:38:34'),
+(44, 'Meat Corner', 'Fillet Mignon', 'Grilled fillet mignon, served with fresh green salads and French fries, rice or nsima', 35000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 6, '2026-02-04 21:23:58', '2026-02-04 21:38:34'),
+(45, 'Fish Corner', 'Fish & Chips', 'Tradition fish fillets fried in a butter or grilled served with tartar sauce and chips. Served with a choice of French fries/Baked potatoes/Mashed Potatoes/Rice and Seasonal Vegetables', 30000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 1, '2026-02-04 21:23:58', '2026-02-04 21:38:34'),
+(46, 'Fish Corner', 'Grilled Chambo (open & whole)', 'Open or closed whole chambo fresh from lake Malawi spiced and marinated in lemon juice and fish spice. Served with a choice of French fries/Baked potatoes/Mashed Potatoes/Rice and Seasonal Vegetables', 28000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(47, 'Fish Corner', 'Grilled Kampango', 'Open marinated in fresh garlic, lemon juice and fish spices. Served with a choice of French fries/Baked potatoes/Mashed Potatoes/Rice and Seasonal Vegetables', 28000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 3, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(48, 'Fish Corner', 'Mama\'s Choice', 'Stewed chambo with green pepper, tomatoes and Onions. Served with a choice of French fries/Baked potatoes/Mashed Potatoes/Rice and Seasonal Vegetables', 28000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 4, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(49, 'Fish Corner', 'Sun prawn platter', 'Succulent Mozambican prawns, marinated in peri-peri basting or fried in atempura butter, served with garlic butter sauce, tartar sauce and pink sauce. Served with a choice of French fries/Baked potatoes/Mashed Potatoes/Rice and Seasonal Vegetables', 48000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 5, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(50, 'Pasta Corner', 'Spaghetti Bolognese', 'Classic beef bolognese source served on a bed of dente cooked spaghetti and garnished with grated parmesan cheese', 25000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 1, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(51, 'Pasta Corner', 'Spaghetti Napolitano', 'Soft-cooked spaghetti, tomato ketchup, onion, button mushrooms, green peppers', 18000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(52, 'Pasta Corner', 'Chicken Alfredo', 'Cooked spaghetti fettucine pasta tosses with cream, garlic cheese sauce and oregano', 20000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 3, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(53, 'Pasta Corner', 'Asian Vegetables Stir fly', 'A melange of Asian vegetables cooked in light soy, garlic butter cumin and a hint of chilli with Chinese eggs noodles and dumbed peppers.', 22000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 4, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(54, 'Burger Corner', 'Sun Hotel Burger', 'Fresh, avorful, at patty burger made from the nest Malawian beef served chips', 20000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 1, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(55, 'Burger Corner', 'Mega Double Burger', 'Juicy, big, loaded with toppings of your choice', 30000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(56, 'Burger Corner', 'Chicken Spice Burger', 'Crispy fried spicy chicken breast layered between, Brioche Bun, lettuce, cheese, gherkins and lashing of homemade spicy mayo sauce', 25000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 3, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(57, 'Pizza Corner', 'Barbeque Pizza Large', 'Classic with its sweet, tangy, and salty BBQ sauce, bits of juicy chicken, creamy cheese, and savoury onions', 36000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 1, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(58, 'Pizza Corner', 'Barbeque Pizza Medium', 'Classic with its sweet, tangy, and salty BBQ sauce, bits of juicy chicken, creamy cheese, and savoury onions', 32000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(59, 'Pizza Corner', 'Barbeque Pizza Small', 'Classic with its sweet, tangy, and salty BBQ sauce, bits of juicy chicken, creamy cheese, and savoury onions', 28000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 3, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(60, 'Pizza Corner', 'Vegetable Pizza Large', 'Fresh cherry tomatoes, bell peppers, artichoke, spinach and more', 30000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 4, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(61, 'Pizza Corner', 'Vegetable Pizza Medium', 'Fresh cherry tomatoes, bell peppers, artichoke, spinach and more', 25000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 5, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(62, 'Pizza Corner', 'Vegetable Pizza Small', 'Fresh cherry tomatoes, bell peppers, artichoke, spinach and more', 22000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 6, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(63, 'Pizza Corner', 'Chicken & Boerewors Pizza Large', 'Grilled boerewors, caramelized onion, mozzarella and fresh basil', 35000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 7, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(64, 'Pizza Corner', 'Chicken & Boerewors Medium Pizza', 'Grilled boerewors, caramelized onion, mozzarella and fresh basil', 30000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 8, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(65, 'Pizza Corner', 'Chicken & Boerewors Small', 'Grilled boerewors, caramelized onion, mozzarella and fresh basil', 28000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 9, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(66, 'Pizza Corner', 'Extra-Large Pizza (All varieties)', 'All extra-large pizza\'s', 42000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 10, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(67, 'Snack Corner', 'Cajun Chicken Wings or Drum sticks', 'Southern fried chicken wings and drumstick with cajun seasoning freshly squeezed lemon, crispy chips and chefs style salad with dressing.', 15500.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 1, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(68, 'Snack Corner', 'Meat Balls', 'Braised homemade meatballs served in barbeque sauce', 20000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(69, 'Snack Corner', 'Beef Samosa or Chicken Samosa', 'A very nice & juicy snack to go with your favourite beverage', 18000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 3, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(70, 'Snack Corner', 'Chicken wrap or Beef Wraps', 'Every bite is loaded with juicy flavourful chicken or beef cirantro- lime sautéed peppers and onions cool yoghurt served with chips.', 19000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 4, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(71, 'Snack Corner', 'Chicken Fingers', 'Crispy chicken tenders\' hand -breaded with a hint of spices served with a choice dipping sauce.', 15500.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 5, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(72, 'Snack Corner', 'Deli-style Sandwich', 'Double cheese and tomatoes one chicken mayo/fried eggs gherkin with tartar sauce accompanied with crispy sliced potatoes, a choice of toasted of brown or white bread.', 18000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 6, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(73, 'Snack Corner', 'Sausages', 'Gilled sausages served with fresh green salads and French fries.', 16000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 7, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(74, 'Snack Corner', 'Omelette or fried Eggs', 'Spanish omelette or fried eggs served with French fries and salads', 12000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 8, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(75, 'Snack Corner', 'Plain chips', 'Freshly made French fries served with green salads', 10000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 9, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(76, 'Snack Corner', 'Chicken Chiwamba (whole)', 'Charcoal grilled local chicken marinated in garlic & lemon juice and chicken spice served with green salads & chips', 40000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 10, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(77, 'Indian Corner', 'Fish Curry', 'Fresh stewed chambo in a curry sauce and other vegetables served with a choice of rice, nsima or chips', 28000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 1, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(78, 'Indian Corner', 'Chicken Butter', 'Pieces of chicken, tossed in a simple spice marinade, light, buttery, creamy tomato sauce served with a choice of chips, nsima or rice', 23500.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(79, 'Indian Corner', 'Beef Curry', 'With succulent meat cooked in aromatic spices, this Indian style beef curry, served with rice, nsima or chips', 24500.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 3, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(80, 'Indian Corner', 'Goat Curry', 'Tender and juicy goatmeat, finished in its own juice & curry sauce', 24500.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 4, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(81, 'Indian Corner', 'Biriyani Rice', 'A flavourful fragrance of Kilombero rice with tender marinated meat and a blend of spices cooked in a clay pot known as matka', 27000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 5, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(82, 'Liwonde Sun Specialities', 'Jollof Rice', 'A flavourful fragrance of Kilombero rice with tender marinated meat and a blend of spices cooked in a clay pot known as matka', 34000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 1, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(83, 'Liwonde Sun Specialities', 'Okra Soup', 'A flavourful fragrance of Kilombero rice with tender marinated meat and a blend of spices cooked in a clay pot known as matka', 34000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(84, 'Extras', 'Plain Chapati', 'Plain chapati', 7000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 1, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(85, 'Extras', 'Plain Nsima', 'Plain nsima', 7000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(86, 'Extras', 'Plain Rice', 'Plain rice', 7000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 3, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(87, 'Extras', 'Plain Chips', 'Plain chips', 10000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 4, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(88, 'Extras', 'Beef or Chicken Samosa Only (4)', 'Beef or chicken samosa only (4 pieces)', 10000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 5, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(89, 'Extras', 'Extra Vegetable/Beans', 'Extra vegetable or beans', 7000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 6, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(90, 'Desserts', 'Banana Custard', 'Amazing dessert to binge on when craving for something sweet.', 15000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 1, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(91, 'Desserts', 'Milk Shake', 'Natural vanilla bean ice cream, dark chocolate truffle sauce, freshly whipped cream and topped with an all-natural Bing cherry', 8500.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 2, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(92, 'Desserts', 'Fruit of the Day', 'Enjoy seasonal fruit of your choice, banana, apples, oranges', 5000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 3, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(93, 'Desserts', 'Ice Cream Cup', 'Enjoy a choice, different ice cream flavours, strawberry, vanilla and chocolate.', 5000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 4, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(94, 'Desserts', 'Chocolate Gateaux', 'Chocolate gateaux', 15000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 5, '2026-02-04 21:24:00', '2026-02-04 21:38:34'),
+(95, 'Desserts', 'Fruit Salads (bowl)', 'Fresh fruit salad bowl', 12000.00, 'MWK', NULL, 1, 0, 0, 0, NULL, 6, '2026-02-04 21:24:00', '2026-02-04 21:38:34');
 
 -- --------------------------------------------------------
 
@@ -669,7 +796,7 @@ CREATE TABLE `gym_content` (
 --
 
 INSERT INTO `gym_content` (`id`, `hero_title`, `hero_subtitle`, `hero_description`, `hero_image_path`, `wellness_title`, `wellness_description`, `wellness_image_path`, `badge_text`, `personal_training_image_path`, `is_active`, `created_at`, `updated_at`) VALUES
-(4, 'Fitness & Wellness Center', 'Health & Vitality', 'State-of-the-art facilities designed to elevate your physical and mental well-being', 'images/gym/hero-bg.jpg', 'Transform Your Body & Mind', 'Our fitness and wellness center offers everything you need to maintain your health routine while traveling or start a new wellness journey.', 'images/gym/fitness-center.jpg', 'Award-Winning Facilities', 'images/gym/personal-training.jpg', 1, '2026-01-20 15:26:43', '2026-01-20 15:26:43');
+(4, 'Fitness & Wellness Center', 'Health & Vitality', 'State-of-the-art facilities designed to elevate your physical and mental well-being', 'images/gym/hero-bg.jpg', 'Transform Your Body & Mind', 'Our fitness and wellness center offers everything you need to maintain your health routine while traveling or start a new wellness journey.', 'images/gym/fitness-center.jpg', 'Award-Winning Facilities', 'https://media.gettyimages.com/id/1773192171/photo/smiling-young-woman-leaning-on-barbell-at-health-club.jpg?s=1024x1024&w=gi&k=20&c=pzLyu0hPJmPgKV4TTs1sOld-TSvZ-uCt18LCsR4vsYU=', 1, '2026-01-20 15:26:43', '2026-02-04 22:49:34');
 
 -- --------------------------------------------------------
 
@@ -816,7 +943,7 @@ CREATE TABLE `hero_slides` (
 --
 
 INSERT INTO `hero_slides` (`id`, `title`, `subtitle`, `description`, `image_path`, `video_path`, `video_type`, `primary_cta_text`, `primary_cta_link`, `secondary_cta_text`, `secondary_cta_link`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'Experience Unparalleled Luxury', 'Where Luxury Meets Nature', 'Discover the perfect blend of comfort, elegance, and exceptional service at Malawi\'s premier destination', '', 'https://media.gettyimages.com/id/2219019953/video/group-of-mature-adult-friends-quickly-booking-a-hotel-on-smartphone-while-exploring-the-temple.mp4?s=mp4-640x640-gi&k=20&c=AklHmBkwIrOueUSYHFDoVY2nN7tD4xkV3QAFYCzG4ts=', NULL, 'Book a Suite', '#book', 'View Rooms', '#rooms', 1, 1, '2026-01-20 07:55:39', '2026-02-04 15:56:32'),
+(1, 'Experience Unparalleled Luxurrry', 'Where Luxury Meets Nature', 'Discover the perfect blend of comfort, elegance, and exceptional service at Malawi\'s premier destination', 'images/hero/slide1.jpg', NULL, NULL, 'Book a Suite', '#book', 'View Rooms', '#rooms', 1, 1, '2026-01-20 07:55:39', '2026-02-04 16:25:19'),
 (2, 'Sunrise Over the Shire River', 'Golden hours above pristine waters', 'Wake to breathtaking Malawian sunrises framed by elegant interiors and world-class amenities', 'images/hero/slide2.jpg', NULL, NULL, 'See Gallery', '#gallery', 'Plan Your Stay', '#contact', 1, 2, '2026-01-20 07:55:39', '2026-01-20 07:55:39'),
 (3, 'Award-Winning Dining', 'Michelin-Star Culinary Excellence', 'Savor exceptional cuisine crafted by our renowned chefs using the finest local and international ingredients', 'images/hero/slide3.jpg', NULL, NULL, 'View Menu', '#facilities', 'Reserve a Table', '#contact', 1, 3, '2026-01-20 07:55:39', '2026-01-20 07:55:39'),
 (4, 'Ultimate Relaxation & Wellness', 'Your sanctuary of serenity', 'Indulge in our luxury spa, Olympic pool, and state-of-the-art fitness facilities designed for your well-being', 'images/hero/slide4.jpg', NULL, NULL, 'Explore Spa', '#facilities', 'Book Treatment', '#book', 1, 4, '2026-01-20 07:55:39', '2026-01-20 07:55:39');
@@ -832,6 +959,8 @@ CREATE TABLE `hotel_gallery` (
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `image_url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `video_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Path to video file or URL (e.g., Getty Images, YouTube, Vimeo)',
+  `video_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Video MIME type (video/mp4, video/webm, etc.) or platform (youtube, vimeo, getty)',
   `category` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'general' COMMENT 'e.g., exterior, interior, rooms, facilities, dining, events',
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `display_order` int NOT NULL DEFAULT '0',
@@ -843,14 +972,14 @@ CREATE TABLE `hotel_gallery` (
 -- Dumping data for table `hotel_gallery`
 --
 
-INSERT INTO `hotel_gallery` (`id`, `title`, `description`, `image_url`, `category`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'Hotel Exterior View', 'Stunning front view of Liwonde Sun Hotel', 'images/hotel_gallery/art.jpg', 'exterior', 1, 1, '2026-01-20 17:25:33', '2026-01-20 17:27:39'),
-(2, 'Luxury Pool Area', 'Infinity pool overlooking the Shire River', 'images/hotel_gallery/Outside2.png', 'facilities', 1, 2, '2026-01-20 17:25:33', '2026-01-20 17:29:31'),
-(3, 'Elegant Dining Hall', 'Our award-winning restaurant interior', 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80', 'dining', 1, 3, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
-(4, 'Executive Suite', 'Spacious suite with panoramic views', 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80', 'rooms', 1, 4, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
-(5, 'Rooftop Lounge', 'Sunset views from our rooftop bar', 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80', 'facilities', 1, 5, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
-(6, 'Grand Lobby', 'Welcome to luxury and elegance', 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80', 'interior', 1, 6, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
-(7, 'Spa & Wellness', 'Rejuvenate in our world-class spa', 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80', 'facilities', 1, 7, '2026-01-20 17:25:33', '2026-01-20 17:25:33');
+INSERT INTO `hotel_gallery` (`id`, `title`, `description`, `image_url`, `video_path`, `video_type`, `category`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'Hotel Exterior View', 'Stunning front view of Liwonde Sun Hotel', 'images/hotel_gallery/art.jpg', 'https://media.gettyimages.com/id/2219019953/video/group-of-mature-adult-friends-quickly-booking-a-hotel-on-smartphone-while-exploring-the-temple.mp4?s=mp4-640x640-gi&k=20&c=AklHmBkwIrOueUSYHFDoVY2nN7tD4xkV3QAFYCzG4ts=', 'video/mp4', 'exterior', 1, 1, '2026-01-20 17:25:33', '2026-02-04 21:59:30'),
+(2, 'Luxury Pool Area', 'Infinity pool overlooking the Shire River', 'images/hotel_gallery/Outside2.png', NULL, NULL, 'facilities', 1, 2, '2026-01-20 17:25:33', '2026-01-20 17:29:31'),
+(3, 'Elegant Dining Hall', 'Our award-winning restaurant interior', 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80', NULL, NULL, 'dining', 1, 3, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
+(4, 'Executive Suite', 'Spacious suite with panoramic views', 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80', NULL, NULL, 'rooms', 1, 4, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
+(5, 'Rooftop Lounge', 'Sunset views from our rooftop bar', 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80', NULL, NULL, 'facilities', 1, 5, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
+(6, 'Grand Lobby', 'Welcome to luxury and elegance', 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80', NULL, NULL, 'interior', 1, 6, '2026-01-20 17:25:33', '2026-01-20 17:25:33'),
+(7, 'Spa & Wellness', 'Rejuvenate in our world-class spa', 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80', NULL, NULL, 'facilities', 1, 7, '2026-01-20 17:25:33', '2026-01-20 17:25:33');
 
 -- --------------------------------------------------------
 
@@ -872,11 +1001,19 @@ CREATE TABLE `menu_categories` (
 --
 
 INSERT INTO `menu_categories` (`id`, `name`, `slug`, `description`, `display_order`, `is_active`) VALUES
-(1, 'Breakfast', 'breakfast', 'Start your day with our gourmet breakfast selection', 1, 1),
-(2, 'Appetizers', 'appetizers', 'Elegant starters to begin your meal', 2, 1),
-(3, 'Main Courses', 'main-courses', 'Exquisite main dishes prepared by our Michelin-star chef', 3, 1),
-(4, 'Desserts', 'desserts', 'Indulgent sweet creations', 4, 1),
-(5, 'Beverages', 'beverages', 'Premium drinks and cocktails', 5, 1);
+(6, 'Breakfast', 'breakfast', 'Start your day with our delicious breakfast options', 1, 1),
+(7, 'Starter', 'starter', 'Appetizing starters to begin your meal', 2, 1),
+(8, 'Chicken Corner', 'chicken-corner', 'Delicious chicken dishes prepared to perfection', 3, 1),
+(9, 'Meat Corner', 'meat-corner', 'Premium meat dishes for carnivores', 4, 1),
+(10, 'Fish Corner', 'fish-corner', 'Fresh fish and seafood from Lake Malawi', 5, 1),
+(11, 'Pasta Corner', 'pasta-corner', 'Italian pasta classics and favorites', 6, 1),
+(12, 'Burger Corner', 'burger-corner', 'Juicy burgers made with premium Malawian beef', 7, 1),
+(13, 'Pizza Corner', 'pizza-corner', 'Authentic pizzas with various toppings', 8, 1),
+(14, 'Snack Corner', 'snack-corner', 'Quick bites and light snacks', 9, 1),
+(15, 'Indian Corner', 'indian-corner', 'Authentic Indian cuisine with aromatic spices', 10, 1),
+(16, 'Liwonde Sun Specialities', 'liwonde-sun-specialities', 'Our signature special dishes', 11, 1),
+(17, 'Extras', 'extras', 'Additional sides and extras', 12, 1),
+(18, 'Desserts', 'desserts', 'Sweet treats to end your meal', 13, 1);
 
 -- --------------------------------------------------------
 
@@ -927,6 +1064,8 @@ CREATE TABLE `page_heroes` (
   `hero_subtitle` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `hero_description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `hero_image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `hero_video_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Path to video file or URL (e.g., Getty Images, YouTube, Vimeo)',
+  `hero_video_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Video MIME type (video/mp4, video/webm, etc.) or platform (youtube, vimeo, getty)',
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `display_order` int NOT NULL DEFAULT '0',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -937,13 +1076,13 @@ CREATE TABLE `page_heroes` (
 -- Dumping data for table `page_heroes`
 --
 
-INSERT INTO `page_heroes` (`id`, `page_slug`, `page_url`, `hero_title`, `hero_subtitle`, `hero_description`, `hero_image_path`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'restaurant', '/restaurant.php', 'Fine Dining Restaurant & Bars', 'Culinary Excellences', 'Savor exceptional cuisine crafted from finest local and international ingredients', 'https://media.gettyimages.com/id/1413260731/photo/a-journalist-team-writing-or-working-on-a-story-together-at-a-media-company-in-a-boardroom.jpg?s=612x612&w=0&k=20&c=EFu8OY0uCLKrtGIGCZ6tHZpUGXJa1gHimC4pf5Iim40=', 1, 1, '2026-01-25 18:03:42', '2026-02-04 13:52:09'),
-(2, 'conference', '/conference.php', 'Conference & Meetings Facilities', 'Business Excellence', 'Businsess-ready venues with premium technology, flexibles layouts, and tailored service for every executive gathering.', 'https://media.gettyimages.com/id/1413260731/photo/a-journalist-team-writing-or-working-on-a-story-together-at-a-media-company-in-a-boardroom.jpg?s=612x612&w=0&k=20&c=EFu8OY0uCLKrtGIGCZ6tHZpUGXJa1gHimC4pf5Iim40=', 1, 2, '2026-01-25 18:03:42', '2026-01-25 19:57:55'),
-(3, 'events', '/events.php', 'Events & Experiences', 'Celebrations & Gathering', 'From exclusive wine tastings to cultural nights—discover moments worth remembering at Liwonde Sun Hotel.', 'https://media.gettyimages.com/id/1434116601/photo/zoom-of-hands-laptop-search-or-business-meeting-for-teamwork-marketing-planning-or-target.jpg?s=612x612&w=0&k=20&c=oIngQBqrLY43jKRMhSlTs9xxtGx1YJdrFHXeXchCssg=', 1, 3, '2026-01-25 18:03:42', '2026-01-25 19:52:02'),
-(4, 'rooms-showcase', '/rooms-showcase.php', 'Rooms & Suites', 'Riverfront Luxury', 'Explore contemporary rooms and suites with panoramic views of the Shire River, featuring premium amenities and seamless booking integration.', 'https://media.gettyimages.com/id/1382975780/photo/businessman-with-cardkey-unlocking-door-in-hotel.jpg?s=612x612&w=0&k=20&c=yltGZmc_7emEGkP1UAPndO25Iih48zGnVJsqVp38Me8=', 1, 4, '2026-01-25 19:08:32', '2026-01-25 19:54:57'),
-(6, 'rooms-gallery', '/rooms-gallery.php', 'Rooms & Suites', 'Riverfront Luxury', 'Explore contemporary rooms and suites with panoramic views of the Shire River, featuring premium amenities and seamless booking integration.', 'https://media.gettyimages.com/id/1382975780/photo/businessman-with-cardkey-unlocking-door-in-hotel.jpg?s=612x612&w=0&k=20&c=yltGZmc_7emEGkP1UAPndO25Iih48zGnVJsqVp38Me8=', 1, 5, '2026-01-25 19:08:32', '2026-01-25 19:54:57'),
-(7, 'gym', '/gym.php', 'Gym', 'Your Wellness Journey begins', 'Comprehensive packages designed for optimal health and relaxation', 'images/gym/fitness-center.jpg', 1, 6, '2026-01-25 19:08:32', '2026-01-25 19:54:57');
+INSERT INTO `page_heroes` (`id`, `page_slug`, `page_url`, `hero_title`, `hero_subtitle`, `hero_description`, `hero_image_path`, `hero_video_path`, `hero_video_type`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'restaurant', '/restaurant.php', 'Fine Dining Restaurant & Bars', 'Culinary Excellences', 'Savor exceptional cuisine crafted from finest local and international ingredients', 'https://media.gettyimages.com/id/1413260731/photo/a-journalist-team-writing-or-working-on-a-story-together-at-a-media-company-in-a-boardroom.jpg?s=612x612&w=0&k=20&c=EFu8OY0uCLKrtGIGCZ6tHZpUGXJa1gHimC4pf5Iim40=', 'https://media.gettyimages.com/id/2219019953/video/group-of-mature-adult-friends-quickly-booking-a-hotel-on-smartphone-while-exploring-the-temple.mp4?s=mp4-640x640-gi&k=20&c=AklHmBkwIrOueUSYHFDoVY2nN7tD4xkV3QAFYCzG4ts=', 'video/mp4', 1, 1, '2026-01-25 18:03:42', '2026-02-04 21:59:30'),
+(2, 'conference', '/conference.php', 'Conference & Meetings Facilities', 'Business Excellence', 'Businsess-ready venues with premium technology, flexibles layouts, and tailored service for every executive gathering.', 'https://media.gettyimages.com/id/1413260731/photo/a-journalist-team-writing-or-working-on-a-story-together-at-a-media-company-in-a-boardroom.jpg?s=612x612&w=0&k=20&c=EFu8OY0uCLKrtGIGCZ6tHZpUGXJa1gHimC4pf5Iim40=', NULL, NULL, 1, 2, '2026-01-25 18:03:42', '2026-01-25 19:57:55'),
+(3, 'events', '/events.php', 'Events & Experiences', 'Celebrations & Gathering', 'From exclusive wine tastings to cultural nights—discover moments worth remembering at Liwonde Sun Hotel.', 'https://media.gettyimages.com/id/1434116601/photo/zoom-of-hands-laptop-search-or-business-meeting-for-teamwork-marketing-planning-or-target.jpg?s=612x612&w=0&k=20&c=oIngQBqrLY43jKRMhSlTs9xxtGx1YJdrFHXeXchCssg=', NULL, NULL, 1, 3, '2026-01-25 18:03:42', '2026-01-25 19:52:02'),
+(4, 'rooms-showcase', '/rooms-showcase.php', 'Rooms & Suites', 'Riverfront Luxury', 'Explore contemporary rooms and suites with panoramic views of the Shire River, featuring premium amenities and seamless booking integration.', 'https://media.gettyimages.com/id/1382975780/photo/businessman-with-cardkey-unlocking-door-in-hotel.jpg?s=612x612&w=0&k=20&c=yltGZmc_7emEGkP1UAPndO25Iih48zGnVJsqVp38Me8=', NULL, NULL, 1, 4, '2026-01-25 19:08:32', '2026-01-25 19:54:57'),
+(6, 'rooms-gallery', '/rooms-gallery.php', 'Rooms & Suites', 'Riverfront Luxury', 'Explore contemporary rooms and suites with panoramic views of the Shire River, featuring premium amenities and seamless booking integration.', 'https://media.gettyimages.com/id/1382975780/photo/businessman-with-cardkey-unlocking-door-in-hotel.jpg?s=612x612&w=0&k=20&c=yltGZmc_7emEGkP1UAPndO25Iih48zGnVJsqVp38Me8=', NULL, NULL, 1, 5, '2026-01-25 19:08:32', '2026-01-25 19:54:57'),
+(7, 'gym', '/gym.php', 'Gym', 'Your Wellness Journey begins', 'Comprehensive packages designed for optimal health and relaxation', 'images/gym/fitness-center.jpg', NULL, NULL, 1, 6, '2026-01-25 19:08:32', '2026-01-25 19:54:57');
 
 -- --------------------------------------------------------
 
@@ -1211,11 +1350,11 @@ CREATE TABLE `site_settings` (
 --
 
 INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_group`, `updated_at`, `hero_video_path`, `hero_video_type`) VALUES
-(1, 'site_name', 'Liwonde Sun Hotel', 'general', '2026-02-04 02:27:15', NULL, NULL),
+(1, 'site_name', 'Liwonde Sun Hotel', 'general', '2026-02-04 22:03:57', NULL, NULL),
 (2, 'site_tagline', 'Where Luxury Meets Nature', 'general', '2026-01-19 20:22:49', NULL, NULL),
 (3, 'hero_title', 'Experience Unparalleled Luxury', 'hero', '2026-01-19 20:22:49', NULL, NULL),
 (4, 'hero_subtitle', 'Discover the perfect blend of comfort, elegance, and exceptional service at Malawi\'s premier destination', 'hero', '2026-01-19 20:22:49', NULL, NULL),
-(5, 'phone_main', '+265 123 456 785', 'contact', '2026-01-20 07:43:44', NULL, NULL),
+(5, 'phone_main', '0212 877 796', 'contact', '2026-02-04 21:24:01', NULL, NULL),
 (6, 'phone_reservations', '+265 987 654 321', 'contact', '2026-01-19 20:22:49', NULL, NULL),
 (9, 'address_line1', 'Liwonde National Park Road', 'contact', '2026-01-19 20:22:49', NULL, NULL),
 (10, 'address_line2', 'Liwonde, Southern Region', 'contact', '2026-01-19 20:22:49', NULL, NULL),
@@ -1263,7 +1402,14 @@ INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_grou
 (114, 'admin_notification_email', '', 'email', '2026-02-03 00:29:35', NULL, NULL),
 (115, 'booking_time_buffer_minutes', '60', 'booking', '2026-02-03 17:49:20', NULL, NULL),
 (117, 'theme_color', '#0A1929', 'general', '2026-02-04 13:56:24', NULL, NULL),
-(118, 'default_keywords', 'luxury hotel malawi, liwonde accommodation, premium resort, lake malawi hotel, 5-star hotel malawi', 'general', '2026-02-04 13:56:24', NULL, NULL);
+(118, 'default_keywords', 'luxury hotel malawi, liwonde accommodation, premium resort, lake malawi hotel, 5-star hotel malawi', 'general', '2026-02-04 13:56:24', NULL, NULL),
+(120, 'phone_reception', '0883 500 304', 'contact', '2026-02-04 21:24:01', NULL, NULL),
+(121, 'phone_cell1', '0998 864 377', 'contact', '2026-02-04 21:24:01', NULL, NULL),
+(122, 'phone_cell2', '0882 363 765', 'contact', '2026-02-04 21:24:01', NULL, NULL),
+(123, 'phone_alternate1', '0983 825 196', 'contact', '2026-02-04 21:24:01', NULL, NULL),
+(124, 'phone_alternate2', '0999 877 796', 'contact', '2026-02-04 21:24:01', NULL, NULL),
+(125, 'phone_alternate3', '0888 353 540', 'contact', '2026-02-04 21:24:01', NULL, NULL),
+(126, 'email_restaurant', 'liwondesunhotel@gmail.com', 'contact', '2026-02-04 21:24:01', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1756,7 +1902,7 @@ ALTER TABLE `conference_rooms`
 -- AUTO_INCREMENT for table `drink_menu`
 --
 ALTER TABLE `drink_menu`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=192;
 
 --
 -- AUTO_INCREMENT for table `email_settings`
@@ -1780,7 +1926,7 @@ ALTER TABLE `facilities`
 -- AUTO_INCREMENT for table `food_menu`
 --
 ALTER TABLE `food_menu`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=96;
 
 --
 -- AUTO_INCREMENT for table `footer_links`
@@ -1846,7 +1992,7 @@ ALTER TABLE `hotel_gallery`
 -- AUTO_INCREMENT for table `menu_categories`
 --
 ALTER TABLE `menu_categories`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `migration_log`
@@ -1918,7 +2064,7 @@ ALTER TABLE `room_blocked_dates`
 -- AUTO_INCREMENT for table `site_settings`
 --
 ALTER TABLE `site_settings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=119;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=127;
 
 --
 -- AUTO_INCREMENT for table `tentative_booking_log`

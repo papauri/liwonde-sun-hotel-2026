@@ -97,4 +97,7 @@ Options -Indexes
     
     # Dynamic Sitemap
     RewriteRule ^sitemap\.xml$ generate-sitemap.php [L]
+    
+    # Dynamic Robots.txt
+    RewriteRule ^robots\.txt$ robots.php [L]
 </IfModule>
