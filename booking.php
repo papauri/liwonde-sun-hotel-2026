@@ -174,7 +174,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Get room details for pricing
         $room = $validation_result['availability']['room'];
         $number_of_nights = $validation_result['availability']['nights'];
-        $total_amount = $room['price_per_night'] * $number_of_nights;
+        
+        // Determine pricing based on occupancy type
+        $occupancy_type = $_POST['occupancy_type'] ?? 'double';
+        
+        // Get the correct price based on occupancy
+        if ($occupancy_type === 'single' && !empty($room['price_single_occupancy'])) {
+            $room_price = $room['price_single_occupancy'];
+        } elseif ($occupancy_type === 'double' && !empty($room['price_double_occupancy'])) {
+            $room_price = $room['price_double_occupancy'];
+        } elseif ($occupancy_type === 'triple' && !empty($room['price_triple_occupancy'])) {
+            $room_price = $room['price_triple_occupancy'];
+        } else {
+            // Fallback to default price
+            $room_price = $room['price_per_night'];
+        }
+        
+        $total_amount = $room_price * $number_of_nights;
 
         // Generate unique booking reference (guaranteed unique)
         do {
@@ -204,15 +220,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     booking_reference, room_id, guest_name, guest_email, guest_phone,
                     guest_country, guest_address, number_of_guests, check_in_date,
                     check_out_date, number_of_nights, total_amount, special_requests, status,
-                    is_tentative, tentative_expires_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    is_tentative, tentative_expires_at, occupancy_type
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
 
             $insert_stmt->execute([
                 $booking_reference, $room_id, $guest_name, $guest_email, $guest_phone,
                 $guest_country, $guest_address, $number_of_guests, $check_in_date,
                 $check_out_date, $number_of_nights, $total_amount, $special_requests,
-                $booking_status, $is_tentative, $tentative_expires_at
+                $booking_status, $is_tentative, $tentative_expires_at, $occupancy_type
             ]);
 
             // Commit transaction - booking secured with foreign key constraints!
@@ -234,7 +250,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'special_requests' => $special_requests,
                 'status' => $booking_status,
                 'is_tentative' => $is_tentative,
-                'tentative_expires_at' => $tentative_expires_at
+                'tentative_expires_at' => $tentative_expires_at,
+                'occupancy_type' => $occupancy_type,
+                'room_price' => $room_price
             ];
             
             // Send appropriate email based on booking type
@@ -311,17 +329,20 @@ $preselected_room_id = isset($_GET['room_id']) ? (int)$_GET['room_id'] : null;
 $preselected_room = null;
 
 // Fetch available rooms for booking form with all details needed for validation
-$rooms_stmt = $pdo->query("SELECT id, name, price_per_night, max_guests, rooms_available, total_rooms, short_description, image_url FROM rooms WHERE is_active = 1 ORDER BY display_order ASC");
+$rooms_stmt = $pdo->query("SELECT id, name, price_per_night, price_single_occupancy, price_double_occupancy, price_triple_occupancy, max_guests, rooms_available, total_rooms, short_description, image_url FROM rooms WHERE is_active = 1 ORDER BY display_order ASC");
 $available_rooms = $rooms_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Build rooms data for JavaScript
-$rooms_data = [];
+        // Build rooms data for JavaScript with occupancy pricing
+        $rooms_data = [];
 foreach ($available_rooms as $room) {
     $rooms_data[] = [
         'id' => (int)$room['id'],
         'name' => $room['name'],
         'max_guests' => (int)$room['max_guests'],
         'price_per_night' => (float)$room['price_per_night'],
+        'price_single_occupancy' => (float)($room['price_single_occupancy'] ?? $room['price_per_night']),
+        'price_double_occupancy' => (float)($room['price_double_occupancy'] ?? $room['price_per_night'] * 1.2),
+        'price_triple_occupancy' => (float)($room['price_triple_occupancy'] ?? $room['price_per_night'] * 1.4),
         'rooms_available' => (int)$room['rooms_available'],
         'total_rooms' => (int)$room['total_rooms']
     ];
@@ -597,6 +618,28 @@ try {
                         <small id="guestCapacityHint" style="color: #666; font-size: 12px; margin-top: 5px; display: none;"></small>
                     </div>
                     
+                    <!-- Occupancy Type Selection -->
+                    <div class="form-group">
+                        <label class="required">Occupancy Type</label>
+                        <div style="display: flex; gap: 15px; margin-top: 8px;">
+                            <label style="flex: 1; cursor: pointer; padding: 12px; border: 2px solid #ddd; border-radius: 8px; text-align: center; transition: all 0.3s; display: flex; flex-direction: column; align-items: center; gap: 5px;" id="singleOccupancyLabel">
+                                <input type="radio" name="occupancy_type" value="single" style="margin: 0;">
+                                <strong style="color: var(--navy);">Single Occupancy</strong>
+                                <span style="font-size: 12px; color: #666;">1 Guest</span>
+                                <span id="singlePriceDisplay" style="font-weight: 600; color: var(--gold);">-</span>
+                            </label>
+                            <label style="flex: 1; cursor: pointer; padding: 12px; border: 2px solid var(--gold); border-radius: 8px; text-align: center; transition: all 0.3s; background: rgba(212, 175, 55, 0.1); display: flex; flex-direction: column; align-items: center; gap: 5px;" id="doubleOccupancyLabel">
+                                <input type="radio" name="occupancy_type" value="double" checked style="margin: 0;">
+                                <strong style="color: var(--navy);">Double Occupancy</strong>
+                                <span style="font-size: 12px; color: #666;">2 Guests</span>
+                                <span id="doublePriceDisplay" style="font-weight: 600; color: var(--gold);">-</span>
+                            </label>
+                        </div>
+                        <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
+                            <i class="fas fa-info-circle"></i> Prices vary based on occupancy type
+                        </small>
+                    </div>
+                    
                     <!-- Second Room Suggestion (hidden by default) -->
                     <div id="secondRoomSuggestion" style="display: none; margin-top: 15px; padding: 15px; background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border-left: 4px solid var(--gold); border-radius: 8px;">
                         <div style="display: flex; align-items: start; gap: 12px;">
@@ -748,8 +791,58 @@ try {
                 selectedRoomName = preselectedRoomName;
                 selectedRoomMaxGuests = preselectedRoomMaxGuests;
                 updateGuestOptions(preselectedRoomMaxGuests);
+                updateOccupancyPrices(preselectedRoomId);
             }
+            
+            // Add occupancy type change listeners
+            const occupancyRadios = document.querySelectorAll('input[name="occupancy_type"]');
+            occupancyRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    updatePriceBasedOnOccupancy();
+                    updateSummary();
+                });
+            });
         });
+        
+        // Update price displays when occupancy type changes
+        function updatePriceBasedOnOccupancy() {
+            const occupancyType = document.querySelector('input[name="occupancy_type"]:checked').value;
+            
+            if (!selectedRoomId) return;
+            
+            // Find the selected room from roomsData
+            const selectedRoom = roomsData.find(room => room.id === selectedRoomId);
+            if (!selectedRoom) return;
+            
+            let newPrice;
+            if (occupancyType === 'single') {
+                newPrice = selectedRoom.price_single_occupancy;
+            } else if (occupancyType === 'double') {
+                newPrice = selectedRoom.price_double_occupancy;
+            } else if (occupancyType === 'triple') {
+                newPrice = selectedRoom.price_triple_occupancy;
+            } else {
+                newPrice = selectedRoom.price_per_night;
+            }
+            
+            selectedRoomPrice = newPrice;
+        }
+        
+        // Update occupancy price displays when room is selected
+        function updateOccupancyPrices(roomId) {
+            const room = roomsData.find(r => r.id === roomId);
+            if (!room) return;
+            
+            const singlePrice = document.getElementById('singlePriceDisplay');
+            const doublePrice = document.getElementById('doublePriceDisplay');
+            
+            if (singlePrice) {
+                singlePrice.textContent = currencySymbol + room.price_single_occupancy.toLocaleString();
+            }
+            if (doublePrice) {
+                doublePrice.textContent = currencySymbol + room.price_double_occupancy.toLocaleString();
+            }
+        }
         
         function updateSummaryWithDates(selection) {
             const roomRadio = document.querySelector('input[name="room_id"]:checked');
@@ -787,11 +880,16 @@ try {
             
             selectedRoomId = roomId;
             selectedRoomName = roomName;
-            selectedRoomPrice = roomPrice;
             selectedRoomMaxGuests = parseInt(label.getAttribute('data-max-guests'));
             
             // Update guest options based on room capacity
             updateGuestOptions(selectedRoomMaxGuests);
+            
+            // Update occupancy prices for this room
+            updateOccupancyPrices(roomId);
+            
+            // Get current occupancy type and set price
+            updatePriceBasedOnOccupancy();
             
             // Reinitialize calendars with new room's blocked dates
             updateBlockedDatesForRoom(roomId);
@@ -948,9 +1046,28 @@ try {
                 const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
 
                 if (nights > 0) {
-                    const total = selectedRoomPrice * nights;
+                    // Get current occupancy type
+                    const occupancyType = document.querySelector('input[name="occupancy_type"]:checked')?.value || 'double';
                     
-                    document.getElementById('summaryRoom').textContent = selectedRoomName;
+                    // Find the selected room from roomsData
+                    const selectedRoom = roomsData.find(room => room.id === selectedRoomId);
+                    if (!selectedRoom) return;
+                    
+                    // Calculate price based on occupancy
+                    let pricePerNight;
+                    if (occupancyType === 'single') {
+                        pricePerNight = selectedRoom.price_single_occupancy;
+                    } else if (occupancyType === 'double') {
+                        pricePerNight = selectedRoom.price_double_occupancy;
+                    } else if (occupancyType === 'triple') {
+                        pricePerNight = selectedRoom.price_triple_occupancy;
+                    } else {
+                        pricePerNight = selectedRoom.price_per_night;
+                    }
+                    
+                    const total = pricePerNight * nights;
+                    
+                    document.getElementById('summaryRoom').textContent = selectedRoomName + ' (' + (occupancyType === 'single' ? 'Single' : occupancyType === 'double' ? 'Double' : 'Triple') + ' Occupancy)';
                     document.getElementById('summaryCheckIn').textContent = checkInDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                     document.getElementById('summaryCheckOut').textContent = checkOutDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                     document.getElementById('summaryNights').textContent = nights + (nights === 1 ? ' night' : ' nights');

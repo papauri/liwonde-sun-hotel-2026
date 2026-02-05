@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Feb 05, 2026 at 12:06 PM
+-- Generation Time: Feb 05, 2026 at 12:57 PM
 -- Server version: 8.0.44-cll-lve
 -- PHP Version: 8.4.16
 
@@ -187,7 +187,8 @@ CREATE TABLE `bookings` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `expires_at` datetime DEFAULT NULL COMMENT 'When tentative booking expires (NULL for non-tentative bookings)',
-  `converted_from_tentative` tinyint(1) DEFAULT '0' COMMENT 'Whether this booking was converted from tentative status (1=yes, 0=no)'
+  `converted_from_tentative` tinyint(1) DEFAULT '0' COMMENT 'Whether this booking was converted from tentative status (1=yes, 0=no)',
+  `occupancy_type` enum('single','double','triple') COLLATE utf8mb4_unicode_ci DEFAULT 'double' COMMENT 'Occupancy type for pricing'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -727,19 +728,10 @@ INSERT INTO `gallery` (`id`, `title`, `description`, `image_url`, `category`, `r
 (24, 'Executive Suite - Work Area', 'Dedicated workspace with desk and business amenities', 'images/rooms/executive-work.jpg', 'rooms', 2, 2, 1, '2026-01-20 16:07:07'),
 (25, 'Executive Suite - Lounge', 'Comfortable lounge area', 'images/rooms/executive-lounge.jpg', 'rooms', 2, 3, 1, '2026-01-20 16:07:07'),
 (26, 'Executive Suite - Bathroom', 'Modern bathroom with premium toiletries', 'images/rooms/executive-bathroom.jpg', 'rooms', 2, 4, 1, '2026-01-20 16:07:07'),
-(27, 'Family Suite - Main Bedroom', 'Spacious master bedroom with king bed', 'images/rooms/family-main.jpg', 'rooms', 3, 1, 1, '2026-01-20 16:07:07'),
-(28, 'Family Suite - Second Bedroom', 'Comfortable second bedroom with double bed', 'images/rooms/family-second.jpg', 'rooms', 3, 2, 1, '2026-01-20 16:07:07'),
-(29, 'Family Suite - Living Area', 'Shared living and dining space', 'images/rooms/family-living.jpg', 'rooms', 3, 3, 1, '2026-01-20 16:07:07'),
-(30, 'Family Suite - Kitchen', 'Kitchenette with cooking facilities', 'images/rooms/family-kitchen.jpg', 'rooms', 3, 4, 1, '2026-01-20 16:07:07'),
-(34, 'Test', 'Test', 'images/rooms/gallery/room_1_gallery_1769091599.png', 'rooms', 1, NULL, 1, '2026-01-20 16:31:10'),
 (35, 'Executive Suite - Bedroom', 'Premium bedroom with king bed', 'images/rooms/gallery/room_2_gallery_1769091563.png', 'rooms', 2, 1, 1, '2026-01-20 16:31:10'),
 (36, 'Executive Suite - Work Area', 'Dedicated workspace with desk and business amenities', 'https://source.unsplash.com/1200x1200/?hotel,workspace,desk', 'rooms', 2, 2, 1, '2026-01-20 16:31:10'),
 (37, 'Executive Suite - Lounge', 'Comfortable lounge area', 'https://source.unsplash.com/1200x1200/?hotel,lounge,sofa', 'rooms', 2, 3, 1, '2026-01-20 16:31:10'),
 (38, 'Executive Suite - Bathroom', 'Modern bathroom with premium toiletries', 'https://source.unsplash.com/1200x1200/?hotel,bathroom,modern', 'rooms', 2, 4, 1, '2026-01-20 16:31:10'),
-(39, 'Family Suite - Main Bedroom', 'Spacious master bedroom with king bed', 'https://source.unsplash.com/1200x1200/?family,hotel,room', 'rooms', 3, 1, 1, '2026-01-20 16:31:10'),
-(40, 'Family Suite - Second Bedroom', 'Comfortable second bedroom with double bed', 'https://source.unsplash.com/1200x1200/?kids,bedroom,hotel', 'rooms', 3, 2, 1, '2026-01-20 16:31:10'),
-(41, 'Family Suite - Living Area', 'Shared living and dining space', 'https://source.unsplash.com/1200x1200/?family,living,room', 'rooms', 3, 3, 1, '2026-01-20 16:31:10'),
-(42, 'Family Suite - Kitchen', 'Kitchenette with cooking facilities', 'https://source.unsplash.com/1200x1200/?kitchenette,hotel,apartment', 'rooms', 3, 4, 1, '2026-01-20 16:31:10'),
 (43, 'Bedroom', 'New View', 'images/rooms/gallery/room_4_gallery_1769093132.png', 'rooms', 4, 0, 1, '2026-01-22 14:45:32');
 
 -- --------------------------------------------------------
@@ -1034,7 +1026,8 @@ CREATE TABLE `migration_log` (
 --
 
 INSERT INTO `migration_log` (`migration_id`, `migration_name`, `migration_date`, `status`, `created_at`) VALUES
-(1, 'payments_accounting_system', '2026-01-30 00:12:22', 'completed', '2026-01-30 00:12:22');
+(1, 'payments_accounting_system', '2026-01-30 00:12:22', 'completed', '2026-01-30 00:12:22'),
+(7, 'occupancy_pricing_system', '2026-02-05 12:48:15', 'completed', '2026-02-05 12:48:15');
 
 -- --------------------------------------------------------
 
@@ -1246,9 +1239,9 @@ CREATE TABLE `reviews` (
 
 INSERT INTO `reviews` (`id`, `booking_id`, `room_id`, `review_type`, `guest_name`, `guest_email`, `rating`, `title`, `comment`, `service_rating`, `cleanliness_rating`, `location_rating`, `value_rating`, `status`, `created_at`, `updated_at`) VALUES
 (1, NULL, NULL, 'general', 'Test User', 'test@example.com', 5, 'Excellent Stay', 'This was a wonderful experience at the hotel. The service was outstanding and the room was very clean.', NULL, NULL, NULL, NULL, 'approved', '2026-01-27 14:47:18', '2026-01-27 22:45:26'),
-(2, NULL, 1, 'general', 'John Doe', 'john@example.com', 4, 'Great Room', 'The room was spacious and comfortable. Staff was very helpful.', 5, 5, 4, 4, 'approved', '2026-01-27 14:48:28', '2026-01-27 15:29:21'),
+(2, NULL, NULL, 'general', 'John Doe', 'john@example.com', 4, 'Great Room', 'The room was spacious and comfortable. Staff was very helpful.', 5, 5, 4, 4, 'approved', '2026-01-27 14:48:28', '2026-01-27 15:29:21'),
 (3, NULL, NULL, 'general', 'Test User', 'test@example.com', 5, 'Great Stay', 'This is a test review submission to verify the form works without cURL', NULL, NULL, NULL, NULL, 'approved', '2026-01-27 16:10:19', '2026-01-27 22:44:47'),
-(6, NULL, 3, 'room', 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', 4, 'tessssssssssssssssssssssssss', 'tessssssssssssssssssssssssss', 1, 3, 3, 2, 'approved', '2026-02-04 02:20:53', '2026-02-04 02:22:16');
+(6, NULL, NULL, 'room', 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', 4, 'tessssssssssssssssssssssssss', 'tessssssssssssssssssssssssss', 1, 3, 3, 2, 'approved', '2026-02-04 02:20:53', '2026-02-04 02:22:16');
 
 -- --------------------------------------------------------
 
@@ -1298,20 +1291,20 @@ CREATE TABLE `rooms` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `video_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Path to room video file',
-  `video_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Video MIME type'
+  `video_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Video MIME type',
+  `price_single_occupancy` decimal(10,2) DEFAULT NULL COMMENT 'Price for single occupancy (1 guest)',
+  `price_double_occupancy` decimal(10,2) DEFAULT NULL COMMENT 'Price for double occupancy (2 guests)',
+  `price_triple_occupancy` decimal(10,2) DEFAULT NULL COMMENT 'Price for triple occupancy (3 guests)'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `rooms`
 --
 
-INSERT INTO `rooms` (`id`, `name`, `slug`, `description`, `short_description`, `price_per_night`, `size_sqm`, `max_guests`, `rooms_available`, `total_rooms`, `bed_type`, `image_url`, `badge`, `amenities`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`, `video_path`, `video_type`) VALUES
-(1, 'Presidential Suite', 'presidential-suite', 'Ultimate luxury with private terrace and exclusive service', 'Ultimate luxury with private terrace and exclusive service', 50000.00, 110, 4, 3, 5, 'King Bed', 'images/rooms/room_1_1768949756.png', 'Luxury', 'King Bed,Private Terrace,Jacuzzi,Butler Service,Living Area,Dining Area,Full Kitchen,Smart TV,Premium WiFi,Climate Control', 1, 1, 1, '2026-01-19 20:22:49', '2026-02-04 15:59:23', 'https://www.youtube.com/watch?v=3aTnsFOFq4w&list=RD3aTnsFOFq4w&start_radio=1', NULL),
-(2, 'Executive Suite', 'executive-suite', 'Premium executive suite with work area and butler service', 'Premium executive suite with work area and butler service', 30050.00, 60, 3, 4, 5, 'King Bed', 'images\\rooms\\Deluxe Room.jpg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-02-01 12:38:20', NULL, NULL),
-(3, 'Family Suite', 'family-suite', 'Spacious two-bedroom suite perfect for families, featuring two king beds, dual bathrooms, and separate living area. Create lasting memories in ultimate comfort.', 'Spacious family accommodation with 2 bedrooms', 30020.00, 55, 6, 5, 5, '2 King Beds', 'images\\rooms\\family_suite.jpg', 'Family', '2 King Beds,2 Bathrooms,Living Area,Kitchenette,Smart TV,Kids Welcome,Free WiFi,Climate Control', 1, 1, 3, '2026-01-19 20:22:49', '2026-01-20 17:01:46', NULL, NULL),
-(4, 'Deluxe Suite', 'deluxe-suite', 'Luxurious suite with marble bathroom featuring jacuzzi tub, separate living area, and premium bedding. Experience sophistication and indulgence.', 'Luxury suite with jacuzzi and separate living area', 28000.00, 45, 2, 4, 5, 'King Bed', 'images/rooms/room_4_featured_1769093172.png', 'Popular', 'King Bed,Jacuzzi Tub,Living Area,Marble Bathroom,Premium Bedding,Smart TV,Mini Bar,Free WiFi', 1, 1, 4, '2026-01-19 20:22:49', '2026-01-30 07:42:24', NULL, NULL),
-(5, 'Superior Room', 'superior-room', 'Spacious room with premium furnishings, stunning views, and modern amenities. Enjoy comfort and elegance in every detail.', 'Spacious room with premium amenities and views', 21000.00, 35, 2, 5, 5, 'King Bed', 'https://source.unsplash.com/1600x900/?superior,hotel,room,view,interior', NULL, 'King Bed,City View,Balcony,Smart TV,Free WiFi,Coffee Machine,Safe,Climate Control', 0, 0, 5, '2026-01-19 20:22:49', '2026-01-22 23:45:09', NULL, NULL),
-(6, 'Standard Room', 'standard-room', 'Comfortable and well-appointed room with all essential amenities for a pleasant stay. Perfect for travelers seeking quality at exceptional value.', 'Comfortable room with essential amenities', 15000.00, 25, 2, 5, 5, 'Queen Bed', 'https://source.unsplash.com/1600x900/?standard,hotel,room,interior', 'Value', 'Queen Bed,Free WiFi,Smart TV,Daily Breakfast,Climate Control,Safe,Coffee Machine', 0, 0, 6, '2026-01-19 20:22:49', '2026-01-22 23:45:13', NULL, NULL);
+INSERT INTO `rooms` (`id`, `name`, `slug`, `description`, `short_description`, `price_per_night`, `size_sqm`, `max_guests`, `rooms_available`, `total_rooms`, `bed_type`, `image_url`, `badge`, `amenities`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`, `video_path`, `video_type`, `price_single_occupancy`, `price_double_occupancy`, `price_triple_occupancy`) VALUES
+(2, 'Executive Suite', 'executive-suite', 'Premium executive suite with work area and butler service', 'Premium executive suite with work area and butler service', 130000.00, 60, 2, 4, 5, 'King Bed', 'images\\rooms\\Deluxe Room.jpg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-02-05 12:51:23', NULL, NULL, 130000.00, 165000.00, NULL),
+(4, 'Deluxe Suite', 'deluxe-suite', 'Luxurious suite with marble bathroom featuring jacuzzi tub, separate living area, and premium bedding. Experience sophistication and indulgence.', 'Luxury suite with jacuzzi and separate living area', 100000.00, 45, 2, 4, 5, 'King Bed', 'images/rooms/room_4_featured_1769093172.png', 'Popular', 'King Bed,Jacuzzi Tub,Living Area,Marble Bathroom,Premium Bedding,Smart TV,Mini Bar,Free WiFi', 1, 1, 4, '2026-01-19 20:22:49', '2026-02-05 12:51:29', NULL, NULL, 100000.00, 135000.00, NULL),
+(5, 'Superior Room', 'superior-room', 'Spacious room with premium furnishings, stunning views, and modern amenities. Enjoy comfort and elegance in every detail.', 'Spacious room with premium amenities and views', 85000.00, 35, 2, 5, 5, 'King Bed', 'https://source.unsplash.com/1600x900/?superior,hotel,room,view,interior', NULL, 'King Bed,City View,Balcony,Smart TV,Free WiFi,Coffee Machine,Safe,Climate Control', 0, 0, 5, '2026-01-19 20:22:49', '2026-02-05 12:51:39', NULL, NULL, 85000.00, 115000.00, NULL);
 
 -- --------------------------------------------------------
 
@@ -1368,11 +1361,11 @@ INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_grou
 (18, 'currency_symbol', 'MWK', 'general', '2026-01-20 10:16:28', NULL, NULL),
 (19, 'currency_code', 'MWK', 'general', '2026-01-20 10:16:13', NULL, NULL),
 (20, 'site_logo', '', 'general', '2026-01-21 23:24:01', NULL, NULL),
-(23, 'site_url', 'https://www.liwondesunhotel.com', 'general', '2026-02-04 13:56:24', NULL, NULL),
+(23, 'site_url', 'https://promanaged-it.com/hotelsmw', 'general', '2026-02-05 12:25:03', NULL, NULL),
 (27, 'check_in_time', '2:00 PM', 'booking', '2026-01-27 12:02:11', NULL, NULL),
 (28, 'check_out_time', '11:00 AM', 'booking', '2026-01-27 12:02:11', NULL, NULL),
 (29, 'booking_change_policy', 'If you need to make any changes, please contact us at least 48 hours before your arrival.', 'booking', '2026-01-27 12:02:11', NULL, NULL),
-(30, 'email_main', 'test@liwondesunhotel.com', 'contact', '2026-01-28 01:12:46', NULL, NULL),
+(30, 'email_main', 'info@liwondesunhotel.com', 'contact', '2026-02-05 12:26:03', NULL, NULL),
 (32, 'vat_enabled', '1', 'accounting', '2026-01-30 00:09:59', NULL, NULL),
 (33, 'vat_rate', '16.5', 'accounting', '2026-01-30 00:09:59', NULL, NULL),
 (34, 'vat_number', 'MW123456789', 'accounting', '2026-01-30 00:09:59', NULL, NULL),
@@ -1998,7 +1991,7 @@ ALTER TABLE `menu_categories`
 -- AUTO_INCREMENT for table `migration_log`
 --
 ALTER TABLE `migration_log`
-  MODIFY `migration_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `migration_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `newsletter_subscribers`

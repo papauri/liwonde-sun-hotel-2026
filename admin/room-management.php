@@ -56,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare("
                     UPDATE rooms
                     SET name = ?, description = ?, short_description = ?, price_per_night = ?,
+                        price_single_occupancy = ?, price_double_occupancy = ?, price_triple_occupancy = ?,
                         size_sqm = ?, max_guests = ?, rooms_available = ?, total_rooms = ?,
                         bed_type = ?, amenities = ?, is_featured = ?, is_active = ?, display_order = ?
                     WHERE id = ?
@@ -65,6 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_POST['description'] ?? $_POST['short_description'],
                     $_POST['short_description'],
                     $_POST['price_per_night'],
+                    $_POST['price_single_occupancy'] ?? null,
+                    $_POST['price_double_occupancy'] ?? null,
+                    $_POST['price_triple_occupancy'] ?? null,
                     $_POST['size_sqm'],
                     $_POST['max_guests'],
                     $rooms_available,
@@ -1001,6 +1005,9 @@ try {
                             <th style="width: 200px;">Room Name</th>
                             <th style="width: 250px;">Short Desc</th>
                             <th style="width: 120px;">Price/Night</th>
+                            <th style="width: 140px;">Single Price</th>
+                            <th style="width: 140px;">Double Price</th>
+                            <th style="width: 140px;">Triple Price</th>
                             <th style="width: 80px;">Size</th>
                             <th style="width: 80px;">Guests</th>
                             <th style="width: 140px;">Availability</th>
@@ -1044,6 +1051,18 @@ try {
                                 <td>
                                     <span class="cell-view"><?php echo htmlspecialchars(getSetting('currency_symbol')); ?> <?php echo number_format($room['price_per_night'], 0); ?></span>
                                     <input type="number" class="cell-edit" value="<?php echo $room['price_per_night']; ?>" step="0.01" data-field="price_per_night">
+                                </td>
+                                <td>
+                                    <span class="cell-view"><?php echo htmlspecialchars(getSetting('currency_symbol')); ?> <?php echo number_format($room['price_single_occupancy'] ?? 0, 0); ?></span>
+                                    <input type="number" class="cell-edit" value="<?php echo $room['price_single_occupancy'] ?? ''; ?>" step="0.01" data-field="price_single_occupancy" placeholder="Optional">
+                                </td>
+                                <td>
+                                    <span class="cell-view"><?php echo htmlspecialchars(getSetting('currency_symbol')); ?> <?php echo number_format($room['price_double_occupancy'] ?? 0, 0); ?></span>
+                                    <input type="number" class="cell-edit" value="<?php echo $room['price_double_occupancy'] ?? ''; ?>" step="0.01" data-field="price_double_occupancy" placeholder="Optional">
+                                </td>
+                                <td>
+                                    <span class="cell-view"><?php echo htmlspecialchars(getSetting('currency_symbol')); ?> <?php echo number_format($room['price_triple_occupancy'] ?? 0, 0); ?></span>
+                                    <input type="number" class="cell-edit" value="<?php echo $room['price_triple_occupancy'] ?? ''; ?>" step="0.01" data-field="price_triple_occupancy" placeholder="Optional">
                                 </td>
                                 <td>
                                     <span class="cell-view"><?php echo $room['size_sqm']; ?></span>
