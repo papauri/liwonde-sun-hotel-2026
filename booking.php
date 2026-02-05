@@ -866,6 +866,130 @@ try {
             .booking-type-selection {
                 grid-template-columns: 1fr;
             }
+            
+            /* Mobile responsive styles */
+            .booking-page {
+                padding-top: 70px;
+            }
+            
+            .booking-container {
+                padding: 20px 15px;
+            }
+            
+            .booking-form-card {
+                padding: 20px;
+                border-radius: 12px;
+            }
+            
+            .booking-header h1 {
+                font-size: 24px;
+            }
+            
+            .booking-header p {
+                font-size: 14px;
+            }
+            
+            .form-section-title {
+                font-size: 18px;
+                margin-bottom: 16px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .form-group {
+                margin-bottom: 16px;
+            }
+            
+            .form-control {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+            
+            .room-option {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 12px;
+            }
+            
+            .room-option input[type="radio"] {
+                width: 18px;
+                height: 18px;
+            }
+            
+            .room-info h4 {
+                font-size: 16px;
+            }
+            
+            .room-info p {
+                font-size: 12px;
+            }
+            
+            .room-price {
+                margin-left: 0;
+                margin-top: 8px;
+                text-align: left;
+            }
+            
+            .room-price-amount {
+                font-size: 18px;
+            }
+            
+            .booking-summary {
+                padding: 16px;
+                margin-top: 24px;
+            }
+            
+            .booking-summary h3 {
+                font-size: 18px;
+            }
+            
+            .summary-row {
+                font-size: 14px;
+                padding: 10px 0;
+            }
+            
+            .summary-row:last-child {
+                font-size: 18px;
+            }
+            
+            .btn-submit {
+                padding: 14px 24px;
+                font-size: 15px;
+            }
+            
+            .alert {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .booking-container {
+                padding: 15px 10px;
+            }
+            
+            .booking-form-card {
+                padding: 16px;
+            }
+            
+            .booking-header h1 {
+                font-size: 20px;
+            }
+            
+            .form-section-title {
+                font-size: 16px;
+            }
+            
+            .room-info h4 {
+                font-size: 15px;
+            }
+            
+            .room-price-amount {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
