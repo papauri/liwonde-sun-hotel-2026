@@ -1,18 +1,55 @@
 <?php
 /**
- * Simple File-Based Caching System
- * Reduces database queries and remote connection overhead
+ * Enhanced Cache Management System
+ * Supports instant clearing, disabling, and automatic invalidation
  */
 
+// Cache directory configuration
 define('CACHE_DIR', __DIR__ . '/../cache');
-define('CACHE_ENABLED', true);
-define('CACHE_DEFAULT_TTL', 3600); // 1 hour default
+define('IMAGE_CACHE_DIR', __DIR__ . '/../data/image-cache');
+
+// Global cache enable/disable flag
+define('CACHE_ENABLED', true); // This can be overridden by database setting
+
+/**
+ * Check if caching is globally enabled
+ */
+function isCacheEnabled($type = null) {
+    // Check global setting from database
+    try {
+        global $pdo;
+        $stmt = $pdo->prepare("SELECT setting_value FROM site_settings WHERE setting_key = 'cache_global_enabled' LIMIT 1");
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result && $result['setting_value'] == '0') {
+            return false;
+        }
+        
+        // Check specific cache type
+        if ($type) {
+            $stmt = $pdo->prepare("SELECT setting_value FROM site_settings WHERE setting_key = ? LIMIT 1");
+            $stmt->execute(["cache_{$type}_enabled"]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result && $result['setting_value'] == '0') {
+                return false;
+            }
+        }
+    } catch (Exception $e) {
+        // If database query fails, default to enabled
+    }
+    
+    return CACHE_ENABLED;
+}
 
 /**
  * Get cached value with readable filename
+ * Respects cache enable/disable settings
  */
-function getCache($key, $default = null) {
-    if (!CACHE_ENABLED) {
+function getCache($key, $default = null, $type = 'settings') {
+    // Check if caching is enabled for this type
+    if (!isCacheEnabled($type)) {
         return $default;
     }
     
@@ -23,7 +60,7 @@ function getCache($key, $default = null) {
         return $default;
     }
     
-    $data = file_get_contents($cacheFile);
+    $data = @file_get_contents($cacheFile);
     if ($data === false) {
         return $default;
     }
@@ -46,21 +83,20 @@ function getCache($key, $default = null) {
  * Generate a human-readable cache filename with prefix
  */
 function getReadableCacheFilename($key) {
-    // Sanitize the key to make it filename-safe
+    // Sanitize key to be filesystem-safe
     $sanitized = preg_replace('/[^a-zA-Z0-9_-]/', '_', $key);
-    
-    // Use the sanitized key as prefix, then add hash for uniqueness
-    $hash = md5($key);
-    $shortHash = substr($hash, 0, 8); // First 8 chars of hash
-    
+    // Generate short hash for uniqueness
+    $shortHash = substr(md5($key), 0, 8);
     return "{$sanitized}_{$shortHash}.cache";
 }
 
 /**
  * Set cached value with readable filename
+ * Respects cache enable/disable settings
  */
-function setCache($key, $value, $ttl = CACHE_DEFAULT_TTL) {
-    if (!CACHE_ENABLED) {
+function setCache($key, $value, $ttl = 3600, $type = 'settings') {
+    // Don't cache if disabled
+    if (!isCacheEnabled($type)) {
         return false;
     }
     
@@ -70,15 +106,17 @@ function setCache($key, $value, $ttl = CACHE_DEFAULT_TTL) {
     }
     
     $cacheFile = CACHE_DIR . '/' . getReadableCacheFilename($key);
+    
     $cacheData = [
+        'key' => $key,
         'data' => $value,
-        'expiry' => time() + $ttl,
         'created' => time(),
-        'key' => $key // Store original key for reference
+        'expiry' => time() + $ttl,
+        'ttl' => $ttl
     ];
     
     $data = json_encode($cacheData);
-    return file_put_contents($cacheFile, $data, LOCK_EX) !== false;
+    return @file_put_contents($cacheFile, $data, LOCK_EX) !== false;
 }
 
 /**
@@ -93,45 +131,71 @@ function deleteCache($key) {
 }
 
 /**
- * Clear all cache
+ * Clear all cache files instantly
  */
 function clearCache() {
     $files = glob(CACHE_DIR . '/*.cache');
+    $cleared = 0;
     if ($files) {
         foreach ($files as $file) {
-            @unlink($file);
+            if (@unlink($file)) {
+                $cleared++;
+            }
         }
     }
-    return true;
+    
+    // Also clear image cache
+    clearImageCache();
+    
+    // Clear in-memory cache
+    global $_SITE_SETTINGS;
+    if (isset($_SITE_SETTINGS)) {
+        $_SITE_SETTINGS = [];
+    }
+    
+    return $cleared;
+}
+
+/**
+ * Clear image cache
+ */
+function clearImageCache() {
+    $files = glob(IMAGE_CACHE_DIR . '/*.jpg');
+    $cleared = 0;
+    if ($files) {
+        foreach ($files as $file) {
+            if (@unlink($file)) {
+                $cleared++;
+            }
+        }
+    }
+    return $cleared;
 }
 
 /**
  * List all cache files with their details
- * Returns array of cache information
  */
 function listCache() {
     $files = glob(CACHE_DIR . '/*.cache');
     $caches = [];
     
-    if ($files) {
-        foreach ($files as $file) {
-            $data = file_get_contents($file);
-            if ($data) {
-                $cache = json_decode($data, true);
-                if ($cache) {
-                    $caches[] = [
-                        'file' => basename($file),
-                        'key' => $cache['key'] ?? 'unknown',
-                        'size' => filesize($file),
-                        'size_formatted' => formatBytes(filesize($file)),
-                        'created' => $cache['created'] ?? null,
-                        'created_formatted' => $cache['created'] ? date('Y-m-d H:i:s', $cache['created']) : 'unknown',
-                        'expires' => $cache['expiry'] ?? null,
-                        'expires_formatted' => $cache['expiry'] ? date('Y-m-d H:i:s', $cache['expiry']) : 'unknown',
-                        'expired' => ($cache['expiry'] ?? 0) < time(),
-                        'ttl' => ($cache['expiry'] ?? time()) - time()
-                    ];
-                }
+    foreach ($files as $file) {
+        $data = @file_get_contents($file);
+        if ($data) {
+            $cache = json_decode($data, true);
+            if ($cache) {
+                $caches[] = [
+                    'file' => basename($file),
+                    'key' => $cache['key'] ?? 'unknown',
+                    'size' => filesize($file),
+                    'size_formatted' => formatBytes(filesize($file)),
+                    'created' => $cache['created'] ?? null,
+                    'created_formatted' => $cache['created'] ? date('Y-m-d H:i:s', $cache['created']) : 'unknown',
+                    'expires' => $cache['expiry'] ?? null,
+                    'expires_formatted' => $cache['expiry'] ? date('Y-m-d H:i:s', $cache['expiry']) : 'unknown',
+                    'expired' => ($cache['expiry'] ?? 0) < time(),
+                    'ttl' => ($cache['expiry'] ?? time()) - time()
+                ];
             }
         }
     }
@@ -146,7 +210,6 @@ function listCache() {
 
 /**
  * Clear cache by key pattern (supports wildcards)
- * Example: clearCacheByPattern('hero_*') clears all hero-related caches
  */
 function clearCacheByPattern($pattern) {
     $files = glob(CACHE_DIR . '/*.cache');
@@ -154,13 +217,18 @@ function clearCacheByPattern($pattern) {
     
     if ($files) {
         // Convert pattern to regex
-        $regex = '/^' . str_replace('*', '.*', str_replace('?', '.', $pattern)) . '/';
+        $regex = '/^' . str_replace('*', '.*', $pattern) . '$/';
         
         foreach ($files as $file) {
-            $filename = basename($file);
-            if (preg_match($regex, $filename)) {
-                if (@unlink($file)) {
-                    $cleared++;
+            $data = @file_get_contents($file);
+            if ($data) {
+                $cache = json_decode($data, true);
+                if ($cache && isset($cache['key'])) {
+                    if (preg_match($regex, $cache['key'])) {
+                        if (@unlink($file)) {
+                            $cleared++;
+                        }
+                    }
                 }
             }
         }
@@ -176,21 +244,22 @@ function getCacheStats() {
     $files = glob(CACHE_DIR . '/*.cache');
     $stats = [
         'total_files' => 0,
-        'total_size' => 0,
-        'expired_files' => 0,
         'active_files' => 0,
+        'expired_files' => 0,
+        'total_size' => 0,
+        'total_size_formatted' => '0 B',
         'oldest_file' => null,
         'newest_file' => null,
         'caches' => []
     ];
     
+    $now = time();
+    $oldest = PHP_INT_MAX;
+    $newest = 0;
+    
     if ($files) {
-        $now = time();
-        $oldest = PHP_INT_MAX;
-        $newest = 0;
-        
         foreach ($files as $file) {
-            $data = file_get_contents($file);
+            $data = @file_get_contents($file);
             if ($data) {
                 $cache = json_decode($data, true);
                 if ($cache) {
@@ -200,11 +269,11 @@ function getCacheStats() {
                     $created = $cache['created'] ?? 0;
                     if ($created < $oldest) {
                         $oldest = $created;
-                        $stats['oldest_file'] = basename($file);
+                        $stats['oldest_file'] = $cache['key'];
                     }
                     if ($created > $newest) {
                         $newest = $created;
-                        $stats['newest_file'] = basename($file);
+                        $stats['newest_file'] = $cache['key'];
                     }
                     
                     if (($cache['expiry'] ?? 0) < $now) {
@@ -218,28 +287,87 @@ function getCacheStats() {
     }
     
     $stats['total_size_formatted'] = formatBytes($stats['total_size']);
-    $stats['oldest_created'] = $oldest !== PHP_INT_MAX ? date('Y-m-d H:i:s', $oldest) : null;
-    $stats['newest_created'] = $newest > 0 ? date('Y-m-d H:i:s', $newest) : null;
     
     return $stats;
 }
 
 /**
- * Format bytes to human readable format
+ * Format bytes to human-readable format
  */
-function formatBytes($size, $precision = 2) {
-    if ($size == 0) return '0 B';
-    
-    $units = array('B', 'KB', 'MB', 'GB', 'TB');
-    $pow = floor(log($size, 1024));
-    
-    return round($size / pow(1024, $pow), $precision) . ' ' . $units[$pow];
+function formatBytes($bytes, $precision = 2) {
+    $units = ['B', 'KB', 'MB', 'GB'];
+    $bytes = max($bytes, 0);
+    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+    $pow = min($pow, count($units) - 1);
+    $bytes /= pow(1024, $pow);
+    return round($bytes, $precision) . ' ' . $units[$pow];
 }
 
 /**
  * Clear specific cache by exact key
  * Alias for deleteCache() for consistency
  */
-function clearCacheKey($key) {
+function clearSpecificCache($key) {
     return deleteCache($key);
+}
+
+/**
+ * Clear all room-related cache instantly
+ * Call this when rooms, prices, or images are updated
+ */
+function clearRoomCache() {
+    // Clear all room-related caches
+    $patterns = [
+        'rooms_*',
+        'table_rooms_*',
+        'room_*',
+        'facilities_*',
+        'gallery_images',
+        'hero_slides'
+    ];
+    
+    $total = 0;
+    foreach ($patterns as $pattern) {
+        $total += clearCacheByPattern($pattern);
+    }
+    
+    // Also clear image cache
+    $total += clearImageCache();
+    
+    // Clear in-memory cache
+    global $_SITE_SETTINGS;
+    if (isset($_SITE_SETTINGS)) {
+        unset($_SITE_SETTINGS['rooms']);
+    }
+    
+    return $total;
+}
+
+/**
+ * Clear all settings cache instantly
+ * Call this when site settings are updated
+ */
+function clearSettingsCache() {
+    return clearCacheByPattern('setting_*');
+}
+
+/**
+ * Clear all email cache instantly
+ * Call this when email settings are updated
+ */
+function clearEmailCache() {
+    return clearCacheByPattern('email_*');
+}
+
+/**
+ * Force cache refresh by clearing and immediately rebuilding
+ * Useful for ensuring data is fresh
+ */
+function forceCacheRefresh($key, $callback, $ttl = 3600, $type = 'settings') {
+    deleteCache($key);
+    $data = $callback();
+    if ($data !== null) {
+        setCache($key, $data, $ttl, $type);
+    }
+    return $data;
 }

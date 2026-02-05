@@ -53,25 +53,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         switch ($type) {
                             case 'all':
                                 $before = count(glob(CACHE_DIR . '/*.cache'));
+                                $image_before = count(glob(IMAGE_CACHE_DIR . '/*.jpg'));
                                 clearCache();
-                                $files_cleared += $before;
+                                $files_cleared += $before + $image_before;
                                 $cleared++;
                                 break;
                             case 'email':
                                 $before = count(glob(CACHE_DIR . '/email_*.cache'));
-                                clearCacheByPattern('email_*');
+                                clearEmailCache();
                                 $files_cleared += $before;
                                 $cleared++;
                                 break;
                             case 'settings':
                                 $before = count(glob(CACHE_DIR . '/setting_*.cache'));
-                                clearCacheByPattern('setting_*');
+                                clearSettingsCache();
                                 $files_cleared += $before;
+                                $cleared++;
+                                break;
+                            case 'rooms':
+                                $before = count(glob(CACHE_DIR . '/rooms_*.cache')) 
+                                        + count(glob(CACHE_DIR . '/room_*.cache'))
+                                        + count(glob(CACHE_DIR . '/facilities_*.cache'))
+                                        + count(glob(CACHE_DIR . '/gallery_*.cache'))
+                                        + count(glob(CACHE_DIR . '/hero_*.cache'));
+                                $image_before = count(glob(IMAGE_CACHE_DIR . '/*.jpg'));
+                                clearRoomCache();
+                                $files_cleared += $before + $image_before;
                                 $cleared++;
                                 break;
                             case 'tables':
                                 $before = count(glob(CACHE_DIR . '/table_*.cache'));
                                 clearCacheByPattern('table_*');
+                                $files_cleared += $before;
+                                $cleared++;
+                                break;
+                            case 'images':
+                                $before = count(glob(IMAGE_CACHE_DIR . '/*.jpg'));
+                                clearImageCache();
                                 $files_cleared += $before;
                                 $cleared++;
                                 break;
@@ -157,11 +175,23 @@ $cache_types = [
         'description' => 'General site settings and configuration',
         'patterns' => ['setting_*']
     ],
+    'rooms' => [
+        'name' => 'Rooms & Images',
+        'icon' => 'fa-bed',
+        'description' => 'Room data, prices, facilities, and image cache',
+        'patterns' => ['rooms_*', 'room_*', 'facilities_*', 'gallery_*', 'hero_*']
+    ],
     'tables' => [
         'name' => 'Database Tables',
         'icon' => 'fa-database',
         'description' => 'Cached database table data',
         'patterns' => ['table_*']
+    ],
+    'images' => [
+        'name' => 'Image Cache',
+        'icon' => 'fa-image',
+        'description' => 'Cached processed images',
+        'patterns' => ['image_*']
     ]
 ];
 ?>
@@ -644,6 +674,24 @@ $cache_types = [
                         <span><i class="fas fa-cog"></i> Site Settings (<?php echo count(array_filter($caches, function($c) { return strpos($c['key'], 'setting_') === 0; })); ?> files)</span>
                     </label>
                     
+                    <label class="cache-checkbox-item" style="border-color: var(--gold); background: rgba(212, 175, 55, 0.05);">
+                        <input type="checkbox" name="cache_types[]" value="rooms">
+                        <span><i class="fas fa-bed"></i> <strong>Rooms & Prices</strong> (<?php 
+                            $room_count = count(array_filter($caches, function($c) { 
+                                return strpos($c['key'], 'rooms_') === 0 || strpos($c['key'], 'room_') === 0 || 
+                                       strpos($c['key'], 'facilities_') === 0 || strpos($c['key'], 'gallery_') === 0 || 
+                                       strpos($c['key'], 'hero_') === 0; 
+                            }));
+                            echo $room_count; ?> files)</span>
+                    </label>
+                    
+                    <label class="cache-checkbox-item" style="border-color: #17a2b8; background: rgba(23, 162, 184, 0.05);">
+                        <input type="checkbox" name="cache_types[]" value="images">
+                        <span><i class="fas fa-image"></i> <strong>Image Cache</strong> (<?php 
+                            $image_count = is_dir(IMAGE_CACHE_DIR) ? count(glob(IMAGE_CACHE_DIR . '/*.jpg')) : 0;
+                            echo $image_count; ?> images)</span>
+                    </label>
+                    
                     <label class="cache-checkbox-item">
                         <input type="checkbox" name="cache_types[]" value="tables">
                         <span><i class="fas fa-database"></i> Database Tables (<?php echo count(array_filter($caches, function($c) { return strpos($c['key'], 'table_') === 0; })); ?> files)</span>
@@ -651,7 +699,7 @@ $cache_types = [
                     
                     <label class="cache-checkbox-item" style="border-color: #dc3545; background: rgba(220, 53, 69, 0.05);">
                         <input type="checkbox" name="cache_types[]" value="all">
-                        <span><i class="fas fa-trash"></i> <strong>ALL CACHES</strong></span>
+                        <span><i class="fas fa-trash"></i> <strong>ALL CACHES + IMAGES</strong></span>
                     </label>
                 </div>
                 

@@ -80,7 +80,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_POST['display_order'] ?? 0,
                     $_POST['id']
                 ]);
-                $message = 'Room updated successfully!';
+                
+                // Clear room cache instantly
+                require_once __DIR__ . '/../config/cache.php';
+                clearRoomCache();
+                
+                $message = 'Room updated successfully! Cache cleared.';
                 
                 if (is_ajax_request()) {
                     header('Content-Type: application/json');
