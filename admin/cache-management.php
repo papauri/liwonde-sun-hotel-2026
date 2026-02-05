@@ -156,10 +156,31 @@ try {
     $error = 'Error fetching cache settings: ' . $e->getMessage();
 }
 
-// Get cache statistics
+// Get cache statistics (with error handling)
 require_once __DIR__ . '/../config/cache.php';
-$stats = getCacheStats();
-$caches = listCache();
+
+try {
+    $stats = getCacheStats();
+} catch (Exception $e) {
+    // Default stats if cache is disabled or error occurs
+    $stats = [
+        'total_files' => 0,
+        'active_files' => 0,
+        'expired_files' => 0,
+        'total_size' => 0,
+        'total_size_formatted' => '0 B',
+        'oldest_file' => null,
+        'newest_file' => null,
+        'caches' => []
+    ];
+}
+
+try {
+    $caches = listCache();
+} catch (Exception $e) {
+    // Empty cache list if error occurs
+    $caches = [];
+}
 
 // Define cache types - based on actual cache patterns in the system
 $cache_types = [

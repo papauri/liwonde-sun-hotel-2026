@@ -241,7 +241,16 @@ function clearCacheByPattern($pattern) {
  * Get cache statistics
  */
 function getCacheStats() {
-    $files = glob(CACHE_DIR . '/*.cache');
+    // Ensure cache directory exists
+    if (!file_exists(CACHE_DIR)) {
+        @mkdir(CACHE_DIR, 0755, true);
+    }
+    
+    $files = @glob(CACHE_DIR . '/*.cache');
+    if ($files === false) {
+        $files = [];
+    }
+    
     $stats = [
         'total_files' => 0,
         'active_files' => 0,
@@ -261,7 +270,7 @@ function getCacheStats() {
         foreach ($files as $file) {
             $data = @file_get_contents($file);
             if ($data) {
-                $cache = json_decode($data, true);
+                $cache = @json_decode($data, true);
                 if ($cache) {
                     $stats['total_files']++;
                     $stats['total_size'] += filesize($file);
