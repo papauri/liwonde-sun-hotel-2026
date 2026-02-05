@@ -15,9 +15,13 @@ define('CACHE_ENABLED', true); // This can be overridden by database setting
  * Check if caching is globally enabled
  */
 function isCacheEnabled($type = null) {
-    // Check global setting from database
     try {
+        // Check global setting from database
         global $pdo;
+        if (!$pdo) {
+            return CACHE_ENABLED;
+        }
+        
         $stmt = $pdo->prepare("SELECT setting_value FROM site_settings WHERE setting_key = 'cache_global_enabled' LIMIT 1");
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -38,6 +42,7 @@ function isCacheEnabled($type = null) {
         }
     } catch (Exception $e) {
         // If database query fails, default to enabled
+        error_log("Cache enable check failed: " . $e->getMessage());
     }
     
     return CACHE_ENABLED;
@@ -48,35 +53,44 @@ function isCacheEnabled($type = null) {
  * Respects cache enable/disable settings
  */
 function getCache($key, $default = null, $type = 'settings') {
-    // Check if caching is enabled for this type
-    if (!isCacheEnabled($type)) {
+    try {
+        // Check if caching is enabled for this type
+        if (!isCacheEnabled($type)) {
+            return $default;
+        }
+        
+        // Ensure cache directory exists
+        if (!file_exists(CACHE_DIR)) {
+            return $default;
+        }
+        
+        // Generate readable cache filename with prefix
+        $cacheFile = CACHE_DIR . '/' . getReadableCacheFilename($key);
+        
+        if (!file_exists($cacheFile)) {
+            return $default;
+        }
+        
+        $data = @file_get_contents($cacheFile);
+        if ($data === false) {
+            return $default;
+        }
+        
+        $cache = json_decode($data, true);
+        if (!$cache || !isset($cache['data']) || !isset($cache['expiry'])) {
+            return $default;
+        }
+        
+        // Check if expired
+        if (time() > $cache['expiry']) {
+            @unlink($cacheFile);
+            return $default;
+        }
+        
+        return $cache['data'];
+    } catch (Exception $e) {
         return $default;
     }
-    
-    // Generate readable cache filename with prefix
-    $cacheFile = CACHE_DIR . '/' . getReadableCacheFilename($key);
-    
-    if (!file_exists($cacheFile)) {
-        return $default;
-    }
-    
-    $data = @file_get_contents($cacheFile);
-    if ($data === false) {
-        return $default;
-    }
-    
-    $cache = json_decode($data, true);
-    if (!$cache || !isset($cache['data']) || !isset($cache['expiry'])) {
-        return $default;
-    }
-    
-    // Check if expired
-    if (time() > $cache['expiry']) {
-        @unlink($cacheFile);
-        return $default;
-    }
-    
-    return $cache['data'];
 }
 
 /**

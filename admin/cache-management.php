@@ -4,7 +4,27 @@
  * Easy cache control with toggles, scheduling, and bulk operations
  */
 
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Don't display to user, log instead
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../logs/php-errors.log');
+
 require_once 'admin-init.php';
+
+// Set a custom error handler to prevent blank screens
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    error_log("Cache Management Error: [$errno] $errstr in $errfile:$errline");
+    return true; // Prevent PHP error handler
+});
+
+// Set exception handler
+set_exception_handler(function($exception) {
+    error_log("Cache Management Exception: " . $exception->getMessage());
+    echo "<div style='padding: 20px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; margin: 20px;'>";
+    echo "<strong>Error:</strong> An unexpected error occurred. Please check the error log.";
+    echo "</div>";
+});
 
 $user = [
     'id' => $_SESSION['admin_user_id'],
@@ -17,6 +37,14 @@ $message = '';
 $error = '';
 $success = false;
 
+// Include alert.php for showAlert function
+require_once __DIR__ . '/../includes/alert.php';
+
+// Handle success message from redirect
+if (isset($_GET['msg'])) {
+    $message = htmlspecialchars($_GET['msg']);
+}
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -25,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         switch ($action) {
             case 'toggle_cache':
                 $cache_type = $_POST['cache_type'] ?? '';
-                $enabled = isset($_POST['enabled']) ? 1 : 0;
+                $enabled = isset($_POST['enabled']) ? (int)$_POST['enabled'] : 0;
                 
                 // Update or insert cache setting
                 $stmt = $pdo->prepare("
@@ -37,6 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $message = "Cache '{$cache_type}' " . ($enabled ? 'enabled' : 'disabled') . " successfully!";
                 $success = true;
+                
+                // Redirect to force fresh read of database
+                header("Location: cache-management.php?msg=" . urlencode($message));
+                exit;
                 break;
                 
             case 'clear_cache':
@@ -162,6 +194,7 @@ require_once __DIR__ . '/../config/cache.php';
 try {
     $stats = getCacheStats();
 } catch (Exception $e) {
+    error_log("Cache stats error: " . $e->getMessage());
     // Default stats if cache is disabled or error occurs
     $stats = [
         'total_files' => 0,
@@ -178,8 +211,27 @@ try {
 try {
     $caches = listCache();
 } catch (Exception $e) {
+    error_log("Cache list error: " . $e->getMessage());
     // Empty cache list if error occurs
     $caches = [];
+}
+
+// Helper function to safely count cache files by pattern
+function countCacheByPattern($caches, $patterns) {
+    try {
+        $count = 0;
+        foreach ($patterns as $pattern) {
+            $regex = '/^' . str_replace('*', '.*', $pattern) . '$/';
+            foreach ($caches as $cache) {
+                if (preg_match($regex, $cache['key'])) {
+                    $count++;
+                }
+            }
+        }
+        return $count;
+    } catch (Exception $e) {
+        return 0;
+    }
 }
 
 // Define cache types - based on actual cache patterns in the system
@@ -833,6 +885,6 @@ $cache_types = [
         <?php endif; ?>
     </div>
     
-    <?php require_once 'admin-footer.php'; ?>
+    <?php require_once 'includes/admin-footer.php'; ?>
 </body>
 </html>
