@@ -1826,62 +1826,140 @@ function sendTentativeBookingExpiredEmail($booking) {
  * Send tentative booking converted email (when converted to confirmed)
  */
 function sendTentativeBookingConvertedEmail($booking) {
-    // First send the standard booking confirmed email
-    $result = sendBookingConfirmedEmail($booking);
+    global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
     
-    // If the standard email succeeded, add a note about conversion
-    if ($result['success']) {
-        global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    try {
+        // Debug: Log what data we received
+        error_log("sendTentativeBookingConvertedEmail called with booking data: " . json_encode($booking));
         
-        try {
-            // Get room details
-            $stmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ?");
-            $stmt->execute([$booking['room_id']]);
-            $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        // Check if room_id exists
+        if (!isset($booking['room_id']) || empty($booking['room_id'])) {
+            throw new Exception("Room ID not found in booking data. Available keys: " . implode(', ', array_keys($booking)));
+        }
+        
+        // Get room details
+        $stmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ?");
+        $stmt->execute([$booking['room_id']]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$room) {
+            throw new Exception("Room not found with ID: " . $booking['room_id']);
+        }
+        
+        error_log("Room found: " . json_encode($room));
+        
+        // Prepare email content specifically for conversion
+        $htmlBody = '
+        <h1 style="color: #0A1929; text-align: center;">Booking Confirmed!</h1>
+        <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
+        
+        <div style="background: #d4edda; padding: 15px; border-left: 4px solid #28a745; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #155724; margin-top: 0;">✅ Great News!</h3>
+            <p style="color: #155724; margin: 0;">
+                <strong>Your tentative booking has been successfully converted to a confirmed booking!</strong><br>
+                Your reservation is now guaranteed and we look forward to welcoming you to ' . htmlspecialchars($email_site_name) . '.
+            </p>
+        </div>
+        
+        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
             
-            // Prepare conversion note email
-            $htmlBody = '
-            <div style="background: #d4edda; padding: 15px; border-left: 4px solid #28a745; border-radius: 5px; margin: 20px 0;">
-                <h3 style="color: #155724; margin-top: 0;">✅ Converted from Tentative</h3>
-                <p style="color: #155724; margin: 0;">
-                    <strong>Great news!</strong> Your tentative booking has been successfully converted to a confirmed booking.<br>
-                    Your reservation is now guaranteed and we look forward to welcoming you.
-                </p>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
             </div>
             
-            <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-                <h2 style="color: #0A1929; margin-top: 0;">Booking Summary</h2>
-                
-                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
-                    <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Room:</span>
-                    <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                    <span style="font-weight: bold; color: #0A1929;">Status:</span>
-                    <span style="color: #28a745; font-weight: bold;">CONFIRMED</span>
-                </div>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Number of Nights:</span>
+                <span style="color: #333;">' . $booking['number_of_nights'] . ' night' . ($booking['number_of_nights'] != 1 ? 's' : '') . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="color: #333;">' . $booking['number_of_guests'] . ' guest' . ($booking['number_of_guests'] != 1 ? 's' : '') . '</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+            </div>
+        </div>
+        
+        <div style="background: #d4edda; padding: 15px; border-left: 4px solid #28a745; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #155724; margin-top: 0;">✅ Booking Status: Confirmed</h3>
+            <p style="color: #155724; margin: 0;">
+                <strong>Your booking is now confirmed and guaranteed!</strong><br>
+                We look forward to welcoming you to ' . htmlspecialchars($email_site_name) . '.
+            </p>
+        </div>
+        
+        <div style="background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #856404; margin-top: 0;">Payment Information</h3>
+            <p style="color: #856404; margin: 0;">
+                ' . getSetting('payment_policy', 'Payment will be made at the hotel upon arrival.<br>We accept cash payments only. Please bring the total amount of <strong>' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</strong> with you.') . '
+            </p>
+        </div>
+        
+        <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #0d6efd; margin-top: 0;">Next Steps</h3>
+            <p style="color: #0d6efd; margin: 0;">
+                <strong>Please save your booking reference:</strong> ' . htmlspecialchars($booking['booking_reference']) . '<br>
+                <strong>Check-in time:</strong> ' . getSetting('check_in_time', '2:00 PM') . '<br>
+                <strong>Check-out time:</strong> ' . getSetting('check_out_time', '11:00 AM') . '<br>
+                <strong>Contact us:</strong> If you need to make any changes, please contact us at least ' . getSetting('booking_change_policy', '48 hours') . ' before your arrival.
+            </p>
+        </div>';
+        
+        if (!empty($booking['special_requests'])) {
+            $htmlBody .= '
+            <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #0d6efd; margin-top: 0;">Special Requests</h3>
+                <p style="color: #0d6efd; margin: 0;">' . htmlspecialchars($booking['special_requests']) . '</p>
             </div>';
-            
-            // Send conversion note as a follow-up
-            sendEmail(
-                $booking['guest_email'],
-                $booking['guest_name'],
-                'Booking Confirmed - ' . htmlspecialchars($email_site_name) . ' [' . $booking['booking_reference'] . ']',
-                $htmlBody
-            );
-            
-        } catch (Exception $e) {
-            error_log("Send Tentative Booking Converted Email Error: " . $e->getMessage());
         }
+        
+        $htmlBody .= '
+        <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
+        
+        <p>We look forward to welcoming you to ' . htmlspecialchars($email_site_name) . '!</p>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+            <p style="color: #666; font-size: 14px;">
+                <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
+                <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
+            </p>
+        </div>';
+        
+        // Send email with unique subject line for conversion
+        return sendEmail(
+            $booking['guest_email'],
+            $booking['guest_name'],
+            'Booking Confirmed (Converted) - ' . htmlspecialchars($email_site_name) . ' [' . $booking['booking_reference'] . ']',
+            $htmlBody
+        );
+        
+    } catch (Exception $e) {
+        error_log("Send Tentative Booking Converted Email Error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
     }
-    
-    return $result;
 }
 
 /**

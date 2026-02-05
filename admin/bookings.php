@@ -12,7 +12,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $action = $_POST['action'] ?? '';
 
-        if ($action === 'make_tentative') {
+        if ($action === 'resend_email') {
+            $booking_id = (int)($_POST['booking_id'] ?? 0);
+            $email_type = $_POST['email_type'] ?? '';
+            $cc_emails = $_POST['cc_emails'] ?? '';
+            
+            if ($booking_id <= 0) {
+                throw new Exception('Invalid booking id');
+            }
+            
+            // Get booking details
+            $stmt = $pdo->prepare("
+                SELECT b.*, r.name as room_name 
+                FROM bookings b
+                LEFT JOIN rooms r ON b.room_id = r.id
+                WHERE b.id = ?
+            ");
+            $stmt->execute([$booking_id]);
+            $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$booking) {
+                throw new Exception('Booking not found');
+            }
+            
+            // Include email functions
+            require_once '../config/email.php';
+            
+            // Parse CC emails
+            $cc_array = [];
+            if (!empty($cc_emails)) {
+                $cc_array = array_filter(array_map('trim', explode(',', $cc_emails)));
+                $cc_array = array_filter($cc_array, function($email) {
+                    return filter_var($email, FILTER_VALIDATE_EMAIL);
+                });
+            }
+            
+            // Send appropriate email based on type
+            $email_result = ['success' => false, 'message' => 'Invalid email type'];
+            
+            switch ($email_type) {
+                case 'booking_received':
+                    $email_result = sendBookingReceivedEmail($booking);
+                    break;
+                case 'booking_confirmed':
+                    $email_result = sendBookingConfirmedEmail($booking);
+                    break;
+                case 'tentative_confirmed':
+                    $booking['tentative_expires_at'] = $booking['tentative_expires_at'] ?? date('Y-m-d H:i:s', strtotime('+48 hours'));
+                    $email_result = sendTentativeBookingConfirmedEmail($booking);
+                    break;
+                case 'tentative_converted':
+                    $email_result = sendTentativeBookingConvertedEmail($booking);
+                    break;
+                case 'booking_cancelled':
+                    $cancellation_reason = 'Resent by admin';
+                    $email_result = sendBookingCancelledEmail($booking, $cancellation_reason);
+                    break;
+                default:
+                    throw new Exception('Invalid email type selected');
+            }
+            
+            if ($email_result['success']) {
+                $message = 'Email sent successfully to ' . htmlspecialchars($booking['guest_email']);
+                if (!empty($cc_array)) {
+                    $message .= ' (CC: ' . implode(', ', array_map(function($email) {
+                        return htmlspecialchars($email);
+                    }, $cc_array)) . ')';
+                }
+            } else {
+                throw new Exception('Failed to send email: ' . $email_result['message']);
+            }
+            
+        } elseif ($action === 'make_tentative') {
             $booking_id = (int)($_POST['id'] ?? 0);
             
             if ($booking_id <= 0) {
@@ -76,8 +147,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('Invalid booking id');
             }
             
-            // Get booking details
-            $stmt = $pdo->prepare("SELECT * FROM bookings WHERE id = ?");
+            // Get booking details WITH room information
+            $stmt = $pdo->prepare("
+                SELECT b.*, r.name as room_name, r.slug as room_slug
+                FROM bookings b
+                LEFT JOIN rooms r ON b.room_id = r.id
+                WHERE b.id = ?
+            ");
             $stmt->execute([$booking_id]);
             $booking = $stmt->fetch(PDO::FETCH_ASSOC);
             
@@ -109,10 +185,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once '../config/email.php';
             $email_result = sendTentativeBookingConvertedEmail($booking);
             
+            // Log email result for debugging
+            error_log("Email sending result for booking {$booking_id}: " . json_encode($email_result));
+            
             if ($email_result['success']) {
-                $message = 'Tentative booking converted to confirmed! Conversion email sent to guest.';
+                if (isset($email_result['preview_url'])) {
+                    $message = 'Tentative booking converted to confirmed! <a href="../' . htmlspecialchars($email_result['preview_url']) . '" target="_blank">View email preview</a> (Development Mode)';
+                } else {
+                    $message = 'Tentative booking converted to confirmed! Conversion email sent to ' . htmlspecialchars($booking['guest_email']);
+                }
             } else {
-                $message = 'Tentative booking converted! (Email failed: ' . $email_result['message'] . ')';
+                $message = 'Tentative booking converted! <strong>Email failed:</strong> ' . htmlspecialchars($email_result['message']);
+                error_log("FAILED to send email for converted booking {$booking_id}: " . $email_result['message']);
+            }
+            
+        } elseif ($action === 'convert_to_tentative') {
+            $booking_id = (int)($_POST['id'] ?? 0);
+            
+            if ($booking_id <= 0) {
+                throw new Exception('Invalid booking id');
+            }
+            
+            // Get booking details
+            $stmt = $pdo->prepare("
+                SELECT b.*, r.name as room_name, r.slug as room_slug
+                FROM bookings b
+                LEFT JOIN rooms r ON b.room_id = r.id
+                WHERE b.id = ?
+            ");
+            $stmt->execute([$booking_id]);
+            $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$booking) {
+                throw new Exception('Booking not found');
+            }
+            
+            if ($booking['status'] !== 'confirmed') {
+                throw new Exception('Only confirmed bookings can be converted to tentative');
+            }
+            
+            // Get tentative duration setting
+            $tentative_hours = (int)getSetting('tentative_duration_hours', 48);
+            $expires_at = date('Y-m-d H:i:s', strtotime("+$tentative_hours hours"));
+            
+            // Convert to tentative status
+            $update_stmt = $pdo->prepare("
+                UPDATE bookings
+                SET status = 'tentative',
+                    is_tentative = 1,
+                    tentative_expires_at = ?
+                WHERE id = ?
+            ");
+            $update_stmt->execute([$expires_at, $booking_id]);
+            
+            // Log the conversion
+            $log_stmt = $pdo->prepare("
+                INSERT INTO tentative_booking_log (
+                    booking_id, action, new_expires_at, performed_by, created_at
+                ) VALUES (?, 'converted_to_tentative', ?, ?, NOW())
+            ");
+            $log_stmt->execute([
+                $booking_id,
+                $expires_at,
+                $user['id']
+            ]);
+            
+            // Send tentative booking email
+            require_once '../config/email.php';
+            $booking['tentative_expires_at'] = $expires_at;
+            $email_result = sendTentativeBookingConfirmedEmail($booking);
+            
+            if ($email_result['success']) {
+                $message = 'Confirmed booking converted to tentative! Email sent to guest.';
+            } else {
+                $message = 'Booking converted to tentative! (Email failed: ' . $email_result['message'] . ')';
             }
             
         } elseif ($action === 'update_status') {
@@ -1290,6 +1436,9 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                                     </small>
                                 </td>
                                 <td>
+                                    <button class="quick-action" style="background: #007bff; color: white;" onclick="openResendEmailModal(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars($booking['booking_reference'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($booking['status']); ?>')">
+                                        <i class="fas fa-envelope"></i> Email
+                                    </button>
                                     <?php if ($is_tentative): ?>
                                         <button class="quick-action confirm" onclick="convertTentativeBooking(<?php echo $booking['id']; ?>)">
                                             <i class="fas fa-check"></i> Convert
@@ -1310,6 +1459,9 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                                     <?php endif; ?>
                                     <?php if ($booking['status'] === 'confirmed'): ?>
                                         <?php $can_checkin = ($booking['payment_status'] === 'paid'); ?>
+                                        <button class="quick-action" style="background: linear-gradient(135deg, var(--gold) 0%, #c49b2e 100%); color: var(--deep-navy);" onclick="convertToTentative(<?php echo $booking['id']; ?>)">
+                                            <i class="fas fa-clock"></i> Make Tentative
+                                        </button>
                                         <button class="quick-action check-in <?php echo $can_checkin ? '' : 'disabled'; ?>"
                                                 onclick="<?php echo $can_checkin ? "updateStatus({$booking['id']}, 'checked-in')" : "Alert.show('Cannot check in: booking must be PAID first.', 'error')"; ?>">
                                             <i class="fas fa-sign-in-alt"></i> Check In
@@ -1680,6 +1832,32 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             });
         }
         
+        function convertToTentative(id) {
+            if (!confirm('Convert this confirmed booking to tentative? This will place the booking on hold for 48 hours and send an email to the guest.')) {
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('action', 'convert_to_tentative');
+            formData.append('id', id);
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    Alert.show('Error converting booking to tentative', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Alert.show('Error converting booking to tentative', 'error');
+            });
+        }
+        
         function updateStatus(id, status) {
             const formData = new FormData();
             formData.append('action', 'update_status');
@@ -1754,6 +1932,269 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                 Alert.show('Error cancelling booking', 'error');
             });
         }
+    </script>
+    
+    <!-- Email Resend Modal -->
+    <div id="resendEmailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-envelope"></i> Resend Email</h3>
+                <button class="close-modal" onclick="closeResendEmailModal()">&times;</button>
+            </div>
+            <form id="resendEmailForm" method="POST" action="">
+                <input type="hidden" name="action" value="resend_email">
+                <input type="hidden" name="booking_id" id="modal_booking_id" value="">
+                
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label><i class="fas fa-hashtag"></i> Booking Reference:</label>
+                        <input type="text" id="modal_booking_reference" class="form-control" readonly style="background: #f5f5f5;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email_type"><i class="fas fa-envelope"></i> Email Type:</label>
+                        <select name="email_type" id="email_type" class="form-control" required>
+                            <option value="">-- Select Email Type --</option>
+                            <option value="booking_received">Booking Received (Initial confirmation)</option>
+                            <option value="booking_confirmed">Booking Confirmed</option>
+                            <option value="tentative_confirmed">Tentative Booking Confirmed</option>
+                            <option value="tentative_converted">Tentative Converted to Confirmed</option>
+                            <option value="booking_cancelled">Booking Cancelled</option>
+                        </select>
+                        <small style="color: #666;">Select the type of email to resend based on current booking status</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cc_emails"><i class="fas fa-users"></i> CC Emails (Optional):</label>
+                        <input type="text" name="cc_emails" id="cc_emails" class="form-control" placeholder="email1@example.com, email2@example.com">
+                        <small style="color: #666;">Comma-separated email addresses to CC (e.g., hotel manager, accounting)</small>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeResendEmailModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Email</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <style>
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        
+        .close-modal:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--navy);
+        }
+        
+        .form-group label i {
+            color: var(--gold);
+            margin-right: 5px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--gold);
+            color: var(--deep-navy);
+        }
+        
+        .btn-primary:hover {
+            background: #c19b2e;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+    </style>
+    
+    <script>
+        function openResendEmailModal(bookingId, bookingReference, bookingStatus) {
+            document.getElementById('resendEmailModal').style.display = 'flex';
+            document.getElementById('modal_booking_id').value = bookingId;
+            document.getElementById('modal_booking_reference').value = bookingReference;
+            
+            // Set default email type based on booking status
+            const emailTypeSelect = document.getElementById('email_type');
+            emailTypeSelect.value = '';
+            
+            // Show/hide appropriate options based on status
+            const options = emailTypeSelect.querySelectorAll('option');
+            options.forEach(option => {
+                option.style.display = '';
+            });
+            
+            // Disable options that don't make sense for current status
+            switch(bookingStatus) {
+                case 'pending':
+                    emailTypeSelect.value = 'booking_received';
+                    break;
+                case 'tentative':
+                    emailTypeSelect.value = 'tentative_confirmed';
+                    break;
+                case 'confirmed':
+                    emailTypeSelect.value = 'booking_confirmed';
+                    break;
+                case 'cancelled':
+                    emailTypeSelect.value = 'booking_cancelled';
+                    break;
+            }
+        }
+        
+        function closeResendEmailModal() {
+            document.getElementById('resendEmailModal').style.display = 'none';
+            document.getElementById('resendEmailForm').reset();
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('resendEmailModal');
+            if (event.target === modal) {
+                closeResendEmailModal();
+            }
+        }
+        
+        // Form submission
+        document.getElementById('resendEmailForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                // Reload page to see success/error message
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Alert.show('Error sending email', 'error');
+            });
+        });
     </script>
     <script src="js/admin-components.js"></script>
     <script src="js/admin-mobile.js"></script>

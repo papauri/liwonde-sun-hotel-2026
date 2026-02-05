@@ -22,7 +22,12 @@ if ($action && $_SERVER['REQUEST_METHOD'] === 'GET') {
         switch ($action) {
             case 'convert':
                 // Convert tentative booking to confirmed
-                $stmt = $pdo->prepare("SELECT * FROM bookings WHERE id = ?");
+                $stmt = $pdo->prepare("
+                    SELECT b.*, r.name as room_name, r.slug as room_slug
+                    FROM bookings b
+                    LEFT JOIN rooms r ON b.room_id = r.id
+                    WHERE b.id = ?
+                ");
                 $stmt->execute([$booking_id]);
                 $booking_data = $stmt->fetch(PDO::FETCH_ASSOC);
                 

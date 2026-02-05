@@ -73,7 +73,7 @@ try {
                                 <div class="room-tile__3d-bg"></div>
 
                                 <a class="room-tile__image" href="room.php?room=<?php echo urlencode($room['slug']); ?>" aria-label="Open details for <?php echo htmlspecialchars($room['name']); ?>">
-                                    <img src="<?php echo htmlspecialchars($room['image_url']); ?>" alt="<?php echo htmlspecialchars($room['name']); ?>" loading="lazy" style="height: 180px; object-fit: cover;">
+                                    <img src="<?php echo htmlspecialchars($room['image_url']); ?>" alt="<?php echo htmlspecialchars($room['name']); ?>" loading="lazy">
                                     <?php if (!empty($room['badge'])): ?>
                                         <span class="room-tile__badge"><?php echo htmlspecialchars($room['badge']); ?></span>
                                     <?php endif; ?>

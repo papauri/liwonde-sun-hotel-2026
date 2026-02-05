@@ -68,23 +68,47 @@
 .admin-nav {
     background: white;
     border-bottom: 1px solid var(--border-color);
-    padding: 0 32px;
+    padding: 0 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* Custom scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold) #f0f0f0;
+}
+
+/* Webkit scrollbar styling */
+.admin-nav::-webkit-scrollbar {
+    height: 6px;
+}
+
+.admin-nav::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+.admin-nav::-webkit-scrollbar-thumb {
+    background: var(--gold);
+    border-radius: 3px;
+}
+
+.admin-nav::-webkit-scrollbar-thumb:hover {
+    background: #c9a227;
 }
 
 .admin-nav ul {
     list-style: none;
     display: flex;
-    gap: 32px;
+    gap: 16px;
     margin: 0;
     padding: 0;
+    min-width: max-content;
 }
 
 .admin-nav a {
     display: block;
-    padding: 16px 0;
+    padding: 16px 8px;
     color: var(--gray);
     text-decoration: none;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     border-bottom: 2px solid transparent;
     transition: all 0.3s ease;
@@ -499,12 +523,16 @@ select.form-control {
     }
     
     .admin-nav {
-        padding: 0 20px;
-        overflow-x: auto;
+        padding: 0 12px;
     }
     
     .admin-nav ul {
-        gap: 20px;
+        gap: 12px;
+    }
+    
+    .admin-nav a {
+        font-size: 12px;
+        padding: 14px 6px;
     }
     
     .page-header {

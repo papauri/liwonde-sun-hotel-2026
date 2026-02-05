@@ -7,6 +7,11 @@
  * - Input validation
  */
 
+// Start session first (before loading security.php which uses $_SESSION)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Load security configuration first
 require_once 'config/security.php';
 
@@ -805,6 +810,12 @@ try {
             const occupancyRadios = document.querySelectorAll('input[name="occupancy_type"]');
             occupancyRadios.forEach(radio => {
                 radio.addEventListener('change', function() {
+                    // Update number of guests based on occupancy type
+                    const guestSelect = document.getElementById('number_of_guests');
+                    const occupancyType = this.value;
+                    const guestCount = occupancyType === 'single' ? 1 : 2;
+                    guestSelect.value = guestCount;
+                    
                     updatePriceBasedOnOccupancy();
                     updateSummary();
                     
@@ -1142,7 +1153,21 @@ try {
         });
         
         // Add guest count change listener
-        document.getElementById('number_of_guests').addEventListener('change', checkGuestCapacity);
+        document.getElementById('number_of_guests').addEventListener('change', function() {
+            const guestCount = parseInt(this.value);
+            
+            // Update occupancy type based on number of guests
+            const occupancyRadios = document.querySelectorAll('input[name="occupancy_type"]');
+            if (guestCount === 1) {
+                occupancyRadios[0].checked = true; // Single occupancy
+                occupancyRadios[0].dispatchEvent(new Event('change'));
+            } else if (guestCount === 2) {
+                occupancyRadios[1].checked = true; // Double occupancy
+                occupancyRadios[1].dispatchEvent(new Event('change'));
+            }
+            
+            checkGuestCapacity();
+        });
         
         // Booking type selection function
         function selectBookingType(type) {
