@@ -40,7 +40,8 @@ function sendSecurityHeaders() {
     // Content Security Policy with Font Awesome fix, video support, and Flatpickr CDN
     // This allows Font Awesome and Flatpickr to load properly and enables video embeds from popular platforms
     // Added media-src for Getty Images videos and other external media
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self'; media-src 'self' https: blob:; frame-src 'self' https://www.youtube.com https://youtube.com https://player.vimeo.com https://vimeo.com https://www.dailymotion.com https://dai.ly https://media.gettyimages.com https://*.gettyimages.com;");
+    // Added cdn.jsdelivr.net to connect-src for Bootstrap source maps
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net; media-src 'self' https: blob:; frame-src 'self' https://www.youtube.com https://youtube.com https://player.vimeo.com https://vimeo.com https://www.dailymotion.com https://dai.ly https://media.gettyimages.com https://*.gettyimages.com;");
     
     // Referrer Policy
     header('Referrer-Policy: strict-origin-when-cross-origin');
