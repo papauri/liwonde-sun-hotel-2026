@@ -206,24 +206,6 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
         }
-        .alert {
-            padding: 16px 20px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
         .back-link {
             display: inline-flex;
             align-items: center;

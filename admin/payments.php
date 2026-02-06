@@ -132,15 +132,6 @@ $totalPages = ceil($total / $limit);
     <link rel="stylesheet" href="css/admin-components.css">
     
     <style>
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        
         .filter-section {
             background: white;
             padding: 20px;
@@ -207,11 +198,6 @@ $totalPages = ceil($total / $limit);
         
         .btn-reset:hover {
             background: #5a6268;
-        }
-        
-        .badge-pending {
-            background: #fff3cd;
-            color: #856404;
         }
         
         .badge-partial {

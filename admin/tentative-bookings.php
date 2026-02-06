@@ -159,13 +159,6 @@ $currency_symbol = getSetting('currency_symbol');
             gap: 20px;
             margin-bottom: 32px;
         }
-        .stat-card {
-            background: white;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border-left: 4px solid var(--gold);
-        }
         .stat-card h3 {
             font-size: 14px;
             color: #666;
@@ -300,24 +293,6 @@ $currency_symbol = getSetting('currency_symbol');
             font-size: 20px;
             color: #666;
             margin-bottom: 8px;
-        }
-        .alert {
-            padding: 16px 20px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
         }
         @media (max-width: 768px) {
             .tentative-page {

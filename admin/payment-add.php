@@ -536,10 +536,6 @@ function updateConferenceEnquiryPayments($pdo, $enquiryId) {
             font-weight: 600;
         }
         
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
         .form-group label {
             display: block;
             margin-bottom: 8px;
