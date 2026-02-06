@@ -102,7 +102,7 @@ $outstandingQuery = "
     FROM payments p
     LEFT JOIN bookings b ON p.booking_type = 'room' AND p.booking_id = b.id
     LEFT JOIN conference_inquiries ci ON p.booking_type = 'conference' AND p.booking_id = ci.id
-    WHERE p.payment_status IN ('pending', 'failed')
+    WHERE p.payment_status = 'pending'
     ORDER BY p.payment_date ASC
 ";
 $outstandingStmt = $pdo->query($outstandingQuery);

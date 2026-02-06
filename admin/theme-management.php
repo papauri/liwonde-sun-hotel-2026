@@ -387,11 +387,11 @@ try {
             <h2><i class="fas fa-swatchbook"></i> Preset Themes</h2>
             <p style="margin-bottom: 16px; color: #666;">Quickly apply professionally designed color schemes</p>
             
-            <form method="POST">
+            <form method="POST" id="presetForm">
                 <input type="hidden" name="action" value="apply_preset">
                 
                 <div class="preset-grid">
-                    <div class="preset-card <?php echo $current_preset === 'navy-gold' ? 'active' : ''; ?>" onclick="this.querySelector('input[type=radio]').checked = true">
+                    <div class="preset-card <?php echo $current_preset === 'navy-gold' ? 'active' : ''; ?>" onclick="selectPreset(this, 'navy-gold')">
                         <input type="radio" name="preset" value="navy-gold" style="display: none;" <?php echo $current_preset === 'navy-gold' ? 'checked' : ''; ?>>
                         <div class="preset-preview" style="background: linear-gradient(135deg, #0A1929 50%, #D4AF37 50%);"></div>
                         <div class="preset-name">Navy & Gold</div>
@@ -401,7 +401,7 @@ try {
                         <?php endif; ?>
                     </div>
                     
-                    <div class="preset-card <?php echo $current_preset === 'burgundy-gold' ? 'active' : ''; ?>" onclick="this.querySelector('input[type=radio]').checked = true">
+                    <div class="preset-card <?php echo $current_preset === 'burgundy-gold' ? 'active' : ''; ?>" onclick="selectPreset(this, 'burgundy-gold')">
                         <input type="radio" name="preset" value="burgundy-gold" style="display: none;" <?php echo $current_preset === 'burgundy-gold' ? 'checked' : ''; ?>>
                         <div class="preset-preview" style="background: linear-gradient(135deg, #722F37 50%, #D4AF37 50%);"></div>
                         <div class="preset-name">Burgundy & Gold</div>
@@ -411,7 +411,7 @@ try {
                         <?php endif; ?>
                     </div>
                     
-                    <div class="preset-card <?php echo $current_preset === 'forest-green' ? 'active' : ''; ?>" onclick="this.querySelector('input[type=radio]').checked = true">
+                    <div class="preset-card <?php echo $current_preset === 'forest-green' ? 'active' : ''; ?>" onclick="selectPreset(this, 'forest-green')">
                         <input type="radio" name="preset" value="forest-green" style="display: none;" <?php echo $current_preset === 'forest-green' ? 'checked' : ''; ?>>
                         <div class="preset-preview" style="background: linear-gradient(135deg, #1B4D3E 50%, #D4AF37 50%);"></div>
                         <div class="preset-name">Forest Green</div>
@@ -421,7 +421,7 @@ try {
                         <?php endif; ?>
                     </div>
                     
-                    <div class="preset-card <?php echo $current_preset === 'midnight-purple' ? 'active' : ''; ?>" onclick="this.querySelector('input[type=radio]').checked = true">
+                    <div class="preset-card <?php echo $current_preset === 'midnight-purple' ? 'active' : ''; ?>" onclick="selectPreset(this, 'midnight-purple')">
                         <input type="radio" name="preset" value="midnight-purple" style="display: none;" <?php echo $current_preset === 'midnight-purple' ? 'checked' : ''; ?>>
                         <div class="preset-preview" style="background: linear-gradient(135deg, #2E1A47 50%, #E5D047 50%);"></div>
                         <div class="preset-name">Midnight Purple</div>
@@ -533,6 +533,39 @@ try {
             </div>
         </div>
     </div>
+    
+    <script>
+    function selectPreset(card, presetValue) {
+        // Remove active class from all preset cards
+        document.querySelectorAll('.preset-card').forEach(function(presetCard) {
+            presetCard.classList.remove('active');
+            // Remove any existing active indicators
+            const existingIndicator = presetCard.querySelector('.active-indicator');
+            if (existingIndicator) {
+                existingIndicator.remove();
+            }
+        });
+        
+        // Add active class to clicked card
+        card.classList.add('active');
+        
+        // Check the radio button
+        const radio = card.querySelector('input[type=radio]');
+        if (radio) {
+            radio.checked = true;
+        }
+        
+        // Add visual active indicator if it doesn't exist
+        const existingCheckmark = card.querySelector('.active-indicator');
+        if (!existingCheckmark) {
+            const activeIndicator = document.createElement('div');
+            activeIndicator.className = 'active-indicator';
+            activeIndicator.style.cssText = 'margin-top: 8px; color: var(--gold); font-weight: 600; font-size: 12px;';
+            activeIndicator.innerHTML = '<i class="fas fa-check-circle"></i> Selected';
+            card.appendChild(activeIndicator);
+        }
+    }
+    </script>
     
     <?php require_once 'includes/admin-footer.php'; ?>
 </body>
