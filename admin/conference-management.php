@@ -305,18 +305,12 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/theme-dynamic.php">
     <link rel="stylesheet" href="css/admin-styles.css">
     <link rel="stylesheet" href="css/admin-components.css">
     
     <style>
         /* Conference management specific styles */
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            margin-bottom: 24px;
-        }
         .card h2 {
             margin: 0 0 16px;
             color: var(--navy);
@@ -326,45 +320,11 @@ try {
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 16px;
         }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        label {
-            font-weight: 600;
-            color: var(--navy);
-            font-size: 14px;
-        }
-        input,
-        textarea {
-            padding: 10px 12px;
-            border-radius: 6px;
-            border: 1px solid #d9d9d9;
-            font-size: 14px;
-        }
-        textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
         .checkbox-row {
             display: flex;
             align-items: center;
             gap: 8px;
             margin-top: 12px;
-        }
-        .btn {
-            background: var(--gold);
-            color: var(--deep-navy);
-            border: none;
-            padding: 10px 18px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
         }
         .btn-info {
             background: #17a2b8;
@@ -407,14 +367,6 @@ try {
             color: var(--navy);
             font-size: 18px;
             font-weight: 700;
-        }
-        .badge {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         .badge-active {
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
@@ -990,21 +942,6 @@ try {
         .modal-actions label {
             font-weight: 600;
             color: var(--navy);
-        }
-        
-        .badge-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .badge-confirmed {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .badge-cancelled {
-            background: #f8d7da;
-            color: #721c24;
         }
         
         .badge-completed {

@@ -180,32 +180,11 @@ $site_name = getSetting('site_name');
             padding: 20px;
         }
         
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-        
-        .page-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 28px;
-            color: var(--navy);
-        }
-        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 32px;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border-left: 4px solid var(--gold);
         }
         
         .stat-card h3 {
@@ -335,11 +314,6 @@ $site_name = getSetting('site_name');
         .badge-generated {
             background: #d4edda;
             color: #155724;
-        }
-        
-        .badge-pending {
-            background: #fff3cd;
-            color: #856404;
         }
         
         .badge-completed {

@@ -613,12 +613,6 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             gap: 20px;
             margin-bottom: 32px;
         }
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
         .stat-card h3 {
             font-size: 14px;
             color: #666;
@@ -672,21 +666,6 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
         .booking-table tbody tr:hover {
             background: #f8f9fa;
         }
-        .badge {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .badge-pending { background: #ffc107; color: #212529; }
-        .badge-confirmed { background: #28a745; color: white; }
-        .badge-checked-in { background: #17a2b8; color: white; }
-        .badge-checked-out { background: #6c757d; color: white; }
-        .badge-cancelled { background: #dc3545; color: white; }
-        .badge-unpaid { background: #dc3545; color: white; }
-        .badge-partial { background: #ffc107; color: #212529; }
-        .badge-paid { background: #28a745; color: white; }
         .badge-new { background: #17a2b8; color: white; }
         .badge-contacted { background: #6c757d; color: white; }
         .quick-action {
@@ -784,31 +763,6 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             }
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 32px;
-        }
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        .stat-card h3 {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-        }
-        .stat-card .number {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--navy);
-        }
-        .stat-card.pending .number { color: #ffc107; }
-        .stat-card.confirmed .number { color: #28a745; }
-        .stat-card.checked-in .number { color: #17a2b8; }
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -820,87 +774,11 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             font-size: 28px;
             color: var(--navy);
         }
-        .alert {
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .bookings-section {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        .section-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--navy);
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--gold);
-        }
-        .booking-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 1200px;
-            border: 1px solid #d0d7de;
-        }
-        .booking-table th {
-            background: #f6f8fa;
-            padding: 12px;
-            text-align: left;
-            font-size: 13px;
-            font-weight: 600;
-            color: #666;
-            text-transform: uppercase;
-            border: 1px solid #d0d7de;
-        }
-        .booking-table td {
-            padding: 12px;
-            border: 1px solid #d0d7de;
-            vertical-align: middle;
-            background: white;
-        }
-        .booking-table tbody tr:hover {
-            background: #f8f9fa;
-        }
-        .badge {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .badge-pending { background: #ffc107; color: #212529; }
-        .badge-confirmed { background: #28a745; color: white; }
+
+        /* Additional status badges (booking & payment specific) */
         .badge-tentative { background: linear-gradient(135deg, var(--gold) 0%, #c49b2e 100%); color: var(--deep-navy); }
-        .badge-checked-in { background: #17a2b8; color: white; }
-        .badge-checked-out { background: #6c757d; color: white; }
-        .badge-cancelled { background: #dc3545; color: white; }
         .badge-expired { background: #6c757d; color: white; }
-        .badge-unpaid { background: #dc3545; color: white; }
-        .badge-partial { background: #ffc107; color: #212529; }
-        .badge-paid { background: #28a745; color: white; }
-        .badge-new { background: #17a2b8; color: white; }
-        .badge-contacted { background: #6c757d; color: white; }
-        
-        /* Payment status badges from payments table */
         .badge-completed { background: #28a745; color: white; }
-        .badge-pending { background: #ffc107; color: #212529; }
         .badge-failed { background: #dc3545; color: white; }
         .badge-refunded { background: #6c757d; color: white; }
         .badge-partially_refunded { background: #e2e3e5; color: #383d41; }
@@ -929,106 +807,12 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
         .expires-soon i {
             margin-right: 4px;
         }
-        .quick-action {
-            padding: 6px 14px;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-right: 4px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
-        }
-        .quick-action:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-        .quick-action.confirm {
-            background: #28a745;
-            color: white;
-        }
-        .quick-action.confirm:hover {
-            background: #229954;
-        }
-        .quick-action.check-in {
-            background: #17a2b8;
-            color: white;
-        }
-        .quick-action.check-in:hover {
-            background: #138496;
-        }
-        .quick-action.undo-checkin {
-            background: #6c757d;
-            color: white;
-        }
-        .quick-action.undo-checkin:hover {
-            background: #5a6268;
-        }
-        .quick-action.disabled {
-            opacity: 0.55;
-            cursor: not-allowed;
-        }
-        .quick-action.paid {
-            background: var(--gold);
-            color: var(--deep-navy);
-        }
-        .quick-action.paid:hover {
-            background: #c19b2e;
-        }
         .quick-action.cancel {
             background: #dc3545;
             color: white;
         }
         .quick-action.cancel:hover {
             background: #c82333;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-        }
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 16px;
-            color: #ddd;
-        }
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-            }
-            .stat-card {
-                padding: 16px;
-            }
-            .stat-card .number {
-                font-size: 24px;
-            }
-            .booking-table {
-                font-size: 12px;
-            }
-            .booking-table th,
-            .booking-table td {
-                padding: 8px;
-            }
-            .booking-table th {
-                font-size: 11px;
-            }
-        }
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            .booking-table {
-                font-size: 11px;
-            }
-            .booking-table th,
-            .booking-table td {
-                padding: 6px;
-            }
         }
         /* Tab Navigation Styles */
         .tabs-container {
@@ -1981,30 +1765,6 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
     </div>
     
     <style>
-        .modal {
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            animation: slideDown 0.3s ease;
-        }
-        
         @keyframes slideDown {
             from {
                 transform: translateY(-50px);
@@ -2014,23 +1774,6 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                 transform: translateY(0);
                 opacity: 1;
             }
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid #ddd;
-            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 100%);
-            color: white;
-            border-radius: 12px 12px 0 0;
-        }
-        
-        .modal-header h3 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: 600;
         }
         
         .close-modal {
@@ -2053,10 +1796,6 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             background: rgba(255,255,255,0.2);
         }
         
-        .modal-body {
-            padding: 20px;
-        }
-        
         .modal-footer {
             padding: 20px;
             border-top: 1px solid #ddd;
@@ -2065,49 +1804,9 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             gap: 10px;
         }
         
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--navy);
-        }
-        
         .form-group label i {
             color: var(--gold);
             margin-right: 5px;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: 'Poppins', sans-serif;
-            transition: border-color 0.3s;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: var(--gold);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
         }
         
         .btn-primary {

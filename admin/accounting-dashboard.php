@@ -139,6 +139,7 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/theme-dynamic.php">
     <link rel="stylesheet" href="css/admin-styles.css">
     <link rel="stylesheet" href="css/admin-components.css">
     
@@ -191,10 +192,6 @@ try {
         }
         
         .stat-card {
-            background: white;
-            padding: 24px;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow);
             position: relative;
             overflow: hidden;
         }

@@ -419,6 +419,12 @@ select.form-control {
     display: flex;
 }
 
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .modal-content {
     background: white;
     border-radius: var(--radius-lg);
@@ -440,15 +446,28 @@ select.form-control {
     align-items: center;
 }
 
-.modal-close {
+.modal-header h3 {
+    margin: 0;
+    color: var(--navy);
+}
+
+.modal-close,
+.modal .close {
     cursor: pointer;
     font-size: 28px;
     color: var(--gray);
     transition: color 0.2s ease;
+    background: none;
+    border: none;
 }
 
-.modal-close:hover {
+.modal-close:hover,
+.modal .close:hover {
     color: var(--dark);
+}
+
+.modal-body {
+    padding: 24px;
 }
 
 /* ============================================

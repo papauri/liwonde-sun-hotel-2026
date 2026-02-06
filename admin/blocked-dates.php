@@ -134,6 +134,7 @@ $site_name = getSetting('site_name');
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/theme-dynamic.php">
     <link rel="stylesheet" href="css/admin-styles.css">
     <link rel="stylesheet" href="css/admin-components.css">
     
@@ -197,15 +198,6 @@ $site_name = getSetting('site_name');
         .info-box li {
             margin-bottom: 6px;
             line-height: 1.4;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e0e0e0;
-            margin-bottom: 24px;
-            overflow: hidden;
         }
         
         .card-header {
@@ -311,26 +303,9 @@ $site_name = getSetting('site_name');
             border-color: #2196f3 !important;
         }
         
-        .modal-content {
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            border: none;
-        }
-        
-        .modal-header {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-bottom: 1px solid #dee2e6;
-            padding: 16px 20px;
-            border-radius: 12px 12px 0 0;
-        }
-        
         .modal-title {
             font-weight: 600;
             color: #333;
-        }
-        
-        .modal-body {
-            padding: 24px;
         }
         
         .form-label {
@@ -338,18 +313,6 @@ $site_name = getSetting('site_name');
             color: #495057;
             margin-bottom: 8px;
             font-size: 14px;
-        }
-        
-        .form-control {
-            border-radius: 8px;
-            border: 2px solid #e0e0e0;
-            padding: 10px 14px;
-            transition: all 0.3s ease;
-        }
-        
-        .form-control:focus {
-            border-color: #2196f3;
-            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
         }
         
         .btn-primary {
