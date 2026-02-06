@@ -775,7 +775,7 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             color: var(--navy);
         }
 
-        /* Payment status badges from payments table */
+        /* Additional status badges (booking & payment specific) */
         .badge-tentative { background: linear-gradient(135deg, var(--gold) 0%, #c49b2e 100%); color: var(--deep-navy); }
         .badge-expired { background: #6c757d; color: white; }
         .badge-completed { background: #28a745; color: white; }
