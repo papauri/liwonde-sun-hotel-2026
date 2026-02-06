@@ -87,6 +87,7 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/theme-dynamic.php">
     <link rel="stylesheet" href="css/admin-styles.css">
     <link rel="stylesheet" href="css/admin-components.css">
     
@@ -189,63 +190,6 @@ try {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-        }
-        
-        /* Modal for inquiry details - unique to this page */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: var(--radius-lg);
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: slideUp 0.3s ease;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .modal-header h3 {
-            margin: 0;
-            color: var(--navy);
-        }
-        
-        .close {
-            font-size: 28px;
-            cursor: pointer;
-            color: #999;
-            transition: color 0.2s ease;
-        }
-        
-        .close:hover {
-            color: #333;
-        }
-        
-        .modal-body {
-            padding: 24px;
         }
         
         /* Inquiry details grid in modal */
