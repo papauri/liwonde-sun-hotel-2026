@@ -846,3 +846,38 @@ try {
     <?php include 'includes/scroll-to-top.php'; ?>
 </body>
 </html>
+MenuData('food');
+        });
+        
+        // Page loader
+        window.addEventListener('load', function() {
+            const pageLoader = document.querySelector('.page-loader');
+            if (pageLoader) {
+                pageLoader.classList.add('fade-out');
+                setTimeout(() => {
+                    pageLoader.style.display = 'none';
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+        
+        // Page loader
+        window.addEventListener('load', function() {
+            const pageLoader = document.querySelector('.page-loader');
+            if (pageLoader) {
+                pageLoader.classList.add('fade-out');
+                setTimeout(() => {
+                    pageLoader.style.display = 'none';
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>
+
+

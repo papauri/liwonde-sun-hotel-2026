@@ -1,15 +1,14 @@
 <?php
-require_once 'config/database.php';
-require_once 'includes/reviews-display.php';
+require_once 'config/database.php';require_once 'includes/reviews-display.php';
+
 
 // Core settings
-$site_name = getSetting('site_name');
-$site_logo = getSetting('site_logo');
-$site_tagline = getSetting('site_tagline');
-$currency_symbol = getSetting('currency_symbol');
-$email_reservations = getSetting('email_reservations');
-$phone_main = getSetting('phone_main');
-
+$site_name = getSetting('site_name', 'Liwonde Sun Hotel');
+$site_logo = getSetting('site_logo', 'images/logo/logo.png');
+$site_tagline = getSetting('site_tagline', 'Where Luxury Meets Nature');
+$currency_symbol = getSetting('currency_symbol', 'K');
+$email_reservations = getSetting('email_reservations', 'book@liwondesunhotel.com');
+$phone_main = getSetting('phone_main', '+265 123 456 789');
 
 // Policies for modals
 $policies = [];
@@ -106,21 +105,37 @@ foreach ($rooms as $room) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloud    <link rel="stylesheet" href="css/footer.css">
+flare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/footer.css">
 </head>
 <body class="rooms-page">
     <?php include 'includes/loader.php'; ?>
     
     <?php include 'includes/header.php'; ?>
-
-    <main>
+    
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" role="presentation"></div>
 
-    <!-- Hero Section -->
-    <?php include 'includes/hero.php'; ?>
+    <section class="rooms-hero" style="background-image: linear-gradient(135deg, rgba(5, 9, 15, 0.76), rgba(10, 25, 41, 0.75)), url('<?php echo htmlspecialchars($hero_room['image_url']); ?>');">
+        <div class="container">
+            <div class="rooms-hero__content">
+                <div class="pill">Riverfront Luxury</div>
+                <h1><?php echo htmlspecialchars($hero_room['name']); ?></h1>
+                <p><?php echo htmlspecialchars($hero_room['short_description'] ?? $site_tagline); ?></p>
+                <div class="rooms-hero__meta">
+                    <span><i class="fas fa-user-friends"></i> Up to <?php echo htmlspecialchars($hero_room['max_guests'] ?? 2); ?> Guests</span>
+                    <span><i class="fas fa-ruler-combined"></i> <?php echo htmlspecialchars($hero_room['size_sqm'] ?? 40); ?> sqm</span>
+                    <span><i class="fas fa-bed"></i> <?php echo htmlspecialchars($hero_room['bed_type'] ?? 'King Bed'); ?></span>
+                    <span><i class="fas fa-tag"></i> <?php echo htmlspecialchars($currency_symbol); ?><?php echo number_format($hero_room['price_per_night'], 0); ?>/night</span>
+                </div>
+                <div class="rooms-hero__actions">
+                    <a class="btn btn-primary" href="#book" data-room-slug="<?php echo htmlspecialchars($hero_room['slug'] ?? ''); ?>">Book This Room</a>
+                    <a class="btn btn-outline" href="#collection">View All Rooms</a>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Room Images Grid Section -->
     <section class="section" style="padding-top: 40px; padding-bottom: 40px;">
@@ -171,7 +186,7 @@ foreach ($rooms as $room) {
                     <div class="spec-item">
                         <i class="fas fa-bed"></i>
                         <div class="spec-label">Bed Type</div>
-                        <div class="spec-value"><?php echo htmlspecialchars($hero_room['bed_type']); ?></div>
+                        <div class="spec-value"><?php echo htmlspecialchars($hero_room['bed_type'] ?? 'King'); ?></div>
                     </div>
                     <div class="spec-item">
                         <i class="fas fa-tag"></i>
@@ -283,12 +298,6 @@ foreach ($rooms as $room) {
                                     <small>per night</small>
                                 </div>
                             </div>
-                            <!-- Compact Rating Display -->
-                            <div class="room-tile__rating" data-room-id="<?php echo (int)$room['id']; ?>">
-                                <div class="compact-rating compact-rating--loading">
-                                    <i class="fas fa-spinner fa-spin"></i>
-                                </div>
-                            </div>
                             <div class="room-tile__meta">
                                 <span><i class="fas fa-user-friends"></i> <?php echo htmlspecialchars($room['max_guests']); ?> guests</span>
                                 <span><i class="fas fa-ruler-combined"></i> <?php echo htmlspecialchars($room['size_sqm']); ?> sqm</span>
@@ -331,76 +340,6 @@ foreach ($rooms as $room) {
                   });
                 });
                 </script>
-
-                <!-- Fetch and display room ratings -->
-                <script>
-                (function() {
-                    const ratingContainers = document.querySelectorAll('.room-tile__rating');
-                    
-                    ratingContainers.forEach(container => {
-                        const roomId = container.dataset.roomId;
-                        
-                        fetch(`admin/api/reviews.php?room_id=${roomId}&status=approved`)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success && data.averages) {
-                                    const avgRating = data.averages.avg_rating || 0;
-                                    const totalCount = data.total_count || 0;
-                                    
-                                    if (totalCount > 0) {
-                                        let starsHtml = '';
-                                        const fullStars = Math.floor(avgRating);
-                                        const hasHalfStar = (avgRating - fullStars) >= 0.5;
-                                        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-
-                                        for (let i = 0; i < fullStars; i++) {
-                                            starsHtml += '<i class="fas fa-star"></i>';
-                                        }
-                                        if (hasHalfStar) {
-                                            starsHtml += '<i class="fas fa-star-half-alt"></i>';
-                                        }
-                                        for (let i = 0; i < emptyStars; i++) {
-                                            starsHtml += '<i class="far fa-star"></i>';
-                                        }
-
-                                        container.innerHTML = `
-                                            <div class="compact-rating">
-                                                <div class="compact-rating__stars">${starsHtml}</div>
-                                                <div class="compact-rating__info">
-                                                    <span class="compact-rating__score">${avgRating.toFixed(1)}</span>
-                                                    <span class="compact-rating__count">(${totalCount})</span>
-                                                </div>
-                                            </div>
-                                        `;
-                                    } else {
-                                        container.innerHTML = `
-                                            <div class="compact-rating compact-rating--no-reviews">
-                                                <i class="far fa-star"></i>
-                                                <span>No reviews</span>
-                                            </div>
-                                        `;
-                                    }
-                                } else {
-                                    container.innerHTML = `
-                                        <div class="compact-rating compact-rating--no-reviews">
-                                            <i class="far fa-star"></i>
-                                            <span>No reviews</span>
-                                        </div>
-                                    `;
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error fetching room rating:', error);
-                                container.innerHTML = `
-                                    <div class="compact-rating compact-rating--no-reviews">
-                                        <i class="far fa-star"></i>
-                                        <span>No reviews</span>
-                                    </div>
-                                `;
-                            });
-                    });
-                })();
-                </script>
             </div>
         </section>
 
@@ -430,22 +369,111 @@ foreach ($rooms as $room) {
                     </div>
                     <div class="booking-cta__row">
                         <span>Floor Space</span>
-                        <strong><?php echo htmlspecialchars($hero_room['size_sqm'] ?? 40); ?> sqm</strong>
-                    </div>
-                    <a class="btn btn-primary" href="index.php?room=<?php echo urlencode($hero_room['slug'] ?? ''); ?>#book">Proceed to Booking</a>
+                        <strong><?php echo htmlspecialchars($hero_room['size_sqm'] ?? 40    <script src="js/modal.js"></script>
+); ?> sqm</strong>
+                   
+    <?php include 'includes/scroll-to-top.php'; ?>
+ </div>
+      
+             <a class="btn btn-primary" href="index.php?room=<?php echo urlencode($hero_room['slug'] ?? ''); ?>#book">Proceed to Booking</a>
                 </div>
             </div>
         </section>
     </main>
 
-    </main>
-    
-    <!-- Footer -->
-    <?php include 'includes/footer.php'; ?>
+    <footer class="footer" id="contact">
+        <div class="container">
+            <div class="footer-grid">
+                <?php foreach ($footer_links as $column_name => $links): ?>
+                <div class="footer-column">
+                    <h4><?php echo htmlspecialchars($column_name); ?></h4>
+                    <ul class="footer-links">
+                        <?php foreach ($links as $link): ?>
+                        <li><a href="<?php echo htmlspecialchars($link['link_url']); ?>"><?php echo htmlspecialchars($link['link_text']); ?></a></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+                <?php endforeach; ?>
 
-    <script src="js/modal.js"></script>
+                <div class="footer-column">
+                    <h4>Policies</h4>
+                    <ul class="footer-links">
+                        <li><a href="#" class="policy-link" data-policy="booking-policy">Booking Policy</a></li>
+                        <li><a href="#" class="policy-link" data-policy="cancellation-policy">Cancellation</a></li>
+                        <li><a href="#" class="policy-link" data-policy="dining-policy">Dining Policy</a></li>
+                        <li><a href="#" class="policy-link" data-policy="faqs">FAQs</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h4>Contact Information</h4>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="fas fa-phone"></i>
+                            <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $contact['phone_main'] ?? $phone_main)); ?>"><?php echo htmlspecialchars($contact['phone_main'] ?? $phone_main); ?></a>
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope"></i>
+                            <a href="mailto:<?php echo htmlspecialchars($contact['email_main'] ?? $email_reservations); ?>"><?php echo htmlspecialchars($contact['email_main'] ?? $email_reservations); ?></a>
+                        </li>
+                        <li>
+                            <i class="fas fa-map-marker-alt"></i>
+                            <a href="https://www.google.com/maps/search/<?php echo urlencode(htmlspecialchars($contact['address_line1'] ?? 'Liwonde, Malawi')); ?>" target="_blank"><?php echo htmlspecialchars($contact['address_line1'] ?? 'Liwonde, Malawi'); ?></a>
+                        </li>
+                        <li>
+                            <i class="fas fa-clock"></i>
+                            <span><?php echo htmlspecialchars($contact['working_hours'] ?? '24/7 Available'); ?></span>
+                        </li>
+                    </ul>
+                    
+                    <div class="social-links">
+                        <?php if (!empty($social['facebook_url'])): ?>
+                        <a href="<?php echo htmlspecialchars($social['facebook_url']); ?>" class="social-icon" target="_blank">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($social['instagram_url'])): ?>
+                        <a href="<?php echo htmlspecialchars($social['instagram_url']); ?>" class="social-icon" target="_blank">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($social['twitter_url'])): ?>
+                        <a href="<?php echo htmlspecialchars($social['twitter_url']); ?>" class="social-icon" target="_blank">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($social['linkedin_url'])): ?>
+                        <a href="<?php echo htmlspecialchars($social['linkedin_url']); ?>" class="social-icon" target="_blank">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; <?php echo htmlspecialchars(getSetting('copyright_text', '2026 Liwonde Sun Hotel. All rights reserved.')); ?></p>
+            </div>
+        </div>
+    </footer>
+
+    <?php if (!empty($policies)): ?>
+    <div class="policy-overlay" data-policy-overlay></div>
+    <div class="p      <p class="policy-summary"><?php echo htmlspecialchars($policy['summary']); ?></p>
+                    <?php endif; ?>
+                </div>
+                <div class="policy-modal__body">
+                    <p><?php echo nl2br(htmlspecialchars($policy['content'])); ?></p>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+
     <script src="js/main.js"></script>
-
-    <?php include 'includes/scroll-to-top.php'; ?>
 </body>
 </html>

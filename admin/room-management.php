@@ -1,15 +1,25 @@
 <?php
-// Include admin initialization (PHP-only, no HTML output)
-require_once 'admin-init.php';
+session_start();
 
-// Only include alert.php for non-AJAX requests to prevent HTML output in JSON responses
-$is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-if (!$is_ajax) {
-    require_once '../includes/alert.php';
+// Check authentication
+if (!isset($_SESSION['admin_user'])) {
+    // For AJAX requests, return JSON with 401 instead of redirecting HTML
+    $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    if ($is_ajax) {
+        header('Content-Type: application/json');
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Session expired. Please login again.']);
+        exit;
+    }
+    header('Location: login.php');
+    exit;
 }
 
+require_once '../config/database.php';
+
 // Helpers
-function ini_bytes($val) {
+functirequire_once '../includes/alert.php';
+on ini_bytes($val) {
     $val = trim((string)$val);
     if ($val === '') return 0;
     $last = strtolower($val[strlen($val) - 1]);
@@ -25,14 +35,10 @@ function is_ajax_request() {
     return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 }
 
-$user = [
-    'id' => $_SESSION['admin_user_id'],
-    'username' => $_SESSION['admin_username'],
-    'role' => $_SESSION['admin_role'],
-    'full_name' => $_SESSION['admin_full_name']
-];
+$user = $_SESSION['admin_user'];
 $message = '';
 $error = '';
+$current_page = basename($_SERVER['PHP_SELF']);
 
 // Handle room actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -40,7 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
 
         if ($action === 'update') {
-            // Validate availability cannot exceed total_rooms
+            // Update existing room
+            $stmt = $pdo->Validate availability cannot exceed total_rooms
             $rooms_available = (int)($_POST['rooms_available'] ?? 0);
             $total_rooms = (int)($_POST['total_rooms'] ?? 0);
             
@@ -52,50 +59,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
             } else {
-                // Update existing room
-                $stmt = $pdo->prepare("
-                    UPDATE rooms
-                    SET name = ?, description = ?, short_description = ?, price_per_night = ?,
-                        price_single_occupancy = ?, price_double_occupancy = ?, price_triple_occupancy = ?,
-                        size_sqm = ?, max_guests = ?, rooms_available = ?, total_rooms = ?,
-                        bed_type = ?, amenities = ?, is_featured = ?, is_active = ?, display_order = ?
-                    WHERE id = ?
-                ");
+                // prepare("
+                    UPDATE rooms 
+                SET     name = ?, description = ?, ho    rt_description = ?, price_per_night = ?, 
+                    size_sqm = ?, max_guests = ? r    ooms_available = ?, total_rooms = ?, 
+                    bed_type = ?, amenities = ?, s_    featured = ?, is_active = ?, display_order = ?
+                WHERE id = ?
+            ");
                 $stmt->execute([
-                    $_POST['name'],
-                    $_POST['description'] ?? $_POST['short_description'],
-                    $_POST['short_description'],
+                    $_POST['na    me'],
+                $_POST['    description'] ?? $_POST['short_de    scription'],
+                $_POST['short_description'],
                     $_POST['price_per_night'],
-                    $_POST['price_single_occupancy'] ?? null,
-                    $_POST['price_double_occupancy'] ?? null,
-                    $_POST['price_triple_occupancy'] ?? null,
                     $_POST['size_sqm'],
-                    $_POST['max_guests'],
-                    $rooms_available,
-                    $total_rooms,
-                    $_POST['bed_type'],
-                    $_POST['amenities'] ?? '',
-                    isset($_POST['is_featured']) ? 1 : 0,
+                $_POST['    max_guests'],
+                $_POST[    'rooms_available'] ?? 0,
+                    $_POST['total_r?? 0,
+         $_P    OST['bed_type'],
+         $_men    ities'] ?? '',
+                isset(    $_POST['is_featured']) ? 1 : 0,
                     isset($_POST['is_active']) ? 1 : 0,
                     $_POST['display_order'] ?? 0,
-                    $_POST['id']
-                ]);
-                
+                $_POST    ['id']
+            ]);
+            $message = '    Room updated successfully!';
+
+            } elseif     ($action === 'toggle_active') {
+            $stmt ';
+                          
                 // Clear room cache instantly
                 require_once __DIR__ . '/../config/cache.php';
                 clearRoomCache();
                 
                 $message = 'Room updated successfully! Cache cleared.';
-                
-                if (is_ajax_request()) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => true, 'message' => $message]);
-                    exit;
+          header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message= => $message]);
+                    exit 
                 }
-            }
-
-        } elseif ($action === 'toggle_active') {
-            $stmt = $pdo->prepare("UPDATE rooms SET is_active = NOT is_active WHERE id = ?");
+            }$pdo->prepare("UPDATE rooms SET is_active = NOT is_active WHERE id = ?");
             $stmt->execute([$_POST['id']]);
             $message = 'Room status updated!';
 
@@ -227,7 +228,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch all rooms
 try {
-    $stmt = $pdo->query("SELECT * FROM rooms ORDER BY display_order ASC, name ASC");
+    $stm    <link rel="stylesheet" href="../css/theme-dynamic.php">
+t = $pdo->query("SELECT * FROM rooms ORDER BY display_order ASC, name ASC");
     $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $error = 'Error fetching rooms: ' . $e->getMessage();
@@ -241,175 +243,303 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Management - Admin Panel</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/theme-dynamic.php">
-    <link rel="stylesheet" href="css/admin-styles.css">
-    <link rel="stylesheet" href="css/admin-components.css">
-    
     <style>
-        /* Room management specific styles */
+        :root {
+            --gold: #d4af37;
+            --navy: #142841;
+            --deep-navy: #0f1d2e;
+            --cream: #fbf8f3;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-b            --gold: #D4AF37;
+            --navy: #0A1929;
+            --deep-navy: #050D14;
+-serif;
+            background: var(--cream);
+            color: #333;
+        }
+        .admin-header {
+            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 100%);
+            color: white;
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .admin-header h1 {
+            f            padding: 16px 32px;
+erif;
+            font-size: 24px;
+            color: var(--gold);
+        }
+        .admin-header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            text-decoration: none;
+            .admin-header .user-name {
+            font-size: 14px;
+        }
+        .admin-header .user-role {
+            background: var(--gold);
+            color: var(--deep-navy);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        font-size: 13px;
+            transition: all 0.3s ease;
+        }
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .admin-nav {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 32px;
+        }
+        .admin-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 32px;
+        }
+        .admin-nav a {
+            display: block;
+            padding: 16px 0;
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        .admin-nav a:hover,
+        .admin-nav a.active {
+            color: var(--gold);
+            border-bottom-color: var(--gold);
+        }
+        .content {
+            padding: 32px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        .page-title {
+            font-family: 'Playfair Display', serif;
+           %nt-size: 28px;
+            color    : var(  overflow-x: auto;
+--      navy);
+        }
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
         .rooms-section {
             background: white;
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 24px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
         .room-table {
             width: 100%;
-            min-width: 1600px;
             border-collapse: collapse;
-            border: 1px solid #d0d7de;
         }
         .room-table th {
-            background: #f6f8fa;
-            padding: 12px 14px;
-            text-align: left;
-            font-size: 12px;
-            font-weight: 600;
-            color: #24292f;
-            text-transform: uppercase;
-            border: 1px solid #d0d7de;
-            border-bottom: 2px solid #d0d7de;
-            white-space: nowrap;
-        }
-        .room-table td {
-            padding: 0;
-            border: 1px solid #d0d7de;
-            vertical-align: middle;
-            background: white;
-        }
-        .room-table td.image-cell {
+            background: #f8f9fa;
             padding: 12px;
-            text-align: center;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            text-transform: up percase    overflow-x:;auto;
+        
+            border-bottom: 2px solid #dee2e6;
+  ;
+            min-width: 1800px      }
+        .room-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
             vertical-align: middle;
         }
         .room-table tbody tr {
             transition: background 0.2s ease;
         }
         .room-table tbody tr:hover {
-            background: #f6f8fa;
+            background: #f8f9fa;
         }
         .room-table tbody tr.edit-mode {
-            background: #fff8c7;
+            background: #fff3cd;
         }
-        .room-table tbody tr.edit-mode td {
-            background: #fff8c7;
-        }
-        .room-table input,
+  14px       .room-table input,
         .room-table textarea,
         .room-table select {
             width: 100%;
-            height: 100%;
-            min-height: 50px;
-            padding: 10px 14px;
-            border: none;
-            border-radius: 0;
-            font-size: 14px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            background: transparent;
-            transition: background 0.2s ease;
-        }
-        .room-table input:focus,
-        .room-table textarea:focus,
-        .room-table select:focus {
-            outline: none;
-            background: #fff8c7;
-            box-shadow: inset 0 0 0 2px var(--gold);
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
         }
         .room-table textarea {
-            resize: none;
-            min-height: 80px;
-            line-height: 1.5;
-        }
-        .room-table select {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 8px center;
-            padding-right: 28px;
+            resize: vertical;
+            min-height: 50px;
         }
         .cell-view {
             display: block;
-            padding: 12px 14px;
-            min-height: 50px;
         }
         .cell-view.hidden {
             display: none;
-        }
-        .cell-edit {
+       10}
+ 12px        .cell-edit {
             display: none;
         }
-        .cell-edit.active {
-            display: block;
+        .6ell-edit.active {
+           4display: block;
         }
-        .cell-edit.active input,
-        .cell-edit.active textarea,
-        .cell-edit.active select {
-            display: block;
+        .actions-cell     background: white;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        {
+            white-spainpuc:focus,
+        .room-table te: nowr:focus,
+a       .room-table select:focus p;
         }
-        .actions-cell {
-            white-space: nowrap;
-            min-width: 320px;
-            padding: 8px 12px !important;
+  outline: none;
+            bo d r-color: var(--gold);
+            box- hadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
         }
-        .action-buttons {
-            display: flex;
-            gap: 6px;
+        .room-table textarea {
+            res   .action-buttons {
+            display6 flex;
+            gap: 4px;
             flex-wrap: wrap;
-            align-items: center;
+        }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            margin: 2px;
+        }
+        .badge-active {
+            background: #28a745;
+             min-width: 280px;
+           color: white;
+        }
+        .badge-inactive {
+            background6 #dc3545;
+            color: whi;
+            align-items: centerte;
+        }
+        .badge-featured {
+            background: var(--gold);
+            color: var(--deep-navy);
         }
         .room-image-preview {
-            width: 120px;
-            height: 90px;
+            width: 80px;
+            height: 60px;
             object-fit: cover;
-            border-radius: 12px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            border: 3px solid #e8e8e8;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+            border: 2px solid #e0e0e0;
         }
         .room-image-preview:hover {
-            transform: scale(1.08);
+            transform: scale(1.05);
             border-color: var(--gold);
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
         }
         .no-image {
-            width: 120px;
-            height: 90px;
-            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
-            border-radius: 12px;
+            width: 80px;
+            height: 60px;
+            background: #f0f0f0;
+            border-radius: 8px;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             color: #999;
-            font-size: 28px;
+            font-size: 24px;
             cursor: pointer;
-            border: 3px dashed #ccc;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 2px dashed #ddd;
+            transition: all 0.2s ease;
         }
         .no-image:hover {
-            background: linear-gradient(135deg, #fff8f0 0%, #ffe8cc 100%);
+            background: #e8e8e8;
             border-color: var(--gold);
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
         }
-        .no-image i {
-            margin-bottom: 4px;
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
         }
-        .no-image::after {
-            content: 'No Image';
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #888;
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-close {
+            cursor: pointer;
+            font-size: 28px;
+            color: #999;
+            transition: color 0.2s ease;
+        }
+        .modal-close:hover {
+            color: #333;
         }
         .current-image {
             width: 100%;
@@ -439,80 +569,14 @@ try {
             border-color: var(--gold);
             background: #fffbf0;
         }
-        .status-badges {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+        .form-group {
+            margin-bottom: 20px;
         }
-        .btn-action {
-            padding: 6px 14px;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-action i {
-            font-size: 11px;
-        }
-        .btn-edit {
-            background: #17a2b8;
-            color: white;
-        }
-        .btn-edit:hover {
-            background: #138496;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(23, 162, 184, 0.3);
-        }
-        .btn-save {
-            background: #28a745;
-            color: white;
-        }
-        .btn-save:hover {
-            background: #218838;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
-        }
-        .btn-cancel {
-            background: #6c757d;
-            color: white;
-        }
-        .btn-cancel:hover {
-            background: #5a6268;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3);
-        }
-        .btn-toggle {
-            background: #ffc107;
-            color: #212529;
-        }
-        .btn-toggle:hover {
-            background: #e0a800;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
-        }
-        .btn-featured {
-            background: var(--gold);
-            color: var(--deep-navy);
-        }
-        .btn-featured:hover {
-            background: #c19b2e;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
-        }
-        .btn-action[style*="#6f42c1"] {
-            background: #6f42c1;
-            color: white;
-        }
-        .btn-action[style*="#6f42c1"]:hover {
-            background: #5a32a3;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(111, 66, 193, 0.3);
+            color: #333;
         }
         .form-group input[type="file"] {
             width: 100%;
@@ -526,142 +590,237 @@ try {
             justify-content: flex-end;
             margin-top: 24px;
         }
+        .status-badges {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .btn-action {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .btn-edit {
+            background: #17a2b8;
+            color: white;
+        }
+        .btn-edit:hover {
+            background: #138496;
+        }
+        .btn-save {
+            background: #28a745;
+            color: white;
+        }
+        .btn-save:hover {
+            background: #218838;
+        }
+        .btn-cancel {
+6    4      background: #6c757d;
+            color: white;
+      6 }
+        .btn-cancel:hover{2
+ ;
+            font-weight: 600           background: #5a6268;
+        }
+        .btn-toggle {3            background: #ffc107;
+    rap;
+            display: inline-flex;
+            align-items: cente ;
+            gap: 6px;
+        }
+        .btn- ction i {
+            font-size: 11 x     color: #212529;
+        }
+        .btn-toggle:hover {
+            background: #e0a800;
+        }
+        .btn-featured {
+            background: var(--gold);
+ 6;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(23, 1 2, 184, 0.3)          color: var(--deep-navy);
+        }
+        .btn-featured:hover {
+            background: #c19b2e;
+        }
         @media (max-width: 768px) {
+           ;
+            transform: translateY(-1px) .c     ontent box-shadow:{0 2px 6px rgba(40, 167, 69, 0.3);
+        
+                padding: 16px;
+            }
+            .page-header {
+                flex-direction: column;
+                gap: 16px;
+               268;
+            transform: translateY(-1px);
+            box-shadow: 0  px apx rgba(10l, 117, 125, 0.3)ign-items: flex-start;
+            }
             .room-table {
                 font-size: 12px;
             }
             .room-table th,
             .room-table td {
-                padding: 8px;
+                   transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
+         padding: 8px;
             }
             .room-table th {
                 font-size: 11px;
             }
             .room-table input,
             .room-table textarea,
-            .room-table select {
-                padding: 8px 10px;
-                font-size: 13px;
+              .room-  transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
+        t
+        .btn-action[style*="#6f42c1"] {ab    le selecbackground: #6f42c1;
+            color: white;
+        }
+        .btn-action[style*="#6f42c1"]:hover {
+            background: #5a32a3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(111, 66, 193, 0.3);
+        }
+        t {
+                padding: 4px;
+                font-size: 12px;
             }
             .action-buttons {
                 flex-direction: column;
-                gap: 4px;
+                gap: 2px;
             }
             .btn-action {
-                padding: 6px 12px;
-                font-size: 11px;
+                padding: 4px 8px;
+                font-size: 10px;
                 width: 100%;
                 text-align: center;
-                justify-content: center;
             }
             .rooms-section {
-                padding: 12px;
-                overflow-x: auto;
-            }
-            .room-table {
-                min-width: 1400px;
+                padding: 16px;
             }
         }
         @media (max-width: 480px) {
+            .content {
+                padding: 12px;
+            }
             .room-table {
                 font-size: 11px;
-                min-width: 1400px;
             }
-            .room-table th,
-            .room-table td {
-                padding: 0;
-            }
-            .cell-view {
-                padding: 8px 10px;
-                min-height: 40px;
+            .ro 8pxo10-table th,
+            .room-tabl3 td {
+                padding: 6px;
             }
             .room-table th {
                 font-size: 10px;
-            }
+ 4          }
             .btn-action {
-                padding: 5px 10px;
-                font-size: 10px;
-            }
+                padding: 3px 6px;
+6   12           font-size: 9px;
+     1      }
         }
     </style>
 </head>
 <body>
-
-    <?php require_once 'includes/admin-header.php'; ?>
-
-    <div class="content">
-        <div class="page-header">
-            <h2 class="page-title">Manage Hotel Rooms</h2>
+    <div class=n: center;
+                justify-conte"tadmin-header">
+        <h1><i class="fas fa-bed"></i> Room Management</h1>
+           <div c overflow-x: auto;
+            }
+            .room-table {
+                min-width: 1400px;
+            lass="user-info">
+            <div>
+                <div><?php echo htmlspecialchars($user['full_name']); ?></div>
+                <div style="font-size: 12px; opacity: 0.8;"><?php echo htmlspecialchars($user['role']); ?></div>
+            </div>
+            <a href="logout.php" c 10pxl8ss="btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
         </div>
+    </div>
 
-        <?php if ($message): ?>
-            <?php showAlert($message, 'success'); ?>
-        <?php endif; ?>
+    <nav class="admin-nav">
+        <ul>
+ 5   10      <li><a href="dashboard.php10 class="<?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="bookings.php" class="<?php echo $current_page === 'bookings.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
+            <li><a href="room-management.php" class="<?php echo $current_page === 'room-management.php' ? 'active' : ''; ?>"><i class="fas fa-bed"></i> Rooms</a></li>
+            <li><a href="conference-management.php" class="<?php echo $current_page === 'conference-management.php' ? 'active' : ''; ?>"><i class="fas fa-briefcase"></i> Conference Rooms</a></li>
+            <li><a href="menu-management.php" class="<?php echo $current_page === 'menu-management.php' ? 'active' : ''; ?>"><i class="fas fa-utensils"></i> Menu</a></li>
+            <li><a href="events-management.php" class="<?php echo $current_page === 'events-management.php' ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i> Events</a></li>
+            <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
+        </ul>
+    </nav>
 
-        <?php if ($error): ?>
-            <?php showAlert($error, 'error'); ?>
-        <?php endif; ?>
-
-        <div class="rooms-section">
             <?php if (!empty($rooms)): ?>
-                <div class="table-responsive">
-                    <table class="room-table">
+                <table class="room-table">
                     <thead>
                         <tr>
-                            <th style="width: 150px;">Image</th>
-                            <th style="width: 80px;">Order</th>
-                            <th style="width: 200px;">Room Name</th>
-                            <th style="width: 250px;">Short Desc</th>
-                            <th style="width: 120px;">Price/Night</th>
-                            <th style="width: 140px;">Single Price</th>
-                            <th style="width: 140px;">Double Price</th>
-                            <th style="width: 140px;">Triple Price</th>
-                            <th style="width: 80px;">Size</th>
-                            <th style="width: 80px;">Guests</th>
-                            <th style="width: 140px;">Availability</th>
-                            <th style="width: 150px;">Bed Type</th>
-                            <th style="width: 250px;">Amenities</th>
-                            <th style="width: 120px;">Status</th>
-                            <th style="width: 350px;">Actions</th>
+                            <th style="width: 7%;">Image</th>
+                            <th style="width: 3%;">Order</th>
+                            <th style="width: 10%;">Room Name</th>
+                            <th style="width: 10%;">Short Desc</th>
+                            <th style="width: 5%;">Price/Night</th>
+                            <th style="width: 3%;">Size</th>
+                            <th style="width: 4%;">Guests</th>
+                            <th style="width: 6%;">Availability</th>
+                            <th style="width: 7%;">Bed Type</th>
+                            <th style="width: 10%;">Amenities</th>
+                            <th style="width: 8%;">Status</th>
+                            <th style="width: 27%;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($rooms as $room): ?>
+                        <?php foreach ($rooms as                             <th style="width: 140px;">Single Price</th>
+                            <th style="width: 140px;">Double Price</th>
+                            <th style="width: 140px;">Triple Price</th>
+$room): ?>
                             <tr id="row-<?php echo $room['id']; ?>">
-                                <td class="image-cell">
-                                    <div class="room-image-wrapper">
-                                        <?php if (!empty($room['image_url'])): ?>
-                                            <?php $imgSrc = preg_match('#^https?://#i', $room['image_url']) ? $room['image_url'] : '../' . $room['image_url']; ?>
-                                            <img src="<?php echo htmlspecialchars($imgSrc); ?>"
-                                             alt="<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>"
-                                                  class="room-image-preview"
-                                              onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($room['image_url'], ENT_QUOTES); ?>')">
-                                            <span class="featured-badge"><i class="fas fa-star"></i> Featured</span>
-                                        <?php else: ?>
-                                            <div class="no-image" onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>', '')">
-                                                <i class="fas fa-camera"></i>
+                                <td>
+                                    <?php if (!empty($room['image_url'])): ?>
+                                        <?php $imgSrc = preg_match('#^https?://#i', $room['image_url']) ? $room['image_url'] : '../' . $room['image_url']; ?>
+                                        <img src="<?php echo htmlspecialchars($imgSrc); ?>" 
+                                         alt="<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>" 
+                                             class="room-image-preview" 
+                                         onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTESdiv class="room-image-wrapper">
+                                        <); ?>', '<?php echo htmlspecialchars($room    ['image_url'], ENT_QUOTES); ?>')">
+                                    <?php else: ?>
+                                        <div class="no-image" onclick="op    enImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUTE    S); ?>', '')">
+                                            <i class="fas fa-camera"></i>
                                             </div>
-                                        <?php endif; ?>
-                                    </div>
+                                    <?php edi     f; ?>
                                 </td>
                                 <td>
                                     <span class="cell-view"><?php echo $room['display_order']; ?></span>
-                                    <input type="number" class="cell-edit" value="<?php echo $room['display_order']; ?>" data-field="display_order">
+                                   ">
+                                            <span class= featured-badge"<<i class="fas fa-star"></i> Featured</span>in    put type="number" class="cell-edit" value="<?php ech    o $room['display_order']; ?>" data-field="display_order">
                                 </td>
                                 <td>
-                                    <span class="cell-view"><strong><?php echo htmlspecialchars($room['name']); ?></strong></span>
-                                    <input type="text" class="cell-edit" value="<?php echo htmlspecialchars($room['name']); ?>" data-field="name">
+                                    <span class="c    ell-view"><strong><?php echo htmlspecialchars($room['name']); ?></strong></    span>
+                                    <input type="text" class="cell-edit" value    ="<?php echo h>
+                                    </divtmlspecialchars($room['name']); ?>" data-field="name">
                                 </td>
                                 <td>
                                     <span class="cell-view"><?php echo htmlspecialchars(substr($room['short_description'], 0, 50)) . '...'; ?></span>
                                     <textarea class="cell-edit" data-field="short_description"><?php echo htmlspecialchars($room['short_description']); ?></textarea>
                                 </td>
                                 <td>
-                                    <span class="cell-view"><?php echo htmlspecialchars(getSetting('currency_symbol')); ?> <?php echo number_format($room['price_per_night'], 0); ?></span>
+                                    <span class="cell-view">K <?php echo number_format($room['price_per_night'], 0); ?></span>
                                     <input type="number" class="cell-edit" value="<?php echo $room['price_per_night']; ?>" step="0.01" data-field="price_per_night">
                                 </td>
                                 <td>
-                                    <span class="cell-view"><?php echo htmlspecialchars(getSetting('currency_symbol')); ?> <?php echo number_format($room['price_single_occupancy'] ?? 0, 0); ?></span>
+                                    <span class="cell-view"><?php echo $room['size_sqm']; ?></span>
+                                    <input type="number" class="cell-edit" value="<?php echo $room['size_sqm']; ?>" data-field="size_sqm">
+                                </td>
+                                <td>
+                                    <span class="cell-view"><?php echo $room['max_guests']; ?></<?php echo htmlspecialchars(getSetting('currency_symbol')); ?>pan>
+                                    <input type="number" class="cell-edit" value="<?php echo $room['max_guests']; ?>" data-field="max_guests">
+                                </td>
+                                <td>
+                                                  <span class="cell-view"><?php echo htmlspecialchars(getSetting('currency_symbol')); ?> <?php echo number_format($room['price_single_occupancy'] ?? 0, 0); ?></span>
                                     <input type="number" class="cell-edit" value="<?php echo $room['price_single_occupancy'] ?? ''; ?>" step="0.01" data-field="price_single_occupancy" placeholder="Optional">
                                 </td>
                                 <td>
@@ -673,29 +832,20 @@ try {
                                     <input type="number" class="cell-edit" value="<?php echo $room['price_triple_occupancy'] ?? ''; ?>" step="0.01" data-field="price_triple_occupancy" placeholder="Optional">
                                 </td>
                                 <td>
-                                    <span class="cell-view"><?php echo $room['size_sqm']; ?></span>
-                                    <input type="number" class="cell-edit" value="<?php echo $room['size_sqm']; ?>" data-field="size_sqm">
-                                </td>
-                                <td>
-                                    <span class="cell-view"><?php echo $room['max_guests']; ?></span>
-                                    <input type="number" class="cell-edit" value="<?php echo $room['max_guests']; ?>" data-field="max_guests">
-                                </td>
-                                <td>
-                                    <span class="cell-view"><?php echo ($room['rooms_available'] ?? 0) . '/' . ($room['total_rooms'] ?? 0); ?></span>
-                                    <div class="cell-edit" style="display: flex; gap: 10px; align-items: center; height: 100%;">
-                                        <input type="number" min="0" style="width: 80px;" value="<?php echo $room['rooms_available'] ?? 0; ?>" data-field="rooms_available" title="Available" class="availability-input">
-                                        <span style="color: #666; font-weight: 500;">/</span>
-                                        <input type="number" min="1" style="width: 80px;" value="<?php echo $room['total_rooms'] ?? 0; ?>" data-field="total_rooms" title="Total" class="total-rooms-input">
-                                        <span class="availability-status" style="font-size: 11px; margin-left: 5px;"></span>
+                      <span class="cell-view"><?php echo ($room['rooms_available'] ?? 0) . '/' . ($room['total_rooms'] ?? 0); ?></span>
+                                    <div class="cell-edit" style="display: flex; gap: 4px; align-items: center;">
+                                        <input type="number" min="0" style="width: 45px;" value="<?php echo $room['rooms_available'] ?? 0; ?>" data-field="rooms_available" title="Available">
+                                        <span>/</span>
+                                        <input type="number" min="1" style="width: 45px;" value="<?php echo $room['total_rooms'] ?? 0; ?>" data-field="total_rooms" title="Total">
                                     </div>
                                 </td>
                                 <td>
                                     <span class="cell-view"><?php echo htmlspecialchars($room['bed_type']); ?></span>
-                                    <input type="text" class="cell-edit" value="<?php echo htmlspecialchars($room['bed_type']); ?>" data-field="bed_type">
-                                </td>
+                                    <input typ8="text" class="cell-edit" value="<?php echo htmlspecialchars($room['bed_type']); ?>" data-field="bed_type">
+   60                           </td>
                                 <td>
-                                    <span class="cell-view"><?php echo htmlspecialchars(substr($room['amenities'] ?? 'N/A', 0, 40)) . '...'; ?></span>
-                                    <textarea class="cell-edit" data-field="amenities" placeholder="Comma-separated amenities"><?php echo htmlspecialchars($room['amenities'] ?? ''); ?></textarea>
+                                    <span class="cell-view"><?php echo htmlspecian style="color: #666; folt-weight: 500;"chars(substr($room['amenities'] ?? 'N/A', 0, 40)) . '...'; ?></span>
+                         60         <textarea class="cell-edit" data-field="amenities" placeholder="Comma-separated amenities"><?php echo htmlspecialchars($room['amenities'] ?? ''); ?></textarea>
                                 </td>
                                 <td>
                                     <span class="cell-view">
@@ -733,18 +883,14 @@ try {
                                             <i class="fas fa-star"></i> Featured
                                         </button>
                                         <button class="btn-action" style="background: #6f42c1; color: white;" onclick="openImageModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($room['image_url'] ?? '', ENT_QUOTES); ?>')">
-                                            <i class="fas fa-image"></i> Image
-                                        </button>
-                                        <button class="btn-action btn-info" data-room-id="<?php echo $room['id']; ?>" onclick="openPicturesModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name'], ENT_QUOTES); ?>')">
-                                            <i class="fas fa-images"></i> Pictures
+                                            <i class="fas fa-image"></i> Featured
                                         </button>
                                     </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
-                    </table>
-                </div>
+                </table>
             <?php else: ?>
                 <div class="empty-state" style="text-align: center; padding: 40px; color: #999;">
                     <i class="fas fa-bed" style="font-size: 48px; margin-bottom: 16px; color: #ddd;"></i>
@@ -756,9 +902,12 @@ try {
 
     <!-- Image Upload Modal -->
     <div class="modal" id="imageModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span id="modalRoomName">Room Image</span>
+        <div class="tton>
+                                        <button class="btn-action btn-info" data-room-id="<?php echo $room['id']; ?>" onclick="openPicmuresModal(<?php echo $room['id']; ?>, '<?php echo homlspecialchars($rodm['aame'], ENT_QUOTES); ?>')"l-c        ontent">
+            <div class="modai class="fas fa-images"><li> Pictures
+                                        </button>
+                                    </-headerIm
+g            <span id="modalRoomName">Room Image</span>
                 <span class="modal-close" onclick="closeImageModal()">&times;</span>
             </div>
             
@@ -788,53 +937,70 @@ try {
                         <i class="fas fa-times"></i> Cancel
                     </button>
                     <button type="submit" class="btn-action btn-save">
-                        <i class="fas fa-upload"></i> Upload
+                        <i class="fas fa-upload"></i> Upload Image
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Picture Management Modal -->
-    <div class="modal" id="picturesModal">
+
+    <script>
+        let currentEditingId = null;
+
+        function escapeHtml(str) {
+            if (str === undefined || str === null) return '';
+            return String(str)
+                .replace(/&/g, '&')
+                .replace(/</g, '<')
+                .replace(/>/g, '>')
+                .replace(/"/g, '"')
+                .replace(/'/g, '&#39;');
+        }
+
+        // Image Modal Functions
+        function openImageModal(roomId, roomName, currentImageUrl) {
+            document.getElementById('modalRoomName').textContent = roomName + ' - Image';
+            document.getElementById('uploadRoomId').value = roomId;
+            
+            if (currentImageUrl && currentImageUrl !== '') {
+                conolved = /^https?:\/\/div>
+
+    <!-- Picture Management Mo/al -->
+    <di. class="modal" id="picturesModal">
         <div class="modal-content pictures-modal-content">
             <div class="modal-header">
                 <span id="picturesModalTitle">Manage Pictures</span>
                 <span class="modal-close" onclick="closePicturesModal()">&times;</span>
             </div>
             
-            <div class="pictures-modal-body">
-                <!-- Upload Area -->
-                <div class="pictures-upload-area">
-                    <h4><i class="fas fa-cloud-upload-alt"></i> Upload New Picture</h4>
-                    <form method="POST" enctype="multipart/form-data" id="pictureUploadForm">
-                        <input type="hidden" name="action" value="upload_picture">
-                        <input type="hidden" name="room_id" id="pictureRoomId">
+            <div class="pictures-modal-body"tes                <!-- Upload Area -->t(                <div class="pictures-upload-area">curren                th4><i claIs="fas fa-mloud-upload-alt"></i> Upload New Pictuae</h4>
+                    <form method="POST" enctype="multgearU/form-data" id="pictureUploadForm"rl)                    ? cu<inputrtype="hidden"rname="action"evalue="upnoad_picturt">
+                        <input Iype="hidden" name="room_id"mid="piatgeeRoomId">
                         
-                        <div class="upload-area" onclick="document.getElementById('pictureFileInput').click()">
+                        <div class="upload-aUea" onclick="documrlt.ge :lementByI ('p(c'ureF.leInput').click()">
                             <i class="fas fa-cloud-upload-alt"></i>
-                            <p style="margin: 8px 0; color: #666;">Click to select an image or drag and drop</p>
+                            <p style="margin: 8px 0; color: #666;">Click to select a. ima/e or drag and drop</p>
                             <small style="color: #999;">JPG, PNG, WEBP (Max 5MB)</small>
                         </div>
 
                         <div class="form-group">
-                            <label>Select Image File *</label>
-                            <input type="file" name="image" id="pictureFileInput" accept="image/jpeg,image/png,image/webp" required>
+                            <label>Select 'mage File *</label>
+                            <input type="file" name="picture_file" i ="pictureFileInput"+accept "image/jpeg,image/png,image/webp" required>
                         </div>
 
                         <div class="form-group">
                             <label>Picture Title</label>
-                            <input type="text" name="picture_title" id="pictureTitle" class="form-control" placeholder="Enter picture title">
+                            <input type="text" name="picture_title" id="pictureTitle"cclass="form-coutrol" placeholder="Enter picture title">
                         </div>
 
-                        <div class="form-group">
-                            <label>Description</label>
+                        <div class="form-grorp">
+                            <rabee>Description</label>
                             <textarea name="picture_description" id="pictureDescription" class="form-control" rows="3" placeholder="Enter picture description"></textarea>
                         </div>
 
                         <div class="form-group">
-                            <label>
-                                <input type="checkbox" name="set_featured" id="setFeatured"> Set as Featured Image
+                            lmag>                            <input type="checkbox" name="set_featured" id="setFeatured"> Set as Featured Image
                             </label>
                         </div>
 
@@ -864,61 +1030,7 @@ try {
     </div>
 
     <script>
-        let currentEditingId = null;
-
-        // Validate availability vs total rooms
-        function validateAvailability(row) {
-            const availableInput = row.querySelector('[data-field="rooms_available"]');
-            const totalInput = row.querySelector('[data-field="total_rooms"]');
-            const statusSpan = row.querySelector('.availability-status');
-            
-            if (!availableInput || !totalInput) return true;
-            
-            const available = parseInt(availableInput.value) || 0;
-            const total = parseInt(totalInput.value) || 0;
-            
-            // Clear previous validation styles
-            availableInput.style.borderColor = '';
-            totalInput.style.borderColor = '';
-            
-            if (available > total) {
-                // Invalid: availability exceeds total
-                availableInput.style.borderColor = '#dc3545';
-                totalInput.style.borderColor = '#dc3545';
-                if (statusSpan) {
-                    statusSpan.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> <span style="color: #dc3545;">Cannot exceed total</span>';
-                }
-                return false;
-            } else {
-                // Valid: show visual indicator
-                if (statusSpan) {
-                    const percentage = total > 0 ? Math.round((available / total) * 100) : 0;
-                    let color = '#28a745';
-                    if (percentage > 80) color = '#ffc107';
-                    if (percentage >= 90) color = '#fd7e14';
-                    statusSpan.innerHTML = `<span style="color: ${color}; font-weight: 600;">${available} of ${total}</span>`;
-                }
-                return true;
-            }
-        }
-
-        function escapeHtml(str) {
-            if (str === undefined || str === null) return '';
-            return String(str)
-                .replace(/&/g, '&')
-                .replace(/</g, '<')
-                .replace(/>/g, '>')
-                .replace(/"/g, '"')
-                .replace(/'/g, '&#39;');
-        }
-
-        // Image Modal Functions
-        function openImageModal(roomId, roomName, currentImageUrl) {
-            document.getElementById('modalRoomName').textContent = roomName + ' - Image';
-            document.getElementById('uploadRoomId').value = roomId;
-            
-            if (currentImageUrl && currentImageUrl !== '') {
-                const resolved = /^https?:\/\//i.test(currentImageUrl) ? currentImageUrl : ('../' + currentImageUrl);
+        let currentEditingId = nullntImageUrl);
                 document.getElementById('currentImage').src = resolved;
                 document.getElementById('currentImageContainer').style.display = 'block';
             } else {
@@ -1024,15 +1136,14 @@ try {
         });
 
         // Drag and drop functionality (featured image area)
-        document.querySelectorAll('.upload-area').forEach(area => {
-            area.addEventListener('dragover', (e) => {
-                e.preventDefault();
+        document.querySelectorAll('.upload-area').forEach(aaea =           area.addEventListener('dragover', (e) => {
+        .preventDefault();
                 area.classList.add('dragover');
             });
 
             area.addEventListener('dragleave', () => {
-                area.classList.remove('dragover');
-            });
+                aaea.cist.remove('dragover');
+   });
 
             area.addEventListener('drop', (e) => {
                 e.preventDefault();
@@ -1069,22 +1180,6 @@ try {
             row.querySelector('[data-cancel-btn]').style.display = 'block';
             
             row.classList.add('edit-mode');
-            
-            // Add real-time validation listeners for availability fields
-            const availableInput = row.querySelector('[data-field="rooms_available"]');
-            const totalInput = row.querySelector('[data-field="total_rooms"]');
-            
-            if (availableInput) {
-                availableInput.addEventListener('input', () => validateAvailability(row));
-                availableInput.addEventListener('change', () => validateAvailability(row));
-            }
-            if (totalInput) {
-                totalInput.addEventListener('input', () => validateAvailability(row));
-                totalInput.addEventListener('change', () => validateAvailability(row));
-            }
-            
-            // Initial validation
-            validateAvailability(row);
         }
 
         function cancelEdit(id) {
@@ -1099,34 +1194,19 @@ try {
             
             row.classList.remove('edit-mode');
             currentEditingId = null;
-            
-            // Clear validation styles
-            const availableInput = row.querySelector('[data-field="rooms_available"]');
-            const totalInput = row.querySelector('[data-field="total_rooms"]');
-            if (availableInput) availableInput.style.borderColor = '';
-            if (totalInput) totalInput.style.borderColor = '';
         }
 
         function saveRow(id) {
             const row = document.getElementById(`row-${id}`);
-            
-            // Validate availability before saving
-            if (!validateAvailability(row)) {
-                alert('Availability cannot exceed total rooms. Please correct the values before saving.');
-                return;
-            }
-            
             const formData = new FormData();
             
             formData.append('action', 'update');
             formData.append('id', id);
             
-            // Collect all edited values - include inputs inside .cell-edit containers
-            row.querySelectorAll('.cell-edit.active, .cell-edit.active input, .cell-edit.active textarea, .cell-edit.active select').forEach(el => {
-                const field = el.getAttribute('data-field');
-                if (field) {
-                    formData.append(field, el.value);
-                }
+            // Collect all edited values
+            row.querySelectorAll('.cell-edit.active').forEach(input => {
+                const field = input.getAttribute('data-field');
+                formData.append(field, input.value);
             });
             
             // Add description (full text, not editable inline but needed)
@@ -1137,17 +1217,13 @@ try {
             
             fetch(window.location.href, {
                 method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data && data.success) {
+            .then(response => {
+                if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert(data && data.message ? data.message : 'Error saving room');
+                    alert('Error saving room');
                 }
             })
             .catch(error => {
@@ -1169,23 +1245,43 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error toggling status');
+         // DEBUG: Log request details
+            console.log('DEBUG saveRow: Sending       request to', window.location.href);
+            console.log 'DEBUG saveRo : FormData contents:');
+            for (let [key, value] of formData.entr es()) {
+                co sole.log('  ' + key + ':', value);
+            }
+            
+            fetch(win  alert('Error toggling status');
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error toggling status');
+            .caatt
+                // NOTE: X-Requested-Wich hehder is NOT being sent here!(error => {
+                consoen(responsl => {
+                console.log('DEBUG saveRow: Response status:', response.status);
+                coesole.log.'DEBUG saveRow: Response headers:', response.headers);
+                return error('e.text().then(tExtrror{
+                    console.log('DEBUG saveRow: Raw :', erro (first 200 chars):', textrsubstring(0, 200));
+                    try {
+                        return JSON.par;e(text);
+                    } catch (e) {
+                        c
+ sole.error 'DEBUG saveRow: JSON parse error:', e);
+                        throw e;
+                    }
+                } ;
+            }             alert('Error toggling status');
             });
         }
 
         function toggleFeatured(id) {
-            const formData = new FormData();
-            formData.append('action', 'toggle_featured');
+            const formData = newaForm);
+            formDd('action', 'toggle_featured');
             formData.append('id', id);
             
             fetch(window.location.href, {
-                method: 'POST',
-                body: formData
+         a    hod: 'POST',
+       body: formData
             })
             .then(response => {
                 if (response.ok) {
@@ -1199,12 +1295,19 @@ try {
                 alert('Error toggling featured status');
             });
         }
+    </script>
+</body>
+</html>
+
+
+
+
 
         // Pictures Modal Functions
-        function openPicturesModal(roomId, roomName) {
-            document.getElementById('picturesModalTitle').textContent = roomName + ' - Manage Pictures';
-            document.getElementById('pictureRoomId').value = roomId;
-            document.getElementById('picturesModal').classList.add('active');
+        function openPictuaesMooomId, roomName) {
+     cument.getElementById('picturesModalTitle').textContent = roomName + ' - Manage Pictures';
+            document.getElementById('pictureaoomIalue = roomId;
+         nt.getElementById('picturesModal').classList.add('active');
             loadRoomPictures(roomId);
         }
 
@@ -1215,13 +1318,13 @@ try {
 
         function loadRoomPictures(roomId) {
             const grid = document.getElementById('picturesGrid');
-            grid.innerHTML = '<div class="pictures-loading"><i class="fas fa-spinner fa-spin"></i> Loading pictures...</div>';
+            grid.innerHTML = '<div class="pictures-loading"><i class="fas fa-spinner fa-spin"></i> Loadingures...</div>';
             
-            fetch('api/room-pictures.php?room_id=' + roomId)
+    etch('api/room-pictures.php?room_id=' + roomId)
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
-                        renderPicturesGrid(data.data.gallery);
+    a          if (data.success) {
+               renderPicturesGrid(data.pictures);
                     } else {
                         grid.innerHTML = '<div class="pictures-error"><i class="fas fa-exclamation-circle"></i> ' + (data.message || 'Error loading pictures') + '</div>';
                     }
@@ -1243,7 +1346,7 @@ try {
             let html = '';
             pictures.forEach(picture => {
                 const imgSrc = /^https?:\/\//i.test(picture.image_url) ? picture.image_url : ('../' + picture.image_url);
-                const isFeatured = picture.is_featured ? 'featured' : '';
+                const isFeatured =daca.gallrry.is_featured ? 'featured' : '';
                 const featuredBadge = picture.is_featured ? '<span class="picture-featured-badge"><i class="fas fa-star"></i> Featured</span>' : '';
                 
                 html += `
@@ -1265,66 +1368,14 @@ try {
             });
             
             grid.innerHTML = html;
-        }
+    }
 
         function setFeaturedPicture(pictureId) {
             if (!confirm('Set this picture as the featured image?')) return;
             
-            const roomId = document.getElementById('pictureRoomId').value;
-            
-            fetch('api/room-pictures.php?action=set_featured', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    room_id: roomId,
-                    picture_id: pictureId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Picture set as featured!');
-                    loadRoomPictures(roomId);
-                    // Refresh page to update featured image in table
-                    setTimeout(() => window.location.reload(), 1000);
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                alert('Error setting featured picture: ' + error);
-            });
-        }
-
-        function deletePicture(pictureId) {
-            if (!confirm('Are you sure you want to delete this picture?')) return;
-            
-            const roomId = document.getElementById('pictureRoomId').value;
-            
-            fetch(`api/room-pictures.php?picture_id=${pictureId}`, {
-                method: 'DELETE'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Picture deleted successfully!');
-                    loadRoomPictures(roomId);
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                alert('Error deleting picture: ' + error);
-            });
-        }
-
-        // Handle picture upload form submission
-        document.getElementById('pictureUploadForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
+            const formData = new FormData();
+            formData.append('action', 'set_featured');
+            formData.append('picture_id', pictureId);
             
             fetch('api/room-pictures.php', {
                 method: 'POST',
@@ -1333,26 +1384,74 @@ try {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Picture uploaded successfully!');
-                    this.reset();
+                    Alert.show('Picture set as featured!', 'success');
                     const roomId = document.getElementById('pictureRoomId').value;
                     loadRoomPictures(roomId);
+                    // Refresh page to update featured image in table
+                    setTimeout(() => window.location.reload(), 1000);
                 } else {
-                    alert(data.message || 'Error uploading picture');
+                    Alert.show(data.message || 'Error setting featured picture', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error uploading picture');
+                Alert.show('Error setting featured picture', 'error');
+            });
+        }
+
+        function deletePicture(pictureId) {
+            if (!confirm('Are you sure you want to deootIdis documept.gitEle?en)ByIdr'pictureRoomId'e.valueturn;
+         
+             etch('api/ oo
+-pic ures  h ?onst f=ata = new For, {ata();
+            a(hoo: nPUT''
+                 headers:f{or        mData.append'Cont'np-Type': ureilctauion/jdon 
+                }        
+          btcyh(JSpN.stringify({om    -pictures.php', ro
+m_i   ro mId,
+                    pictu e_id: pic ureId
+                })    method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+           a    ata.success) {
+           t  = document.getElementById('pictureRoomId').value;
+                    loadRoomPictures(roomId);
+                } else {
+                    Alert.show(data.message || 'Error deleting picture', 'error');
+                }
+            })
+a     'Error: ' +  .catch(err , error);
+                Alert.show('Error deleting picture', 'error');
+            }am suion
+        document.getElementB: y +d'pictreUploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('api/room-pictrorsId', d cu en  g  Erm  .tByIthen(respoRoomIe ).valpnjson())
+            .then(data => {`                if (p?picture_id=${dictureId}`ta.success) {
+                DELE EAerw('Picture dccess');
+                    this.reset();
+                    const roomId = document.getElementById('pictureRoomId').value;
+            a    adRoomPictures(roomId);
+       else 
+                  r            })
+            .catch(error => {
+                console.erroa('Er('Err:r: ' +  error);
+ .ring picture', 'error');
             });
         });
 
-        // Close pictures modal on outside click
-        document.getElementById('picturesModal').addEventListener('click', function(e) {
+        // Close pictures modal oasi udal').addEventListener(': c +ik', fnction(e) {
             if (e.target === this) {
                 closePicturesModal();
             }
         });
-    </script>
+    
+aaat>
 </body>
-</html>
+</hml
+
+
