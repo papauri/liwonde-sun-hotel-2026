@@ -209,6 +209,7 @@ try {
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
     <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     
     <style>
         .theme-section {
