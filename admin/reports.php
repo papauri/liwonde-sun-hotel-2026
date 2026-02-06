@@ -27,7 +27,7 @@ if (!in_array($active_tab, $valid_tabs)) {
 
 // Get currency symbol and VAT settings
 $currency_symbol = getSetting('currency_symbol', 'MK');
-$vatEnabled = in_array(getSetting('vat_enabled'), ['1', 1, true, 'true', 'on'], true);
+$vatEnabled = in_array(getSetting('vat_enabled'), ['1', 'true', 'on']);
 $vatRate = (float)getSetting('vat_rate', 0);
 
 // Initialize all data arrays with defaults
@@ -1204,8 +1204,13 @@ try {
                                 <?php echo number_format($reviewStats['avg_rating'], 1); ?>/5
                                 <span class="star-rating">
                                     <?php for ($s = 1; $s <= 5; $s++): ?>
-                                        <i class="fas fa-star<?php echo $s <= round($reviewStats['avg_rating']) ? '' : '-half-alt'; ?>" 
-                                           style="color: <?php echo $s <= round($reviewStats['avg_rating']) ? '#D4AF37' : '#ddd'; ?>;"></i>
+                                        <?php if ($s <= floor($reviewStats['avg_rating'])): ?>
+                                            <i class="fas fa-star" style="color: #D4AF37;"></i>
+                                        <?php elseif ($s == ceil($reviewStats['avg_rating']) && $reviewStats['avg_rating'] != floor($reviewStats['avg_rating'])): ?>
+                                            <i class="fas fa-star-half-alt" style="color: #D4AF37;"></i>
+                                        <?php else: ?>
+                                            <i class="far fa-star" style="color: #ddd;"></i>
+                                        <?php endif; ?>
                                     <?php endfor; ?>
                                 </span>
                             </span>
@@ -1403,7 +1408,7 @@ try {
                     endDate = new Date(today.getFullYear(), 11, 31).toISOString().split('T')[0];
                     break;
                 case 'all':
-                    startDate = '2020-01-01';
+                    startDate = new Date(today.getFullYear() - 5, 0, 1).toISOString().split('T')[0];
                     endDate = new Date(today.getFullYear(), 11, 31).toISOString().split('T')[0];
                     break;
             }

@@ -11,7 +11,7 @@ $report_type = $_GET['report_type'] ?? 'overview';
 
 // Set headers for CSV download
 header('Content-Type: text/csv');
-header('Content-Disposition: attachment; filename="hotel-report-' . htmlspecialchars($report_type) . '-' . date('Y-m-d') . '.csv"');
+header('Content-Disposition: attachment; filename="hotel-report-' . preg_replace('/[^a-zA-Z0-9_-]/', '', $report_type) . '-' . date('Y-m-d') . '.csv"');
 header('Pragma: no-cache');
 header('Expires: 0');
 
