@@ -188,10 +188,12 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/theme-dynamic.php">
     <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     
     <style>
-        /* Menu management specific styles */
+        /* Menu management specific styles - unique to this page */
         .btn-add {
             background: var(--gold);
             color: var(--deep-navy);
@@ -963,7 +965,7 @@ try {
     </style>
 </head>
 <body>
-    <?php require_once 'admin-header.php'; ?>
+    <?php require_once 'includes/admin-header.php'; ?>
     
     <div class="content">
         <div class="page-header">

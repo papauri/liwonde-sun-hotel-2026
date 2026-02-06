@@ -126,7 +126,9 @@ $currency_symbol = getSetting('currency_symbol');
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/theme-dynamic.php">
     <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     
     <style>
         .tentative-page {
@@ -338,7 +340,7 @@ $currency_symbol = getSetting('currency_symbol');
     </style>
 </head>
 <body>
-    <?php require_once 'admin-header.php'; ?>
+    <?php require_once 'includes/admin-header.php'; ?>
 
     <div class="tentative-page">
         <div class="page-header">

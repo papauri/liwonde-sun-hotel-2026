@@ -156,6 +156,14 @@ try {
         ORDER BY event_date ASC, display_order ASC
     ");
     $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Mark expired events
+    $today = date('Y-m-d');
+    foreach ($events as &$event) {
+        $event['is_expired'] = ($event['event_date'] < $today);
+    }
+    unset($event);
+    
 } catch (PDOException $e) {
     $error = 'Error fetching events: ' . $e->getMessage();
     $events = [];
@@ -173,10 +181,12 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/theme-dynamic.php">
     <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     
     <style>
-        /* Events management specific styles */
+        /* Events management specific styles - unique to this page */
         .btn-add {
             background: var(--gold);
             color: var(--deep-navy);
@@ -339,10 +349,34 @@ try {
             background: #17a2b8;
             color: white;
         }
+        .badge-expired {
+            background: #dc3545;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
         .status-badges {
             display: flex;
             flex-direction: column;
             gap: 4px;
+        }
+        .event-table tbody tr.expired-event {
+            background: rgba(220, 53, 69, 0.05);
+        }
+        .event-table tbody tr.expired-event:hover {
+            background: rgba(220, 53, 69, 0.1);
+        }
+        .event-table tbody tr.expired-event .title-cell strong {
+            color: #666;
+            text-decoration: line-through;
+        }
+        .event-table tbody tr.expired-event .event-thumb,
+        .event-table tbody tr.expired-event .event-thumb-placeholder {
+            filter: grayscale(100%);
+            opacity: 0.5;
         }
         .btn-action {
             padding: 6px 14px;
@@ -917,7 +951,7 @@ try {
     </style>
 </head>
 <body>
-    <?php require_once 'admin-header.php'; ?>
+    <?php require_once 'includes/admin-header.php'; ?>
 
     <div class="content">
         <div class="page-header">
@@ -953,7 +987,7 @@ try {
                     </thead>
                     <tbody>
                         <?php foreach ($events as $event): ?>
-                            <tr id="row-<?php echo $event['id']; ?>">
+                            <tr id="row-<?php echo $event['id']; ?>" <?php echo $event['is_expired'] ? 'class="expired-event"' : ''; ?>>
                                 <td>
                                     <div class="title-cell cell-view">
                                         <?php if (!empty($event['image_path'])): ?>
@@ -1007,6 +1041,9 @@ try {
                                 <td>
                                     <span class="cell-view">
                                         <div class="status-badges">
+                                            <?php if ($event['is_expired']): ?>
+                                                <span class="badge badge-expired"><i class="fas fa-calendar-times"></i> Expired</span>
+                                            <?php endif; ?>
                                             <?php if ($event['is_active']): ?>
                                                 <span class="badge badge-active"><i class="fas fa-check-circle"></i> Active</span>
                                             <?php else: ?>

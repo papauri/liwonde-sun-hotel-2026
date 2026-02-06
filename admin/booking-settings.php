@@ -109,27 +109,13 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/theme-dynamic.php">
     <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="css/admin-components.css">
     <style>
-        body {
-            background: #f5f5f5;
-        }
-        .page-header {
-            background: white;
-            padding: 20px 30px;
-            border-bottom: 2px solid #D4AF37;
-            margin-bottom: 30px;
-        }
-        .page-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 28px;
-            color: #0A1929;
-            margin: 0;
-        }
+        /* Settings page specific styles */
         .content {
             max-width: 900px;
-            margin: 0 auto;
-            padding: 0 20px 40px 20px;
         }
         .settings-card {
             background: white;
@@ -281,7 +267,7 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
     </style>
 </head>
 <body>
-    <?php require_once 'admin-header.php'; ?>
+    <?php require_once 'includes/admin-header.php'; ?>
 
     <div class="content">
         <a href="dashboard.php" class="back-link">

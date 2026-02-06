@@ -1215,7 +1215,7 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
 </head>
 <body>
 
-    <?php require_once 'admin-header.php'; ?>
+    <?php require_once 'includes/admin-header.php'; ?>
     
     <div class="content">
         <div class="stats-grid">

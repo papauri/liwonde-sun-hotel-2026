@@ -385,7 +385,7 @@ $site_name = getSetting('site_name');
 </head>
 <body>
 
-    <?php require_once 'admin-header.php'; ?>
+    <?php require_once 'includes/admin-header.php'; ?>
     
     <div class="content">
         <h2 class="section-title">Blocked Dates Management</h2>

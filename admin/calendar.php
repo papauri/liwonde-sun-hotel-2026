@@ -147,6 +147,7 @@ $today = date('Y-m-d');
     <link rel="stylesheet" href="css/admin-styles.css">
     <link rel="stylesheet" href="css/admin-components.css">
     <style>
+        /* Calendar-specific styles - unique to this page */
         .calendar-container {
             background: white;
             border-radius: 8px;
@@ -376,18 +377,18 @@ $today = date('Y-m-d');
 </head>
 <body>
 
-    <?php require_once 'admin-header.php'; ?>
+    <?php require_once 'includes/admin-header.php'; ?>
     
     <div class="content">
-        <h1 style="margin-bottom: 20px; color: #0A1929;">📅 Room Calendar</h1>
+        <h2 class="section-title">📅 Room Calendar</h2>
         
-        <div class="calendar-actions">
+        <div class="calendar-actions mb-3">
             <a href="bookings.php">← Back to Bookings</a>
             <a href="dashboard.php">Dashboard</a>
         </div>
         
         <?php if (isset($error)): ?>
-            <div class="alert alert-danger" style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <div class="alert alert-error">
                 <?php echo htmlspecialchars($error); ?>
             </div>
         <?php endif; ?>
@@ -503,7 +504,10 @@ $today = date('Y-m-d');
                     <?php endforeach; ?>
                 </div>
             <?php else: ?>
-                <p style="text-align: center; padding: 40px; color: #666;">No rooms found.</p>
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No rooms found.</p>
+                </div>
             <?php endif; ?>
         </div>
     </div>

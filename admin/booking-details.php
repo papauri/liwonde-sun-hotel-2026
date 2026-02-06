@@ -533,7 +533,7 @@ $currency_symbol = getSetting('currency_symbol');
 </head>
 <body>
 
- <?php require_once 'admin-header.php'; ?>
+ <?php require_once 'includes/admin-header.php'; ?>
     
     <div class="booking-details-container">
         <div class="details-card">

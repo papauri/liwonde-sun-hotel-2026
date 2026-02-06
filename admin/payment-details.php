@@ -539,7 +539,7 @@ $dueAmount = $bookingTotalAmount - $paymentSummary['total_paid'];
 </head>
 <body>
 
-    <?php require_once 'admin-header.php'; ?>
+    <?php require_once 'includes/admin-header.php'; ?>
 
     <div class="content">
         <div class="page-header">

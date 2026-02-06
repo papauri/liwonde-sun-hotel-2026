@@ -567,7 +567,7 @@ try {
 </head>
 <body>
 
-    <?php require_once 'admin-header.php'; ?>
+    <?php require_once 'includes/admin-header.php'; ?>
     
     <div class="content">
         <?php if ($message): ?>

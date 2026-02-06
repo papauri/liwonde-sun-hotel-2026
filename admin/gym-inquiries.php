@@ -91,20 +91,7 @@ try {
     <link rel="stylesheet" href="css/admin-components.css">
     
     <style>
-        .gym-inquiries-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        
-        .gym-inquiries-header h2 {
-            margin: 0;
-            color: var(--navy);
-        }
-        
+        /* Filter tabs - unique to this page */
         .filter-tabs {
             display: flex;
             gap: 8px;
@@ -143,6 +130,7 @@ try {
             margin-left: 6px;
         }
         
+        /* Search bar - uses standard form-control */
         .search-bar {
             display: flex;
             gap: 12px;
@@ -153,69 +141,9 @@ try {
         .search-bar input {
             flex: 1;
             min-width: 250px;
-            padding: 10px 16px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            font-size: 14px;
         }
         
-        .search-bar input:focus {
-            outline: none;
-            border-color: var(--gold);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
-        }
-        
-        .table-container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-        }
-        
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .table thead {
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-        }
-        
-        .table th {
-            padding: 16px;
-            text-align: left;
-            font-weight: 600;
-            color: var(--navy);
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #e8e8e8;
-        }
-        
-        .table td {
-            padding: 16px;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 14px;
-        }
-        
-        .table tbody tr:hover {
-            background: #fafbfc;
-        }
-        
-        .table tbody tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
+        /* Status badges for gym inquiries - custom colors */
         .badge-new {
             background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
             color: white;
@@ -241,48 +169,11 @@ try {
             color: white;
         }
         
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        .btn-primary {
-            background: var(--gold);
-            color: var(--deep-navy);
-        }
-        
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-        
+        /* Status select dropdown */
         .status-select {
             padding: 6px 12px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
             font-size: 13px;
             background: white;
             cursor: pointer;
@@ -293,23 +184,71 @@ try {
             border-color: var(--gold);
         }
         
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
+        /* Action buttons container */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 16px;
-            opacity: 0.3;
+        /* Modal for inquiry details - unique to this page */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
         }
         
-        .empty-state p {
-            font-size: 16px;
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: var(--radius-lg);
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-header h3 {
             margin: 0;
+            color: var(--navy);
         }
         
+        .close {
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s ease;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        /* Inquiry details grid in modal */
         .inquiry-details {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -335,62 +274,6 @@ try {
             color: var(--navy);
         }
         
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: slideUp 0.3s ease;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 24px;
-            border-bottom: 1px solid #e8e8e8;
-        }
-        
-        .modal-header h3 {
-            margin: 0;
-            color: var(--navy);
-        }
-        
-        .close {
-            font-size: 28px;
-            cursor: pointer;
-            color: #999;
-            transition: color 0.2s ease;
-        }
-        
-        .close:hover {
-            color: #333;
-        }
-        
-        .modal-body {
-            padding: 24px;
-        }
-        
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -402,11 +285,6 @@ try {
         }
         
         @media (max-width: 768px) {
-            .gym-inquiries-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
             .filter-tabs {
                 width: 100%;
                 overflow-x: auto;
@@ -415,29 +293,12 @@ try {
             .search-bar {
                 flex-direction: column;
             }
-            
-            .search-bar input {
-                width: 100%;
-            }
-            
-            .table {
-                font-size: 12px;
-            }
-            
-            .table th,
-            .table td {
-                padding: 12px 8px;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-            }
         }
     </style>
 </head>
 <body>
 
-    <?php require_once 'admin-header.php'; ?>
+    <?php require_once 'includes/admin-header.php'; ?>
     
     <div class="content">
         <?php if ($message): ?>
@@ -447,8 +308,8 @@ try {
             <?php showAlert($error, 'error'); ?>
         <?php endif; ?>
 
-        <div class="gym-inquiries-header">
-            <h2><i class="fas fa-dumbbell"></i> Gym Inquiries Management</h2>
+        <div class="page-header">
+            <h2 class="section-title"><i class="fas fa-dumbbell"></i> Gym Inquiries Management</h2>
         </div>
 
         <!-- Filter Tabs -->
@@ -475,7 +336,7 @@ try {
 
         <!-- Search Bar -->
         <form method="GET" class="search-bar">
-            <input type="text" name="search" placeholder="Search by name, email, phone, or reference..." value="<?php echo htmlspecialchars($search); ?>">
+            <input type="text" name="search" placeholder="Search by name, email, phone, or reference..." value="<?php echo htmlspecialchars($search); ?>" class="form-control">
             <?php if (!empty($status_filter)): ?>
                 <input type="hidden" name="status" value="<?php echo htmlspecialchars($status_filter); ?>">
             <?php endif; ?>
@@ -503,9 +364,11 @@ try {
                 <tbody>
                     <?php if (empty($gym_inquiries)): ?>
                     <tr>
-                        <td colspan="8" class="empty-state">
-                            <i class="fas fa-inbox"></i>
-                            <p>No gym inquiries found</p>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>No gym inquiries found</p>
+                            </div>
                         </td>
                     </tr>
                     <?php else: ?>
