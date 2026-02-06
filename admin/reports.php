@@ -61,6 +61,17 @@ $cancellationRate = 0;
 $totalStatusCount = 0;
 $error = null;
 
+$adr = 0;
+$revpar = 0;
+$noShowRate = 0;
+$adrData = ['total_room_revenue' => 0, 'total_nights_sold' => 0];
+$noShowData = ['total_confirmed' => 0, 'no_shows' => 0];
+$forecastData = ['upcoming_bookings' => 0, 'forecast_revenue' => 0, 'upcoming_nights' => 0];
+$cancelData = ['total' => 0, 'cancelled' => 0];
+$monthlyAdr = [];
+$totalRoomNightsAvailable = 0;
+$totalRoomInventory = 0;
+
 $statusLabels = [
     'pending' => 'Pending',
     'partial' => 'Partial Payment',
@@ -427,6 +438,73 @@ try {
     $gymStatsStmt->execute([$start_date, $end_date]);
     $gymInquiryStats = $gymStatsStmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // ============================================
+    // ADVANCED HOTEL KPI METRICS
+    // ============================================
+
+    // 23. ADR (Average Daily Rate) = Total Room Revenue / Number of Room Nights Sold
+    $adrStmt = $pdo->prepare("
+        SELECT COALESCE(SUM(b.total_amount), 0) as total_room_revenue,
+               COALESCE(SUM(b.number_of_nights), 0) as total_nights_sold
+        FROM bookings b
+        WHERE b.status IN ('confirmed', 'checked-in', 'checked-out')
+        AND b.created_at >= ? AND b.created_at <= DATE_ADD(?, INTERVAL 1 DAY)
+    ");
+    $adrStmt->execute([$start_date, $end_date]);
+    $adrData = $adrStmt->fetch(PDO::FETCH_ASSOC);
+    $adr = $adrData['total_nights_sold'] > 0 
+        ? round($adrData['total_room_revenue'] / $adrData['total_nights_sold'], 0) 
+        : 0;
+
+    // 24. RevPAR (Revenue Per Available Room) = Total Room Revenue / Total Available Room Nights
+    $revpar = $totalRoomNightsAvailable > 0 
+        ? round($adrData['total_room_revenue'] / $totalRoomNightsAvailable, 0) 
+        : 0;
+
+    // 25. No-Show Rate
+    $noShowStmt = $pdo->prepare("
+        SELECT 
+            COUNT(*) as total_confirmed,
+            SUM(CASE WHEN status = 'no-show' THEN 1 ELSE 0 END) as no_shows
+        FROM bookings
+        WHERE status IN ('confirmed', 'checked-in', 'checked-out', 'no-show')
+        AND created_at >= ? AND created_at <= DATE_ADD(?, INTERVAL 1 DAY)
+    ");
+    $noShowStmt->execute([$start_date, $end_date]);
+    $noShowData = $noShowStmt->fetch(PDO::FETCH_ASSOC);
+    $noShowRate = $noShowData['total_confirmed'] > 0 
+        ? round(($noShowData['no_shows'] / $noShowData['total_confirmed']) * 100, 1) 
+        : 0;
+
+    // 26. Revenue Forecast (from future confirmed bookings)
+    $forecastStmt = $pdo->query("
+        SELECT COUNT(*) as upcoming_bookings,
+               COALESCE(SUM(total_amount), 0) as forecast_revenue,
+               COALESCE(SUM(number_of_nights), 0) as upcoming_nights
+        FROM bookings
+        WHERE status IN ('confirmed', 'tentative')
+        AND check_in_date > CURDATE()
+    ");
+    $forecastData = $forecastStmt->fetch(PDO::FETCH_ASSOC);
+
+    // 27. Monthly ADR trend
+    $monthlyAdrStmt = $pdo->prepare("
+        SELECT DATE_FORMAT(b.created_at, '%Y-%m') as month,
+               DATE_FORMAT(b.created_at, '%b %Y') as month_label,
+               COALESCE(SUM(b.total_amount), 0) as revenue,
+               COALESCE(SUM(b.number_of_nights), 0) as nights_sold,
+               CASE WHEN SUM(b.number_of_nights) > 0 
+                    THEN ROUND(SUM(b.total_amount) / SUM(b.number_of_nights), 0) 
+                    ELSE 0 END as adr
+        FROM bookings b
+        WHERE b.status IN ('confirmed', 'checked-in', 'checked-out')
+        AND b.created_at >= ? AND b.created_at <= DATE_ADD(?, INTERVAL 1 DAY)
+        GROUP BY month, month_label
+        ORDER BY month ASC
+    ");
+    $monthlyAdrStmt->execute([$start_date, $end_date]);
+    $monthlyAdr = $monthlyAdrStmt->fetchAll(PDO::FETCH_ASSOC);
+
 } catch (PDOException $e) {
     $error = "Unable to load report data. Please try again.";
     error_log("Reports error: " . $e->getMessage());
@@ -712,6 +790,35 @@ try {
                 </div>
             </div>
 
+            <!-- Hotel KPIs Row -->
+            <div class="summary-cards" style="margin-top: 0;">
+                <div class="summary-card" style="border-left: 4px solid #007bff;">
+                    <h3><i class="fas fa-bed"></i> ADR</h3>
+                    <div class="value"><?php echo $currency_symbol . ' ' . number_format($adr); ?></div>
+                    <div class="subtitle">Average Daily Rate (<?php echo number_format($adrData['total_nights_sold']); ?> nights sold)</div>
+                </div>
+                <div class="summary-card" style="border-left: 4px solid #28a745;">
+                    <h3><i class="fas fa-chart-bar"></i> RevPAR</h3>
+                    <div class="value"><?php echo $currency_symbol . ' ' . number_format($revpar); ?></div>
+                    <div class="subtitle">Revenue Per Available Room</div>
+                </div>
+                <div class="summary-card" style="border-left: 4px solid #dc3545;">
+                    <h3><i class="fas fa-ban"></i> Cancellation Rate</h3>
+                    <div class="value"><?php echo $cancellationRate; ?>%</div>
+                    <div class="subtitle"><?php echo $cancelData['cancelled']; ?> of <?php echo $cancelData['total']; ?> bookings</div>
+                </div>
+                <div class="summary-card" style="border-left: 4px solid #795548;">
+                    <h3><i class="fas fa-user-slash"></i> No-Show Rate</h3>
+                    <div class="value"><?php echo $noShowRate; ?>%</div>
+                    <div class="subtitle"><?php echo $noShowData['no_shows']; ?> no-show(s) in period</div>
+                </div>
+                <div class="summary-card" style="border-left: 4px solid #6f42c1;">
+                    <h3><i class="fas fa-forward"></i> Revenue Forecast</h3>
+                    <div class="value"><?php echo $currency_symbol . ' ' . number_format($forecastData['forecast_revenue']); ?></div>
+                    <div class="subtitle"><?php echo $forecastData['upcoming_bookings']; ?> upcoming bookings (<?php echo $forecastData['upcoming_nights']; ?> nights)</div>
+                </div>
+            </div>
+
             <!-- Payment Status Overview -->
             <div class="report-section">
                 <h2><i class="fas fa-tasks"></i> Payment Status Overview</h2>
@@ -830,6 +937,16 @@ try {
                     <div class="value"><?php echo $currency_symbol . ' ' . number_format($totalVatCollected, 2); ?></div>
                 </div>
                 <?php endif; ?>
+                <div class="summary-card" style="border-left: 4px solid #007bff;">
+                    <h3>ADR</h3>
+                    <div class="value"><?php echo $currency_symbol . ' ' . number_format($adr); ?></div>
+                    <div class="subtitle">Avg Daily Rate</div>
+                </div>
+                <div class="summary-card" style="border-left: 4px solid #28a745;">
+                    <h3>RevPAR</h3>
+                    <div class="value"><?php echo $currency_symbol . ' ' . number_format($revpar); ?></div>
+                    <div class="subtitle">Rev Per Available Room</div>
+                </div>
             </div>
 
             <!-- Payment Method Breakdown -->
@@ -952,6 +1069,28 @@ try {
                 <?php endif; ?>
             </div>
             <?php endif; ?>
+
+            <!-- Monthly ADR Trend -->
+            <div class="report-section">
+                <h2><i class="fas fa-chart-line"></i> Monthly ADR Trend</h2>
+                <?php if (empty($monthlyAdr)): ?>
+                    <div class="empty-state"><i class="fas fa-chart-line"></i><p>No ADR data for this period</p></div>
+                <?php else: ?>
+                    <table class="report-table">
+                        <thead><tr><th>Month</th><th>Revenue</th><th>Nights Sold</th><th>ADR</th></tr></thead>
+                        <tbody>
+                        <?php foreach ($monthlyAdr as $ma): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($ma['month_label']); ?></td>
+                                <td><?php echo $currency_symbol . ' ' . number_format($ma['revenue'], 2); ?></td>
+                                <td><?php echo number_format($ma['nights_sold']); ?></td>
+                                <td><strong><?php echo $currency_symbol . ' ' . number_format($ma['adr']); ?></strong></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
         </div>
 
         <!-- ============================================ -->

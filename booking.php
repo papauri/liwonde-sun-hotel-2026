@@ -1118,26 +1118,6 @@ try {
             }
         }
 
-        function checkRoomAvailability(roomId, checkIn, checkOut, callback) {
-            const url = `check-availability.php?room_id=${roomId}&check_in=${checkIn}&check_out=${checkOut}`;
-            
-            fetch(url)
-                .then(response => response.json())
-                .then(callback)
-                .catch(error => {
-                    console.error('Availability check failed:', error);
-                    callback({ available: false, message: 'Unable to check availability' });
-                });
-        }
-
-        function showAvailabilityMessage(message, isSuccess) {
-            // Use the new Alert component
-            Alert.show(message, isSuccess ? 'success' : 'error', {
-                timeout: 5000,
-                position: 'top'
-            });
-        }
-
         document.getElementById('check_in_date').addEventListener('change', function() {
             const checkIn = new Date(this.value);
             const nextDay = new Date(checkIn);

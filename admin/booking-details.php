@@ -9,15 +9,16 @@ $user = [
     'full_name' => $_SESSION['admin_full_name']
 ];
 $booking_id = filter_var($_GET['id'] ?? 0, FILTER_VALIDATE_INT);
-$action = $_GET['action'] ?? '';
 
 if (!$booking_id) {
     header('Location: dashboard.php');
     exit;
 }
 
-// Handle status changes
-if ($action && $_SERVER['REQUEST_METHOD'] === 'GET') {
+// Handle status changes (POST-only for CSRF protection)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_action'])) {
+    $action = $_POST['booking_action'];
+    
     try {
         switch ($action) {
             case 'convert':
@@ -41,16 +42,20 @@ if ($action && $_SERVER['REQUEST_METHOD'] === 'GET') {
                     $update->execute([$booking_id]);
                     
                     // Log the conversion
-                    $log_stmt = $pdo->prepare("
-                        INSERT INTO tentative_booking_log (
-                            booking_id, action, action_by, action_at, notes
-                        ) VALUES (?, 'converted', ?, NOW(), ?)
-                    ");
-                    $log_stmt->execute([
-                        $booking_id,
-                        $user['id'],
-                        'Converted from tentative to confirmed by admin'
-                    ]);
+                    try {
+                        $log_stmt = $pdo->prepare("
+                            INSERT INTO tentative_booking_log (
+                                booking_id, action, action_by, action_at, notes
+                            ) VALUES (?, 'converted', ?, NOW(), ?)
+                        ");
+                        $log_stmt->execute([
+                            $booking_id,
+                            $user['id'],
+                            'Converted from tentative to confirmed by admin'
+                        ]);
+                    } catch (PDOException $logError) {
+                        error_log("Tentative log error: " . $logError->getMessage());
+                    }
                     
                     // Send conversion email
                     require_once '../config/email.php';
@@ -67,19 +72,84 @@ if ($action && $_SERVER['REQUEST_METHOD'] === 'GET') {
             case 'confirm':
                 $stmt = $pdo->prepare("UPDATE bookings SET status = 'confirmed', updated_at = NOW() WHERE id = ? AND status = 'pending'");
                 $stmt->execute([$booking_id]);
-                $_SESSION['success_message'] = 'Booking confirmed successfully.';
+                
+                // Decrement room availability
+                $room_stmt = $pdo->prepare("SELECT room_id FROM bookings WHERE id = ?");
+                $room_stmt->execute([$booking_id]);
+                $booking_room = $room_stmt->fetch(PDO::FETCH_ASSOC);
+                if ($booking_room) {
+                    $pdo->prepare("UPDATE rooms SET rooms_available = rooms_available - 1 WHERE id = ? AND rooms_available > 0")
+                        ->execute([$booking_room['room_id']]);
+                }
+                
+                // Send confirmation email
+                require_once '../config/email.php';
+                $conf_stmt = $pdo->prepare("SELECT b.*, r.name as room_name FROM bookings b LEFT JOIN rooms r ON b.room_id = r.id WHERE b.id = ?");
+                $conf_stmt->execute([$booking_id]);
+                $conf_booking = $conf_stmt->fetch(PDO::FETCH_ASSOC);
+                if ($conf_booking) {
+                    $email_result = sendBookingConfirmedEmail($conf_booking);
+                    $_SESSION['success_message'] = 'Booking confirmed.' . ($email_result['success'] ? ' Confirmation email sent.' : '');
+                } else {
+                    $_SESSION['success_message'] = 'Booking confirmed successfully.';
+                }
                 break;
             
             case 'checkin':
-                $stmt = $pdo->prepare("UPDATE bookings SET status = 'checked-in', updated_at = NOW() WHERE id = ? AND status = 'confirmed'");
-                $stmt->execute([$booking_id]);
-                $_SESSION['success_message'] = 'Guest checked in successfully.';
+                // Enforce payment check on check-in
+                $check_stmt = $pdo->prepare("SELECT status, payment_status FROM bookings WHERE id = ?");
+                $check_stmt->execute([$booking_id]);
+                $check_row = $check_stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$check_row) {
+                    $_SESSION['error_message'] = 'Booking not found.';
+                } elseif ($check_row['status'] !== 'confirmed') {
+                    $_SESSION['error_message'] = 'Only confirmed bookings can be checked in.';
+                } elseif ($check_row['payment_status'] !== 'paid') {
+                    $_SESSION['error_message'] = 'Cannot check in: booking must be PAID first.';
+                } else {
+                    $stmt = $pdo->prepare("UPDATE bookings SET status = 'checked-in', updated_at = NOW() WHERE id = ?");
+                    $stmt->execute([$booking_id]);
+                    $_SESSION['success_message'] = 'Guest checked in successfully.';
+                }
                 break;
             
             case 'checkout':
                 $stmt = $pdo->prepare("UPDATE bookings SET status = 'checked-out', updated_at = NOW() WHERE id = ? AND status = 'checked-in'");
                 $stmt->execute([$booking_id]);
-                $_SESSION['success_message'] = 'Guest checked out successfully.';
+                if ($stmt->rowCount() > 0) {
+                    // Restore room availability
+                    $room_stmt = $pdo->prepare("SELECT room_id FROM bookings WHERE id = ?");
+                    $room_stmt->execute([$booking_id]);
+                    $checkout_room = $room_stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($checkout_room) {
+                        $pdo->prepare("UPDATE rooms SET rooms_available = rooms_available + 1 WHERE id = ? AND rooms_available < total_rooms")
+                            ->execute([$checkout_room['room_id']]);
+                    }
+                    $_SESSION['success_message'] = 'Guest checked out successfully. Room availability restored.';
+                } else {
+                    $_SESSION['error_message'] = 'Only checked-in guests can be checked out.';
+                }
+                break;
+            
+            case 'noshow':
+                $check_stmt = $pdo->prepare("SELECT status, room_id FROM bookings WHERE id = ?");
+                $check_stmt->execute([$booking_id]);
+                $noshow_row = $check_stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($noshow_row && in_array($noshow_row['status'], ['confirmed', 'pending'])) {
+                    $stmt = $pdo->prepare("UPDATE bookings SET status = 'no-show', updated_at = NOW() WHERE id = ?");
+                    $stmt->execute([$booking_id]);
+                    
+                    // Restore room availability if was confirmed
+                    if ($noshow_row['status'] === 'confirmed') {
+                        $pdo->prepare("UPDATE rooms SET rooms_available = rooms_available + 1 WHERE id = ? AND rooms_available < total_rooms")
+                            ->execute([$noshow_row['room_id']]);
+                    }
+                    $_SESSION['success_message'] = 'Booking marked as no-show.';
+                } else {
+                    $_SESSION['error_message'] = 'Cannot mark as no-show from current status.';
+                }
                 break;
             
             case 'cancel':
@@ -106,7 +176,7 @@ if ($action && $_SERVER['REQUEST_METHOD'] === 'GET') {
                     
                     // Send cancellation email
                     require_once '../config/email.php';
-                    $cancellation_reason = $_GET['reason'] ?? 'Cancelled by admin';
+                    $cancellation_reason = $_POST['cancellation_reason'] ?? 'Cancelled by admin';
                     $email_result = sendBookingCancelledEmail($booking, $cancellation_reason);
                     
                     // Log cancellation to database
@@ -149,7 +219,7 @@ if ($action && $_SERVER['REQUEST_METHOD'] === 'GET') {
         error_log("Booking action error: " . $e->getMessage());
     }
     
-    header('Location: dashboard.php');
+    header("Location: booking-details.php?id=$booking_id");
     exit;
 }
 
@@ -677,34 +747,56 @@ $currency_symbol = getSetting('currency_symbol');
                 <label style="display: block; margin-bottom: 12px; font-weight: 600;">Quick Actions</label>
                 <div class="action-buttons">
                     <?php if ($booking['status'] == 'tentative' || $booking['is_tentative'] == 1): ?>
-                    <a href="booking-details.php?id=<?php echo $booking_id; ?>&action=convert" class="btn btn-success" onclick="return confirm('Convert this tentative booking to confirmed? This will send a confirmation email to the guest.')">
-                        <i class="fas fa-check"></i> Convert to Confirmed
-                    </a>
+                    <form method="POST" style="display:inline;" onsubmit="return confirm('Convert this tentative booking to confirmed?')">
+                        <input type="hidden" name="booking_action" value="convert">
+                        <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Convert to Confirmed</button>
+                    </form>
                     <?php endif; ?>
                     
                     <?php if ($booking['status'] == 'pending'): ?>
-                    <a href="booking-details.php?id=<?php echo $booking_id; ?>&action=confirm" class="btn btn-success" onclick="return confirm('Confirm this booking?')">
-                        <i class="fas fa-check"></i> Confirm Booking
-                    </a>
+                    <form method="POST" style="display:inline;" onsubmit="return confirm('Confirm this booking?')">
+                        <input type="hidden" name="booking_action" value="confirm">
+                        <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Confirm Booking</button>
+                    </form>
                     <?php endif; ?>
 
                     <?php if ($booking['status'] == 'confirmed'): ?>
-                    <a href="booking-details.php?id=<?php echo $booking_id; ?>&action=checkin" class="btn btn-primary" onclick="return confirm('Check in this guest?')">
-                        <i class="fas fa-sign-in-alt"></i> Check In
-                    </a>
+                    <?php $can_checkin = ($booking['actual_payment_status'] === 'paid' || $booking['actual_payment_status'] === 'completed'); ?>
+                    <form method="POST" style="display:inline;" onsubmit="return confirm('Check in this guest?')">
+                        <input type="hidden" name="booking_action" value="checkin">
+                        <button type="submit" class="btn btn-primary" <?php echo $can_checkin ? '' : 'disabled title="Guest must pay before check-in"'; ?>>
+                            <i class="fas fa-sign-in-alt"></i> Check In
+                        </button>
+                    </form>
+                    <?php if (!$can_checkin): ?>
+                        <small style="color: #dc3545; display: block; margin-top: 4px;"><i class="fas fa-info-circle"></i> Payment required before check-in</small>
+                    <?php endif; ?>
                     <?php endif; ?>
 
                     <?php if ($booking['status'] == 'checked-in'): ?>
-                    <a href="booking-details.php?id=<?php echo $booking_id; ?>&action=checkout" class="btn btn-warning" onclick="return confirm('Check out this guest?')">
-                        <i class="fas fa-sign-out-alt"></i> Check Out
-                    </a>
+                    <form method="POST" style="display:inline;" onsubmit="return confirm('Check out this guest?')">
+                        <input type="hidden" name="booking_action" value="checkout">
+                        <button type="submit" class="btn btn-warning"><i class="fas fa-sign-out-alt"></i> Check Out</button>
+                    </form>
+                    <?php endif; ?>
+                    
+                    <?php if (in_array($booking['status'], ['confirmed', 'pending']) && strtotime($booking['check_in_date']) < strtotime('today')): ?>
+                    <form method="POST" style="display:inline;" onsubmit="return confirm('Mark this booking as no-show? The room will be released.')">
+                        <input type="hidden" name="booking_action" value="noshow">
+                        <button type="submit" class="btn" style="background: #6c757d; color: white;"><i class="fas fa-user-slash"></i> No-Show</button>
+                    </form>
                     <?php endif; ?>
 
-                    <?php if (!in_array($booking['status'], ['checked-out', 'cancelled'])): ?>
-                    <a href="booking-details.php?id=<?php echo $booking_id; ?>&action=cancel" class="btn btn-danger" onclick="return confirm('Cancel this booking? This cannot be undone.')">
-                        <i class="fas fa-times"></i> Cancel Booking
-                    </a>
+                    <?php if (!in_array($booking['status'], ['checked-out', 'cancelled', 'no-show'])): ?>
+                    <form method="POST" style="display:inline;" onsubmit="return confirm('Cancel this booking? This cannot be undone.')">
+                        <input type="hidden" name="booking_action" value="cancel">
+                        <input type="hidden" name="cancellation_reason" value="Cancelled by admin">
+                        <button type="submit" class="btn btn-danger"><i class="fas fa-times"></i> Cancel Booking</button>
+                    </form>
                     <?php endif; ?>
+                    
+                    <a href="bookings.php" class="btn" style="background: #f0f0f0; color: #333;"><i class="fas fa-arrow-left"></i> Back to Bookings</a>
+                    <a href="edit-booking.php?id=<?php echo $booking_id; ?>" class="btn" style="background: #007bff; color: white;"><i class="fas fa-edit"></i> Edit Booking</a>
                 </div>
             </div>
         </div>

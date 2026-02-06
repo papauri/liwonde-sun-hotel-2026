@@ -172,13 +172,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Log the conversion
             $log_stmt = $pdo->prepare("
                 INSERT INTO tentative_booking_log (
-                    booking_id, action, action_by, action_at, notes
-                ) VALUES (?, 'converted', ?, NOW(), ?)
+                    booking_id, action, action_reason, performed_by, created_at
+                ) VALUES (?, 'converted', ?, ?, NOW())
             ");
             $log_stmt->execute([
                 $booking_id,
-                $user['id'],
-                'Converted from tentative to confirmed by admin'
+                'Converted from tentative to confirmed by admin',
+                $user['id']
             ]);
             
             // Send conversion email
@@ -241,8 +241,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Log the conversion
             $log_stmt = $pdo->prepare("
                 INSERT INTO tentative_booking_log (
-                    booking_id, action, new_expires_at, performed_by, created_at
-                ) VALUES (?, 'converted_to_tentative', ?, ?, NOW())
+                    booking_id, action, new_expires_at, action_reason, performed_by, created_at
+                ) VALUES (?, 'created', ?, 'Converted from confirmed to tentative by admin', ?, NOW())
             ");
             $log_stmt->execute([
                 $booking_id,
@@ -495,6 +495,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $message .= ' (Invoice email failed - check logs)';
                 }
             }
+        } elseif ($action === 'checkout') {
+            // Checkout a checked-in booking
+            $booking_id = intval($_POST['id'] ?? 0);
+            if ($booking_id > 0) {
+                // Get booking info
+                $check_stmt = $pdo->prepare("SELECT status, room_id, booking_reference FROM bookings WHERE id = ?");
+                $check_stmt->execute([$booking_id]);
+                $bk = $check_stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($bk && $bk['status'] === 'checked-in') {
+                    // Update status
+                    $upd = $pdo->prepare("UPDATE bookings SET status = 'checked-out', updated_at = NOW() WHERE id = ?");
+                    $upd->execute([$booking_id]);
+                    
+                    // Restore room availability
+                    $restore = $pdo->prepare("UPDATE rooms SET rooms_available = rooms_available + 1 WHERE id = ?");
+                    $restore->execute([$bk['room_id']]);
+                    
+                    $message = 'Booking ' . htmlspecialchars($bk['booking_reference']) . ' checked out successfully. Room availability restored.';
+                } else {
+                    $error = 'Booking is not in checked-in status.';
+                }
+            }
+
+        } elseif ($action === 'noshow') {
+            // Mark a confirmed booking as no-show
+            $booking_id = intval($_POST['id'] ?? 0);
+            if ($booking_id > 0) {
+                // Get booking info
+                $check_stmt = $pdo->prepare("SELECT status, room_id, booking_reference FROM bookings WHERE id = ?");
+                $check_stmt->execute([$booking_id]);
+                $bk = $check_stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($bk && $bk['status'] === 'confirmed') {
+                    // Update status to no-show
+                    $upd = $pdo->prepare("UPDATE bookings SET status = 'no-show', updated_at = NOW() WHERE id = ?");
+                    $upd->execute([$booking_id]);
+                    
+                    // Restore room availability (was decremented at confirmation)
+                    $restore = $pdo->prepare("UPDATE rooms SET rooms_available = rooms_available + 1 WHERE id = ?");
+                    $restore->execute([$bk['room_id']]);
+                    
+                    $message = 'Booking ' . htmlspecialchars($bk['booking_reference']) . ' marked as No-Show. Room availability restored.';
+                } else {
+                    $error = 'Only confirmed bookings can be marked as no-show.';
+                }
+            }
         }
 
     } catch (Throwable $e) {
@@ -502,9 +549,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Handle CSV export
+if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+    try {
+        $export_stmt = $pdo->query("
+            SELECT b.booking_reference, b.guest_name, b.guest_email, b.guest_phone, b.guest_country,
+                   r.name as room_name, b.check_in_date, b.check_out_date, b.number_of_nights,
+                   b.number_of_guests, b.total_amount, b.status, b.payment_status, b.occupancy_type,
+                   b.special_requests, b.created_at
+            FROM bookings b
+            LEFT JOIN rooms r ON b.room_id = r.id
+            ORDER BY b.created_at DESC
+        ");
+        $export_data = $export_stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="bookings-export-' . date('Y-m-d') . '.csv"');
+        
+        $output = fopen('php://output', 'w');
+        fputcsv($output, ['Reference', 'Guest Name', 'Email', 'Phone', 'Country', 'Room', 
+                          'Check-in', 'Check-out', 'Nights', 'Guests', 'Total', 'Status', 
+                          'Payment', 'Occupancy', 'Special Requests', 'Created']);
+        
+        foreach ($export_data as $row) {
+            fputcsv($output, $row);
+        }
+        
+        fclose($output);
+        exit;
+    } catch (PDOException $e) {
+        $error = 'Export failed: ' . $e->getMessage();
+    }
+}
+
+// Handle search
+$search_query = trim($_GET['search'] ?? '');
+$filter_status = $_GET['filter_status'] ?? '';
+$filter_date_from = $_GET['date_from'] ?? '';
+$filter_date_to = $_GET['date_to'] ?? '';
+
 // Fetch all bookings with room details and payment status from payments table
 try {
-    $stmt = $pdo->query("
+    $where_clauses = [];
+    $params = [];
+    
+    if (!empty($search_query)) {
+        $where_clauses[] = "(b.booking_reference LIKE ? OR b.guest_name LIKE ? OR b.guest_email LIKE ? OR b.guest_phone LIKE ? OR r.name LIKE ?)";
+        $search_param = "%{$search_query}%";
+        $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param]);
+    }
+    
+    if (!empty($filter_status)) {
+        $where_clauses[] = "b.status = ?";
+        $params[] = $filter_status;
+    }
+    
+    if (!empty($filter_date_from)) {
+        $where_clauses[] = "b.check_in_date >= ?";
+        $params[] = $filter_date_from;
+    }
+    
+    if (!empty($filter_date_to)) {
+        $where_clauses[] = "b.check_out_date <= ?";
+        $params[] = $filter_date_to;
+    }
+    
+    $where_sql = !empty($where_clauses) ? 'WHERE ' . implode(' AND ', $where_clauses) : '';
+    
+    $stmt = $pdo->prepare("
         SELECT b.*,
                r.name as room_name,
                COALESCE(p.payment_status, b.payment_status) as actual_payment_status,
@@ -513,8 +625,10 @@ try {
         FROM bookings b
         LEFT JOIN rooms r ON b.room_id = r.id
         LEFT JOIN payments p ON b.id = p.booking_id AND p.booking_type = 'room' AND p.status = 'completed'
+        {$where_sql}
         ORDER BY b.created_at DESC
     ");
+    $stmt->execute($params);
     $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Also fetch conference inquiries
@@ -540,6 +654,7 @@ $checked_in = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-
 // Additional statistics for new tabs
 $checked_out = count(array_filter($bookings, fn($b) => $b['status'] === 'checked-out'));
 $cancelled = count(array_filter($bookings, fn($b) => $b['status'] === 'cancelled'));
+$no_show = count(array_filter($bookings, fn($b) => $b['status'] === 'no-show'));
 
 // Count paid/unpaid based on actual payment status from payments table
 $paid = count(array_filter($bookings, fn($b) =>
@@ -928,6 +1043,11 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             color: white;
         }
 
+        .tab-button[data-tab="no-show"].active .tab-count {
+            background: #795548;
+            color: white;
+        }
+
         .tab-button[data-tab="paid"].active .tab-count {
             background: #28a745;
             color: white;
@@ -1033,6 +1153,50 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             <?php showAlert($error, 'error'); ?>
         <?php endif; ?>
 
+        <!-- Search & Tools Bar -->
+        <div class="bookings-toolbar" style="background: white; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+            <form method="GET" style="display: flex; flex-wrap: wrap; gap: 10px; flex: 1; align-items: center;">
+                <div style="position: relative; flex: 1; min-width: 200px;">
+                    <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999;"></i>
+                    <input type="text" name="search" value="<?php echo htmlspecialchars($search_query); ?>" 
+                           placeholder="Search by name, reference, email, phone..."
+                           style="width: 100%; padding: 10px 12px 10px 36px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                </div>
+                <select name="filter_status" style="padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Poppins', sans-serif; min-width: 140px;">
+                    <option value="">All Statuses</option>
+                    <option value="pending" <?php echo $filter_status === 'pending' ? 'selected' : ''; ?>>Pending</option>
+                    <option value="tentative" <?php echo $filter_status === 'tentative' ? 'selected' : ''; ?>>Tentative</option>
+                    <option value="confirmed" <?php echo $filter_status === 'confirmed' ? 'selected' : ''; ?>>Confirmed</option>
+                    <option value="checked-in" <?php echo $filter_status === 'checked-in' ? 'selected' : ''; ?>>Checked In</option>
+                    <option value="checked-out" <?php echo $filter_status === 'checked-out' ? 'selected' : ''; ?>>Checked Out</option>
+                    <option value="cancelled" <?php echo $filter_status === 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
+                    <option value="no-show" <?php echo $filter_status === 'no-show' ? 'selected' : ''; ?>>No-Show</option>
+                </select>
+                <input type="date" name="date_from" value="<?php echo htmlspecialchars($filter_date_from); ?>" 
+                       placeholder="From" title="Check-in from"
+                       style="padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                <input type="date" name="date_to" value="<?php echo htmlspecialchars($filter_date_to); ?>" 
+                       placeholder="To" title="Check-out to"
+                       style="padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                <button type="submit" style="padding: 10px 20px; background: var(--navy, #1a1a2e); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <?php if (!empty($search_query) || !empty($filter_status) || !empty($filter_date_from) || !empty($filter_date_to)): ?>
+                    <a href="bookings.php" style="padding: 10px 16px; color: #666; text-decoration: none; font-size: 14px; border: 1px solid #ddd; border-radius: 8px;">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                <?php endif; ?>
+            </form>
+            <div style="display: flex; gap: 8px;">
+                <a href="bookings.php?export=csv" class="quick-action" style="padding: 10px 16px; background: #28a745; color: white; text-decoration: none; border-radius: 8px; font-size: 13px;">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </a>
+                <a href="create-booking.php" class="quick-action" style="padding: 10px 16px; background: var(--gold, #d4a843); color: var(--deep-navy, #0d0d1a); text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                    <i class="fas fa-plus"></i> New Booking
+                </a>
+            </div>
+        </div>
+
         <!-- Tab Navigation -->
         <div class="tabs-container">
             <div class="tabs-header">
@@ -1085,6 +1249,11 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                     <i class="fas fa-times-circle"></i>
                     Cancelled
                     <span class="tab-count"><?php echo $cancelled; ?></span>
+                </button>
+                <button class="tab-button" data-tab="no-show" data-count="<?php echo $no_show; ?>">
+                    <i class="fas fa-user-slash"></i>
+                    No-Show
+                    <span class="tab-count"><?php echo $no_show; ?></span>
                 </button>
                 <button class="tab-button" data-tab="paid" data-count="<?php echo $paid; ?>">
                     <i class="fas fa-dollar-sign"></i>
@@ -1221,6 +1390,9 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                                     </small>
                                 </td>
                                 <td>
+                                    <a href="booking-details.php?id=<?php echo $booking['id']; ?>" class="quick-action" style="background: #6f42c1; color: white; text-decoration: none;">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
                                     <button class="quick-action" style="background: #007bff; color: white;" onclick="openResendEmailModal(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars($booking['booking_reference'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($booking['status']); ?>')">
                                         <i class="fas fa-envelope"></i> Email
                                     </button>
@@ -1251,11 +1423,24 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                                                 onclick="<?php echo $can_checkin ? "updateStatus({$booking['id']}, 'checked-in')" : "Alert.show('Cannot check in: booking must be PAID first.', 'error')"; ?>">
                                             <i class="fas fa-sign-in-alt"></i> Check In
                                         </button>
+                                        <?php
+                                            // Show no-show button if check-in date has passed
+                                            $checkin_date = new DateTime($booking['check_in_date']);
+                                            $today_dt = new DateTime('today');
+                                            if ($checkin_date < $today_dt):
+                                        ?>
+                                        <button class="quick-action" style="background: #795548; color: white;" onclick="markNoShow(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars($booking['booking_reference'], ENT_QUOTES); ?>')">
+                                            <i class="fas fa-user-slash"></i> No-Show
+                                        </button>
+                                        <?php endif; ?>
                                         <button class="quick-action cancel" onclick="cancelBooking(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars($booking['booking_reference'], ENT_QUOTES); ?>')">
                                             <i class="fas fa-times"></i> Cancel
                                         </button>
                                     <?php endif; ?>
                                     <?php if ($booking['status'] === 'checked-in'): ?>
+                                        <button class="quick-action" style="background: #6c757d; color: white;" onclick="checkoutBooking(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars($booking['booking_reference'], ENT_QUOTES); ?>')">
+                                            <i class="fas fa-sign-out-alt"></i> Checkout
+                                        </button>
                                         <button class="quick-action undo-checkin" onclick="updateStatus(<?php echo $booking['id']; ?>, 'cancel-checkin')">
                                             <i class="fas fa-undo"></i> Cancel Check-in
                                         </button>
@@ -1470,6 +1655,9 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                     case 'cancelled':
                         isVisible = status === 'cancelled';
                         break;
+                    case 'no-show':
+                        isVisible = status === 'no-show';
+                        break;
                     case 'paid':
                         isVisible = payment === 'paid' || payment === 'completed';
                         break;
@@ -1517,6 +1705,7 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                 'checked-in': 'Checked In Guests',
                 'checked-out': 'Checked Out Bookings',
                 'cancelled': 'Cancelled Bookings',
+                'no-show': 'No-Show Bookings',
                 'paid': 'Paid Bookings',
                 'unpaid': 'Unpaid Bookings',
                 'today-bookings': "Today's Bookings",
@@ -1539,6 +1728,7 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             if (tabName === 'checked-in') newIcon = 'fa-sign-in-alt';
             if (tabName === 'checked-out') newIcon = 'fa-sign-out-alt';
             if (tabName === 'cancelled') newIcon = 'fa-times-circle';
+            if (tabName === 'no-show') newIcon = 'fa-user-slash';
             if (tabName === 'paid') newIcon = 'fa-dollar-sign';
             if (tabName === 'unpaid') newIcon = 'fa-exclamation-circle';
             if (tabName === 'today-bookings') newIcon = 'fa-calendar-day';
@@ -1715,6 +1905,54 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             .catch(error => {
                 console.error('Error:', error);
                 Alert.show('Error cancelling booking', 'error');
+            });
+        }
+
+        function checkoutBooking(id, reference) {
+            if (!confirm('Check out booking ' + reference + '?')) return;
+            
+            const formData = new FormData();
+            formData.append('action', 'checkout');
+            formData.append('id', id);
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    Alert.show('Error checking out booking', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Alert.show('Error checking out booking', 'error');
+            });
+        }
+
+        function markNoShow(id, reference) {
+            if (!confirm('Mark booking ' + reference + ' as No-Show? This will restore room availability.')) return;
+            
+            const formData = new FormData();
+            formData.append('action', 'noshow');
+            formData.append('id', id);
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    Alert.show('Error marking as no-show', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Alert.show('Error marking as no-show', 'error');
             });
         }
     </script>
