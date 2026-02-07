@@ -2,6 +2,9 @@
 /* This file contains ONLY admin-specific styles.
    Common styles are inherited from css/style.css */
 
+/* Import responsive/mobile overrides */
+@import url('admin-responsive.css');
+
 /* ============================================
    ADMIN CSS VARIABLES (missing from theme)
    ============================================ */

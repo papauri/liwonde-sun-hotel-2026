@@ -34,8 +34,11 @@ function _canShowNavItem($permission_key) {
             <div class="user-name"><?php echo htmlspecialchars($user['full_name']); ?></div>
             <div class="user-role"><?php echo htmlspecialchars($user['role']); ?></div>
         </div>
+        <button class="admin-nav-toggle" id="adminNavToggle" aria-label="Toggle navigation" aria-expanded="false">
+            <i class="fas fa-bars" id="navToggleIcon"></i>
+        </button>
         <a href="logout.php" class="btn-logout">
-            <i class="fas fa-sign-out-alt"></i> Logout
+            <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
         </a>
     </div>
 </div>
@@ -107,3 +110,35 @@ function _canShowNavItem($permission_key) {
         <?php endif; ?>
     </ul>
 </nav>
+<script>
+(function() {
+    var toggle = document.getElementById('adminNavToggle');
+    var nav = document.querySelector('.admin-nav');
+    var icon = document.getElementById('navToggleIcon');
+    if (toggle && nav) {
+        toggle.addEventListener('click', function() {
+            var isOpen = nav.classList.toggle('nav-open');
+            toggle.setAttribute('aria-expanded', isOpen);
+            icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+        });
+        // Close nav when a link is clicked (mobile)
+        nav.querySelectorAll('a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    nav.classList.remove('nav-open');
+                    toggle.setAttribute('aria-expanded', 'false');
+                    icon.className = 'fas fa-bars';
+                }
+            });
+        });
+        // Close nav when clicking outside
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768 && !nav.contains(e.target) && !toggle.contains(e.target)) {
+                nav.classList.remove('nav-open');
+                toggle.setAttribute('aria-expanded', 'false');
+                icon.className = 'fas fa-bars';
+            }
+        });
+    }
+})();
+</script>

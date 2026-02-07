@@ -1296,6 +1296,6 @@ function updateConferenceEnquiryPayments($pdo, $enquiryId) {
             }
         });
     </script>
+    <script src="js/admin-mobile.js"></script>
 
 </body>
-</html>

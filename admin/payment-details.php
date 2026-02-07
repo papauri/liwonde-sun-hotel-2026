@@ -789,5 +789,5 @@ $dueAmount = $bookingTotalAmount - $paymentSummary['total_paid'];
         <?php endif; ?>
     </div>
 
+    <script src="js/admin-mobile.js"></script>
 </body>
-</html>

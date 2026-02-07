@@ -831,5 +831,6 @@ $currency_symbol = getSetting('currency_symbol');
         </div>
     </div>
     <script src="js/admin-components.js"></script>
+    <script src="js/admin-mobile.js"></script>
 </body>
 </html>

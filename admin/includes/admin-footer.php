@@ -8,6 +8,8 @@
         </p>
     </div>
 </footer>
+<!-- Admin Mobile Enhancements -->
+<script src="js/admin-mobile.js"></script>
 
 </body>
 </html>
