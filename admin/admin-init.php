@@ -46,4 +46,15 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 // Generate CSRF token for use in forms
 $csrf_token = generateCsrfToken();
+
+// ---- Permission-based Access Control ----
+// Load permissions system and enforce page-level access
+require_once __DIR__ . '/includes/permissions.php';
+
+$_required_permission = getPermissionForPage($current_page);
+if ($_required_permission !== null && !hasPermission($user['id'], $_required_permission)) {
+    // User doesn't have access to this page
+    header('Location: dashboard.php?error=access_denied');
+    exit;
+}
 ?>
