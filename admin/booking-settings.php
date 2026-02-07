@@ -546,6 +546,5 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
                 Your SMTP password is encrypted for security. You can update it anytime in this admin panel.
             </p>
         </div>
-    </div>
-</body>
-</html>
+
+    <?php require_once 'includes/admin-footer.php'; ?>

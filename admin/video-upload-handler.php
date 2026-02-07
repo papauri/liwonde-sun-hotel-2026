@@ -154,6 +154,99 @@ if (!function_exists('formatBytes')) {
 }
 
 /**
+ * Process a video URL (YouTube, Vimeo, Dailymotion, or direct video link)
+ * Returns the URL and detected type for database storage
+ * 
+ * @param string $url The video URL to process
+ * @return array|null Returns array with 'path' (url) and 'type' on success, null if empty/invalid
+ */
+function processVideoUrl($url) {
+    $url = trim($url ?? '');
+    if (empty($url)) {
+        return null;
+    }
+    
+    // Detect video platform
+    if (preg_match('/youtube\.com|youtu\.be/i', $url)) {
+        return ['path' => $url, 'type' => 'youtube'];
+    } elseif (preg_match('/vimeo\.com/i', $url)) {
+        return ['path' => $url, 'type' => 'vimeo'];
+    } elseif (preg_match('/dailymotion\.com|dai\.ly/i', $url)) {
+        return ['path' => $url, 'type' => 'dailymotion'];
+    } elseif (preg_match('/\.(mp4|webm|ogg|mov|avi)(\?|$)/i', $url)) {
+        return ['path' => $url, 'type' => 'video/mp4'];
+    } else {
+        // Treat any other URL as a generic video URL
+        return ['path' => $url, 'type' => 'url'];
+    }
+}
+
+/**
+ * Render a combined video upload + URL input field for admin forms
+ * 
+ * @param string $fieldName Base name for fields (e.g., 'video')
+ * @param string|null $currentVideoPath Current video path/URL
+ * @param string|null $currentVideoType Current video type
+ * @param string $label Field label
+ * @return string HTML output
+ */
+function renderVideoField($fieldName, $currentVideoPath = null, $currentVideoType = null, $label = 'Video') {
+    $isUrl = false;
+    $isExternal = false;
+    if ($currentVideoPath) {
+        $isUrl = in_array($currentVideoType, ['youtube', 'vimeo', 'dailymotion', 'url']);
+        $isExternal = (stripos($currentVideoPath, 'http') === 0);
+    }
+    
+    ob_start();
+    ?>
+    <div class="form-group video-field-group" style="margin-bottom: 16px;">
+        <label style="display:block; font-weight:600; margin-bottom:8px;"><?php echo htmlspecialchars($label); ?></label>
+        
+        <?php if ($currentVideoPath): ?>
+        <div style="background:#f0f7ff; padding:12px; border-radius:8px; border:1px solid #b3d4fc; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                <i class="fas fa-video" style="color:var(--gold);"></i>
+                <strong>Current Video:</strong>
+                <?php if ($isExternal): ?>
+                    <span style="font-size:12px; background:#e3f2fd; padding:2px 8px; border-radius:4px;"><?php echo htmlspecialchars(ucfirst($currentVideoType ?? 'URL')); ?></span>
+                <?php else: ?>
+                    <span style="font-size:12px; background:#e8f5e9; padding:2px 8px; border-radius:4px;">Local File</span>
+                <?php endif; ?>
+            </div>
+            <div style="font-size:13px; color:#555; word-break:break-all;"><?php echo htmlspecialchars($currentVideoPath); ?></div>
+        </div>
+        <?php endif; ?>
+        
+        <!-- Video URL Input -->
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:13px; font-weight:500; margin-bottom:4px;">
+                <i class="fas fa-link"></i> Video URL (YouTube, Vimeo, or direct link)
+            </label>
+            <input type="url" name="<?php echo $fieldName; ?>_url" 
+                   placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
+                   value="<?php echo $isExternal ? htmlspecialchars($currentVideoPath) : ''; ?>"
+                   style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:14px;">
+            <small style="color:#888;">Paste a YouTube, Vimeo, Dailymotion, or direct video URL</small>
+        </div>
+        
+        <div style="text-align:center; color:#999; font-size:12px; margin-bottom:12px;">— OR —</div>
+        
+        <!-- File Upload -->
+        <div style="border:2px dashed #ddd; border-radius:8px; padding:16px; text-align:center; cursor:pointer; background:#f8f9fa;" 
+             onclick="document.getElementById('<?php echo $fieldName; ?>_file').click()">
+            <i class="fas fa-cloud-upload-alt" style="font-size:32px; color:var(--gold); margin-bottom:8px; display:block;"></i>
+            <div style="font-weight:600; font-size:13px;">Upload Video File</div>
+            <div style="font-size:11px; color:#999;">MP4, WebM, OGG — Max 100MB</div>
+        </div>
+        <input type="file" name="<?php echo $fieldName; ?>" id="<?php echo $fieldName; ?>_file" accept="video/*" style="display:none;"
+               onchange="if(this.files[0]) { this.parentElement.querySelector('.video-file-name')?.remove(); const d=document.createElement('div'); d.className='video-file-name'; d.style.cssText='margin-top:8px;background:#e8f5e9;padding:8px 12px;border-radius:6px;font-size:13px;'; d.innerHTML='<i class=\'fas fa-check-circle\' style=\'color:#4caf50\'></i> '+this.files[0].name; this.parentElement.appendChild(d); }">
+    </div>
+    <?php
+    return ob_get_clean();
+}
+
+/**
  * Render video upload HTML field
  * 
  * @param string $fieldName Form field name
@@ -258,14 +351,15 @@ function renderVideoUploadField($fieldName, $currentVideoPath = null, $label = '
 }
 
 /**
- * Render video embed for frontend display
+ * Render video embed for admin display (local files only)
+ * For frontend pages that need YouTube/Vimeo support, use includes/video-display.php renderVideoEmbed() instead
  * 
  * @param string|null $videoPath Video path
  * @param string|null $videoType Video MIME type
  * @param array $options Display options
  * @return string HTML for video embed
  */
-function renderVideoEmbed($videoPath, $videoType = null, $options = []) {
+function renderAdminVideoEmbed($videoPath, $videoType = null, $options = []) {
     if (empty($videoPath)) {
         return '';
     }

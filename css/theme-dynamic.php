@@ -1,35 +1,37 @@
 <?php
 /**
- * Dynamic Theme CSS
+ * Dynamic Theme CSS with Aggressive Caching
  * Generates CSS variables from database settings
  * This file is included as a CSS stylesheet
  */
-header('Content-Type: text/css; charset=utf-8');
 
-// Include database connection
+// Include database connection (uses singleton pattern, no duplicate connections)
 require_once __DIR__ . '/../config/database.php';
 
-// Get theme colors from database with defaults
-try {
-    $stmt = $pdo->query("SELECT setting_key, setting_value FROM site_settings WHERE setting_key LIKE '%color%' OR setting_key LIKE '%theme%'");
-    $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-    
-    $navy = $settings['navy_color'] ?? '#0A1929';
-    $deep_navy = $settings['deep_navy_color'] ?? '#05090F';
-    $gold = $settings['gold_color'] ?? '#D4AF37';
-    $dark_gold = $settings['dark_gold_color'] ?? '#B8941F';
-    $theme_color = $settings['theme_color'] ?? '#0A1929';
-    $accent_color = $settings['accent_color'] ?? $gold;
-    
-} catch (PDOException $e) {
-    // Fallback to defaults if database fails
-    $navy = '#0A1929';
-    $deep_navy = '#05090F';
-    $gold = '#D4AF37';
-    $dark_gold = '#B8941F';
-    $theme_color = '#0A1929';
-    $accent_color = $gold;
+// Generate ETag based on theme settings version
+$theme_version = getSetting('theme_version', '1.0');
+$etag = md5('theme-v' . $theme_version);
+
+// Check If-None-Match header for 304 response
+if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] === $etag) {
+    header('HTTP/1.1 304 Not Modified');
+    header('ETag: ' . $etag);
+    exit;
 }
+
+// Set caching headers (cache for 1 hour)
+header('Content-Type: text/css; charset=utf-8');
+header('Cache-Control: public, max-age=3600, must-revalidate');
+header('ETag: ' . $etag);
+header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
+
+// Get theme colors using cached getSetting function (much faster)
+$navy = getSetting('navy_color', '#0A1929');
+$deep_navy = getSetting('deep_navy_color', '#05090F');
+$gold = getSetting('gold_color', '#D4AF37');
+$dark_gold = getSetting('dark_gold_color', '#B8941F');
+$theme_color = getSetting('theme_color', '#0A1929');
+$accent_color = getSetting('accent_color', $gold);
 ?>
 
 :root {

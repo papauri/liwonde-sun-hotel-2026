@@ -888,5 +888,3 @@ $cache_types = [
     </div>
     
     <?php require_once 'includes/admin-footer.php'; ?>
-</body>
-</html>

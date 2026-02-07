@@ -5,6 +5,7 @@
  */
 
 require_once 'admin-init.php';
+require_once '../includes/alert.php';
 
 $user = [
     'id' => $_SESSION['admin_user_id'],
@@ -18,8 +19,8 @@ $error = '';
 $success = false;
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' || (isset($_GET['action']) && $_GET['action'] === 'revert_default')) {
-    $action = $_POST['action'] ?? $_GET['action'] ?? '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
     
     try {
         if ($action === 'revert_default') {
@@ -376,11 +377,11 @@ try {
         </div>
         
         <?php if ($message): ?>
-            <?php require_once __DIR__ . '/../includes/alert.php'; showAlert($message, 'success'); ?>
+            <?php showAlert($message, 'success'); ?>
         <?php endif; ?>
         
         <?php if ($error): ?>
-            <?php require_once __DIR__ . '/../includes/alert.php'; showAlert($error, 'error'); ?>
+            <?php showAlert($error, 'error'); ?>
         <?php endif; ?>
         
         <!-- Preset Themes -->
@@ -437,10 +438,13 @@ try {
                     <button type="submit" class="btn-primary">
                         <i class="fas fa-magic"></i> Apply Selected Theme
                     </button>
-                    <button type="button" class="btn-primary" style="background: #666; color: white;" onclick="if(confirm('Are you sure you want to revert to the default Navy & Gold theme? All custom color changes will be lost.')) { window.location.href='?action=revert_default'; }">
-                        <i class="fas fa-undo"></i> Revert to Default
-                    </button>
                 </div>
+            </form>
+            <form method="POST" style="display:inline; margin-top:8px;">
+                <input type="hidden" name="action" value="revert_default">
+                <button type="submit" class="btn-primary" style="background: #666; color: white;" onclick="return confirm('Are you sure you want to revert to the default Navy & Gold theme? All custom color changes will be lost.')">
+                    <i class="fas fa-undo"></i> Revert to Default
+                </button>
             </form>
         </div>
         
@@ -565,9 +569,65 @@ try {
             activeIndicator.innerHTML = '<i class="fas fa-check-circle"></i> Selected';
             card.appendChild(activeIndicator);
         }
+        
+        // Update custom color inputs and preview with preset colors
+        const presets = {
+            'navy-gold': { navy_color: '#0A1929', deep_navy_color: '#05090F', gold_color: '#D4AF37', dark_gold_color: '#B8941F', accent_color: '#D4AF37' },
+            'burgundy-gold': { navy_color: '#722F37', deep_navy_color: '#4A1A21', gold_color: '#D4AF37', dark_gold_color: '#B8941F', accent_color: '#D4AF37' },
+            'forest-green': { navy_color: '#1B4D3E', deep_navy_color: '#0F2E24', gold_color: '#D4AF37', dark_gold_color: '#B8941F', accent_color: '#FFD700' },
+            'midnight-purple': { navy_color: '#2E1A47', deep_navy_color: '#1A0D2E', gold_color: '#D4AF37', dark_gold_color: '#B8941F', accent_color: '#E5D047' }
+        };
+        
+        if (presets[presetValue]) {
+            const colors = presets[presetValue];
+            for (const [key, value] of Object.entries(colors)) {
+                const input = document.getElementById(key);
+                const preview = document.getElementById(key + '_preview');
+                if (input) input.value = value;
+                if (preview) preview.value = value;
+            }
+            updateLivePreview();
+        }
     }
+    
+    // Live preview - update CSS variables and preview box in real time
+    function updateLivePreview() {
+        const navyColor = document.getElementById('navy_color').value;
+        const deepNavyColor = document.getElementById('deep_navy_color').value;
+        const goldColor = document.getElementById('gold_color').value;
+        const darkGoldColor = document.getElementById('dark_gold_color').value;
+        const accentColor = document.getElementById('accent_color').value;
+        
+        // Update the live preview box
+        const previewBox = document.querySelector('.live-preview-box');
+        if (previewBox) {
+            previewBox.style.background = navyColor;
+        }
+        
+        const previewTitle = document.querySelector('.preview-title');
+        if (previewTitle) {
+            previewTitle.style.color = goldColor;
+        }
+        
+        const previewButton = document.querySelector('.preview-button');
+        if (previewButton) {
+            previewButton.style.background = `linear-gradient(135deg, ${goldColor}, ${darkGoldColor})`;
+            previewButton.style.color = navyColor;
+        }
+    }
+    
+    // Attach live preview listeners to all color inputs
+    document.querySelectorAll('.color-input, .color-preview').forEach(function(input) {
+        input.addEventListener('input', function() {
+            // Sync color picker and text input
+            const id = this.id.replace('_preview', '');
+            const textInput = document.getElementById(id);
+            const colorInput = document.getElementById(id + '_preview');
+            if (this.type === 'color' && textInput) textInput.value = this.value;
+            if (this.type === 'text' && colorInput) colorInput.value = this.value;
+            updateLivePreview();
+        });
+    });
     </script>
     
     <?php require_once 'includes/admin-footer.php'; ?>
-</body>
-</html>

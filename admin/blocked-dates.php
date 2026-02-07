@@ -679,5 +679,5 @@ $site_name = getSetting('site_name');
     });
     </script>
     <script src="js/admin-components.js"></script>
-</body>
-</html>
+
+    <?php require_once 'includes/admin-footer.php'; ?>

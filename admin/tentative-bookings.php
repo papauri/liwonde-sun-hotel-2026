@@ -470,5 +470,5 @@ $currency_symbol = getSetting('currency_symbol');
             location.reload();
         }, 300000);
     </script>
-</body>
-</html>
+
+    <?php require_once 'includes/admin-footer.php'; ?>

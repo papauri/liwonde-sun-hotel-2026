@@ -818,5 +818,5 @@ $pending_count = $pending_stmt->fetch(PDO::FETCH_ASSOC)['count'];
             });
         }
     </script>
-</body>
-</html>
+
+    <?php require_once 'includes/admin-footer.php'; ?>

@@ -513,5 +513,5 @@ $today = date('Y-m-d');
     </div>
 
     <script src="js/admin-components.js"></script>
-</body>
-</html>
+
+    <?php require_once 'includes/admin-footer.php'; ?>

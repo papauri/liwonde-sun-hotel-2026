@@ -5,17 +5,12 @@ require_once 'admin-init.php';
 // Include modal and alert helpers
 require_once '../includes/modal.php';
 require_once '../includes/alert.php';
+require_once '../includes/video-display.php';
 require_once 'video-upload-handler.php';
 
-$user = [
-    'id' => $_SESSION['admin_user_id'],
-    'username' => $_SESSION['admin_username'],
-    'role' => $_SESSION['admin_role'],
-    'full_name' => $_SESSION['admin_full_name']
-];
+// Note: $user and $current_page are already set in admin-init.php
 $message = '';
 $error = '';
-$current_page = basename($_SERVER['PHP_SELF']);
 
 // Simple helper to process uploaded event images
 function uploadEventImage($fileInput)
@@ -48,9 +43,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'add') {
             $imagePath = uploadEventImage($_FILES['image'] ?? null);
-            $videoUpload = uploadVideo($_FILES['video'] ?? null, 'events');
-            $videoPath = $videoUpload['path'] ?? null;
-            $videoType = $videoUpload['type'] ?? null;
+            
+            // Check for video URL first, then file upload
+            $videoUrl = processVideoUrl($_POST['video_url'] ?? '');
+            if ($videoUrl) {
+                $videoPath = $videoUrl['path'];
+                $videoType = $videoUrl['type'];
+            } else {
+                $videoUpload = uploadVideo($_FILES['video'] ?? null, 'events');
+                $videoPath = $videoUpload['path'] ?? null;
+                $videoType = $videoUpload['type'] ?? null;
+            }
 
             $stmt = $pdo->prepare("
                 INSERT INTO events (title, description, event_date, start_time, end_time, location, ticket_price, capacity, is_featured, is_active, display_order, image_path, video_path, video_type)
@@ -76,9 +79,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         } elseif ($action === 'update') {
             $imagePath = uploadEventImage($_FILES['image'] ?? null);
-            $videoUpload = uploadVideo($_FILES['video'] ?? null, 'events');
-            $videoPath = $videoUpload['path'] ?? null;
-            $videoType = $videoUpload['type'] ?? null;
+            
+            // Check for video URL first, then file upload
+            $videoUrl = processVideoUrl($_POST['video_url'] ?? '');
+            if ($videoUrl) {
+                $videoPath = $videoUrl['path'];
+                $videoType = $videoUrl['type'];
+            } else {
+                $videoUpload = uploadVideo($_FILES['video'] ?? null, 'events');
+                $videoPath = $videoUpload['path'] ?? null;
+                $videoType = $videoUpload['type'] ?? null;
+            }
 
             // Build the update query dynamically based on what's being updated
             $updateFields = [
@@ -87,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
             $updateValues = [
                 $_POST['title'],
-                $_POST['description'],
+                $_POST['description'] ?? '',
                 $_POST['event_date'],
                 $_POST['start_time'],
                 $_POST['end_time'],
@@ -186,7 +197,24 @@ try {
     <link rel="stylesheet" href="css/admin-components.css">
     
     <style>
-        /* Events management specific styles - unique to this page */
+        /* Events management specific styles - Card Grid Layout (matching gallery) */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
         .btn-add {
             background: var(--gold);
             color: var(--deep-navy);
@@ -196,185 +224,208 @@ try {
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
         }
         .btn-add:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
         }
-        .events-section {
+        
+        /* Events Grid Layout (matching gallery) */
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+            padding: 0;
+        }
+        
+        .event-card {
             background: white;
             border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        .event-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 1400px;
-            border: 1px solid #d0d7de;
-        }
-        .event-table th {
-            background: #f6f8fa;
-            padding: 12px;
-            text-align: left;
-            font-size: 13px;
-            font-weight: 600;
-            color: #666;
-            text-transform: uppercase;
-            border: 1px solid #d0d7de;
-        }
-        .event-table td {
-            padding: 0;
-            border: 1px solid #d0d7de;
-            vertical-align: middle;
-            background: white;
-        }
-        .event-table tbody tr {
-            transition: background 0.2s ease;
-        }
-        .event-table tbody tr:hover {
-            background: #f8f9fa;
-        }
-        .title-cell {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .event-thumb {
-            width: 70px;
-            height: 70px;
-            border-radius: 10px;
-            object-fit: cover;
-            border: 2px solid #eee;
-            background: #fafafa;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
             transition: all 0.3s ease;
+            position: relative;
         }
-        .event-thumb:hover {
-            transform: scale(2.5);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-            z-index: 100;
-            border-color: var(--gold);
+        
+        .event-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
         }
-        .event-thumb-placeholder {
-            width: 70px;
-            height: 70px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+        
+        .event-card.expired {
+            opacity: 0.65;
+            background: #fff8f0;
+        }
+        
+        .event-card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--gold) 0%, #c19b2e 100%);
+        }
+        
+        .no-image-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
             display: flex;
             align-items: center;
             justify-content: center;
+            color: #757575;
+            font-size: 48px;
+        }
+        
+        .event-card-body {
+            padding: 20px;
+        }
+        
+        .event-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .event-card.expired .event-card-title {
+            text-decoration: line-through;
             color: #999;
-            font-size: 24px;
         }
-        .event-table tbody tr.edit-mode {
-            background: #fff3cd;
+        
+        .event-card-desc {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.5;
         }
-        .event-table input,
-        .event-table textarea,
-        .event-table select {
-            width: 100%;
-            min-height: 50px;
-            padding: 10px 14px;
-            border: none;
-            border-radius: 0;
-            font-size: 14px;
-            font-family: inherit;
-            background: transparent;
+        
+        .event-card-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 12px;
+            margin-bottom: 12px;
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
         }
-        .event-table input:focus,
-        .event-table textarea:focus,
-        .event-table select:focus {
-            background: #fff8c7;
-            box-shadow: inset 0 0 0 2px var(--gold);
-            outline: none;
-        }
-        .event-table textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-        .cell-view {
-            display: block;
-        }
-        .cell-view.hidden {
-            display: none;
-        }
-        .cell-edit {
-            display: none;
-        }
-        .cell-edit.active {
-            display: block;
-        }
-        .actions-cell {
-            white-space: nowrap;
-            min-width: 200px;
-        }
-        .action-buttons {
+        
+        .event-card-info-item {
             display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            color: #495057;
+        }
+        
+        .event-card-info-item i {
+            color: var(--gold);
+            width: 16px;
+            margin-top: 2px;
+        }
+        
+        .event-card-info-full {
+            grid-column: 1 / -1;
+        }
+        
+        .event-card-meta {
+            display: flex;
+            flex-wrap: wrap;
             gap: 6px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .event-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
             align-items: center;
-            justify-content: flex-start;
-        }
-        .action-group {
-            display: flex;
             gap: 4px;
-            padding: 0 4px;
+            white-space: nowrap;
         }
-        .action-group:not(:last-child) {
-            border-right: 1px solid #e0e0e0;
-            padding-right: 8px;
+        
+        .badge-active {
+            background: #d4edda;
+            color: #155724;
         }
+        
+        .badge-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-featured {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
         .badge-expired {
             background: #dc3545;
             color: white;
             animation: pulse 2s infinite;
         }
+        
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
         }
-        .status-badges {
+        
+        .badge-free {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .badge-price {
+            background: #e7f3ff;
+            color: #004085;
+        }
+        
+        .badge-video {
+            background: #fce4ec;
+            color: #880e4f;
+        }
+        
+        .event-card-actions {
             display: flex;
-            flex-direction: column;
-            gap: 4px;
+            gap: 6px;
+            flex-wrap: wrap;
         }
-        .event-table tbody tr.expired-event {
-            background: rgba(220, 53, 69, 0.05);
-        }
-        .event-table tbody tr.expired-event:hover {
-            background: rgba(220, 53, 69, 0.1);
-        }
-        .event-table tbody tr.expired-event .title-cell strong {
-            color: #666;
-            text-decoration: line-through;
-        }
-        .event-table tbody tr.expired-event .event-thumb,
-        .event-table tbody tr.expired-event .event-thumb-placeholder {
-            filter: grayscale(100%);
-            opacity: 0.5;
-        }
+        
         .btn-action {
-            padding: 6px 14px;
+            flex: 1;
+            min-width: 70px;
+            padding: 8px 12px;
+            font-size: 12px;
             border: none;
             border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            white-space: nowrap;
+            gap: 4px;
+            font-weight: 500;
         }
+        
         .btn-action:hover {
             transform: translateY(-1px);
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
-        .btn-action:active {
-            transform: translateY(0);
-        }
+        
         .btn-edit {
             background: #3498db;
             color: white;
@@ -382,27 +433,7 @@ try {
         .btn-edit:hover {
             background: #2980b9;
         }
-        .btn-save {
-            background: #27ae60;
-            color: white;
-        }
-        .btn-save:hover {
-            background: #229954;
-        }
-        .btn-cancel {
-            background: #95a5a6;
-            color: white;
-        }
-        .btn-cancel:hover {
-            background: #7f8c8d;
-        }
-        .btn-delete {
-            background: #e74c3c;
-            color: white;
-        }
-        .btn-delete:hover {
-            background: #c0392b;
-        }
+        
         .btn-toggle {
             background: #f39c12;
             color: white;
@@ -410,6 +441,7 @@ try {
         .btn-toggle:hover {
             background: #e67e22;
         }
+        
         .btn-featured {
             background: var(--gold);
             color: var(--deep-navy);
@@ -417,19 +449,32 @@ try {
         .btn-featured:hover {
             background: #c19b2e;
         }
-        .btn-upload {
-            background: #9b59b6;
+        
+        .btn-delete {
+            background: #e74c3c;
             color: white;
         }
-        .btn-upload:hover {
-            background: #8e44ad;
+        .btn-delete:hover {
+            background: #c0392b;
         }
-        .image-upload-form {
-            display: inline-block;
+        
+        .btn-save {
+            background: #27ae60;
+            color: white;
         }
-        .image-upload-form input[type="file"] {
-            display: none;
+        .btn-save:hover {
+            background: #229954;
         }
+        
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+        }
+        .btn-cancel:hover {
+            background: #7f8c8d;
+        }
+        
+        /* Modal styles */
         .image-upload-wrapper {
             position: relative;
         }
@@ -467,15 +512,10 @@ try {
         .checkbox-group input {
             width: auto;
         }
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            margin-top: 24px;
-        }
+        
         @media (max-width: 768px) {
-            .content {
-                padding: 16px;
+            .events-grid {
+                grid-template-columns: 1fr;
             }
             .page-header {
                 flex-direction: column;
@@ -485,20 +525,6 @@ try {
             .btn-add {
                 width: 100%;
             }
-            .event-table {
-                font-size: 12px;
-            }
-            .event-table th,
-            .event-table td {
-                padding: 8px;
-            }
-            .action-buttons {
-                flex-direction: column;
-            }
-            .btn-action {
-                width: 100%;
-                text-align: center;
-            }
         }
     </style>
 </head>
@@ -507,7 +533,10 @@ try {
 
     <div class="content">
         <div class="page-header">
-            <h2 class="page-title">Manage Hotel Events</h2>
+            <div>
+                <h2 class="page-title"><i class="fas fa-calendar-alt"></i> Events Management</h2>
+                <p style="color:#666; margin-top:4px;"><?php echo count($events); ?> event<?php echo count($events) !== 1 ? 's' : ''; ?> total</p>
+            </div>
             <button class="btn-add" onclick="openAddModal()">
                 <i class="fas fa-plus"></i> Add New Event
             </button>
@@ -523,143 +552,103 @@ try {
 
         <div class="events-section">
             <?php if (!empty($events)): ?>
-                <div class="table-responsive">
-                    <table class="event-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 250px;">Title</th>
-                            <th style="width: 140px;">Date</th>
-                            <th style="width: 180px;">Time</th>
-                            <th style="width: 200px;">Location</th>
-                            <th style="width: 120px;">Price</th>
-                            <th style="width: 100px;">Capacity</th>
-                            <th style="width: 140px;">Status</th>
-                            <th style="width: 400px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($events as $event): ?>
-                            <tr id="row-<?php echo $event['id']; ?>" <?php echo $event['is_expired'] ? 'class="expired-event"' : ''; ?>>
-                                <td>
-                                    <div class="title-cell cell-view">
-                                        <?php if (!empty($event['image_path'])): ?>
-                                            <img src="../<?php echo htmlspecialchars($event['image_path']); ?>" 
-                                                 alt="Event: <?php echo htmlspecialchars($event['title']); ?>" 
-                                                 class="event-thumb" 
-                                                 title="Click image upload to change"
-                                                 onerror="this.outerHTML='&lt;div class=&quot;event-thumb-placeholder&quot;&gt;&lt;i class=&quot;fas fa-image&quot;&gt;&lt;/i&gt;&lt;/div&gt;';">
-                                        <?php else: ?>
-                                            <div class="event-thumb-placeholder"><i class="fas fa-image"></i></div>
-                                        <?php endif; ?>
-                                        <div>
-                                            <strong><?php echo htmlspecialchars($event['title']); ?></strong>
-                                            <div style="font-size: 11px; color: #999; margin-top: 2px;">
-                                                <?php echo !empty($event['image_path']) ? basename($event['image_path']) : 'No image'; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <input type="text" class="cell-edit" value="<?php echo htmlspecialchars($event['title']); ?>" data-field="title">
-                                </td>
-                                <td>
-                                    <span class="cell-view"><?php echo date('M d, Y', strtotime($event['event_date'])); ?></span>
-                                    <input type="date" class="cell-edit" value="<?php echo $event['event_date']; ?>" data-field="event_date">
-                                </td>
-                                <td>
-                                    <span class="cell-view">
-                                        <?php echo date('H:i', strtotime($event['start_time'])); ?> - 
-                                        <?php echo date('H:i', strtotime($event['end_time'])); ?>
-                                    </span>
-                                    <input type="time" class="cell-edit" value="<?php echo $event['start_time']; ?>" data-field="start_time" placeholder="Start">
-                                    <input type="time" class="cell-edit" value="<?php echo $event['end_time']; ?>" data-field="end_time" placeholder="End">
-                                </td>
-                                <td>
-                                    <span class="cell-view"><?php echo htmlspecialchars($event['location']); ?></span>
-                                    <input type="text" class="cell-edit" value="<?php echo htmlspecialchars($event['location']); ?>" data-field="location">
-                                </td>
-                                <td>
-                                    <span class="cell-view">
-                                        <?php if ($event['ticket_price'] == 0): ?>
-                                            <span class="badge badge-free">Free</span>
-                                        <?php else: ?>
-                                            <?php echo htmlspecialchars(getSetting('currency_symbol')); ?> <?php echo number_format($event['ticket_price'], 0); ?>
-                                        <?php endif; ?>
-                                    </span>
-                                    <input type="number" class="cell-edit" value="<?php echo $event['ticket_price']; ?>" step="0.01" data-field="ticket_price">
-                                </td>
-                                <td>
-                                    <span class="cell-view"><?php echo $event['capacity']; ?></span>
-                                    <input type="number" class="cell-edit" value="<?php echo $event['capacity']; ?>" data-field="capacity">
-                                </td>
-                                <td>
-                                    <span class="cell-view">
-                                        <div class="status-badges">
-                                            <?php if ($event['is_expired']): ?>
-                                                <span class="badge badge-expired"><i class="fas fa-calendar-times"></i> Expired</span>
-                                            <?php endif; ?>
-                                            <?php if ($event['is_active']): ?>
-                                                <span class="badge badge-active"><i class="fas fa-check-circle"></i> Active</span>
-                                            <?php else: ?>
-                                                <span class="badge badge-inactive"><i class="fas fa-times-circle"></i> Inactive</span>
-                                            <?php endif; ?>
-                                            <?php if ($event['is_featured']): ?>
-                                                <span class="badge badge-featured"><i class="fas fa-star"></i> Featured</span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </span>
-                                    <select class="cell-edit" data-field="is_active">
-                                        <option value="1" <?php echo $event['is_active'] ? 'selected' : ''; ?>>Active</option>
-                                        <option value="0" <?php echo !$event['is_active'] ? 'selected' : ''; ?>>Inactive</option>
-                                    </select>
-                                </td>
-                                <td class="actions-cell">
-                                    <div class="action-buttons">
-                                        <!-- Edit Group -->
-                                        <div class="action-group">
-                                            <button class="btn-action btn-edit" onclick="enterEditMode(<?php echo $event['id']; ?>)" data-edit-btn title="Edit Event">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </button>
-                                            <button class="btn-action btn-save" style="display: none;" onclick="saveRow(<?php echo $event['id']; ?>)" data-save-btn title="Save Changes">
-                                                <i class="fas fa-check"></i> Save
-                                            </button>
-                                            <button class="btn-action btn-cancel" style="display: none;" onclick="cancelEdit(<?php echo $event['id']; ?>)" data-cancel-btn title="Cancel Edit">
-                                                <i class="fas fa-times"></i> Cancel
-                                            </button>
-                                        </div>
-                                        
-                                        <!-- Status Group -->
-                                        <div class="action-group">
-                                            <button class="btn-action btn-toggle" onclick="toggleActive(<?php echo $event['id']; ?>)" title="Toggle Active/Inactive">
-                                                <i class="fas fa-power-off"></i> Toggle
-                                            </button>
-                                            <button class="btn-action btn-featured" onclick="toggleFeatured(<?php echo $event['id']; ?>)" title="Toggle Featured">
-                                                <i class="fas fa-star"></i> Featured
-                                            </button>
-                                        </div>
-                                        
-                                        <!-- Media Group -->
-                                        <div class="action-group">
-                                            <form class="image-upload-form" method="POST" enctype="multipart/form-data" style="margin: 0; display: inline-block;">
-                                                <input type="hidden" name="action" value="update_image">
-                                                <input type="hidden" name="id" value="<?php echo $event['id']; ?>">
-                                                <label class="btn-action btn-upload" style="cursor: pointer; margin: 0;" title="Upload Event Image">
-                                                    <i class="fas fa-image"></i> Image
-                                                    <input type="file" name="image" accept="image/jpeg,image/png,image/jpg,image/webp" style="display: none;" onchange="if(confirm('Upload and replace event image?')) { this.form.submit(); } else { this.value=''; }">
-                                                </label>
-                                            </form>
-                                        </div>
-                                        
-                                        <!-- Delete Group -->
-                                        <div class="action-group">
-                                            <button class="btn-action btn-delete" onclick="if(confirm('Delete this event?')) deleteEvent(<?php echo $event['id']; ?>)" title="Delete Event">
-                                                <i class="fas fa-trash-alt"></i> Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                    </table>
+                <div class="events-grid">
+                    <?php foreach ($events as $event): ?>
+                    <div class="event-card <?php echo $event['is_expired'] ? 'expired' : ''; ?>">
+                        <?php 
+                            // Prioritize video over image
+                            $hasVideo = !empty($event['video_path']);
+                            $imgSrc = $event['image_path'] ?? '';
+                            if ($imgSrc && !preg_match('#^https?://#i', $imgSrc)) {
+                                $imgSrc = '../' . $imgSrc;
+                            }
+                        ?>
+                        
+                        <?php if ($hasVideo): ?>
+                            <div style="width: 100%; height: 200px; overflow: hidden; background: #000;">
+                                <?php echo renderVideoEmbed($event['video_path'], $event['video_type'], ['autoplay' => false, 'muted' => false, 'style' => 'width: 100%; height: 200px; object-fit: cover;']); ?>
+                            </div>
+                        <?php elseif ($imgSrc): ?>
+                            <img src="<?php echo htmlspecialchars($imgSrc); ?>" 
+                                 alt="<?php echo htmlspecialchars($event['title']); ?>" 
+                                 class="event-card-image"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="no-image-placeholder" style="display:none;"><i class="fas fa-calendar-alt"></i></div>
+                        <?php else: ?>
+                            <div class="no-image-placeholder"><i class="fas fa-calendar-alt"></i></div>
+                        <?php endif; ?>
+                        
+                        <div class="event-card-body">
+                            <div class="event-card-title"><?php echo htmlspecialchars($event['title']); ?></div>
+                            <?php if (!empty($event['description'])): ?>
+                                <div class="event-card-desc"><?php echo htmlspecialchars(substr($event['description'], 0, 100)); ?></div>
+                            <?php endif; ?>
+                            
+                            <div class="event-card-info">
+                                <div class="event-card-info-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span><?php echo date('M d, Y', strtotime($event['event_date'])); ?></span>
+                                </div>
+                                <?php if ($event['start_time']): ?>
+                                <div class="event-card-info-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span><?php echo date('H:i', strtotime($event['start_time'])); ?> - <?php echo date('H:i', strtotime($event['end_time'])); ?></span>
+                                </div>
+                                <?php endif; ?>
+                                <?php if ($event['location']): ?>
+                                <div class="event-card-info-item event-card-info-full">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span><?php echo htmlspecialchars($event['location']); ?></span>
+                                </div>
+                                <?php endif; ?>
+                                <?php if ($event['capacity']): ?>
+                                <div class="event-card-info-item">
+                                    <i class="fas fa-users"></i>
+                                    <span><?php echo $event['capacity']; ?> seats</span>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <div class="event-card-meta">
+                                <?php if ($event['is_expired']): ?>
+                                    <span class="event-badge badge-expired"><i class="fas fa-calendar-times"></i> Expired</span>
+                                <?php endif; ?>
+                                <?php if ($event['is_active']): ?>
+                                    <span class="event-badge badge-active"><i class="fas fa-check-circle"></i> Active</span>
+                                <?php else: ?>
+                                    <span class="event-badge badge-inactive"><i class="fas fa-times-circle"></i> Inactive</span>
+                                <?php endif; ?>
+                                <?php if ($event['is_featured']): ?>
+                                    <span class="event-badge badge-featured"><i class="fas fa-star"></i> Featured</span>
+                                <?php endif; ?>
+                                <?php if ($event['ticket_price'] == 0): ?>
+                                    <span class="event-badge badge-free"><i class="fas fa-ticket-alt"></i> Free</span>
+                                <?php else: ?>
+                                    <span class="event-badge badge-price"><i class="fas fa-tag"></i> <?php echo htmlspecialchars(getSetting('currency_symbol')); ?><?php echo number_format($event['ticket_price'], 0); ?></span>
+                                <?php endif; ?>
+                                <?php if (!empty($event['video_path'])): ?>
+                                    <span class="event-badge badge-video"><i class="fas fa-video"></i> Video</span>
+                                <?php endif; ?>
+                                <span style="font-size:11px; color:#999;">Order: <?php echo $event['display_order']; ?></span>
+                            </div>
+                            
+                            <div class="event-card-actions">
+                                <button class="btn-action btn-edit" type="button" onclick='openEditModal(<?php echo htmlspecialchars(json_encode($event), ENT_QUOTES, "UTF-8"); ?>)'>
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="btn-action btn-toggle" type="button" onclick="toggleActive(<?php echo $event['id']; ?>)">
+                                    <i class="fas fa-power-off"></i> Toggle
+                                </button>
+                                <button class="btn-action btn-featured" type="button" onclick="toggleFeatured(<?php echo $event['id']; ?>)">
+                                    <i class="fas fa-star"></i> Featured
+                                </button>
+                                <button class="btn-action btn-delete" type="button" onclick="if(confirm('Delete this event?')) deleteEvent(<?php echo $event['id']; ?>)">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
             <?php else: ?>
                 <div style="text-align: center; padding: 60px 20px; color: #999;">
@@ -744,6 +733,20 @@ try {
 
             <div class="form-group">
                 <label>Event Video (Optional)</label>
+                
+                <!-- Video URL Input -->
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">
+                        <i class="fas fa-link"></i> Video URL (YouTube, Vimeo, or direct link)
+                    </label>
+                    <input type="url" name="video_url" id="eventVideoUrl" 
+                           placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
+                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    <small style="color: #888;">Paste a YouTube, Vimeo, Dailymotion, or direct video URL</small>
+                </div>
+                
+                <div style="text-align: center; color: #999; font-size: 12px; margin-bottom: 12px;">— OR upload a file —</div>
+                
                 <div class="video-upload-wrapper">
                     <div class="image-upload-area" onclick="document.getElementById(\'eventVideo\').click()" style="border-color: #9b59b6;">
                         <i class="fas fa-video" style="color: #9b59b6;"></i>
@@ -785,89 +788,78 @@ try {
 
     <script src="js/admin-components.js"></script>
     <script>
-        let currentEditingId = null;
-
         function openAddModal() {
             document.getElementById('formAction').value = 'add';
             document.getElementById('eventForm').reset();
             document.getElementById('eventActive').checked = true;
             document.getElementById('imagePreviewContainer').style.display = 'none';
-            // Update the modal header by finding the modal and changing its header text
+            document.getElementById('videoPreviewContainer').style.display = 'none';
+            
+            // Update the modal header
             const modalHeader = document.querySelector('#eventModal .modal-header');
             if (modalHeader) {
                 const titleElement = modalHeader.querySelector('span');
                 if (titleElement) {
                     titleElement.textContent = 'Add New Event';
                 } else {
-                    // If there's no span, create one
                     modalHeader.innerHTML = '<span>Add New Event</span><span class="modal-close" data-modal-close>&times;</span>';
                 }
             }
             Modal.open('eventModal');
         }
 
-        function enterEditMode(id) {
-            if (currentEditingId && currentEditingId !== id) {
-                cancelEdit(currentEditingId);
+        function openEditModal(event) {
+            document.getElementById('formAction').value = 'update';
+            document.getElementById('eventId').value = event.id;
+            document.getElementById('eventTitle').value = event.title || '';
+            document.getElementById('eventDescription').value = event.description || '';
+            document.getElementById('eventDate').value = event.event_date || '';
+            document.getElementById('eventStartTime').value = event.start_time || '';
+            document.getElementById('eventEndTime').value = event.end_time || '';
+            document.getElementById('eventLocation').value = event.location || '';
+            document.getElementById('eventPrice').value = event.ticket_price || 0;
+            document.getElementById('eventCapacity').value = event.capacity || '';
+            document.getElementById('eventOrder').value = event.display_order || 0;
+            document.getElementById('eventFeatured').checked = event.is_featured == 1;
+            document.getElementById('eventActive').checked = event.is_active == 1;
+            
+            // Show existing image if available
+            if (event.image_path) {
+                const imgSrc = event.image_path.startsWith('http') ? event.image_path : '../' + event.image_path;
+                document.getElementById('imagePreview').src = imgSrc;
+                document.getElementById('imageFileName').textContent = 'Current: ' + (event.image_path.split('/').pop() || 'image');
+                document.getElementById('imagePreviewContainer').style.display = 'block';
+            } else {
+                document.getElementById('imagePreviewContainer').style.display = 'none';
             }
-
-            currentEditingId = id;
-            const row = document.getElementById(`row-${id}`);
-
-            row.querySelectorAll('.cell-view').forEach(el => el.classList.add('hidden'));
-            row.querySelectorAll('.cell-edit').forEach(el => el.classList.add('active'));
-
-            row.querySelector('[data-edit-btn]').style.display = 'none';
-            row.querySelector('[data-save-btn]').style.display = 'block';
-            row.querySelector('[data-cancel-btn]').style.display = 'block';
-
-            row.classList.add('edit-mode');
-        }
-
-        function cancelEdit(id) {
-            const row = document.getElementById(`row-${id}`);
-
-            row.querySelectorAll('.cell-view').forEach(el => el.classList.remove('hidden'));
-            row.querySelectorAll('.cell-edit').forEach(el => el.classList.remove('active'));
-
-            row.querySelector('[data-edit-btn]').style.display = 'block';
-            row.querySelector('[data-save-btn]').style.display = 'none';
-            row.querySelector('[data-cancel-btn]').style.display = 'none';
-
-            row.classList.remove('edit-mode');
-            currentEditingId = null;
-        }
-
-        function saveRow(id) {
-            const row = document.getElementById(`row-${id}`);
-            const formData = new FormData();
-
-            formData.append('action', 'update');
-            formData.append('id', id);
-            formData.append('description', ''); // Not editable inline
-            formData.append('is_featured', 0);
-            formData.append('display_order', 0);
-
-            row.querySelectorAll('.cell-edit.active').forEach(input => {
-                const field = input.getAttribute('data-field');
-                formData.append(field, input.value);
-            });
-
-            fetch(window.location.href, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    window.location.reload();
+            
+            // Show existing video URL if it's an external URL
+            if (event.video_path) {
+                const isUrl = event.video_path.startsWith('http://') || event.video_path.startsWith('https://');
+                if (isUrl) {
+                    document.getElementById('eventVideoUrl').value = event.video_path;
                 } else {
-                    Alert.show('Error saving event', 'error');
+                    // It's an uploaded file
+                    document.getElementById('videoFileName').textContent = 'Current: ' + (event.video_path.split('/').pop() || 'video file');
+                    document.getElementById('videoPreviewContainer').style.display = 'block';
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Alert.show('Error saving event', 'error');
-            });
+            } else {
+                document.getElementById('eventVideoUrl').value = '';
+                document.getElementById('videoPreviewContainer').style.display = 'none';
+            }
+            
+            // Update the modal header
+            const modalHeader = document.querySelector('#eventModal .modal-header');
+            if (modalHeader) {
+                const titleElement = modalHeader.querySelector('span');
+                if (titleElement) {
+                    titleElement.textContent = 'Edit Event';
+                } else {
+                    modalHeader.innerHTML = '<span>Edit Event</span><span class="modal-close" data-modal-close>&times;</span>';
+                }
+            }
+            
+            Modal.open('eventModal');
         }
 
         function deleteEvent(id) {
@@ -883,12 +875,20 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    Alert.show('Error deleting event', 'error');
+                    if (typeof Alert !== 'undefined') {
+                        Alert.show('Error deleting event', 'error');
+                    } else {
+                        alert('Error deleting event');
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                Alert.show('Error deleting event', 'error');
+                if (typeof Alert !== 'undefined') {
+                    Alert.show('Error deleting event', 'error');
+                } else {
+                    alert('Error deleting event');
+                }
             });
         }
 
@@ -905,12 +905,20 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    Alert.show('Error toggling status', 'error');
+                    if (typeof Alert !== 'undefined') {
+                        Alert.show('Error toggling status', 'error');
+                    } else {
+                        alert('Error toggling status');
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                Alert.show('Error toggling status', 'error');
+                if (typeof Alert !== 'undefined') {
+                    Alert.show('Error toggling status', 'error');
+                } else {
+                    alert('Error toggling status');
+                }
             });
         }
 
@@ -927,12 +935,20 @@ try {
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    Alert.show('Error toggling featured status', 'error');
+                    if (typeof Alert !== 'undefined') {
+                        Alert.show('Error toggling featured status', 'error');
+                    } else {
+                        alert('Error toggling featured status');
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                Alert.show('Error toggling featured status', 'error');
+                if (typeof Alert !== 'undefined') {
+                    Alert.show('Error toggling featured status', 'error');
+                } else {
+                    alert('Error toggling featured status');
+                }
             });
         }
 
@@ -971,5 +987,5 @@ try {
             return size.toFixed(2) + ' ' + units[unitIndex];
         }
     </script>
-</body>
-</html>
+
+    <?php require_once 'includes/admin-footer.php'; ?>

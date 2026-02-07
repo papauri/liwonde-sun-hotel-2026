@@ -443,11 +443,9 @@ $totalPages = ceil($total / $limit);
                                 </td>
                                 <td>
                                     <?php echo date('M j, Y', strtotime($payment['payment_date'])); ?>
-                                    <?php if ($payment['payment_date'] != $payment['created_at']): ?>
-                                        <br><small style="color: #666; font-size: 11px;">
-                                            <i class="fas fa-clock"></i> <?php echo date('H:i', strtotime($payment['payment_date'])); ?>
-                                        </small>
-                                    <?php endif; ?>
+                                    <br><small style="color: #666; font-size: 11px;">
+                                        <i class="fas fa-clock"></i> <?php echo date('H:i', strtotime($payment['created_at'])); ?>
+                                    </small>
                                 </td>
                                 <td>
                                     <strong><?php echo $currency_symbol; ?><?php echo number_format($payment['total_amount'], 0); ?></strong>
@@ -541,5 +539,5 @@ $totalPages = ceil($total / $limit);
     </div>
 
     <script src="js/admin-components.js"></script>
-</body>
-</html>
+
+    <?php require_once 'includes/admin-footer.php'; ?>

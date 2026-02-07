@@ -48,7 +48,8 @@ try {
 
     // Recent bookings (last 10)
     $recent_stmt = $pdo->query("
-        SELECT b.*, r.name as room_name 
+        SELECT b.*, r.name as room_name,
+               b.total_amount, b.amount_paid, b.amount_due, b.payment_status
         FROM bookings b
         JOIN rooms r ON b.room_id = r.id
         ORDER BY b.created_at DESC
@@ -58,7 +59,8 @@ try {
 
     // Upcoming check-ins (next 7 days)
     $upcoming_stmt = $pdo->prepare("
-        SELECT b.*, r.name as room_name 
+        SELECT b.*, r.name as room_name,
+               b.total_amount, b.amount_paid, b.amount_due, b.payment_status
         FROM bookings b
         JOIN rooms r ON b.room_id = r.id
         WHERE b.check_in_date BETWEEN ? AND DATE_ADD(?, INTERVAL 7 DAY)
@@ -276,7 +278,8 @@ $currency_symbol = getSetting('currency_symbol');
             
             <?php
             $today_checkin_list = $pdo->prepare("
-                SELECT b.*, r.name as room_name 
+                SELECT b.*, r.name as room_name,
+                       b.total_amount, b.amount_paid, b.amount_due, b.payment_status
                 FROM bookings b
                 JOIN rooms r ON b.room_id = r.id
                 WHERE b.check_in_date = ? 
@@ -317,6 +320,12 @@ $currency_symbol = getSetting('currency_symbol');
                                         <span class="badge badge-<?php echo $booking['payment_status']; ?>">
                                             <?php echo ucfirst($booking['payment_status']); ?>
                                         </span>
+                                        <br><small style="color: #666; font-size: 11px; margin-top: 4px; display: block;">
+                                            <?php echo $currency_symbol . number_format($booking['amount_paid'], 0); ?> / <?php echo $currency_symbol . number_format($booking['total_amount'], 0); ?>
+                                            <?php if ($booking['amount_due'] > 0): ?>
+                                                <span style="color: #dc3545; font-weight: 600;">(Due: <?php echo $currency_symbol . number_format($booking['amount_due'], 0); ?>)</span>
+                                            <?php endif; ?>
+                                        </small>
                                     </td>
                                     <td>
                                         <?php if ($booking['status'] !== 'checked-in'): ?>
@@ -412,13 +421,14 @@ $currency_symbol = getSetting('currency_symbol');
                         <th>Check-in</th>
                         <th>Nights</th>
                         <th>Status</th>
+                        <th>Payment</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($upcoming_checkins)): ?>
                     <tr>
-                        <td colspan="7" class="empty-state">
+                        <td colspan="8" class="empty-state">
                             <i class="fas fa-calendar"></i>
                             <p>No upcoming check-ins in the next 7 days</p>
                         </td>
@@ -435,6 +445,17 @@ $currency_symbol = getSetting('currency_symbol');
                             <span class="badge badge-<?php echo $booking['status']; ?>">
                                 <?php echo ucfirst($booking['status']); ?>
                             </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-<?php echo $booking['payment_status']; ?>">
+                                <?php echo ucfirst($booking['payment_status']); ?>
+                            </span>
+                            <br><small style="color: #666; font-size: 11px; margin-top: 4px; display: block;">
+                                <?php echo $currency_symbol . number_format($booking['amount_paid'], 0); ?> / <?php echo $currency_symbol . number_format($booking['total_amount'], 0); ?>
+                                <?php if ($booking['amount_due'] > 0): ?>
+                                    <span style="color: #dc3545; font-weight: 600;">(Due: <?php echo $currency_symbol . number_format($booking['amount_due'], 0); ?>)</span>
+                                <?php endif; ?>
+                            </small>
                         </td>
                         <td>
                             <div class="quick-actions">
@@ -468,6 +489,7 @@ $currency_symbol = getSetting('currency_symbol');
                         <th>Dates</th>
                         <th>Total</th>
                         <th>Status</th>
+                        <th>Payment</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -486,6 +508,17 @@ $currency_symbol = getSetting('currency_symbol');
                             <span class="badge badge-<?php echo $booking['status']; ?>">
                                 <?php echo ucfirst($booking['status']); ?>
                             </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-<?php echo $booking['payment_status']; ?>">
+                                <?php echo ucfirst($booking['payment_status']); ?>
+                            </span>
+                            <br><small style="color: #666; font-size: 11px; margin-top: 4px; display: block;">
+                                <?php echo $currency_symbol . number_format($booking['amount_paid'], 0); ?> / <?php echo $currency_symbol . number_format($booking['total_amount'], 0); ?>
+                                <?php if ($booking['amount_due'] > 0): ?>
+                                    <span style="color: #dc3545; font-weight: 600;">(Due: <?php echo $currency_symbol . number_format($booking['amount_due'], 0); ?>)</span>
+                                <?php endif; ?>
+                            </small>
                         </td>
                         <td>
                             <a href="booking-details.php?id=<?php echo $booking['id']; ?>" class="btn btn-primary btn-sm">View</a>
@@ -655,5 +688,5 @@ $currency_symbol = getSetting('currency_symbol');
             });
         }
     </script>
-</body>
-</html>
+
+    <?php require_once 'includes/admin-footer.php'; ?>

@@ -87,7 +87,7 @@ try {
             p.*,
             CASE
                 WHEN p.booking_type = 'room' THEN CONCAT(b.guest_name, ' (', b.booking_reference, ')')
-                WHEN p.booking_type = 'conference' THEN CONCAT(ci.organization_name, ' (', ci.enquiry_reference, ')')
+                WHEN p.booking_type = 'conference' THEN CONCAT(ci.company_name, ' (', ci.inquiry_reference, ')')
                 ELSE 'Unknown'
             END as booking_description
         FROM payments p
@@ -667,7 +667,5 @@ try {
                 </a>
             </div>
         <?php endif; ?>
-    </div>
 
-</body>
-</html>
+    <?php require_once 'includes/admin-footer.php'; ?>

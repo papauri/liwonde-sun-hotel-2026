@@ -19,8 +19,8 @@ if (!isset($gallery_images) || empty($gallery_images)) {
         } else {
             // Fallback to direct query
             $stmt = $pdo->query("
-                SELECT image_url, title, description, category 
-                FROM gallery_images 
+                SELECT image_url, title, description, category, video_path, video_type 
+                FROM hotel_gallery 
                 WHERE is_active = 1 
                 ORDER BY display_order ASC
             ");

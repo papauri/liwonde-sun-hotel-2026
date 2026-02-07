@@ -166,6 +166,26 @@ try {
             object-fit: cover;
         }
 
+        /* Fix video wrapper to fit within event-image-container */
+        .event-image-container .video-wrapper {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            padding-bottom: 0 !important;
+            overflow: hidden;
+        }
+
+        .event-image-container .video-wrapper iframe {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
+        }
+
         .event-date-badge {
             position: absolute;
             top: 16px;

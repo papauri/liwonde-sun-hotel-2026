@@ -6,12 +6,7 @@ require_once '../config/email.php';
 require_once '../config/invoice.php';
 require_once '../includes/alert.php';
 
-$user = [
-    'id' => $_SESSION['admin_user_id'],
-    'username' => $_SESSION['admin_username'],
-    'role' => $_SESSION['admin_role'],
-    'full_name' => $_SESSION['admin_full_name']
-];
+// Note: $user and $current_page are already set in admin-init.php
 $message = '';
 $error = '';
 
@@ -950,5 +945,5 @@ try {
         }
     </style>
     <script src="js/admin-components.js"></script>
-</body>
-</html>
+
+    <?php require_once 'includes/admin-footer.php'; ?>

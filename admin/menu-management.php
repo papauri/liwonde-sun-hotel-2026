@@ -1,6 +1,7 @@
 <?php
 // Include admin initialization (PHP-only, no HTML output)
 require_once 'admin-init.php';
+require_once '../includes/alert.php';
 
 $user = [
     'id' => $_SESSION['admin_user_id'],
@@ -112,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = 'Menu item updated successfully!';
 
         } elseif ($action === 'delete') {
-            $table = $_POST['menu_type'] === 'food' ? 'restaurant_menu' : 'menu_items';
+            $table = $_POST['menu_type'] === 'food' ? 'food_menu' : 'drink_menu';
             $stmt = $pdo->prepare("DELETE FROM $table WHERE id = ?");
             $stmt->execute([$_POST['id']]);
             $message = 'Menu item deleted successfully!';
@@ -785,7 +786,7 @@ try {
                                                         title="Save Changes">
                                                     <i class="fas fa-save"></i> Save
                                                 </button>
-                                                <button class="btn-action btn-toggle <?php echo $item['is_active'] ? 'active' : ''; ?>"
+                                                <button class="btn-action btn-toggle <?php echo $item['is_available'] ? 'active' : ''; ?>"
                                                         onclick="quickToggle(<?php echo $item['id']; ?>, 'drinks')"
                                                         title="<?php echo $item['is_available'] ? 'Mark as Unavailable' : 'Mark as Available'; ?>">
                                                     <i class="fas fa-toggle-<?php echo $item['is_available'] ? 'on' : 'off'; ?>"></i> Toggle
@@ -1029,5 +1030,5 @@ try {
             });
         }
     </script>
-</body>
-</html>
+
+    <?php require_once 'includes/admin-footer.php'; ?>
