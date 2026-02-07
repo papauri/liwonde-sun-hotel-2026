@@ -29,34 +29,27 @@ if (file_exists(__DIR__ . '/config/database.php')) {
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/theme-dynamic.php">
     <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/footer.css">
     
     <style>
         :root {
-            --gold: #d4af37;
+            /* Page-specific variables not in theme */
             --gold-light: #f4d03f;
             --gold-dark: #b8962e;
             --black: #1a1a1a;
-            --dark-gray: #2d2d2d;
-            --light-gray: #f5f5f5;
-            --white: #ffffff;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
         }
         
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: var(--font-sans);
             background: linear-gradient(135deg, var(--black) 0%, var(--dark-gray) 100%);
             min-height: 100vh;
             display: flex;

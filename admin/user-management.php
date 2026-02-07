@@ -928,7 +928,7 @@ foreach ($all_permissions as $key => $info) {
                 </div>
                 <div class="form-row">
                     <label for="add-email">Email</label>
-                    <input type="email" id="add-email" name="email" required placeholder="e.g. jane@liwondesunhotel.com">
+                    <input type="email" id="add-email" name="email" required placeholder="e.g. jane@example.com">
                 </div>
                 <div class="form-row">
                     <label for="add-role">Role</label>

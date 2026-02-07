@@ -4,7 +4,7 @@
 # Configuration
 $ScriptPath = Join-Path $PSScriptRoot "scheduled-cache-clear.php"
 $ProjectPath = Split-Path $PSScriptRoot -Parent
-$TaskName = "Liwonde Sun Hotel - Cache Clearing"
+$TaskName = "Hotel Website - Cache Clearing"
 $TaskDescription = "Automatically clears website cache based on admin panel settings"
 
 # Find PHP executable
@@ -17,7 +17,7 @@ if (-not $PhpPath) {
 }
 
 Write-Host "==================================================================" -ForegroundColor Cyan
-Write-Host "  Liwonde Sun Hotel - Windows Task Scheduler Setup" -ForegroundColor Cyan
+Write-Host "  Hotel Website - Windows Task Scheduler Setup" -ForegroundColor Cyan
 Write-Host "==================================================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "PHP Path: $PhpPath" -ForegroundColor Green

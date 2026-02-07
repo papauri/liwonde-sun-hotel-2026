@@ -5,6 +5,7 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
 require_once 'config/database.php';
+require_once 'includes/page-guard.php';
 require_once 'includes/image-proxy-helper.php';
 require_once 'includes/section-headers.php';
 
@@ -60,11 +61,11 @@ $site_logo = getSetting('site_logo');
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=yes">
     <title>Upcoming Events - <?php echo htmlspecialchars($site_name); ?></title>
-    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/theme-dynamic.php">
+    <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/footer.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .events-section {
             padding: 80px 0;

@@ -5475,8 +5475,9 @@ button:disabled,
     }
     
     .gallery-carousel-wrapper {
-        gap: 12px;
+        gap: 0;
         margin-top: 40px;
+        position: relative;
     }
     
     .gallery-carousel-item {
@@ -5488,10 +5489,33 @@ button:disabled,
         height: 260px;
     }
     
+    /* Mobile: overlay nav buttons on the carousel */
     .gallery-nav-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+        width: 42px;
+        height: 42px;
+        font-size: 15px;
+        background: rgba(10, 25, 41, 0.55);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1.5px solid rgba(212, 175, 55, 0.45);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        color: var(--gold, #D4AF37);
+    }
+    .gallery-nav-prev {
+        left: 8px;
+    }
+    .gallery-nav-next {
+        right: 8px;
+    }
+    .gallery-nav-btn:hover {
+        transform: translateY(-50%) scale(1.08);
+    }
+    .gallery-nav-btn:active {
+        transform: translateY(-50%) scale(0.95);
     }
     
     .gallery-item-content h4 {
@@ -5516,7 +5540,7 @@ button:disabled,
 /* Mobile optimization for 480px and below */
 @media (max-width: 480px) {
     .gallery-carousel-wrapper {
-        gap: 10px;
+        gap: 0;
         margin-top: 30px;
     }
     
@@ -5530,14 +5554,19 @@ button:disabled,
     }
     
     .gallery-nav-btn {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
         font-size: 14px;
         border-width: 1.5px;
     }
-    
+    .gallery-nav-prev {
+        left: 6px;
+    }
+    .gallery-nav-next {
+        right: 6px;
+    }
     .gallery-nav-btn:hover {
-        transform: scale(1.05);
+        transform: translateY(-50%) scale(1.05);
     }
     
     .gallery-dots {
@@ -5586,7 +5615,7 @@ button:disabled,
     }
     
     .gallery-carousel-wrapper {
-        gap: 8px;
+        gap: 0;
         margin-top: 25px;
     }
     
@@ -5600,14 +5629,20 @@ button:disabled,
     }
     
     .gallery-nav-btn {
-        width: 32px;
-        height: 32px;
+        width: 34px;
+        height: 34px;
         font-size: 12px;
         border-width: 1px;
     }
+    .gallery-nav-prev {
+        left: 4px;
+    }
+    .gallery-nav-next {
+        right: 4px;
+    }
     
     .gallery-nav-btn:hover {
-        transform: scale(1.02);
+        transform: translateY(-50%) scale(1.02);
     }
     
     .gallery-nav-btn i {
@@ -7085,8 +7120,7 @@ button:disabled,
     }
 
     .gallery-carousel-wrapper {
-        flex-direction: column;
-        align-items: stretch;
+        position: relative;
     }
 
     .gallery-carousel-container {
@@ -7254,8 +7288,7 @@ button:disabled,
     }
 
     .gallery-carousel-wrapper {
-        flex-direction: column;
-        align-items: stretch;
+        position: relative;
     }
 
     .hero-widget {
@@ -8569,5 +8602,20 @@ body.modal-open {
         font-size: 10px;
         padding: 6px 10px;
     }
+}
+
+/* ============================================
+   CONTENT-VISIBILITY — SKIP RENDERING OFF-SCREEN
+   Improves initial paint speed on mobile by
+   deferring layout/paint of below-fold sections.
+   ============================================ */
+.about-section,
+#rooms,
+#facilities,
+.hotel-gallery-section,
+.hotel-reviews-section,
+#testimonials {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 600px;
 }
 

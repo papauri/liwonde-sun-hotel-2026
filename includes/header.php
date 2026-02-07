@@ -45,40 +45,84 @@
                 </a>
                 
                 <?php
-                // Determine current page for active nav highlighting - SIMPLE VERSION
+                // Determine current page for active nav highlighting
                 $current_file = basename($_SERVER['PHP_SELF']);
                 
                 // Function to check if nav link is active
-                function is_nav_active($link) {
+                // Works for any page added via site_pages (dynamic or hardcoded)
+                function is_nav_active($link_file) {
                     global $current_file;
-                    
-                    // Home link
-                    if ($link === '/') {
-                        return $current_file === 'index.php';
-                    }
-                    
-                    // Extract filename from link
-                    $link_file = basename($link);
-                    
-                    // Special case: room.php should activate "Rooms" nav link
-                    if ($current_file === 'room.php' && $link_file === 'rooms-gallery.php') {
+
+                    // Normalise to bare filename so sub-paths like ./spa.php still match
+                    $link_base = basename($link_file);
+
+                    // Direct match
+                    if ($current_file === $link_base) {
                         return true;
                     }
-                    
-                    // Direct comparison for all other pages
-                    return $current_file === $link_file;
+
+                    // Special case: room.php (detail page) highlights "Rooms" nav
+                    if ($current_file === 'room.php' && $link_base === 'rooms-gallery.php') {
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                // ── Load pages from site_pages table ─────────────────
+                $_nav_pages = [];
+                $_nav_booking = null; // CTA button handled separately
+                try {
+                    if (isset($pdo)) {
+                        $nav_stmt = $pdo->query("
+                            SELECT page_key, title, file_path, icon
+                            FROM site_pages
+                            WHERE is_enabled = 1 AND show_in_nav = 1
+                            ORDER BY nav_position ASC
+                        ");
+                        $all_nav = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
+                        foreach ($all_nav as $np) {
+                            if ($np['page_key'] === 'booking') {
+                                $_nav_booking = $np;
+                            } else {
+                                $_nav_pages[] = $np;
+                            }
+                        }
+                    }
+                } catch (PDOException $e) {
+                    // Table doesn't exist yet — fall back to hardcoded
+                    $_nav_pages = null;
+                }
+
+                // Fallback: if no DB pages loaded, use the original hardcoded nav
+                if (empty($_nav_pages) && $_nav_pages !== []) {
+                    $_nav_pages = [
+                        ['page_key' => 'home',       'title' => 'Home',       'file_path' => 'index.php',        'icon' => 'fa-home'],
+                        ['page_key' => 'rooms',      'title' => 'Rooms',      'file_path' => 'rooms-gallery.php','icon' => 'fa-bed'],
+                        ['page_key' => 'restaurant', 'title' => 'Restaurant', 'file_path' => 'restaurant.php',   'icon' => 'fa-utensils'],
+                        ['page_key' => 'gym',        'title' => 'Gym',        'file_path' => 'gym.php',          'icon' => 'fa-dumbbell'],
+                        ['page_key' => 'conference', 'title' => 'Conference', 'file_path' => 'conference.php',   'icon' => 'fa-briefcase'],
+                        ['page_key' => 'events',     'title' => 'Events',     'file_path' => 'events.php',       'icon' => 'fa-calendar-alt'],
+                    ];
+                    $_nav_booking = ['page_key' => 'booking', 'title' => 'Book Now', 'file_path' => 'booking.php', 'icon' => 'fa-calendar-check'];
                 }
                 ?>
                 
                 <ul class="nav-menu" id="primary-nav">
-                    <li class="nav-item"><a href="<?php echo siteUrl('/'); ?>" class="nav-link <?php echo is_nav_active('/') ? 'active' : ''; ?>"><span class="link-text">Home</span></a></li>
-                    <li class="nav-item"><a href="<?php echo siteUrl('rooms-gallery.php'); ?>" class="nav-link <?php echo is_nav_active('/rooms-gallery.php') ? 'active' : ''; ?>"><span class="link-text">Rooms</span></a></li>
-                    <li class="nav-item"><a href="<?php echo siteUrl('restaurant.php'); ?>" class="nav-link <?php echo is_nav_active('/restaurant.php') ? 'active' : ''; ?>"><span class="link-text">Restaurant</span></a></li>
-                    <li class="nav-item"><a href="<?php echo siteUrl('gym.php'); ?>" class="nav-link <?php echo is_nav_active('/gym.php') ? 'active' : ''; ?>"><span class="link-text">Gym</span></a></li>
-                    <li class="nav-item"><a href="<?php echo siteUrl('conference.php'); ?>" class="nav-link <?php echo is_nav_active('/conference.php') ? 'active' : ''; ?>"><span class="link-text">Conference</span></a></li>
-                    <li class="nav-item"><a href="<?php echo siteUrl('events.php'); ?>" class="nav-link <?php echo is_nav_active('/events.php') ? 'active' : ''; ?>"><span class="link-text">Events</span></a></li>
-                    <li class="nav-item"><a href="#contact" class="nav-link contact-link"><span class="link-text">Contact</span></a></li>
-                    <li class="nav-item nav-item-cta"><a href="<?php echo siteUrl('booking.php'); ?>" class="nav-cta"><i class="fas fa-calendar-check"></i> Book Now</a></li>
+                    <?php foreach ($_nav_pages as $navp): ?>
+                    <li class="nav-item">
+                        <a href="<?php echo siteUrl($navp['file_path']); ?>" class="nav-link <?php echo is_nav_active($navp['file_path']) ? 'active' : ''; ?>">
+                            <span class="link-text"><?php echo htmlspecialchars($navp['title']); ?></span>
+                        </a>
+                    </li>
+                    <?php endforeach; ?>
+                    <?php if ($_nav_booking): ?>
+                    <li class="nav-item nav-item-cta">
+                        <a href="<?php echo siteUrl($_nav_booking['file_path']); ?>" class="nav-cta <?php echo is_nav_active($_nav_booking['file_path']) ? 'active' : ''; ?>">
+                            <i class="fas <?php echo htmlspecialchars($_nav_booking['icon']); ?>"></i> <?php echo htmlspecialchars($_nav_booking['title']); ?>
+                        </a>
+                    </li>
+                    <?php endif; ?>
                 </ul>
                 
                 <button class="mobile-menu-btn" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="Open menu">

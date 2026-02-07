@@ -1,6 +1,7 @@
 <?php
 require_once 'config/database.php';
 require_once 'config/base-url.php';
+require_once 'includes/page-guard.php';
 require_once 'includes/section-headers.php';
 
 // AJAX Endpoint - Handle menu data requests
@@ -185,8 +186,8 @@ try {
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/theme-dynamic.php">
+    <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/footer.css">
     
@@ -260,38 +261,78 @@ try {
             min-width: 180px;
         }
         
-        /* Menu Type Tabs - Japandi Style */
+        /* Menu Type Tabs - Premium Segmented Control */
         .menu-type-tabs {
-            display: flex;
+            display: inline-flex;
             justify-content: center;
-            gap: 8px;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-        }
-        .menu-type-tab {
-            background: var(--japandi-card-bg);
+            margin: 0 auto 44px;
+            background: rgba(139, 115, 85, 0.06);
             border: 1px solid var(--japandi-border);
-            color: var(--japandi-text-primary);
-            padding: 14px 32px;
-            border-radius: 4px;
+            border-radius: 60px;
+            padding: 5px;
+            position: relative;
+            width: auto;
+        }
+        /* centre the inline-flex pill within its parent */
+        .menu-type-tabs-wrap {
+            text-align: center;
+            margin-bottom: 44px;
+        }
+        .menu-type-tabs-wrap .menu-type-tabs {
+            margin-bottom: 0;
+        }
+
+        .menu-type-tab {
+            background: transparent;
+            border: none;
+            color: var(--japandi-text-secondary);
+            padding: 13px 30px;
+            border-radius: 50px;
             cursor: pointer;
             font-family: 'Poppins', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 500;
-            letter-spacing: 0.5px;
-            transition: all 0.3s ease;
-            display: flex;
+            letter-spacing: 0.3px;
+            transition: all 0.35s cubic-bezier(.4,0,.2,1);
+            display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 9px;
+            position: relative;
+            z-index: 1;
+            white-space: nowrap;
+        }
+        .menu-type-tab i {
+            font-size: 0.92rem;
+            transition: transform 0.3s ease;
         }
         .menu-type-tab:hover {
-            border-color: var(--japandi-accent);
-            color: var(--japandi-accent);
+            color: var(--japandi-text-primary);
+        }
+        .menu-type-tab:hover i {
+            transform: scale(1.12);
         }
         .menu-type-tab.active {
             background: var(--japandi-accent);
-            border-color: var(--japandi-accent);
             color: #ffffff;
+            box-shadow: 0 4px 14px rgba(139, 115, 85, 0.32);
+        }
+        .menu-type-tab.active i {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 520px) {
+            .menu-type-tabs {
+                border-radius: 16px;
+                padding: 4px;
+                width: calc(100% - 8px);
+            }
+            .menu-type-tab {
+                padding: 11px 16px;
+                font-size: 0.82rem;
+                flex: 1;
+                justify-content: center;
+                border-radius: 12px;
+            }
         }
         
         /* Category Tabs - Japandi Style */
@@ -699,16 +740,17 @@ try {
                 <!-- QR Menu Panel -->
                 <div class="qr-menu-panel" data-aos="fade-up">
                     <div class="qr-menu-brand">
-                        <span class="qr-menu-mark">Curated tasting</span>
-                        <h3 class="qr-menu-title">Monochrome Digital Menu</h3>
-                        <p class="qr-menu-desc">A pared-back layout inspired by modern tasting cards. Scan to open the live menu or save as PDF directly from your browser.</p>
+                        <span class="qr-menu-mark"><i class="fas fa-qrcode"></i> Scan &amp; Dine</span>
+                        <h3 class="qr-menu-title">Digital Menu</h3>
+                        <p class="qr-menu-desc">Browse our full menu on your phone. Scan the QR code or tap below to view dishes, prices, and save a copy as PDF.</p>
                         <div class="qr-menu-actions">
-                            <a class="btn" href="<?php echo htmlspecialchars($menu_page_url); ?>" target="_blank" rel="noopener">View Menu</a>
-                            <a class="btn btn-outline" href="<?php echo htmlspecialchars($menu_page_url); ?>" target="_blank" rel="noopener">Save as PDF</a>
+                            <a class="btn" href="<?php echo htmlspecialchars($menu_page_url); ?>" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> View Menu</a>
+                            <a class="btn btn-outline" href="<?php echo htmlspecialchars($menu_page_url); ?>" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> Save as PDF</a>
                         </div>
                         <div class="qr-menu-meta">
-                            <span>Updated: Feb 2026</span>
-                            <span aria-hidden="true">•</span>
+                            <i class="fas fa-sync-alt" style="font-size:0.8rem;"></i>
+                            <span>Always up to date</span>
+                            <span aria-hidden="true">·</span>
                             <span>Live from our kitchen</span>
                         </div>
                     </div>
@@ -718,6 +760,7 @@ try {
                 </div>
 
                 <!-- Menu Type Tabs -->
+                <div class="menu-type-tabs-wrap">
                 <div class="menu-type-tabs">
                     <button type="button" class="menu-type-tab active" data-type="food">
                         <i class="fas fa-utensils"></i> Food Menu
@@ -728,6 +771,7 @@ try {
                     <button type="button" class="menu-type-tab" data-type="bar">
                         <i class="fas fa-glass-martini-alt"></i> Bar & Drinks
                     </button>
+                </div>
                 </div>
 
                 <!-- Loading State -->

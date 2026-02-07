@@ -193,10 +193,6 @@ This ensures pages always display properly even if database is unavailable.
 
 ## Managing Content
 
-### Quick Updates via SQL
-
-See `Database/migrations/section_headers_examples.sql` for SQL examples.
-
 ### Bulk Updates
 
 ```sql
@@ -282,7 +278,11 @@ If you make mistakes or want to start fresh:
 
 View all section headers via SQL:
 
-See `Database/migrations/section_headers_examples.sql` for SQL examples.
+```sql
+SELECT section_key, page, section_label, section_subtitle, section_title
+FROM section_headers
+ORDER BY page, display_order;
+```
 
 ## Future Enhancements
 
@@ -327,5 +327,5 @@ See `Database/migrations/section_headers_examples.sql` for SQL examples.
 
 For questions or issues, refer to:
 - `includes/section-headers.php` - Helper functions
+- `admin/section-headers-management.php` - Admin UI
 - `Database/migrations/create_section_headers_table.sql` - Table structure
-- `Database/migrations/section_headers_examples.sql` - SQL examples

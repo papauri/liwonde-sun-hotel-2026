@@ -16,6 +16,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once 'config/security.php';
 
 require_once 'config/database.php';
+require_once 'includes/page-guard.php';
 require_once 'config/email.php';
 require_once 'includes/modal.php';
 require_once 'includes/validation.php';
@@ -320,11 +321,11 @@ function resolveConferenceImage(?string $imagePath): string
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conference Facilities - <?php echo htmlspecialchars($site_name); ?></title>
-    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/theme-dynamic.php">
+    <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/footer.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .conference-rooms-section {
             padding: 90px 0;

@@ -1,7 +1,6 @@
 <?php
 /**
  * Dynamic Restaurant Menu - Print-Ready HTML
- * Liwonde Sun Hotel
  * 
  * Dark, minimalist design inspired by modern tasting-card menus.
  * Pulls live data from food_menu and drink_menu tables.
@@ -9,9 +8,13 @@
  */
 require_once 'config/database.php';
 
-// Currency
+// All settings from DB – zero hardcoded values
 $currency_symbol = getSetting('currency_symbol') ?: 'MWK';
-$site_name = getSetting('site_name') ?: 'Liwonde Sun Hotel';
+$currency_code   = getSetting('currency_code')   ?: 'MWK';
+$site_name       = getSetting('site_name')        ?: 'Hotel';
+$site_tagline    = getSetting('restaurant_tagline', 'Fresh. Local. Inspired.');
+$site_phone      = getSetting('phone', '');
+$site_email      = getSetting('email', '');
 
 // ── Fetch food menu ──
 $food_categories = [];
@@ -50,7 +53,7 @@ function fmtPrice($price, $symbol) {
 $food_order = [
     'Breakfast', 'Starter', 'Chicken Corner', 'Meat Corner', 'Fish Corner',
     'Pasta Corner', 'Burger Corner', 'Pizza Corner', 'Snack Corner',
-    'Indian Corner', 'Liwonde Sun Specialities', 'Extras', 'Desserts'
+    'Indian Corner', $site_name . ' Specialities', 'Extras', 'Desserts'
 ];
 
 // Preferred category order for drinks
@@ -331,7 +334,7 @@ body {
         <div class="hotel-name"><?php echo htmlspecialchars($site_name); ?></div>
         <div class="menu-label">Menu</div>
         <div class="divider"></div>
-        <div class="tagline">Fresh. Local. Inspired.</div>
+        <div class="tagline"><?php echo htmlspecialchars($site_tagline); ?></div>
     </div>
 
     <!-- ═══ FOOD MENU ═══ -->
@@ -383,7 +386,14 @@ body {
         <p>All prices are inclusive of applicable taxes.<br>
         Menu items are subject to availability.<br>
         Please inform your server of any dietary requirements or allergies.</p>
-        <div class="currency-note">All prices in Malawian Kwacha (MWK)</div>
+        <div class="currency-note">All prices in <?php echo htmlspecialchars($currency_code); ?></div>
+        <?php if (!empty($site_phone) || !empty($site_email)): ?>
+        <div class="currency-note" style="margin-top:6px;">
+            <?php if (!empty($site_phone)): ?><?php echo htmlspecialchars($site_phone); ?><?php endif; ?>
+            <?php if (!empty($site_phone) && !empty($site_email)): ?> &middot; <?php endif; ?>
+            <?php if (!empty($site_email)): ?><?php echo htmlspecialchars($site_email); ?><?php endif; ?>
+        </div>
+        <?php endif; ?>
     </div>
 
 </div>

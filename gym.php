@@ -1,5 +1,6 @@
 <?php
 require_once 'config/database.php';
+require_once 'includes/page-guard.php';
 require_once 'config/email.php';
 require_once 'includes/validation.php';
 require_once 'includes/modal.php';
@@ -280,8 +281,8 @@ try {
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/theme-dynamic.php">
+    <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/footer.css">
     

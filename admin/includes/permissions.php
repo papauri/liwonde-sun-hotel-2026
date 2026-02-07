@@ -163,6 +163,13 @@ function getAllPermissions() {
             'category' => 'Settings',
             'page' => 'booking-settings.php'
         ],
+        'pages' => [
+            'label' => 'Page Management',
+            'description' => 'Enable, disable and reorder website pages',
+            'icon' => 'fa-file-alt',
+            'category' => 'Settings',
+            'page' => 'page-management.php'
+        ],
         'cache' => [
             'label' => 'Cache Management',
             'description' => 'Manage website cache',
@@ -191,7 +198,7 @@ function getDefaultPermissionsForRole($role) {
             return $all_permissions; // Admin gets everything
             
         case 'manager':
-            return array_diff($all_permissions, ['user_management', 'cache', 'theme', 'section_headers']);
+            return array_diff($all_permissions, ['user_management', 'cache', 'theme', 'section_headers', 'pages']);
             
         case 'receptionist':
             return ['dashboard', 'bookings', 'calendar', 'blocked_dates', 'rooms', 'reviews', 'gym'];
@@ -368,6 +375,7 @@ function getPermissionForPage($page) {
         'theme-management.php' => 'theme',
         'section-headers-management.php' => 'section_headers',
         'booking-settings.php' => 'booking_settings',
+        'page-management.php' => 'pages',
         'cache-management.php' => 'cache',
         'user-management.php' => 'user_management',
         'process-checkin.php' => 'bookings',

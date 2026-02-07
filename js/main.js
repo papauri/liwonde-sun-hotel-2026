@@ -3,14 +3,14 @@
  * Premium Interactions & Animations
  */
 
-// Page Loader
+// Page Loader — hide quickly once everything is ready
 window.addEventListener('load', function() {
     const loader = document.getElementById('page-loader');
     if (loader) {
-        // Hide the loader after a short delay to ensure page content is loaded
+        // Brief delay for paint, then reveal content
         setTimeout(() => {
             loader.classList.add('hidden');
-        }, 800);
+        }, 200);
     }
 });
 
@@ -402,6 +402,20 @@ document.addEventListener('DOMContentLoaded', function() {
         heroIndicators.forEach((dot, i) => {
             dot.classList.toggle('active', i === heroIndex);
         });
+        // Lazy-load: apply background-image from data-bg for active + next slide
+        loadHeroBg(heroIndex);
+        loadHeroBg((heroIndex + 1) % heroSlides.length);
+    }
+
+    // Load a hero slide's background image from data-bg attribute
+    function loadHeroBg(idx) {
+        var slide = heroSlides[idx];
+        if (!slide) return;
+        var imgDiv = slide.querySelector('.hero-slide-image[data-bg]');
+        if (imgDiv) {
+            imgDiv.style.backgroundImage = "url('" + imgDiv.getAttribute('data-bg') + "')";
+            imgDiv.removeAttribute('data-bg');
+        }
     }
 
     function nextHeroSlide() {

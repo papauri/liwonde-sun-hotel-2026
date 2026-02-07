@@ -145,7 +145,9 @@ foreach ($footer_links_raw as $link) {
     
     <!-- Preload Critical Resources -->
     <link rel="preload" href="css/style.css" as="style">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" as="style">
+    <?php if (!empty($hero_slides[0]['image_path'])): ?>
+    <link rel="preload" as="image" href="<?php echo htmlspecialchars($hero_slides[0]['image_path']); ?>" fetchpriority="high">
+    <?php endif; ?>
     
     <!-- Session Handler -->
     <script src="js/session-handler.js" defer></script>
@@ -220,7 +222,11 @@ foreach ($footer_links_raw as $link) {
                     </div>
                 <?php else: ?>
                     <!-- Display image background if no video -->
+                    <?php if ($index === 0): ?>
                     <div class="hero-slide-image" style="background-image: url('<?php echo htmlspecialchars($slide['image_path']); ?>'); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center;"></div>
+                    <?php else: ?>
+                    <div class="hero-slide-image" data-bg="<?php echo htmlspecialchars($slide['image_path']); ?>" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center;"></div>
+                    <?php endif; ?>
                 <?php endif; ?>
                 <div class="hero-overlay"></div>
                 <div class="hero-content fade-in-up">

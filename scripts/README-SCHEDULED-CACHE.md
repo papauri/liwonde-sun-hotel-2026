@@ -35,8 +35,8 @@ This will:
 
 ### 3. Verify It's Working
 ```powershell
-# Run the test script
-php scripts/test-scheduled-cache.php
+# Run the scheduled script manually to test
+php scripts/scheduled-cache-clear.php
 
 # Monitor logs in real-time
 Get-Content logs\cache-clear.log -Wait
@@ -107,11 +107,6 @@ General PHP errors including cache-related issues.
 php scripts/scheduled-cache-clear.php
 ```
 
-### Test with Detailed Output
-```powershell
-php scripts/test-scheduled-cache.php
-```
-
 ### Check Current Settings
 ```powershell
 php -r "require 'config/database.php'; $stmt = $pdo->query('SELECT setting_key, setting_value FROM site_settings WHERE setting_key LIKE \"cache_%\"'); print_r($stmt->fetchAll(PDO::FETCH_KEY_PAIR));"
@@ -121,22 +116,22 @@ php -r "require 'config/database.php'; $stmt = $pdo->query('SELECT setting_key, 
 
 ### View the Task
 ```powershell
-Get-ScheduledTask -TaskName "Liwonde Sun Hotel - Cache Clearing"
+Get-ScheduledTask -TaskName "Hotel Website - Cache Clearing"
 ```
 
 ### Run Manually
 ```powershell
-Start-ScheduledTask -TaskName "Liwonde Sun Hotel - Cache Clearing"
+Start-ScheduledTask -TaskName "Hotel Website - Cache Clearing"
 ```
 
 ### Disable the Task
 ```powershell
-Disable-ScheduledTask -TaskName "Liwonde Sun Hotel - Cache Clearing"
+Disable-ScheduledTask -TaskName "Hotel Website - Cache Clearing"
 ```
 
 ### Remove the Task
 ```powershell
-Unregister-ScheduledTask -TaskName "Liwonde Sun Hotel - Cache Clearing" -Confirm:$false
+Unregister-ScheduledTask -TaskName "Hotel Website - Cache Clearing" -Confirm:$false
 ```
 
 ## Linux/Mac Setup (Cron)
@@ -150,7 +145,7 @@ crontab -e
 
 ### Add This Line (for minute-based intervals)
 ```bash
-* * * * * /usr/bin/php /path/to/liwonde-sun-hotel-2026/scripts/scheduled-cache-clear.php >> /dev/null 2>&1
+* * * * * /usr/bin/php /path/to/your-project/scripts/scheduled-cache-clear.php >> /dev/null 2>&1
 ```
 
 This runs every minute, and the script internally decides if it should clear cache based on your admin panel settings.
@@ -159,10 +154,10 @@ This runs every minute, and the script internally decides if it should clear cac
 If you only use daily or weekly intervals, you can run less frequently:
 ```bash
 # Daily at 3 AM
-0 3 * * * /usr/bin/php /path/to/liwonde-sun-hotel-2026/scripts/scheduled-cache-clear.php >> /dev/null 2>&1
+0 3 * * * /usr/bin/php /path/to/your-project/scripts/scheduled-cache-clear.php >> /dev/null 2>&1
 
 # Weekly on Sunday at 3 AM
-0 3 * * 0 /usr/bin/php /path/to/liwonde-sun-hotel-2026/scripts/scheduled-cache-clear.php >> /dev/null 2>&1
+0 3 * * 0 /usr/bin/php /path/to/your-project/scripts/scheduled-cache-clear.php >> /dev/null 2>&1
 ```
 
 ## Troubleshooting
@@ -175,7 +170,7 @@ If you only use daily or weekly intervals, you can run less frequently:
 
 2. **Check Task Scheduler:**
    ```powershell
-   Get-ScheduledTask -TaskName "Liwonde Sun Hotel - Cache Clearing" | Select-Object -Property *
+   Get-ScheduledTask -TaskName "Hotel Website - Cache Clearing" | Select-Object -Property *
    ```
 
 3. **Check logs:**
@@ -185,12 +180,7 @@ If you only use daily or weekly intervals, you can run less frequently:
    Get-Content logs\php-errors.log | Select-String "cache"
    ```
 
-4. **Run test script:**
-   ```powershell
-   php scripts/test-scheduled-cache.php
-   ```
-
-5. **Manually run scheduled script:**
+4. **Manually run scheduled script:**
    ```powershell
    php scripts/scheduled-cache-clear.php
    ```
@@ -213,7 +203,6 @@ Make sure you run PowerShell as Administrator:
 ## Files in This Directory
 
 - `scheduled-cache-clear.php` - Main cron/scheduled task script
-- `test-scheduled-cache.php` - Test script to verify functionality
 - `setup-windows-task-scheduler.ps1` - Windows setup script (PowerShell)
 - `setup-cron.sh` - Linux/Mac setup script (Bash)
 - `README-SCHEDULED-CACHE.md` - This file
