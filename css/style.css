@@ -347,14 +347,17 @@ button {
 }
 
 .hero-content {
-    position: relative;
-    z-index: 2;
+    position: absolute;
+    top: 40%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    z-index: 10;
     text-align: center;
     max-width: 100%;
     width: 90%;
     margin: 0 auto;
     padding: 0;
-    padding-top: 15%;
 }
 
 .hero-subtitle {
@@ -433,11 +436,11 @@ button {
 
     .hero-content {
         position: absolute;
-        top: 42%;
+        top: 40%;
         left: 0;
         right: 0;
         transform: translateY(-50%);
-        z-index: 5;
+        z-index: 10;
         width: 86%;
         max-width: 600px;
         margin: 0 auto;
