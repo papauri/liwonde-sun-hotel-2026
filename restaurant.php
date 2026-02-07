@@ -1,15 +1,16 @@
 <?php
 require_once 'config/database.php';
+require_once 'config/base-url.php';
 require_once 'includes/section-headers.php';
 
 // AJAX Endpoint - Handle menu data requests
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'menu') {
     header('Content-Type: application/json');
-    
+
     $menu_type = isset($_GET['menu_type']) ? strtolower($_GET['menu_type']) : 'food';
     $currency_symbol = getSetting('currency_symbol');
     $currency_code = getSetting('currency_code');
-    
+
     $response = [
         'success' => false,
         'menu_type' => $menu_type,
@@ -19,18 +20,18 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'menu') {
             'code' => $currency_code
         ]
     ];
-    
+
     try {
         if ($menu_type === 'food') {
             // Simple approach: just use food_menu table
             $stmt = $pdo->query("SELECT * FROM food_menu WHERE is_available = 1 ORDER BY category ASC, display_order ASC, id ASC");
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             // Group by category name (category column contains the name)
             foreach ($items as $item) {
                 $category = $item['category'];
                 $slug = strtolower(str_replace(' ', '-', $category));
-                
+
                 if (!isset($response['categories'][$slug])) {
                     $response['categories'][$slug] = [
                         'name' => $category,
@@ -50,17 +51,17 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'menu') {
                 ];
             }
             $response['success'] = true;
-            
+
         } elseif ($menu_type === 'coffee') {
             $stmt = $pdo->query("SELECT * FROM drink_menu WHERE category = 'Coffee' ORDER BY display_order ASC, id ASC");
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             $response['categories']['Coffee'] = [
                 'name' => 'Coffee',
                 'slug' => 'coffee',
                 'items' => []
             ];
-            
+
             foreach ($items as $item) {
                 $response['categories']['Coffee']['items'][] = [
                     'id' => $item['id'],
@@ -71,11 +72,11 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'menu') {
                 ];
             }
             $response['success'] = true;
-            
+
         } elseif ($menu_type === 'bar') {
             $stmt = $pdo->query("SELECT * FROM drink_menu WHERE category != 'Coffee' ORDER BY category, display_order ASC, id ASC");
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             // Group by category
             foreach ($items as $item) {
                 $category = $item['category'];
@@ -100,7 +101,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'menu') {
         error_log("Error fetching menu: " . $e->getMessage());
         $response['error'] = 'Failed to load menu data';
     }
-    
+
     echo json_encode($response);
     exit;
 }
@@ -110,6 +111,16 @@ $site_name = getSetting('site_name');
 $site_logo = getSetting('site_logo');
 $currency_symbol = getSetting('currency_symbol');
 $currency_code = getSetting('currency_code');
+// Dynamic menu page (pulls live data from DB)
+$site_url = rtrim((string)getSetting('site_url', ''), '/');
+if (!empty($site_url)) {
+    $menu_page_url = $site_url . siteUrl('menu-pdf.php');
+} else {
+    $menu_host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $menu_protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $menu_page_url = $menu_protocol . '://' . $menu_host . siteUrl('menu-pdf.php');
+}
+$menu_qr_image = 'https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=' . urlencode($menu_page_url) . '&margin=0';
 
 // Fetch restaurant gallery
 $gallery_images = [];
@@ -497,6 +508,123 @@ try {
             margin-bottom: 12px;
             font-weight: 500;
         }
+
+        /* QR Menu Panel - deep black/minimal lines */
+        .qr-menu-panel {
+            max-width: 980px;
+            margin: 0 auto 44px;
+            background: linear-gradient(135deg, #0f0f0f 0%, #141414 50%, #0f0f0f 100%);
+            border: 1px solid #1f1f1f;
+            border-radius: 18px;
+            padding: 38px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 230px;
+            gap: 30px;
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.45);
+        }
+        .qr-menu-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            color: #f3f3f0;
+        }
+        .qr-menu-mark {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 16px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fefefe;
+            font-size: 0.75rem;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .qr-menu-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.85rem;
+            margin: 0;
+            color: #ffffff;
+        }
+        .qr-menu-desc {
+            margin: 0;
+            color: #c7c7c7;
+            line-height: 1.8;
+            font-size: 1.02rem;
+            max-width: 620px;
+        }
+        .qr-menu-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 6px;
+        }
+        .qr-menu-actions .btn {
+            min-width: 180px;
+            justify-content: center;
+            border-radius: 10px;
+            background: #f5e6d3;
+            color: #0f0f0f;
+            border: 1px solid #f5e6d3;
+        }
+        .qr-menu-actions .btn:hover {
+            background: #e8d7c0;
+            border-color: #e8d7c0;
+        }
+        .qr-menu-actions .btn-outline {
+            background: transparent;
+            color: #f5e6d3;
+            border: 1px solid rgba(245, 230, 211, 0.7);
+        }
+        .qr-menu-actions .btn-outline:hover {
+            background: rgba(245, 230, 211, 0.1);
+            color: #ffffff;
+            border-color: #f5e6d3;
+        }
+        .qr-menu-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #a8a8a8;
+            font-size: 0.95rem;
+            margin-top: 2px;
+            letter-spacing: 0.2px;
+        }
+        .qr-menu-qr {
+            justify-self: end;
+            text-align: center;
+        }
+        .qr-menu-qr img {
+            width: 210px;
+            height: 210px;
+            border-radius: 14px;
+            border: 1px solid rgba(245, 230, 211, 0.25);
+            background: #0a0a0a;
+            padding: 14px;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+        }
+        .qr-menu-url {
+            margin-top: 14px;
+            font-size: 0.86rem;
+            color: #d8d8d8;
+            word-break: break-all;
+            letter-spacing: 0.3px;
+        }
+        @media (max-width: 900px) {
+            .qr-menu-panel {
+                grid-template-columns: 1fr;
+                padding: 28px;
+            }
+            .qr-menu-qr {
+                justify-self: start;
+            }
+            .qr-menu-qr img {
+                width: 190px;
+                height: 190px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -566,6 +694,27 @@ try {
                 <div class="restaurant-hero-actions">
                     <a href="#book" class="btn btn-primary"><i class="fas fa-utensils"></i> Reserve a Table</a>
                     <a href="#contact" class="btn btn-outline"><i class="fas fa-phone"></i> Call Restaurant</a>
+                </div>
+
+                <!-- QR Menu Panel -->
+                <div class="qr-menu-panel" data-aos="fade-up">
+                    <div class="qr-menu-brand">
+                        <span class="qr-menu-mark">Curated tasting</span>
+                        <h3 class="qr-menu-title">Monochrome Digital Menu</h3>
+                        <p class="qr-menu-desc">A pared-back layout inspired by modern tasting cards. Scan to open the live menu or save as PDF directly from your browser.</p>
+                        <div class="qr-menu-actions">
+                            <a class="btn" href="<?php echo htmlspecialchars($menu_page_url); ?>" target="_blank" rel="noopener">View Menu</a>
+                            <a class="btn btn-outline" href="<?php echo htmlspecialchars($menu_page_url); ?>" target="_blank" rel="noopener">Save as PDF</a>
+                        </div>
+                        <div class="qr-menu-meta">
+                            <span>Updated: Feb 2026</span>
+                            <span aria-hidden="true">•</span>
+                            <span>Live from our kitchen</span>
+                        </div>
+                    </div>
+                    <div class="qr-menu-qr">
+                        <img src="<?php echo $menu_qr_image; ?>" alt="QR code to view the restaurant menu" loading="lazy">
+                    </div>
                 </div>
 
                 <!-- Menu Type Tabs -->
