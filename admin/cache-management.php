@@ -137,6 +137,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $enabled = isset($_POST['schedule_enabled']) ? 1 : 0;
                 $interval = $_POST['schedule_interval'] ?? 'daily';
                 $time = $_POST['schedule_time'] ?? '00:00';
+                $custom_seconds = isset($_POST['custom_seconds']) ? (int)$_POST['custom_seconds'] : 60;
+                
+                // Validate custom seconds (minimum 10 seconds, maximum 86400 seconds/24 hours)
+                if ($custom_seconds < 10) $custom_seconds = 10;
+                if ($custom_seconds > 86400) $custom_seconds = 86400;
                 
                 // Update schedule settings
                 $stmt = $pdo->prepare("
@@ -147,6 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute(['cache_schedule_enabled', $enabled, $enabled]);
                 $stmt->execute(['cache_schedule_interval', $interval, $interval]);
                 $stmt->execute(['cache_schedule_time', $time, $time]);
+                $stmt->execute(['cache_custom_seconds', $custom_seconds, $custom_seconds]);
                 
                 $message = "Cache clearing schedule " . ($enabled ? 'enabled' : 'disabled') . "!";
                 $success = true;
@@ -805,7 +811,27 @@ $cache_types = [
                     
                     <div class="form-group">
                         <label>Clear Frequency</label>
-                        <select name="schedule_interval">
+                        <select name="schedule_interval" id="schedule_interval" onchange="toggleCustomInterval()">
+                            <option value="30sec" 
+                                    <?php echo (isset($cache_settings['cache_schedule_interval']) && $cache_settings['cache_schedule_interval'] == '30sec') ? 'selected' : ''; ?>>
+                                Every 30 Seconds
+                            </option>
+                            <option value="1min" 
+                                    <?php echo (isset($cache_settings['cache_schedule_interval']) && $cache_settings['cache_schedule_interval'] == '1min') ? 'selected' : ''; ?>>
+                                Every 1 Minute
+                            </option>
+                            <option value="5min" 
+                                    <?php echo (isset($cache_settings['cache_schedule_interval']) && $cache_settings['cache_schedule_interval'] == '5min') ? 'selected' : ''; ?>>
+                                Every 5 Minutes
+                            </option>
+                            <option value="15min" 
+                                    <?php echo (isset($cache_settings['cache_schedule_interval']) && $cache_settings['cache_schedule_interval'] == '15min') ? 'selected' : ''; ?>>
+                                Every 15 Minutes
+                            </option>
+                            <option value="30min" 
+                                    <?php echo (isset($cache_settings['cache_schedule_interval']) && $cache_settings['cache_schedule_interval'] == '30min') ? 'selected' : ''; ?>>
+                                Every 30 Minutes
+                            </option>
                             <option value="hourly" 
                                     <?php echo (isset($cache_settings['cache_schedule_interval']) && $cache_settings['cache_schedule_interval'] == 'hourly') ? 'selected' : ''; ?>>
                                 Every Hour
@@ -826,7 +852,21 @@ $cache_types = [
                                     <?php echo (isset($cache_settings['cache_schedule_interval']) && $cache_settings['cache_schedule_interval'] == 'weekly') ? 'selected' : ''; ?>>
                                 Weekly
                             </option>
+                            <option value="custom" 
+                                    <?php echo (isset($cache_settings['cache_schedule_interval']) && $cache_settings['cache_schedule_interval'] == 'custom') ? 'selected' : ''; ?>>
+                                Custom Interval
+                            </option>
                         </select>
+                    </div>
+                    
+                    <div class="form-group" id="custom_interval_group" style="display: none;">
+                        <label>Custom Interval (seconds)</label>
+                        <input type="number" name="custom_seconds" id="custom_seconds"
+                               value="<?php echo $cache_settings['cache_custom_seconds'] ?? '60'; ?>"
+                               min="10" max="86400" step="1">
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            Min: 10 seconds (0.17 mins) | Max: 86400 seconds (24 hours)
+                        </small>
                     </div>
                     
                     <div class="form-group">
@@ -844,9 +884,37 @@ $cache_types = [
             
             <div style="margin-top: 20px; padding: 16px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
                 <i class="fas fa-info-circle"></i>
-                <strong>Note:</strong> Scheduled cache clearing requires a cron job to be set up on your server.
-                <code>php scripts/scheduled-cache-clear.php</code> should run according to your schedule.
+                <strong>Note:</strong> Scheduled cache clearing requires a cron job (Linux/Mac) or Task Scheduler (Windows) to be set up.
+                <br><br>
+                <strong>Cron Setup (Linux/Mac):</strong><br>
+                For intervals &lt; 1 minute: <code>* * * * * php scripts/scheduled-cache-clear.php</code> (runs every minute)<br>
+                For other intervals: Script will check if it should run based on your settings.<br>
+                <br>
+                <strong>Windows Task Scheduler:</strong><br>
+                Set trigger to run every 1 minute for best accuracy with short intervals.
             </div>
+            
+            <script>
+            function toggleCustomInterval() {
+                const interval = document.getElementById('schedule_interval').value;
+                const customGroup = document.getElementById('custom_interval_group');
+                const timeGroup = document.querySelector('input[name="schedule_time"]').closest('.form-group');
+                
+                if (interval === 'custom') {
+                    customGroup.style.display = 'block';
+                    timeGroup.style.display = 'none';
+                } else if (['30sec', '1min', '5min', '15min', '30min', 'hourly'].includes(interval)) {
+                    customGroup.style.display = 'none';
+                    timeGroup.style.display = 'none';
+                } else {
+                    customGroup.style.display = 'none';
+                    timeGroup.style.display = 'block';
+                }
+            }
+            
+            // Run on page load
+            document.addEventListener('DOMContentLoaded', toggleCustomInterval);
+            </script>
         </div>
         
         <!-- Cache Files List -->
