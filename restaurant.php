@@ -114,7 +114,7 @@ $currency_code = getSetting('currency_code');
 // Dynamic menu page (pulls live data from DB)
 $site_url = rtrim((string)getSetting('site_url', ''), '/');
 if (!empty($site_url)) {
-    $menu_page_url = $site_url . siteUrl('menu-pdf.php');
+    $menu_page_url = $site_url . '/menu-pdf.php';
 } else {
     $menu_host = $_SERVER['HTTP_HOST'] ?? 'localhost';
     $menu_protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
