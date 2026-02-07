@@ -1,8 +1,8 @@
 <?php
 /**
  * Review Submission Form with Enhanced Security
- * Liwonde Sun Hotel - Guest Review Submission
- *
+ * Hotel Website - Guest Review Submission
+*
  * Features:
  * - CSRF protection
  * - Secure session management
@@ -242,8 +242,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit a Review | <?php echo htmlspecialchars(getSetting('site_name', 'Liwonde Sun Hotel')); ?></title>
-    <meta name="description" content="Share your experience at <?php echo htmlspecialchars(getSetting('site_name', 'Liwonde Sun Hotel')); ?>. Submit your review and help us improve our services.">
+    <title>Submit a Review | <?php echo htmlspecialchars(getSetting('site_name', 'Hotel Website')); ?></title>
+    <meta name="description" content="Share your experience at <?php echo htmlspecialchars(getSetting('site_name', 'Hotel Website')); ?>. Submit your review and help us improve our services.">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

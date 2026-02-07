@@ -15,14 +15,22 @@
  * 8. Finds bookings expiring in 24 hours and sends reminder emails
  */
 
+// Production error handling
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../logs/cron-errors.log');
+
 // Load bootstrap
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/email.php';
 
-echo "========================================\n";
-echo "Tentative Booking Check Cron\n";
-echo "Started: " . date('Y-m-d H:i:s') . "\n";
-echo "========================================\n\n";
+// Log output to file
+$log_file = __DIR__ . '/../logs/tentative-bookings-cron.log';
+$log_output = "========================================\n";
+$log_output .= "Tentative Booking Check Cron\n";
+$log_output .= "Started: " . date('Y-m-d H:i:s') . "\n";
+$log_output .= "========================================\n\n";
 
 try {
     $processed_expired = 0;
@@ -34,15 +42,15 @@ try {
     $grace_period_hours = (int)getSetting('tentative_grace_period_hours', 0);
     $pending_duration_hours = (int)getSetting('pending_duration_hours', 24);
     
-    echo "Settings loaded:\n";
-    echo "  - Grace period: {$grace_period_hours} hours\n";
-    echo "  - Pending duration: {$pending_duration_hours} hours\n\n";
+    $log_output .= "Settings loaded:\n";
+    $log_output .= "  - Grace period: {$grace_period_hours} hours\n";
+    $log_output .= "  - Pending duration: {$pending_duration_hours} hours\n\n";
     
     // ============================================
     // PART 1: Process Expired Tentative Bookings
     // ============================================
     
-    echo "PART 1: Checking for expired tentative bookings...\n";
+    $log_output .= "PART 1: Checking for expired tentative bookings...\n";
     
     // Build query with grace period support
     $grace_period_sql = $grace_period_hours > 0
@@ -60,11 +68,11 @@ try {
     $stmt->execute();
     $expired_bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    echo "Found " . count($expired_bookings) . " expired tentative bookings\n\n";
+    $log_output .= "Found " . count($expired_bookings) . " expired tentative bookings\n\n";
     
     if (!empty($expired_bookings)) {
         foreach ($expired_bookings as $booking) {
-            echo "Processing booking: {$booking['booking_reference']}\n";
+            $log_output .= "Processing booking: {$booking['booking_reference']}\n";
             
             $pdo->beginTransaction();
             
@@ -99,32 +107,32 @@ try {
                         WHERE id = ? AND rooms_available < total_rooms
                     ");
                     $restore->execute([$booking['room_id']]);
-                    echo "  - Room availability restored\n";
+                    $log_output .= "  - Room availability restored\n";
                 }
                 
                 // Send expiration email to guest
                 $email_result = sendTentativeBookingExpiredEmail($booking);
                 if ($email_result['success']) {
-                    echo "  - Expiration email sent to guest\n";
+                    $log_output .= "  - Expiration email sent to guest\n";
                 } else {
-                    echo "  - Guest email failed: {$email_result['message']}\n";
+                    $log_output .= "  - Guest email failed: {$email_result['message']}\n";
                 }
                 
                 // Send admin notification
                 $admin_email_result = sendAdminBookingExpiredNotification($booking, 'tentative');
                 if ($admin_email_result['success']) {
-                    echo "  - Admin notification sent\n";
+                    $log_output .= "  - Admin notification sent\n";
                 } else {
-                    echo "  - Admin notification failed: {$admin_email_result['message']}\n";
+                    $log_output .= "  - Admin notification failed: {$admin_email_result['message']}\n";
                 }
                 
                 $pdo->commit();
-                echo "  - Booking marked as expired\n\n";
+                $log_output .= "  - Booking marked as expired\n\n";
                 $processed_expired++;
                 
             } catch (Exception $e) {
                 $pdo->rollBack();
-                echo "  - ERROR: {$e->getMessage()}\n\n";
+                $log_output .= "  - ERROR: {$e->getMessage()}\n\n";
                 error_log("Failed to expire booking {$booking['booking_reference']}: {$e->getMessage()}");
                 $errors++;
             }
@@ -135,7 +143,7 @@ try {
     // PART 2: Process Expired Pending Bookings
     // ============================================
     
-    echo "PART 2: Checking for expired pending bookings...\n";
+    $log_output .= "PART 2: Checking for expired pending bookings...\n";
     
     $stmt = $pdo->prepare("
         SELECT * FROM bookings
@@ -146,11 +154,11 @@ try {
     $stmt->execute([$pending_duration_hours]);
     $expired_pending = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    echo "Found " . count($expired_pending) . " expired pending bookings\n\n";
+    $log_output .= "Found " . count($expired_pending) . " expired pending bookings\n\n";
     
     if (!empty($expired_pending)) {
         foreach ($expired_pending as $booking) {
-            echo "Processing pending booking: {$booking['booking_reference']}\n";
+            $log_output .= "Processing pending booking: {$booking['booking_reference']}\n";
             
             $pdo->beginTransaction();
             
@@ -190,32 +198,32 @@ try {
                         WHERE id = ? AND rooms_available < total_rooms
                     ");
                     $restore->execute([$booking['room_id']]);
-                    echo "  - Room availability restored\n";
+                    $log_output .= "  - Room availability restored\n";
                 }
                 
                 // Send expiration email to guest
                 $email_result = sendPendingBookingExpiredEmail($booking, $room);
                 if ($email_result['success']) {
-                    echo "  - Expiration email sent to guest\n";
+                    $log_output .= "  - Expiration email sent to guest\n";
                 } else {
-                    echo "  - Guest email failed: {$email_result['message']}\n";
+                    $log_output .= "  - Guest email failed: {$email_result['message']}\n";
                 }
                 
                 // Send admin notification
                 $admin_email_result = sendAdminBookingExpiredNotification($booking, 'pending');
                 if ($admin_email_result['success']) {
-                    echo "  - Admin notification sent\n";
+                    $log_output .= "  - Admin notification sent\n";
                 } else {
-                    echo "  - Admin notification failed: {$admin_email_result['message']}\n";
+                    $log_output .= "  - Admin notification failed: {$admin_email_result['message']}\n";
                 }
                 
                 $pdo->commit();
-                echo "  - Pending booking marked as expired\n\n";
+                $log_output .= "  - Pending booking marked as expired\n\n";
                 $processed_pending++;
                 
             } catch (Exception $e) {
                 $pdo->rollBack();
-                echo "  - ERROR: {$e->getMessage()}\n\n";
+                $log_output .= "  - ERROR: {$e->getMessage()}\n\n";
                 error_log("Failed to expire pending booking {$booking['booking_reference']}: {$e->getMessage()}");
                 $errors++;
             }
@@ -226,7 +234,7 @@ try {
     // PART 3: Send Reminder Emails (24h before expiry)
     // ============================================
     
-    echo "PART 2: Checking for bookings expiring in 24 hours...\n";
+    $log_output .= "PART 3: Checking for bookings expiring in 24 hours...\n";
     
     $reminder_hours = (int)getSetting('tentative_reminder_hours', 24);
     
@@ -241,11 +249,11 @@ try {
     $stmt->execute([$reminder_hours]);
     $reminder_bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    echo "Found " . count($reminder_bookings) . " bookings needing reminders\n\n";
+    $log_output .= "Found " . count($reminder_bookings) . " bookings needing reminders\n\n";
     
     if (!empty($reminder_bookings)) {
         foreach ($reminder_bookings as $booking) {
-            echo "Processing reminder for booking: {$booking['booking_reference']}\n";
+            $log_output .= "Processing reminder for booking: {$booking['booking_reference']}\n";
             
             $pdo->beginTransaction();
             
@@ -276,19 +284,19 @@ try {
                         $booking['tentative_expires_at']
                     ]);
                     
-                    echo "  - Reminder email sent\n";
+                    $log_output .= "  - Reminder email sent\n";
                     $processed_reminders++;
                 } else {
-                    echo "  - Email failed: {$email_result['message']}\n";
+                    $log_output .= "  - Email failed: {$email_result['message']}\n";
                     $errors++;
                 }
                 
                 $pdo->commit();
-                echo "  - Reminder processed\n\n";
+                $log_output .= "  - Reminder processed\n\n";
                 
             } catch (Exception $e) {
                 $pdo->rollBack();
-                echo "  - ERROR: {$e->getMessage()}\n\n";
+                $log_output .= "  - ERROR: {$e->getMessage()}\n\n";
                 error_log("Failed to send reminder for booking {$booking['booking_reference']}: {$e->getMessage()}");
                 $errors++;
             }
@@ -299,30 +307,45 @@ try {
     // PART 4: Summary Statistics
     // ============================================
     
-    echo "========================================\n";
-    echo "SUMMARY\n";
-    echo "========================================\n";
-    echo "Tentative bookings expired: {$processed_expired}\n";
-    echo "Pending bookings expired: {$processed_pending}\n";
-    echo "Reminder emails sent: {$processed_reminders}\n";
-    echo "Errors encountered: {$errors}\n";
-    echo "Completed: " . date('Y-m-d H:i:s') . "\n";
-    echo "========================================\n";
+    $log_output .= "========================================\n";
+    $log_output .= "SUMMARY\n";
+    $log_output .= "========================================\n";
+    $log_output .= "Tentative bookings expired: {$processed_expired}\n";
+    $log_output .= "Pending bookings expired: {$processed_pending}\n";
+    $log_output .= "Reminder emails sent: {$processed_reminders}\n";
+    $log_output .= "Errors encountered: {$errors}\n";
+    $log_output .= "Completed: " . date('Y-m-d H:i:s') . "\n";
+    $log_output .= "========================================\n";
     
-    // Log summary to file
+    // Write full log to file
     $logDir = __DIR__ . '/../logs';
     if (!file_exists($logDir)) {
         mkdir($logDir, 0755, true);
     }
     
-    $logFile = $logDir . '/tentative-booking-cron.log';
+    $logFile = $logDir . '/tentative-bookings-cron.log';
+    $summaryFile = $logDir . '/tentative-bookings-summary.log';
     $logEntry = "[" . date('Y-m-d H:i:s') . "] Tentative Expired: {$processed_expired}, Pending Expired: {$processed_pending}, Reminders: {$processed_reminders}, Errors: {$errors}\n";
-    file_put_contents($logFile, $logEntry, FILE_APPEND);
+    file_put_contents($logFile, $log_output, FILE_APPEND);
+    file_put_contents($summaryFile, $logEntry, FILE_APPEND);
+    
+    // Log to error_log if there were errors
+    if ($errors > 0) {
+        error_log("Tentative booking cron completed with {$errors} errors");
+    }
     
     exit(0);
     
 } catch (Exception $e) {
-    echo "CRITICAL ERROR: {$e->getMessage()}\n";
-    error_log("Tentative booking cron failed: " . $e->getMessage());
+    $error_msg = "CRITICAL ERROR in tentative booking cron: {$e->getMessage()}\n";
+    error_log($error_msg);
+    
+    // Write error to log file
+    $logDir = __DIR__ . '/../logs';
+    if (!file_exists($logDir)) {
+        mkdir($logDir, 0755, true);
+    }
+    file_put_contents($logDir . '/tentative-bookings-cron.log', "[" . date('Y-m-d H:i:s') . "] " . $error_msg, FILE_APPEND);
+    
     exit(1);
 }

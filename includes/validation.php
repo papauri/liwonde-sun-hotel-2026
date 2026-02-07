@@ -1,7 +1,7 @@
 <?php
 /**
  * Input Validation Library
- * Liwonde Sun Hotel - Comprehensive Input Validation
+ * Hotel Website - Comprehensive Input Validation
  * 
  * This library provides reusable validation functions for all forms
  * to ensure data integrity and security.

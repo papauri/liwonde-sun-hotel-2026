@@ -44,6 +44,7 @@
         <li><a href="reports.php" class="<?php echo $current_page === 'reports.php' ? 'active' : ''; ?>"><i class="fas fa-chart-bar"></i> Reports</a></li>
         <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></li>
         <li><a href="theme-management.php" class="<?php echo $current_page === 'theme-management.php' ? 'active' : ''; ?>"><i class="fas fa-palette"></i> Theme Management</a></li>
+        <li><a href="section-headers-management.php" class="<?php echo $current_page === 'section-headers' ? 'active' : ''; ?>"><i class="fas fa-heading"></i> Section Headers</a></li>
         <li><a href="booking-settings.php" class="<?php echo $current_page === 'booking-settings.php' ? 'active' : ''; ?>"><i class="fas fa-cog"></i> Booking Settings</a></li>
         <li><a href="cache-management.php" class="<?php echo $current_page === 'cache-management.php' ? 'active' : ''; ?>"><i class="fas fa-bolt"></i> Cache Management</a></li>
     </ul>

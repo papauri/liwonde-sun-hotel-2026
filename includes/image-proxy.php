@@ -5,34 +5,29 @@
  * Usage: <img src="/includes/image-proxy.php?url=[encoded_url]" />
  */
 
-// Enable error reporting for debugging
+// Production error handling - log critical errors only
 error_reporting(E_ALL);
-ini_set('display_errors', 0); // Don't display errors to browser
+ini_set('display_errors', 0);
 ini_set('log_errors', 1);
-
-// Log to file for debugging
-error_log("Image Proxy: Request received - " . $_SERVER['REQUEST_URI']);
 
 // Get the image URL from query parameter
 if (!isset($_GET['url'])) {
-    error_log("Image Proxy: Missing URL parameter");
+    error_log("Image Proxy Error: Missing URL parameter");
     header('HTTP/1.0 400 Bad Request');
     exit('Missing URL parameter');
 }
 
 $imageUrl = $_GET['url'];
-error_log("Image Proxy: URL = " . $imageUrl);
 
 // Security: Validate URL format
 if (!filter_var($imageUrl, FILTER_VALIDATE_URL)) {
-    error_log("Image Proxy: Invalid URL format");
+    error_log("Image Proxy Error: Invalid URL format - " . substr($imageUrl, 0, 100));
     header('HTTP/1.0 400 Bad Request');
     exit('Invalid URL');
 }
 
 // Security: Only allow specific domains (Facebook, Instagram, etc.)
 $urlHost = parse_url($imageUrl, PHP_URL_HOST);
-error_log("Image Proxy: URL Host = " . ($urlHost ?: 'empty'));
 $allowed = false;
 
 // Check if it's an external URL that needs proxy
@@ -40,40 +35,34 @@ $proxyDomains = ['fbcdn.net', 'facebook.com', 'instagram.com', 'fb.com', 'fbsbx.
 foreach ($proxyDomains as $domain) {
     if (strpos($urlHost, $domain) !== false) {
         $allowed = true;
-        error_log("Image Proxy: Allowed domain matched = " . $domain);
         break;
     }
 }
 
 // If not an external domain, redirect directly
 if (!$allowed) {
-    error_log("Image Proxy: Domain not allowed, redirecting");
     header('Location: ' . $imageUrl);
     exit;
 }
 
 // Cache directory - use absolute path
 $cacheDir = dirname(__DIR__) . '/data/image-cache/';
-error_log("Image Proxy: Cache dir = " . $cacheDir);
 
 // Create cache directory if it doesn't exist
 if (!file_exists($cacheDir)) {
-    error_log("Image Proxy: Creating cache directory");
     if (!mkdir($cacheDir, 0755, true)) {
-        error_log("Image Proxy: FAILED to create cache directory");
+        error_log("Image Proxy Error: Failed to create cache directory: " . $cacheDir);
         header('HTTP/1.0 500 Internal Server Error');
         exit('Cannot create cache directory');
     }
-    error_log("Image Proxy: Cache directory created successfully");
 }
 
 // Check if cache directory is writable
 if (!is_writable($cacheDir)) {
-    error_log("Image Proxy: Cache directory not writable");
+    error_log("Image Proxy Error: Cache directory not writable: " . $cacheDir);
     header('HTTP/1.0 500 Internal Server Error');
     exit('Cache directory not writable');
 }
-error_log("Image Proxy: Cache directory is writable");
 
 // Generate cache filename from URL hash
 $cacheFile = $cacheDir . md5($imageUrl) . '.jpg';
@@ -95,7 +84,6 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
 
 // Fetch the image
 header('X-Image-Cache: MISS');
-error_log("Image Proxy: Fetching image from remote");
 
 $imageData = null;
 $contentType = null;

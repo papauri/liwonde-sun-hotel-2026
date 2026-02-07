@@ -1,7 +1,7 @@
 <?php
 /**
  * Reviews API
- * Liwonde Sun Hotel - Admin API for managing guest reviews
+ * Hotel Website - Admin API for managing guest reviews
  * 
  * Endpoints:
  * - GET: Fetch reviews with optional filtering

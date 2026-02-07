@@ -146,8 +146,8 @@ $seo_data = [
             'name' => $site_name,
             'address' => [
                 '@type' => 'PostalAddress',
-                'addressLocality' => 'Liwonde',
-                'addressCountry' => 'MW'
+                'addressLocality' => $contact['address_line2'] ?? '',
+                'addressCountry' => $contact['address_country'] ?? ''
             ]
         ]
     ]

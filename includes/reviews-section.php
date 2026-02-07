@@ -8,16 +8,19 @@
  * - $review_averages: Array of average rating values
  * - $site_name: Site name for admin response attribution
  */
+
+// Load section headers helper
+require_once __DIR__ . '/section-headers.php';
 ?>
 
 <!-- Hotel Reviews Section -->
 <section class="section hotel-reviews-section" id="reviews">
     <div class="container">
-        <div class="section-header">
-            <span class="section-subtitle">Guest Reviews</span>
-            <h2 class="section-title">What Our Guests Say</h2>
-            <p class="section-description">Read authentic reviews from guests who have experienced our hospitality</p>
-        </div>
+        <?php renderSectionHeader('hotel_reviews', 'global', [
+            'label' => 'Guest Reviews',
+            'title' => 'What Our Guests Say',
+            'description' => 'Read authentic reviews from guests who have experienced our hospitality'
+        ]); ?>
         
         <?php if (!empty($hotel_reviews)): ?>
         <!-- Reviews List -->

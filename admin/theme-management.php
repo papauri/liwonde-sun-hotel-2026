@@ -384,6 +384,29 @@ try {
             <?php showAlert($error, 'error'); ?>
         <?php endif; ?>
         
+        <!-- Section Headers Info -->
+        <div style="background: linear-gradient(135deg, #E8F4F8 0%, #F0F8FF 100%); border-left: 4px solid var(--gold); padding: 20px; border-radius: 8px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
+            <div style="display: flex; align-items: start; gap: 16px;">
+                <div style="flex-shrink: 0; width: 44px; height: 44px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">
+                    <i class="fas fa-heading"></i>
+                </div>
+                <div style="flex: 1;">
+                    <h3 style="margin: 0 0 8px 0; color: var(--navy); font-size: 18px; font-weight: 600;">
+                        Manage Section Headers & Content
+                    </h3>
+                    <p style="margin: 0 0 12px 0; color: #555; font-size: 14px; line-height: 1.6;">
+                        Looking to customize section titles, labels, and descriptions across your website? 
+                        Use the <strong>Section Headers</strong> management tool to update all section content including labels, subtitles, titles, and descriptions.
+                    </p>
+                    <a href="section-headers-management.php" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--gold); color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; transition: all 0.3s ease;">
+                        <i class="fas fa-heading"></i>
+                        Manage Section Headers
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
         <!-- Preset Themes -->
         <div class="theme-section">
             <h2><i class="fas fa-swatchbook"></i> Preset Themes</h2>

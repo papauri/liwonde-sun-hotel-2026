@@ -157,7 +157,7 @@
 
         <div class="minimalist-footer-bottom">
             <div class="minimalist-footer-copyright">
-                <p><?php echo htmlspecialchars(getSetting('footer_credits', '&copy; ' . date('Y') . ' ' . getSetting('site_name', 'Liwonde Sun Hotel') . '. Powered by ProManaged IT')); ?></p>
+                <p><?php echo htmlspecialchars(getSetting('footer_credits', '&copy; ' . date('Y') . ' ' . getSetting('site_name', 'Hotel Website') . '. Powered by ProManaged IT')); ?></p>
             </div>
 
             <div class="minimalist-footer-credits">
@@ -237,9 +237,9 @@
 <script>
 function sharePage(platform) {
     const shareData = {
-        title: document.title || '<?php echo htmlspecialchars(getSetting('site_name', 'Liwonde Sun Hotel')); ?> - Luxury Accommodation in Malawi',
+        title: document.title || '<?php echo htmlspecialchars(getSetting('site_name', 'Hotel Website')); ?>',
         url: window.location.href,
-        text: 'Experience unmatched luxury at <?php echo htmlspecialchars(getSetting('site_name', 'Liwonde Sun Hotel')); ?>. Book your stay today!'
+        text: 'Experience hospitality at <?php echo htmlspecialchars(getSetting('site_name', 'Hotel Website')); ?>. Book your stay today!'
     };
 
     const shareUrls = {

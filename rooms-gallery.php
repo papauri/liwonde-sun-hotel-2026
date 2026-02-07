@@ -1,5 +1,5 @@
 <?php
-// Liwonde Sun Hotel - Rooms Gallery (Modern Cards)
+// Hotel Website - Rooms Gallery (Modern Cards)
 require_once 'config/database.php';
 require_once 'includes/reviews-display.php';
 

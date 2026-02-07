@@ -1,7 +1,7 @@
 <?php
 /**
  * Calendar-Based Room Management
- * Liwonde Sun Hotel - Admin Panel
+ * Hotel Website - Admin Panel
  */
 
 // Include admin initialization (PHP-only, no HTML output)

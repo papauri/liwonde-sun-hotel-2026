@@ -49,17 +49,18 @@ if (!function_exists('resolveImageUrl')) {
 <?php if (!empty($gallery_images)): ?>
 <section class="section hotel-gallery-section" id="gallery">
     <div class="container">
-        <div class="section-header">
-            <span class="section-subtitle">Visual Journey</span>
-            <h2 class="section-title">Explore Our Hotel</h2>
-            <p class="section-description">
-                <?php 
-                echo isset($site_name) 
-                    ? 'Immerse yourself in the beauty and luxury of ' . htmlspecialchars($site_name) 
-                    : 'Immerse yourself in the beauty and luxury of our hotel'; 
-                ?>
-            </p>
-        </div>
+        <?php 
+        // Get section header from database
+        $gallery_description = isset($site_name) 
+            ? 'Immerse yourself in the beauty and luxury of ' . htmlspecialchars($site_name) 
+            : 'Immerse yourself in the beauty and luxury of our hotel';
+        
+        renderSectionHeader('hotel_gallery', 'index', [
+            'label' => 'Visual Journey',
+            'title' => 'Explore Our Hotel',
+            'description' => $gallery_description
+        ]); 
+        ?>
         
         <div class="gallery-carousel-wrapper">
             <button class="gallery-nav-btn gallery-nav-prev" aria-label="Previous">

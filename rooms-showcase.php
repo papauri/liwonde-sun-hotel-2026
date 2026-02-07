@@ -1,6 +1,7 @@
 <?php
 require_once 'config/database.php';
 require_once 'includes/reviews-display.php';
+require_once 'includes/section-headers.php';
 
 // Core settings
 $site_name = getSetting('site_name');
@@ -246,11 +247,11 @@ foreach ($rooms as $room) {
     <main>
         <section class="section" id="collection">
             <div class="container">
-                <div class="section-header">
-                    <span class="section-subtitle">Stay Collection</span>
-                    <h2 class="section-title">Pick Your Perfect Space</h2>
-                    <p class="section-description">Suites and rooms crafted for business, romance, and family stays with direct booking flows.</p>
-                </div>
+                <?php renderSectionHeader('rooms_collection', 'rooms-showcase', [
+                    'label' => 'Stay Collection',
+                    'title' => 'Pick Your Perfect Space',
+                    'description' => 'Suites and rooms crafted for business, romance, and family stays with direct booking flows'
+                ]); ?>
 
                 <div class="rooms-filter">
                     <?php foreach ($badges as $badge): ?>

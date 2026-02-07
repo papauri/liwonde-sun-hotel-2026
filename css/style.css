@@ -87,7 +87,7 @@
     z-index: -2;
 }
 /**
- * Liwonde Sun Hotel - Mega Premium Landing Page
+ * Hotel Website - Main Stylesheet
  * Ultra-Luxury Design System
  */
 
@@ -1205,12 +1205,14 @@ button:disabled,
 }
 
 .section-subtitle {
-    color: var(--gold);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-bottom: 15px;
+    font-family: var(--font-serif);
+    font-style: italic;
+    color: #7a7a7a;
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    line-height: 1.4;
 }
 
 .section-title {
@@ -2733,8 +2735,8 @@ button:disabled,
 }
 
 #testimonials .section-subtitle {
-    color: var(--gold);
-    text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 #testimonials .section-title {
@@ -2852,9 +2854,10 @@ button:disabled,
 
 .hotel-reviews-section .section-subtitle {
     text-align: center;
-    font-size: 1.1rem;
-    color: #666;
-    margin-bottom: 3rem;
+    font-style: italic;
+    color: #888;
+    font-size: 18px;
+    margin-bottom: 2rem;
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
@@ -4979,6 +4982,10 @@ button:disabled,
     color: rgba(212, 175, 55, 0.8);
 }
 
+.bg-dark .section-subtitle {
+    color: rgba(255, 255, 255, 0.7);
+}
+
 .bg-dark .section-title {
     color: var(--white);
 }
@@ -5093,7 +5100,8 @@ button:disabled,
 }
 
 .hotel-gallery-section .section-subtitle {
-    color: var(--gold);
+    color: rgba(255, 255, 255, 0.75);
+    font-style: italic;
 }
 
 .hotel-gallery-section .section-title {
@@ -5651,8 +5659,8 @@ button:disabled,
     }
     
     .section-subtitle {
-        font-size: 11px;
-        letter-spacing: 2px;
+        font-size: 16px;
+        letter-spacing: 0.3px;
         margin-bottom: 8px;
     }
     
@@ -6013,7 +6021,9 @@ button:disabled,
     
     .hotel-reviews-section .section-subtitle {
         text-align: center;
-        font-size: 1.1rem;
+        font-size: 17px;
+        font-style: italic;
+    }
         color: var(--text-muted);
         margin-bottom: 3rem;
         max-width: 600px;
@@ -6338,8 +6348,9 @@ button:disabled,
         }
     
         .hotel-reviews-section .section-subtitle {
-            font-size: 1rem;
+            font-size: 16px;
             margin-bottom: 2rem;
+            font-style: italic;
         }
     
         .reviews-summary-wrapper {

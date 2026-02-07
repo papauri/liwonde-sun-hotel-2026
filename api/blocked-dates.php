@@ -1,7 +1,7 @@
 <?php
 /**
  * Blocked Dates API Endpoint
- * Liwonde Sun Hotel - Room Availability System
+ * Hotel Website - Room Availability System
  * 
  * This API handles CRUD operations for blocked room dates
  * Endpoints:

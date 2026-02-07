@@ -1,6 +1,6 @@
 <?php
 /**
- * Liwonde Sun Hotel - Site Settings API Endpoint
+ * Hotel Website - Site Settings API Endpoint
  * 
  * Returns dynamic site settings from database
  * Used by client integrations to avoid hardcoded values
@@ -32,9 +32,9 @@ try {
         'message' => 'Site settings retrieved successfully',
         'data' => [
             'hotel' => [
-                'name' => $settingsArray['site_name'] ?? 'Liwonde Sun Hotel',
-                'tagline' => $settingsArray['site_tagline'] ?? 'Where Luxury Meets Nature',
-                'url' => $settingsArray['site_url'] ?? 'https://liwondesunhotel.com',
+                'name' => $settingsArray['site_name'] ?? 'Hotel Website',
+                'tagline' => $settingsArray['site_tagline'] ?? '',
+                'url' => $settingsArray['site_url'] ?? '',
                 'logo' => $settingsArray['site_logo'] ?? ''
             ],
             'contact' => [
@@ -63,7 +63,7 @@ try {
                 'linkedin' => $settingsArray['linkedin_url'] ?? ''
             ],
             'legal' => [
-                'copyright_text' => $settingsArray['footer_credits'] ?? $settingsArray['copyright_text'] ?? (date('Y') . ' ' . ($settingsArray['site_name'] ?? 'Liwonde Sun Hotel') . '. All rights reserved.')
+                'copyright_text' => $settingsArray['footer_credits'] ?? $settingsArray['copyright_text'] ?? (date('Y') . ' ' . ($settingsArray['site_name'] ?? 'Hotel Website') . '. All rights reserved.')
             ],
             'all_settings' => $settingsArray
         ]

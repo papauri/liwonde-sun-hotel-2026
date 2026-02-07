@@ -1,7 +1,7 @@
 <?php
 /**
  * Reviews Display Functions
- * Liwonde Sun Hotel - Reusable functions for displaying reviews and ratings
+ * Hotel Website - Reusable functions for displaying reviews and ratings
  */
 
 /**

@@ -1,7 +1,7 @@
 <?php
 /**
  * Security Configuration and Utilities
- * Liwonde Sun Hotel - Basic Security Layer
+ * Hotel Website - Basic Security Layer
  * 
  * Features:
  * - Security Headers (including CSP for Font Awesome)

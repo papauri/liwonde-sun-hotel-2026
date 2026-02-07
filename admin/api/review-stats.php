@@ -1,7 +1,7 @@
 <?php
 /**
  * Review Statistics API
- * Liwonde Sun Hotel - Admin API for review statistics and analytics
+ * Hotel Website - Admin API for review statistics and analytics
  * 
  * Endpoints:
  * - GET: Get comprehensive review statistics

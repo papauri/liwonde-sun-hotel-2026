@@ -19,6 +19,7 @@ require_once 'config/database.php';
 require_once 'config/email.php';
 require_once 'includes/modal.php';
 require_once 'includes/validation.php';
+require_once 'includes/section-headers.php';
 
 // Send security headers
 sendSecurityHeaders();
@@ -757,6 +758,11 @@ function resolveConferenceImage(?string $imagePath): string
     <!-- Conference Rooms Section -->
     <section class="conference-rooms-section">
         <div class="container">
+            <?php renderSectionHeader('conference_overview', 'conference', [
+                'label' => 'Our Meeting Spaces',
+                'title' => 'Professional Conference Facilities',
+                'description' => 'State-of-the-art venues for your business meetings and events'
+            ], 'text-center'); ?>
             <?php if (empty($conference_rooms)): ?>
                 <div class="conference-empty">
                     <h2>No conference rooms available</h2>

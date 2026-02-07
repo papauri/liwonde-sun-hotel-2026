@@ -1,6 +1,6 @@
 <?php
 /**
- * Liwonde Sun Hotel Booking API
+ * Hotel Booking API
  * RESTful API for external websites to access booking system
  * 
  * Base endpoint: /api/
@@ -320,7 +320,7 @@ try {
         case '':
             // API documentation/info
             ApiResponse::success([
-                'api' => getSetting('site_name', 'Liwonde Sun Hotel') . ' Booking API',
+                'api' => getSetting('site_name', 'Hotel Website') . ' Booking API',
                 'version' => '1.0.0',
                 'endpoints' => [
                     'GET /api/rooms' => 'List available rooms',

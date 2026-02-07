@@ -2,10 +2,11 @@
 # SMTP EMAIL CONFIGURATION
 # ====================
 # These environment variables are used by config/email.php
-SetEnv SMTP_HOST smtp.hostinger.com
-SetEnv SMTP_PORT 465
-SetEnv SMTP_USER info@liwondesunhotel.com
-SetEnv SMTP_PASS LiwondeSunHotel26!
+# IMPORTANT: Set these in your production environment
+# SetEnv SMTP_HOST your-smtp-host.com
+# SetEnv SMTP_PORT 465
+# SetEnv SMTP_USER your-email@yourdomain.com
+# SetEnv SMTP_PASS your-secure-password
 
 # ====================
 # COMPRESSION

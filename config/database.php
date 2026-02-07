@@ -1,7 +1,7 @@
 <?php
 /**
  * Database Configuration
- * Liwonde Sun Hotel - Premium Database Connection
+ * Hotel Website - Database Connection
  * Supports both LOCAL and PRODUCTION environments
  */
 

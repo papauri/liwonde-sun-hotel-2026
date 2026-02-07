@@ -9,6 +9,12 @@
  * - Weekly: 0 3 * * 0 php /path/to/scripts/scheduled-cache-clear.php
  */
 
+// Production error handling
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../logs/cron-errors.log');
+
 // Load database connection
 require_once __DIR__ . '/../config/database.php';
 
@@ -26,7 +32,7 @@ $scheduled_time = $settings['cache_schedule_time'] ?? '00:00';
 
 // Check if scheduling is enabled
 if (!$schedule_enabled) {
-    echo "Cache clearing schedule is disabled.\n";
+    error_log("Scheduled cache clear: Schedule is disabled");
     exit(0);
 }
 
@@ -70,7 +76,7 @@ switch ($interval) {
 }
 
 if (!$should_run) {
-    echo "Not scheduled to run at this time. Current: {$current_time}, Scheduled: {$scheduled_time}, Interval: {$interval}\n";
+    // Silent exit - not scheduled to run now
     exit(0);
 }
 
@@ -83,11 +89,15 @@ $cleared = clearCache();
 // Log the action
 $log_file = __DIR__ . '/../logs/cache-clear.log';
 $log_entry = date('Y-m-d H:i:s') . " - Scheduled cache clear executed. Files cleared: {$cleared}\n";
-file_put_contents($log_file, $log_entry, FILE_APPEND);
 
-echo "Cache cleared successfully at " . date('Y-m-d H:i:s') . "\n";
-echo "Files cleared: {$cleared}\n";
-echo "Log entry written to: {$log_file}\n";
+// Ensure log directory exists
+$log_dir = dirname($log_file);
+if (!file_exists($log_dir)) {
+    mkdir($log_dir, 0755, true);
+}
+
+file_put_contents($log_file, $log_entry, FILE_APPEND);
+error_log("Scheduled cache clear completed: {$cleared} files cleared");
 
 exit(0);
 ?>

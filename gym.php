@@ -4,6 +4,7 @@ require_once 'config/email.php';
 require_once 'includes/validation.php';
 require_once 'includes/modal.php';
 require_once 'includes/image-proxy-helper.php';
+require_once 'includes/section-headers.php';
 
 // Start session for any session-based functionality
 if (session_status() === PHP_SESSION_NONE) {
@@ -362,11 +363,13 @@ try {
     <!-- Wellness Overview -->
     <section class="wellness-intro section-padding">
         <div class="container">
+            <?php renderSectionHeader('gym_wellness', 'gym', [
+                'label' => 'Your Wellness Journey',
+                'title' => $gymContent['wellness_title'] ?? 'Wellness & Fitness',
+                'description' => $gymContent['wellness_description'] ?? 'Experience comprehensive wellness facilities'
+            ]); ?>
             <div class="wellness-content-grid">
                 <div class="wellness-text" data-aos="fade-right">
-                    <span class="section-label">Your Wellness Journey</span>
-                    <h2 class="section-title"><?php echo htmlspecialchars($gymContent['wellness_title']); ?></h2>
-                    <p class="section-description"><?php echo htmlspecialchars($gymContent['wellness_description']); ?></p>
                     
                     <div class="wellness-features">
                         <?php if (!empty($gymFeatures)): ?>
@@ -426,11 +429,11 @@ try {
     <!-- Gym Facilities -->
     <section class="gym-facilities section-padding bg-dark">
         <div class="container">
-            <div class="section-header text-center">
-                <span class="section-label">What We Offer</span>
-                <h2 class="section-title">Comprehensive Fitness Facilities</h2>
-                <p class="section-description">Everything you need for a complete wellness experience</p>
-            </div>
+            <?php renderSectionHeader('gym_facilities', 'gym', [
+                'label' => 'What We Offer',
+                'title' => 'Comprehensive Fitness Facilities',
+                'description' => 'Everything you need for a complete wellness experience'
+            ], 'text-center'); ?>
 
             <div class="facilities-grid">
                 <?php if (!empty($gymFacilities)): ?>
@@ -480,11 +483,11 @@ try {
     <!-- Class Schedule -->
     <section class="class-schedule section-padding">
         <div class="container">
-            <div class="section-header text-center">
-                <span class="section-label">Stay Active</span>
-                <h2 class="section-title">Group Fitness Classes</h2>
-                <p class="section-description">Join our expert-led classes designed for all fitness levels</p>
-            </div>
+            <?php renderSectionHeader('gym_classes', 'gym', [
+                'label' => 'Stay Active',
+                'title' => 'Group Fitness Classes',
+                'description' => 'Join our expert-led classes designed for all fitness levels'
+            ], 'text-center'); ?>
 
             <div class="schedule-grid">
                 <?php if (!empty($gymClasses)): ?>
@@ -555,9 +558,11 @@ try {
                 </div>
                 
                 <div class="training-text" data-aos="fade-left">
-                    <span class="section-label">One-on-One Coaching</span>
-                    <h2 class="section-title">Personal Training Programs</h2>
-                    <p class="section-description">Achieve your fitness goals faster with personalized guidance from our certified trainers.</p>
+                    <?php renderSectionHeader('gym_training', 'gym', [
+                        'label' => 'One-on-One Coaching',
+                        'title' => 'Personal Training Programs',
+                        'description' => 'Achieve your fitness goals faster with personalized guidance from our certified trainers.'
+                    ]); ?>
                     
                     <ul class="training-benefits">
                         <li><i class="fas fa-check-circle"></i> Customized workout plans tailored to your goals</li>
@@ -579,11 +584,11 @@ try {
     <!-- Wellness Packages -->
     <section class="wellness-packages section-padding">
         <div class="container">
-            <div class="section-header text-center">
-                <span class="section-label">Exclusive Offers</span>
-                <h2 class="section-title">Wellness Packages</h2>
-                <p class="section-description">Comprehensive packages designed for optimal health and relaxation</p>
-            </div>
+            <?php renderSectionHeader('gym_packages', 'gym', [
+                'label' => 'Exclusive Offers',
+                'title' => 'Wellness Packages',
+                'description' => 'Comprehensive packages designed for optimal health and relaxation'
+            ], 'text-center'); ?>
 
             <div class="packages-grid">
                 <?php if (!empty($gymPackages)): ?>

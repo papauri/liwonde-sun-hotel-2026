@@ -1,7 +1,7 @@
 <?php
 /**
  * Blocked Dates Management Page
- * Liwonde Sun Hotel - Admin Panel
+ * Hotel Website - Admin Panel
  *
  * Allows administrators to block/unblock room dates
  * for maintenance, events, or other reasons

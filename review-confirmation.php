@@ -1,7 +1,7 @@
 <?php
 /**
  * Review Submission Confirmation
- * Liwonde Sun Hotel - Professional Confirmation Page
+ * Hotel Website - Professional Confirmation Page
  */
 
 // Start session
@@ -12,10 +12,10 @@ $review_details = $_SESSION['review_details'] ?? null;
 unset($_SESSION['review_details']);
 
 // Get site name
-$site_name = 'Liwonde Sun Hotel';
+$site_name = 'Hotel Website';
 if (file_exists(__DIR__ . '/config/database.php')) {
     require_once __DIR__ . '/config/database.php';
-    $site_name = getSetting('site_name', 'Liwonde Sun Hotel');
+    $site_name = getSetting('site_name', 'Hotel Website');
 }
 ?>
 <!DOCTYPE html>

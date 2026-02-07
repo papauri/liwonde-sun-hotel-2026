@@ -1,5 +1,6 @@
 <?php
 require_once 'config/database.php';
+require_once 'includes/section-headers.php';
 
 // AJAX Endpoint - Handle menu data requests
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'menu') {
@@ -138,9 +139,9 @@ try {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=yes">
-    <title>Fine Dining Restaurant - <?php echo htmlspecialchars($site_name); ?> | Gourmet Cuisine in Malawi</title>
+    <title>Fine Dining Restaurant - <?php echo htmlspecialchars($site_name); ?> | Gourmet Cuisine</title>
     <meta name="description" content="Experience exquisite fine dining at <?php echo htmlspecialchars($site_name); ?>. Fresh local cuisine, international dishes, craft cocktails, and premium bar service in an elegant setting.">
-    <meta name="keywords" content="fine dining malawi, gourmet restaurant, lake malawi dining, luxury restaurant liwonde, international cuisine">
+    <meta name="keywords" content="<?php echo htmlspecialchars(getSetting('default_keywords', 'fine dining, gourmet restaurant, international cuisine, luxury restaurant')); ?>">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/restaurant.php">
     
@@ -521,11 +522,11 @@ try {
     <!-- Restaurant Gallery Grid -->
     <section class="restaurant-gallery section-padding">
         <div class="container">
-            <div class="section-header text-center">
-                <span class="section-label">Visual Journey</span>
-                <h2 class="section-title">Our Dining Spaces</h2>
-                <p class="section-description">From elegant interiors to breathtaking views, every detail creates the perfect ambiance</p>
-            </div>
+            <?php renderSectionHeader('restaurant_gallery', 'restaurant', [
+                'label' => 'Visual Journey',
+                'title' => 'Our Dining Spaces',
+                'description' => 'From elegant interiors to breathtaking views, every detail creates the perfect ambiance'
+            ], 'text-center'); ?>
 
             <div class="gallery-grid">
                 <?php if (!empty($gallery_images)): ?>
@@ -553,11 +554,11 @@ try {
     <!-- Menu Section -->
     <section class="restaurant-menu section-padding" style="background: var(--japandi-bg);">
         <div class="container">
-            <div class="section-header text-center">
-                <span class="section-label">Culinary Delights</span>
-                <h2 class="section-title">Our Menu</h2>
-                <p class="section-description">Discover our carefully curated selection of dishes and beverages</p>
-            </div>
+            <?php renderSectionHeader('restaurant_menu', 'restaurant', [
+                'label' => 'Culinary Delights',
+                'title' => 'Our Menu',
+                'description' => 'Discover our carefully curated selection of dishes and beverages'
+            ], 'text-center'); ?>
 
             <!-- Menu Container -->
             <div class="menu-container">

@@ -1,10 +1,12 @@
 <?php
-// Enable error reporting for debugging
+// Production error handling - log errors, don't display
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
 
 require_once 'config/database.php';
 require_once 'includes/image-proxy-helper.php';
+require_once 'includes/section-headers.php';
 
 
 // Fetch all events (both upcoming and expired)
@@ -565,6 +567,11 @@ try {
     <!-- Events Section -->
     <section class="events-section">
         <div class="container">
+            <?php renderSectionHeader('events_overview', 'events', [
+                'label' => 'Upcoming Events',
+                'title' => 'Special Events & Occasions',
+                'description' => 'Join us for memorable celebrations and special gatherings'
+            ], 'text-center'); ?>
             <?php if (empty($upcoming_events)): ?>
                 <div class="no-events">
                     <i class="fas fa-calendar-times"></i>

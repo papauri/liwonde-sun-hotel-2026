@@ -23,7 +23,7 @@ if (file_exists(__DIR__ . '/config/database.php')) {
 // If no site URL in database, use current domain
 if (empty($site_url)) {
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'] ?? 'liwondesunhotel.com';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
     $site_url = $protocol . '://' . $host;
 }
 

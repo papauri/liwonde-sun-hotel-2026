@@ -1,7 +1,7 @@
 <?php
 /**
  * Room Pictures API
- * Liwonde Sun Hotel - Admin API for managing room gallery images
+ * Hotel Website - Admin API for managing room gallery images
  * 
  * Endpoints:
  * - GET: Fetch all pictures for a room

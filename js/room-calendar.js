@@ -1,6 +1,6 @@
 /**
  * Room Availability Calendar
- * Liwonde Sun Hotel - Booking System
+ * Hotel Website - Booking System
  * 
  * A visual calendar component that shows available dates
  * and blocks unavailable dates (booked or manually blocked)

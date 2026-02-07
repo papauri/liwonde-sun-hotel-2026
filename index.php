@@ -5,6 +5,7 @@ require_once 'config/security.php';
 require_once 'config/database.php';
 require_once 'includes/reviews-display.php';
 require_once 'includes/video-display.php';
+require_once 'includes/section-headers.php';
 
 // Send security headers
 sendSecurityHeaders();
@@ -121,9 +122,9 @@ foreach ($footer_links_raw as $link) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=yes">
-    <title><?php echo htmlspecialchars($site_name); ?> - Luxury Hotel in Malawi | Premium Accommodation</title>
-    <meta name="description" content="<?php echo htmlspecialchars($hero_subtitle); ?>. Book your stay at Malawi's premier luxury hotel featuring world-class dining, spa, and breathtaking views.">
-    <meta name="keywords" content="luxury hotel malawi, liwonde accommodation, premium resort, lake malawi hotel, 5-star hotel malawi">
+    <title><?php echo htmlspecialchars($site_name); ?> - Luxury Hotel | Premium Accommodation</title>
+    <meta name="description" content="<?php echo htmlspecialchars($hero_subtitle); ?>. Book your stay at our premier luxury hotel featuring world-class dining, spa, and breathtaking views.">
+    <meta name="keywords" content="<?php echo htmlspecialchars(getSetting('default_keywords', 'luxury hotel, premium accommodation, resort')); ?>">
     <meta name="author" content="<?php echo htmlspecialchars($site_name); ?>">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/">
@@ -131,7 +132,7 @@ foreach ($footer_links_raw as $link) {
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://<?php echo $_SERVER['HTTP_HOST']; ?>/">
-    <meta property="og:title" content="<?php echo htmlspecialchars($site_name); ?> - Luxury Hotel in Malawi">
+    <meta property="og:title" content="<?php echo htmlspecialchars($site_name); ?> - Luxury Hotel">
     <meta property="og:description" content="<?php echo htmlspecialchars($hero_subtitle); ?>">
     <meta property="og:image" content="https://<?php echo $_SERVER['HTTP_HOST']; ?>/images/hero/slide1.jpg">
     
@@ -178,9 +179,9 @@ foreach ($footer_links_raw as $link) {
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "<?php echo htmlspecialchars($contact['address_line1']); ?>",
-        "addressLocality": "Liwonde",
-        "addressRegion": "Southern Region",
-        "addressCountry": "MW"
+        "addressLocality": "<?php echo htmlspecialchars($contact['address_line2'] ?? ''); ?>",
+        "addressRegion": "<?php echo htmlspecialchars($contact['address_region'] ?? ''); ?>",
+        "addressCountry": "<?php echo htmlspecialchars($contact['address_country'] ?? ''); ?>"
       },
       "telephone": "<?php echo htmlspecialchars($contact['phone_main']); ?>",
       "email": "<?php echo htmlspecialchars($contact['email_main']); ?>",
@@ -410,11 +411,11 @@ foreach ($footer_links_raw as $link) {
     <!-- Featured Rooms Section -->
     <section class="section" id="rooms" style="background: #FBF8F3;">
         <div class="container">
-            <div class="section-header">
-                <span class="section-subtitle">Accommodations</span>
-                <h2 class="section-title">Luxurious Rooms & Suites</h2>
-                <p class="section-description">Experience unmatched comfort in our meticulously designed rooms and suites</p>
-            </div>
+            <?php renderSectionHeader('home_rooms', 'index', [
+                'label' => 'Accommodations',
+                'title' => 'Luxurious Rooms & Suites',
+                'description' => 'Experience unmatched comfort in our meticulously designed rooms and suites'
+            ]); ?>
             
             <div class="rooms-grid" id="roomsGrid" data-room-count="<?php echo count($featured_rooms); ?>">
                 <?php foreach ($featured_rooms as $room): 
@@ -474,11 +475,11 @@ foreach ($footer_links_raw as $link) {
     <!-- Facilities Section -->
     <section class="section" id="facilities">
         <div class="container">
-            <div class="section-header">
-                <span class="section-subtitle">Amenities</span>
-                <h2 class="section-title">World-Class Facilities</h2>
-                <p class="section-description">Indulge in our premium facilities designed for your ultimate comfort</p>
-            </div>
+            <?php renderSectionHeader('home_facilities', 'index', [
+                'label' => 'Amenities',
+                'title' => 'World-Class Facilities',
+                'description' => 'Indulge in our premium facilities designed for your ultimate comfort'
+            ]); ?>
             
             <div class="facilities-grid">
                 <?php foreach ($facilities as $facility): ?>
@@ -514,11 +515,11 @@ foreach ($footer_links_raw as $link) {
     <!-- Testimonials Section -->
     <section class="section" id="testimonials">
         <div class="container">
-            <div class="section-header">
-                <span class="section-subtitle">Reviews</span>
-                <h2 class="section-title">What Our Guests Say</h2>
-                <p class="section-description">Hear from those who have experienced our exceptional hospitality</p>
-            </div>
+            <?php renderSectionHeader('home_testimonials', 'index', [
+                'label' => 'Reviews',
+                'title' => 'What Our Guests Say',
+                'description' => 'Hear from those who have experienced our exceptional hospitality'
+            ]); ?>
             
             <div class="testimonials-grid">
                 <?php foreach ($testimonials as $testimonial): ?>

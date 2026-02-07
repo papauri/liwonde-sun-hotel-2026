@@ -1,7 +1,7 @@
 <?php
 /**
  * Review Responses API
- * Liwonde Sun Hotel - Admin API for managing admin responses to reviews
+ * Hotel Website - Admin API for managing admin responses to reviews
  * 
  * Endpoints:
  * - GET: Fetch responses for a specific review
@@ -203,8 +203,8 @@ try {
             
             // Send email notification to guest
             if (!empty($review_details['guest_email'])) {
-                $site_name = getSetting('site_name', 'Liwonde Sun Hotel');
-                $site_url = getSetting('site_url', 'https://liwondesunhotel.com');
+                $site_name = getSetting('site_name', 'Hotel Website');
+                $site_url = getSetting('site_url', '');
                 
                 $email_subject = "Response to your review at {$site_name}";
                 
@@ -316,8 +316,8 @@ try {
             if (!empty($review_details['guest_email'])) {
                 $response_data['email_status'] = 'attempting';
                 
-                $site_name = getSetting('site_name', 'Liwonde Sun Hotel');
-                $site_url = getSetting('site_url', 'https://liwondesunhotel.com');
+                $site_name = getSetting('site_name', 'Hotel Website');
+                $site_url = getSetting('site_url', '');
                 
                 $email_subject = "Response to your review at {$site_name}";
                 

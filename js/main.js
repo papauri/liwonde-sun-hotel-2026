@@ -1,5 +1,5 @@
 /**
- * Liwonde Sun Hotel - Main JavaScript
+ * Hotel Website - Main JavaScript
  * Premium Interactions & Animations
  */
 
