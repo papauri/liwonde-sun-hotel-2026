@@ -359,31 +359,39 @@ button {
 
 .hero-subtitle {
     color: var(--gold);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 2px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 3px;
     text-transform: uppercase;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
     display: block;
+    animation: fadeInUp 0.8s ease-out 0.2s both;
 }
 
 .hero-title {
     font-family: var(--font-serif);
-    font-size: 24px;
+    font-size: 56px;
     font-weight: 700;
     color: var(--white);
-    line-height: 1.1;
-    margin-bottom: 8px;
-    letter-spacing: 0.5px;
+    line-height: 1.15;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+    animation: fadeInUp 0.8s ease-out 0.4s both;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
 .hero-description {
     color: var(--cream);
-    font-size: 12px;
-    line-height: 1.5;
-    margin-bottom: 16px;
-    opacity: 0.9;
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+    opacity: 0.95;
     display: block;
+    max-width: 650px;
+    margin-left: auto;
+    margin-right: auto;
+    font-weight: 300;
+    animation: fadeInUp 0.8s ease-out 0.6s both;
 }
 
 .hero-cta {
@@ -438,24 +446,26 @@ button {
     }
 
     .hero-subtitle {
-        font-size: 9px;
-        letter-spacing: 1.8px;
-        margin-bottom: 2px;
-        opacity: 0.94;
+        font-size: 11px;
+        letter-spacing: 2.5px;
+        margin-bottom: 12px;
+        opacity: 0.95;
     }
 
     .hero-title {
-        font-size: 20px;
-        margin-bottom: 3px;
-        line-height: 1.15;
+        font-size: 32px;
+        margin-bottom: 14px;
+        line-height: 1.2;
+        letter-spacing: -0.3px;
     }
 
     .hero-description {
         display: block;
-        font-size: 11px;
-        line-height: 1.35;
-        margin-bottom: 6px;
-        opacity: 0.88;
+        font-size: 15px;
+        line-height: 1.5;
+        margin-bottom: 20px;
+        opacity: 0.92;
+        max-width: 90%;
     }
 
     .hero-cta {
@@ -872,7 +882,7 @@ button:disabled,
     }
     
     .hero-title {
-        font-size: 20px !important;
+        font-size: 32px !important;
     }
     
     .rooms-hero__content h1,
@@ -3447,13 +3457,15 @@ button:disabled,
         margin: 0 auto;
     }
     .hero-title {
-        font-size: 36px;
-        line-height: 1.15;
+        font-size: 44px;
+        line-height: 1.2;
         margin-bottom: 18px;
+        letter-spacing: -0.4px;
     }
     .hero-description {
-        font-size: 16px;
-        margin-bottom: 22px;
+        font-size: 17px;
+        margin-bottom: 26px;
+        max-width: 85%;
     }
     .hero-cta {
         flex-direction: column;
@@ -8526,15 +8538,17 @@ body.modal-open {
     }
     
     .hero-title {
-        font-size: 20px;
+        font-size: 28px;
     }
     
     .hero-subtitle {
-        font-size: 10px;
+        font-size: 11px;
+        letter-spacing: 2px;
     }
     
     .hero-description {
-        font-size: 11px;
+        font-size: 14px;
+        line-height: 1.5;
     }
     
     .hero-cta .btn {

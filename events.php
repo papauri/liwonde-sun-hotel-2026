@@ -49,51 +49,6 @@ require_once 'includes/video-display.php';
 $currency_symbol = getSetting('currency_symbol');
 $site_name = getSetting('site_name');
 $site_logo = getSetting('site_logo');
-
-// Fetch contact settings
-try {
-    $contact_settings = getSettingsByGroup('contact');
-    $contact = [];
-    if ($contact_settings && is_array($contact_settings)) {
-        foreach ($contact_settings as $setting) {
-            $contact[$setting['setting_key']] = $setting['setting_value'];
-        }
-    }
-} catch (Exception $e) {
-    $contact = [];
-}
-
-// Fetch social media links
-try {
-    $social_settings = getSettingsByGroup('social');
-    $social = [];
-    if ($social_settings && is_array($social_settings)) {
-        foreach ($social_settings as $setting) {
-            $social[$setting['setting_key']] = $setting['setting_value'];
-        }
-    }
-} catch (Exception $e) {
-    $social = [];
-}
-
-// Fetch footer links grouped by column
-try {
-    $stmt = $pdo->query("
-        SELECT column_name, link_text, link_url 
-        FROM footer_links 
-        WHERE is_active = 1 
-        ORDER BY column_name, display_order
-    ");
-    $footer_links_raw = $stmt->fetchAll();
-
-    // Group footer links by column
-    $footer_links = [];
-    foreach ($footer_links_raw as $link) {
-        $footer_links[$link['column_name']][] = $link;
-    }
-} catch (PDOException $e) {
-    $footer_links = [];
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -106,6 +61,7 @@ try {
     <meta name="format-detection" content="telephone=yes">
     <title>Upcoming Events - <?php echo htmlspecialchars($site_name); ?></title>
     <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/theme-dynamic.php">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/footer.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
