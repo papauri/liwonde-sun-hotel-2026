@@ -111,6 +111,9 @@ function _canShowNavItem($permission_key) {
         <?php if (_canShowNavItem('user_management')): ?>
         <li><a href="user-management.php" class="<?php echo $current_page === 'user-management.php' ? 'active' : ''; ?>"><i class="fas fa-users-cog"></i> User Management</a></li>
         <?php endif; ?>
+        <?php if (_canShowNavItem('reports')): ?>
+        <li><a href="visitor-analytics.php" class="<?php echo $current_page === 'visitor-analytics.php' ? 'active' : ''; ?>"><i class="fas fa-chart-line"></i> Visitor Analytics</a></li>
+        <?php endif; ?>
     </ul>
 </nav>
 <script>

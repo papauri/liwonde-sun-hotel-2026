@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Feb 08, 2026 at 12:32 AM
+-- Generation Time: Feb 08, 2026 at 01:09 AM
 -- Server version: 8.0.44-cll-lve
 -- PHP Version: 8.4.16
 
@@ -230,7 +230,8 @@ CREATE TABLE `bookings` (
 
 INSERT INTO `bookings` (`id`, `booking_reference`, `room_id`, `guest_name`, `guest_email`, `guest_phone`, `guest_country`, `guest_address`, `number_of_guests`, `check_in_date`, `check_out_date`, `number_of_nights`, `total_amount`, `amount_paid`, `amount_due`, `vat_rate`, `vat_amount`, `total_with_vat`, `last_payment_date`, `special_requests`, `status`, `is_tentative`, `tentative_expires_at`, `deposit_required`, `deposit_amount`, `deposit_paid`, `deposit_paid_at`, `reminder_sent`, `reminder_sent_at`, `converted_to_confirmed_at`, `expired_at`, `tentative_notes`, `payment_status`, `payment_amount`, `payment_date`, `created_at`, `updated_at`, `expires_at`, `converted_from_tentative`, `occupancy_type`) VALUES
 (26, 'LSH20262435', 4, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-02-08', '2026-02-11', 3, 405000.00, 471825.00, 0.00, 16.50, 66825.00, 471825.00, '2026-02-07', '', 'confirmed', 0, '2026-02-07 17:02:29', 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, 'paid', 0.00, NULL, '2026-02-05 14:05:05', '2026-02-07 00:24:20', NULL, 0, 'double'),
-(27, 'LSH20262851', 5, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-02-11', '2026-02-19', 8, 920000.00, 1071800.00, 0.00, 16.50, 151800.00, 1071800.00, '2026-02-07', '', 'confirmed', 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, 'paid', 0.00, NULL, '2026-02-07 00:19:44', '2026-02-07 00:22:33', NULL, 0, 'double');
+(27, 'LSH20262851', 5, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-02-11', '2026-02-19', 8, 920000.00, 1071800.00, 0.00, 16.50, 151800.00, 1071800.00, '2026-02-07', '', 'confirmed', 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, 'paid', 0.00, NULL, '2026-02-07 00:19:44', '2026-02-07 00:22:33', NULL, 0, 'double'),
+(28, 'LSH20264267', 2, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-02-09', '2026-02-13', 4, 660000.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, '', 'pending', 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, 'unpaid', 0.00, NULL, '2026-02-08 00:36:43', '2026-02-08 00:36:43', NULL, 0, 'double');
 
 -- --------------------------------------------------------
 
@@ -1353,9 +1354,9 @@ CREATE TABLE `rooms` (
 --
 
 INSERT INTO `rooms` (`id`, `name`, `slug`, `description`, `short_description`, `price_per_night`, `size_sqm`, `max_guests`, `rooms_available`, `total_rooms`, `bed_type`, `image_url`, `badge`, `amenities`, `is_featured`, `is_active`, `display_order`, `created_at`, `updated_at`, `video_path`, `video_type`, `price_single_occupancy`, `price_double_occupancy`, `price_triple_occupancy`) VALUES
-(2, 'Executive Suite', 'executive-suite', 'Comfortable suite with separate sitting area. Includes a desk for work, TV, WiFi, coffee/tea facilities, and mini fridge. Good for business travelers or those wanting extra space.', 'Spacious room with work area', 130000.00, 60, 2, 4, 5, 'King Bed', 'images/rooms/ExecutiveRoom.jpeg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-02-07 02:40:52', NULL, NULL, 130000.00, 165000.00, NULL),
-(4, 'Deluxe Room', 'deluxe-room', 'Comfortable room with en-suite bathroom. Features a comfortable bed, TV, WiFi, and basic amenities. Clean and well-maintained for a good night\'s sleep.', 'Comfortable room with private bathroom', 100000.00, 45, 2, 4, 5, 'King Bed', 'images/rooms/Deluxe_Room.jpg', 'Popular', 'King Bed,Jacuzzi Tub,Living Area,Marble Bathroom,Premium Bedding,Smart TV,Mini Bar,Free WiFi', 1, 1, 4, '2026-01-19 20:22:49', '2026-02-07 02:40:52', NULL, NULL, 100000.00, 135000.00, 0.00),
-(5, 'Standard Room', 'standard-room', 'Simple, clean room with everything you need. Comfortable bed, TV, and WiFi. Perfect for budget travelers looking for a good value.', 'Simple, affordable accommodation', 85000.00, 35, 2, 3, 5, 'King Bed', 'images/rooms/family_suite.jpg', NULL, 'King Bed,City View,Balcony,Smart TV,Free WiFi,Coffee Machine,Safe,Climate Control', 1, 1, 5, '2026-01-19 20:22:49', '2026-02-07 02:40:52', NULL, NULL, 85000.00, 115000.00, NULL);
+(2, 'Executive Suite', 'executive-suite', 'Comfortable suite with separate sitting area. Includes a desk for work, TV, WiFi, coffee/tea facilities, and mini fridge. Good for business travelers or those wanting extra space.', 'Spacious room with work area', 130000.00, 60, 2, 4, 5, 'King Bed', 'images/rooms/ExecutiveRoom.jpeg', NULL, 'King Bed,Work Desk,Butler Service,Living Area,Smart TV,High-Speed WiFi,Coffee Machine,Mini Bar,Safe', 1, 1, 2, '2026-01-19 20:22:49', '2026-02-08 00:35:43', NULL, NULL, 130000.00, 165000.00, 165000.00),
+(4, 'Deluxe Room', 'deluxe-room', 'Comfortable room with en-suite bathroom. Features a comfortable bed, TV, WiFi, and basic amenities. Clean and well-maintained for a good night\'s sleep.', 'Comfortable room with private bathroom', 100000.00, 45, 2, 4, 5, 'King Bed', 'images/rooms/Deluxe_Room.jpg', 'Popular', 'King Bed,Jacuzzi Tub,Living Area,Marble Bathroom,Premium Bedding,Smart TV,Mini Bar,Free WiFi', 1, 1, 4, '2026-01-19 20:22:49', '2026-02-08 00:35:51', NULL, NULL, 100000.00, 135000.00, 135000.00),
+(5, 'Standard Room', 'standard-room', 'Simple, clean room with everything you need. Comfortable bed, TV, and WiFi. Perfect for budget travelers looking for a good value.', 'Simple, affordable accommodation', 85000.00, 35, 2, 3, 5, 'King Bed', 'images/rooms/family_suite.jpg', NULL, 'King Bed,City View,Balcony,Smart TV,Free WiFi,Coffee Machine,Safe,Climate Control', 1, 1, 5, '2026-01-19 20:22:49', '2026-02-08 00:35:58', NULL, NULL, 85000.00, 115000.00, 115000.00);
 
 -- --------------------------------------------------------
 
@@ -1544,6 +1545,30 @@ INSERT INTO `site_settings` (`id`, `setting_key`, `setting_value`, `setting_grou
 (266, 'cache_global_enabled', '1', NULL, '2026-02-07 12:49:14', NULL, NULL),
 (269, 'cache_last_run', '1770469224', NULL, '2026-02-07 13:00:24', NULL, NULL),
 (273, 'cache_custom_seconds', '60', NULL, '2026-02-07 13:03:46', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `site_visitors`
+--
+
+CREATE TABLE `site_visitors` (
+  `id` int UNSIGNED NOT NULL,
+  `session_id` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_agent` text COLLATE utf8mb4_unicode_ci,
+  `device_type` enum('desktop','tablet','mobile','bot','unknown') COLLATE utf8mb4_unicode_ci DEFAULT 'unknown',
+  `browser` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `os` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `referrer` text COLLATE utf8mb4_unicode_ci,
+  `referrer_domain` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `page_url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `page_title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_first_visit` tinyint(1) DEFAULT '0',
+  `visit_duration` int DEFAULT NULL COMMENT 'Seconds on page',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -2045,6 +2070,17 @@ ALTER TABLE `site_settings`
   ADD UNIQUE KEY `setting_key` (`setting_key`);
 
 --
+-- Indexes for table `site_visitors`
+--
+ALTER TABLE `site_visitors`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_session` (`session_id`),
+  ADD KEY `idx_ip` (`ip_address`),
+  ADD KEY `idx_created` (`created_at`),
+  ADD KEY `idx_page` (`page_url`(191)),
+  ADD KEY `idx_device` (`device_type`);
+
+--
 -- Indexes for table `tentative_booking_log`
 --
 ALTER TABLE `tentative_booking_log`
@@ -2106,7 +2142,7 @@ ALTER TABLE `api_usage_logs`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `booking_notes`
@@ -2317,6 +2353,12 @@ ALTER TABLE `site_pages`
 --
 ALTER TABLE `site_settings`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=283;
+
+--
+-- AUTO_INCREMENT for table `site_visitors`
+--
+ALTER TABLE `site_visitors`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `tentative_booking_log`

@@ -76,6 +76,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_booking'])) {
         
         if (!$room) throw new Exception('Room not found');
         
+        // Enforce maximum guest capacity
+        if ($number_of_guests > (int)$room['max_guests']) {
+            throw new Exception('Number of guests (' . $number_of_guests . ') exceeds room capacity of ' . $room['max_guests'] . ' guests. Please reduce guests or book an additional room.');
+        }
+        
         // Calculate pricing
         if ($occupancy_type === 'single' && !empty($room['price_single_occupancy'])) {
             $room_price = $room['price_single_occupancy'];
@@ -98,8 +103,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_booking'])) {
         $total_amount = $price_override !== null ? $price_override : ($room_price * $number_of_nights);
         
         // Generate unique booking reference
+        $ref_prefix = getSetting('booking_reference_prefix', 'LSH');
         do {
-            $booking_reference = 'LSH' . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            $booking_reference = $ref_prefix . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
             $ref_check = $pdo->prepare("SELECT COUNT(*) as count FROM bookings WHERE booking_reference = ?");
             $ref_check->execute([$booking_reference]);
             $ref_exists = $ref_check->fetch(PDO::FETCH_ASSOC)['count'] > 0;
@@ -478,7 +484,12 @@ $rooms_json = json_encode(array_map(function($r) {
             const roomId = parseInt(document.getElementById('roomSelect').value);
             const room = roomsData.find(r => r.id === roomId);
             if (room) {
-                document.getElementById('numGuests').max = room.max_guests;
+                const guestsInput = document.getElementById('numGuests');
+                guestsInput.max = room.max_guests;
+                // Clamp current value to max capacity
+                if (parseInt(guestsInput.value) > room.max_guests) {
+                    guestsInput.value = room.max_guests;
+                }
             }
             calculateTotal();
         }

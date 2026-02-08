@@ -19,7 +19,7 @@ $error = '';
 // Fetch booking
 try {
     $stmt = $pdo->prepare("
-        SELECT b.*, r.name as room_name, r.price_per_night, r.total_rooms, r.rooms_available
+        SELECT b.*, r.name as room_name, r.price_per_night, r.total_rooms, r.rooms_available, r.max_guests
         FROM bookings b
         LEFT JOIN rooms r ON b.room_id = r.id
         WHERE b.id = ?
@@ -75,6 +75,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $booking) {
         } elseif (strtotime($check_out) <= strtotime($check_in)) {
             $error = 'Check-out date must be after check-in date.';
         } else {
+            // Enforce maximum guest capacity for selected room
+            $cap_check = $pdo->prepare("SELECT max_guests FROM rooms WHERE id = ?");
+            $cap_check->execute([$room_id]);
+            $cap_room = $cap_check->fetch(PDO::FETCH_ASSOC);
+            if ($cap_room && $number_of_guests > (int)$cap_room['max_guests']) {
+                $error = 'Number of guests (' . $number_of_guests . ') exceeds room capacity of ' . $cap_room['max_guests'] . '. Please reduce guests or assign a different room.';
+            }
+        }
+        
+        if (empty($error)) {
             try {
                 $pdo->beginTransaction();
                 
@@ -205,6 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $booking) {
     }
 }
 
+
 if (!$booking) {
     echo '<p>Booking not found.</p>';
     exit;
@@ -332,6 +343,7 @@ if (!$booking) {
                                     data-single="<?php echo $room['single_price'] ?? $room['price_per_night']; ?>"
                                     data-double="<?php echo $room['double_price'] ?? $room['price_per_night']; ?>"
                                     data-triple="<?php echo $room['triple_price'] ?? $room['price_per_night']; ?>"
+                                    data-max-guests="<?php echo $room['max_guests']; ?>"
                                     data-available="<?php echo $room['rooms_available']; ?>"
                                     <?php echo $room['id'] == $booking['room_id'] ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($room['name']); ?> 
@@ -363,8 +375,10 @@ if (!$booking) {
                 </div>
                 <div class="form-group">
                     <label for="number_of_guests">Number of Guests</label>
-                    <input type="number" id="number_of_guests" name="number_of_guests" min="1" max="10"
+                    <input type="number" id="number_of_guests" name="number_of_guests" min="1"
+                           max="<?php echo $booking['max_guests'] ?? 10; ?>"
                            value="<?php echo $booking['number_of_guests']; ?>">
+                    <small style="color: #888;">Max: <span id="maxGuestsHint"><?php echo $booking['max_guests'] ?? '?'; ?></span> for this room</small>
                 </div>
                 <div class="form-group">
                     <label for="total_amount">Total Amount (<?php echo $currency_symbol; ?>)</label>
@@ -444,6 +458,18 @@ if (!$booking) {
             document.getElementById('calcVatInfo').textContent = 'VAT (' + vatRate + '%): ' + currencySymbol + ' ' + vat.toFixed(2);
         }
     }
+
+    // Update max guests when room changes
+    document.getElementById('room_id').addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+        const maxGuests = parseInt(selected.dataset.maxGuests) || 10;
+        const guestsInput = document.getElementById('number_of_guests');
+        guestsInput.max = maxGuests;
+        document.getElementById('maxGuestsHint').textContent = maxGuests;
+        if (parseInt(guestsInput.value) > maxGuests) {
+            guestsInput.value = maxGuests;
+        }
+    });
 </script>
 
 <script src="js/admin-components.js"></script>

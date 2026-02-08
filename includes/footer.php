@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/visitor-tracker.php'; ?>
 <?php require_once 'modal.php'; ?>
 <!-- Footer - Minimalist Professional 2026 -->
 <footer class="minimalist-footer" id="contact">
