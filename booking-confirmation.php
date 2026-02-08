@@ -261,6 +261,17 @@ $payment_policy = getSetting('payment_policy');
             margin-bottom: 10px;
         }
 
+        @media print {
+            body { background: white !important; padding: 0 !important; }
+            .confirmation-container { max-width: 100%; }
+            .confirmation-card { box-shadow: none; border: 1px solid #ddd; }
+            .success-icon { margin-bottom: 15px; }
+            .success-icon i { font-size: 40px; width: 70px; height: 70px; box-shadow: none; }
+            .action-buttons, .next-steps, .scroll-to-top { display: none !important; }
+            .booking-reference-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .detail-item { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+
         /* Tentative Booking Styles */
         .tentative-badge {
             display: inline-flex;
@@ -424,6 +435,14 @@ $payment_policy = getSetting('payment_policy');
                         <?php echo $currency_symbol; ?><?php echo number_format($booking['total_amount'], 0); ?>
                     </div>
                 </div>
+                <div class="detail-item">
+                    <label>Check-in Time</label>
+                    <div class="value"><?php echo htmlspecialchars(getSetting('check_in_time', '2:00 PM')); ?></div>
+                </div>
+                <div class="detail-item">
+                    <label>Check-out Time</label>
+                    <div class="value"><?php echo htmlspecialchars(getSetting('check_out_time', '11:00 AM')); ?></div>
+                </div>
             </div>
 
             <?php if ($is_tentative && $booking['tentative_expires_at']): ?>
@@ -464,6 +483,9 @@ $payment_policy = getSetting('payment_policy');
                 <a href="mailto:<?php echo $email_reservations; ?>?subject=Booking <?php echo $booking['booking_reference']; ?>" class="btn btn-secondary">
                     <i class="fas fa-envelope"></i> Email
                 </a>
+                <button onclick="window.print()" class="btn btn-secondary">
+                    <i class="fas fa-print"></i> Print
+                </button>
                 <a href="index.php" class="btn btn-primary">
                     <i class="fas fa-home"></i> Back to Home
                 </a>

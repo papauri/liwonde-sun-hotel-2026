@@ -152,8 +152,9 @@ try {
     $totalAmount = $room['price_per_night'] * $nights;
     
     // Generate unique booking reference
+    $refPrefix = getSetting('booking_reference_prefix', 'LSH');
     do {
-        $bookingReference = 'LSH' . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+        $bookingReference = $refPrefix . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
         $refCheck = $pdo->prepare("SELECT COUNT(*) as count FROM bookings WHERE booking_reference = ?");
         $refCheck->execute([$bookingReference]);
         $refExists = $refCheck->fetch(PDO::FETCH_ASSOC)['count'] > 0;

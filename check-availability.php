@@ -9,6 +9,23 @@ require_once 'config/database.php';
 
 header('Content-Type: application/json');
 
+// Rate limiting: max 30 availability checks per minute per session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$rate_key = 'avail_checks';
+if (!isset($_SESSION[$rate_key])) {
+    $_SESSION[$rate_key] = [];
+}
+$_SESSION[$rate_key] = array_filter($_SESSION[$rate_key], function($t) {
+    return $t > time() - 60;
+});
+if (count($_SESSION[$rate_key]) >= 30) {
+    echo json_encode(['available' => false, 'message' => 'Too many requests. Please wait a moment.']);
+    exit;
+}
+$_SESSION[$rate_key][] = time();
+
 try {
     $room_id = isset($_GET['room_id']) ? (int)$_GET['room_id'] : 0;
     $check_in = $_GET['check_in'] ?? '';

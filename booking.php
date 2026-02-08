@@ -29,6 +29,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requireCsrfValidation();
     
     try {
+        // Rate limiting: max 5 booking submissions per 10 minutes
+        if (!isset($_SESSION['booking_attempts'])) {
+            $_SESSION['booking_attempts'] = [];
+        }
+        $_SESSION['booking_attempts'] = array_filter($_SESSION['booking_attempts'], function($t) {
+            return $t > time() - 600;
+        });
+        if (count($_SESSION['booking_attempts']) >= 5) {
+            throw new Exception('Too many booking attempts. Please wait a few minutes before trying again.');
+        }
+        $_SESSION['booking_attempts'][] = time();
+
         // Initialize validation errors array
         $validation_errors = [];
         $sanitized_data = [];
@@ -198,9 +210,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $total_amount = $room_price * $number_of_nights;
 
+        // Check for duplicate bookings (same email, room, overlapping dates)
+        $dup_check = $pdo->prepare("
+            SELECT COUNT(*) as count FROM bookings 
+            WHERE guest_email = ? AND room_id = ? 
+            AND status IN ('pending', 'tentative', 'confirmed', 'checked-in')
+            AND check_in_date = ? AND check_out_date = ?
+        ");
+        $dup_check->execute([$sanitized_data['guest_email'], $sanitized_data['room_id'], $check_in, $check_out]);
+        if ($dup_check->fetch(PDO::FETCH_ASSOC)['count'] > 0) {
+            throw new Exception('A booking already exists for these dates and room. Please check your existing bookings.');
+        }
+
         // Generate unique booking reference (guaranteed unique)
+        $ref_prefix = getSetting('booking_reference_prefix', 'LSH');
         do {
-            $booking_reference = 'LSH' . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            $booking_reference = $ref_prefix . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
             $ref_check = $pdo->prepare("SELECT COUNT(*) as count FROM bookings WHERE booking_reference = ?");
             $ref_check->execute([$booking_reference]);
             $ref_exists = $ref_check->fetch(PDO::FETCH_ASSOC)['count'] > 0;
@@ -628,18 +653,24 @@ try {
                     <!-- Occupancy Type Selection -->
                     <div class="form-group">
                         <label class="required">Occupancy Type</label>
-                        <div style="display: flex; gap: 15px; margin-top: 8px;">
-                            <label style="flex: 1; cursor: pointer; padding: 12px; border: 2px solid #ddd; border-radius: 8px; text-align: center; transition: all 0.3s; display: flex; flex-direction: column; align-items: center; gap: 5px;" id="singleOccupancyLabel">
+                        <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 8px;">
+                            <label style="flex: 1; min-width: 100px; cursor: pointer; padding: 12px; border: 2px solid #ddd; border-radius: 8px; text-align: center; transition: all 0.3s; display: flex; flex-direction: column; align-items: center; gap: 5px;" id="singleOccupancyLabel">
                                 <input type="radio" name="occupancy_type" value="single" style="margin: 0;">
-                                <strong style="color: var(--navy);">Single Occupancy</strong>
+                                <strong style="color: var(--navy);">Single</strong>
                                 <span style="font-size: 12px; color: #666;">1 Guest</span>
                                 <span id="singlePriceDisplay" style="font-weight: 600; color: var(--gold);">-</span>
                             </label>
-                            <label style="flex: 1; cursor: pointer; padding: 12px; border: 2px solid var(--gold); border-radius: 8px; text-align: center; transition: all 0.3s; background: rgba(212, 175, 55, 0.1); display: flex; flex-direction: column; align-items: center; gap: 5px;" id="doubleOccupancyLabel">
+                            <label style="flex: 1; min-width: 100px; cursor: pointer; padding: 12px; border: 2px solid var(--gold); border-radius: 8px; text-align: center; transition: all 0.3s; background: rgba(212, 175, 55, 0.1); display: flex; flex-direction: column; align-items: center; gap: 5px;" id="doubleOccupancyLabel">
                                 <input type="radio" name="occupancy_type" value="double" checked style="margin: 0;">
-                                <strong style="color: var(--navy);">Double Occupancy</strong>
+                                <strong style="color: var(--navy);">Double</strong>
                                 <span style="font-size: 12px; color: #666;">2 Guests</span>
                                 <span id="doublePriceDisplay" style="font-weight: 600; color: var(--gold);">-</span>
+                            </label>
+                            <label style="flex: 1; min-width: 100px; cursor: pointer; padding: 12px; border: 2px solid #ddd; border-radius: 8px; text-align: center; transition: all 0.3s; display: flex; flex-direction: column; align-items: center; gap: 5px;" id="tripleOccupancyLabel">
+                                <input type="radio" name="occupancy_type" value="triple" style="margin: 0;">
+                                <strong style="color: var(--navy);">Triple</strong>
+                                <span style="font-size: 12px; color: #666;">3 Guests</span>
+                                <span id="triplePriceDisplay" style="font-weight: 600; color: var(--gold);">-</span>
                             </label>
                         </div>
                         <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
@@ -815,21 +846,20 @@ try {
                     // Update number of guests based on occupancy type
                     const guestSelect = document.getElementById('number_of_guests');
                     const occupancyType = this.value;
-                    const guestCount = occupancyType === 'single' ? 1 : 2;
+                    const guestCount = occupancyType === 'single' ? 1 : (occupancyType === 'double' ? 2 : 3);
                     guestSelect.value = guestCount;
                     
                     updatePriceBasedOnOccupancy();
                     updateSummary();
                     
                     // Update visual styling for selected occupancy
-                    document.getElementById('singleOccupancyLabel').style.borderColor = 
-                        this.value === 'single' ? 'var(--gold)' : '#ddd';
-                    document.getElementById('singleOccupancyLabel').style.background = 
-                        this.value === 'single' ? 'rgba(212, 175, 55, 0.1)' : 'white';
-                    document.getElementById('doubleOccupancyLabel').style.borderColor = 
-                        this.value === 'double' ? 'var(--gold)' : '#ddd';
-                    document.getElementById('doubleOccupancyLabel').style.background = 
-                        this.value === 'double' ? 'rgba(212, 175, 55, 0.1)' : 'white';
+                    ['single', 'double', 'triple'].forEach(type => {
+                        const label = document.getElementById(type + 'OccupancyLabel');
+                        if (label) {
+                            label.style.borderColor = this.value === type ? 'var(--gold)' : '#ddd';
+                            label.style.background = this.value === type ? 'rgba(212, 175, 55, 0.1)' : 'white';
+                        }
+                    });
                 });
             });
         });
@@ -865,12 +895,16 @@ try {
             
             const singlePrice = document.getElementById('singlePriceDisplay');
             const doublePrice = document.getElementById('doublePriceDisplay');
+            const triplePrice = document.getElementById('triplePriceDisplay');
             
             if (singlePrice) {
                 singlePrice.textContent = currencySymbol + room.price_single_occupancy.toLocaleString();
             }
             if (doublePrice) {
                 doublePrice.textContent = currencySymbol + room.price_double_occupancy.toLocaleString();
+            }
+            if (triplePrice) {
+                triplePrice.textContent = currencySymbol + room.price_triple_occupancy.toLocaleString();
             }
         }
         
@@ -1146,6 +1180,9 @@ try {
             } else if (guestCount === 2) {
                 occupancyRadios[1].checked = true; // Double occupancy
                 occupancyRadios[1].dispatchEvent(new Event('change'));
+            } else if (guestCount >= 3) {
+                occupancyRadios[2].checked = true; // Triple occupancy
+                occupancyRadios[2].dispatchEvent(new Event('change'));
             }
             
             checkGuestCapacity();

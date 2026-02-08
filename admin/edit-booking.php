@@ -80,9 +80,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $booking) {
                 
                 $number_of_nights = (strtotime($check_out) - strtotime($check_in)) / 86400;
                 
-                // If room changed, update room availability
+                // Track changes for notification email
+                $changes = [];
+                $currency_sym = getSetting('currency_symbol', 'MK');
+                
                 $old_room_id = $booking['room_id'];
                 $room_changed = ($room_id != $old_room_id);
+                
+                if ($room_changed) {
+                    $old_room_name = $booking['room_name'] ?? 'Unknown';
+                    $new_room_stmt = $pdo->prepare("SELECT name FROM rooms WHERE id = ?");
+                    $new_room_stmt->execute([$room_id]);
+                    $new_room_row = $new_room_stmt->fetch(PDO::FETCH_ASSOC);
+                    $new_room_name = $new_room_row ? $new_room_row['name'] : 'Unknown';
+                    $changes['room'] = ['old' => $old_room_name, 'new' => $new_room_name];
+                }
+                if ($check_in !== $booking['check_in_date']) {
+                    $changes['check_in_date'] = ['old' => date('M j, Y', strtotime($booking['check_in_date'])), 'new' => date('M j, Y', strtotime($check_in))];
+                }
+                if ($check_out !== $booking['check_out_date']) {
+                    $changes['check_out_date'] = ['old' => date('M j, Y', strtotime($booking['check_out_date'])), 'new' => date('M j, Y', strtotime($check_out))];
+                }
+                if ($number_of_guests != $booking['number_of_guests']) {
+                    $changes['number_of_guests'] = ['old' => $booking['number_of_guests'], 'new' => $number_of_guests];
+                }
+                if ($occupancy_type !== ($booking['occupancy_type'] ?? 'single')) {
+                    $changes['occupancy_type'] = ['old' => ucfirst($booking['occupancy_type'] ?? 'single'), 'new' => ucfirst($occupancy_type)];
+                }
+                if (abs($total_amount - (float)$booking['total_amount']) > 0.01) {
+                    $changes['total_amount'] = ['old' => $currency_sym . ' ' . number_format($booking['total_amount'], 0), 'new' => $currency_sym . ' ' . number_format($total_amount, 0)];
+                }
+                if ($guest_name !== $booking['guest_name']) {
+                    $changes['guest_name'] = ['old' => $booking['guest_name'], 'new' => $guest_name];
+                }
+                if ($guest_email !== $booking['guest_email']) {
+                    $changes['guest_email'] = ['old' => $booking['guest_email'], 'new' => $guest_email];
+                }
+                if ($guest_phone !== ($booking['guest_phone'] ?? '')) {
+                    $changes['guest_phone'] = ['old' => $booking['guest_phone'] ?? '', 'new' => $guest_phone];
+                }
                 
                 if ($room_changed && in_array($booking['status'], ['confirmed', 'checked-in'])) {
                     // Restore old room availability
@@ -139,6 +175,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $booking) {
                     
                     $pdo->commit();
                     $message = 'Booking updated successfully.';
+                    
+                    // Send modification email to guest if there were meaningful changes
+                    if (!empty($changes)) {
+                        $stmt->execute([$booking_id]);
+                        $updated_booking = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        if ($updated_booking) {
+                            require_once __DIR__ . '/../config/email.php';
+                            $email_result = sendBookingModifiedEmail($updated_booking, $changes);
+                            if ($email_result['success']) {
+                                $message .= ' Notification email sent to guest.';
+                            } else {
+                                $message .= ' Guest notification email could not be sent.';
+                                error_log("Failed to send booking modification email: {$email_result['message']}");
+                            }
+                        }
+                    }
                     
                     // Refresh booking data
                     $stmt->execute([$booking_id]);

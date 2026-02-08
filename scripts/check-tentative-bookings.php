@@ -304,7 +304,54 @@ try {
     }
     
     // ============================================
-    // PART 4: Summary Statistics
+    // PART 4: Auto Check-out Overdue Guests
+    // ============================================
+    
+    $log_output .= "\n========================================\n";
+    $log_output .= "PART 4: Auto Check-out Overdue Guests\n";
+    $log_output .= "========================================\n";
+    
+    $processed_checkouts = 0;
+    
+    $overdue_stmt = $pdo->prepare("
+        SELECT b.*, r.room_name 
+        FROM bookings b 
+        LEFT JOIN rooms r ON b.room_id = r.id 
+        WHERE b.status = 'checked-in' AND b.check_out_date < CURDATE()
+    ");
+    $overdue_stmt->execute();
+    $overdue_bookings = $overdue_stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $log_output .= "Found " . count($overdue_bookings) . " overdue checked-in bookings\n\n";
+    
+    foreach ($overdue_bookings as $booking) {
+        try {
+            $pdo->beginTransaction();
+            
+            $log_output .= "Processing: {$booking['booking_reference']} - {$booking['guest_name']}\n";
+            $log_output .= "  - Room: {$booking['room_name']}, Check-out was: {$booking['check_out_date']}\n";
+            
+            // Update booking status to checked-out
+            $update = $pdo->prepare("UPDATE bookings SET status = 'checked-out', updated_at = NOW() WHERE id = ?");
+            $update->execute([$booking['id']]);
+            
+            // Restore room availability
+            $restore = $pdo->prepare("UPDATE rooms SET rooms_available = rooms_available + 1 WHERE id = ?");
+            $restore->execute([$booking['room_id']]);
+            
+            $pdo->commit();
+            $log_output .= "  - Auto checked-out and room restored\n\n";
+            $processed_checkouts++;
+            
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            $log_output .= "  - ERROR: {$e->getMessage()}\n\n";
+            $errors++;
+        }
+    }
+    
+    // ============================================
+    // PART 5: Summary Statistics
     // ============================================
     
     $log_output .= "========================================\n";
@@ -313,6 +360,7 @@ try {
     $log_output .= "Tentative bookings expired: {$processed_expired}\n";
     $log_output .= "Pending bookings expired: {$processed_pending}\n";
     $log_output .= "Reminder emails sent: {$processed_reminders}\n";
+    $log_output .= "Auto check-outs: {$processed_checkouts}\n";
     $log_output .= "Errors encountered: {$errors}\n";
     $log_output .= "Completed: " . date('Y-m-d H:i:s') . "\n";
     $log_output .= "========================================\n";
@@ -325,7 +373,7 @@ try {
     
     $logFile = $logDir . '/tentative-bookings-cron.log';
     $summaryFile = $logDir . '/tentative-bookings-summary.log';
-    $logEntry = "[" . date('Y-m-d H:i:s') . "] Tentative Expired: {$processed_expired}, Pending Expired: {$processed_pending}, Reminders: {$processed_reminders}, Errors: {$errors}\n";
+    $logEntry = "[" . date('Y-m-d H:i:s') . "] Tentative Expired: {$processed_expired}, Pending Expired: {$processed_pending}, Reminders: {$processed_reminders}, Auto Check-outs: {$processed_checkouts}, Errors: {$errors}\n";
     file_put_contents($logFile, $log_output, FILE_APPEND);
     file_put_contents($summaryFile, $logEntry, FILE_APPEND);
     

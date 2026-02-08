@@ -522,6 +522,112 @@ function sendBookingConfirmedEmail($booking) {
 }
 
 /**
+ * Send booking modified email (sent when admin edits a booking)
+ */
+function sendBookingModifiedEmail($booking, $changes = []) {
+    global $pdo, $email_from_name, $email_from_email, $email_admin_email, $email_site_name, $email_site_url;
+    
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ?");
+        $stmt->execute([$booking['room_id']]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$room) {
+            throw new Exception("Room not found");
+        }
+        
+        $changesHtml = '';
+        if (!empty($changes)) {
+            $changesHtml = '
+            <div style="background: #e3f2fd; padding: 15px; border-left: 4px solid #0d6efd; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #0d6efd; margin-top: 0;">What Changed</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">';
+            
+            $fieldLabels = [
+                'room' => 'Room', 'check_in_date' => 'Check-in Date', 'check_out_date' => 'Check-out Date',
+                'number_of_nights' => 'Number of Nights', 'number_of_guests' => 'Number of Guests',
+                'occupancy_type' => 'Occupancy Type', 'total_amount' => 'Total Amount',
+                'guest_name' => 'Guest Name', 'guest_email' => 'Email', 'guest_phone' => 'Phone', 'guest_country' => 'Country'
+            ];
+            
+            foreach ($changes as $field => $change) {
+                $label = $fieldLabels[$field] ?? ucfirst(str_replace('_', ' ', $field));
+                $changesHtml .= '
+                    <tr style="border-bottom: 1px solid #bbdefb;">
+                        <td style="padding: 8px; font-weight: bold; color: #0d6efd; width: 40%;">' . htmlspecialchars($label) . '</td>
+                        <td style="padding: 8px; color: #999; text-decoration: line-through;">' . htmlspecialchars($change['old']) . '</td>
+                        <td style="padding: 8px; color: #155724; font-weight: 600;">' . htmlspecialchars($change['new']) . '</td>
+                    </tr>';
+            }
+            $changesHtml .= '</table></div>';
+        }
+        
+        $htmlBody = '
+        <h1 style="color: #0A1929; text-align: center;">Booking Updated</h1>
+        <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
+        <p>Your booking with <strong>' . htmlspecialchars($email_site_name) . '</strong> has been updated by our team. Please review the details below.</p>
+        ' . $changesHtml . '
+        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #0A1929; margin-top: 0;">Updated Booking Details</h2>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Number of Nights:</span>
+                <span style="color: #333;">' . $booking['number_of_nights'] . ' night' . ($booking['number_of_nights'] != 1 ? 's' : '') . '</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="color: #333;">' . $booking['number_of_guests'] . ' guest' . ($booking['number_of_guests'] != 1 ? 's' : '') . '</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
+                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+            </div>
+        </div>
+        <div style="background: #d4edda; padding: 15px; border-left: 4px solid #28a745; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #155724; margin-top: 0;">Next Steps</h3>
+            <p style="color: #155724; margin: 0;">
+                <strong>Check-in time:</strong> ' . getSetting('check_in_time', '2:00 PM') . '<br>
+                <strong>Check-out time:</strong> ' . getSetting('check_out_time', '11:00 AM') . '<br>
+                <strong>Contact us:</strong> If you have questions about these changes, please reach out.
+            </p>
+        </div>
+        <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
+        <p>Thank you for choosing ' . htmlspecialchars($email_site_name) . '!</p>
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+            <p style="color: #666; font-size: 14px;">
+                <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
+                <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
+            </p>
+        </div>';
+        
+        return sendEmail(
+            $booking['guest_email'],
+            $booking['guest_name'],
+            'Booking Updated - ' . htmlspecialchars($email_site_name) . ' [' . $booking['booking_reference'] . ']',
+            $htmlBody
+        );
+    } catch (Exception $e) {
+        error_log("Send Booking Modified Email Error: " . $e->getMessage());
+        return ['success' => false, 'message' => $e->getMessage()];
+    }
+}
+
+/**
  * Send admin notification email
  */
 function sendAdminNotificationEmail($booking) {
