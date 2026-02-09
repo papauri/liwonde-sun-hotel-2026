@@ -972,11 +972,12 @@ function resolveConferenceImage(?string $imagePath): string
     ?>
 
     <?php include 'includes/footer.php'; ?>
+    <script src="js/modal.js"></script>
     <script src="js/main.js"></script>
     <script>
-        // Modal functionality - similar to gym.php pattern
-        const inquiryModal = document.querySelector('[data-modal]');
-        const inquiryModalOverlay = document.querySelector('[data-modal-overlay]');
+        // Inquiry Modal - target by specific ID, not generic selector
+        const inquiryModal = document.getElementById('inquiryModal');
+        const inquiryModalOverlay = document.getElementById('inquiryModal-overlay');
 
         function openInquiryModal(roomId, roomName) {
             document.getElementById('selectedRoomId').value = roomId;
@@ -984,6 +985,7 @@ function resolveConferenceImage(?string $imagePath): string
             
             if (inquiryModal) {
                 inquiryModal.classList.add('active');
+                if (inquiryModalOverlay) inquiryModalOverlay.classList.add('active');
                 document.body.style.overflow = 'hidden';
             }
         }
@@ -991,23 +993,49 @@ function resolveConferenceImage(?string $imagePath): string
         function closeInquiryModal() {
             if (inquiryModal) {
                 inquiryModal.classList.remove('active');
+                if (inquiryModalOverlay) inquiryModalOverlay.classList.remove('active');
                 document.body.style.overflow = '';
             }
         }
 
-        // Close modal on overlay click
+        // Close inquiry modal on overlay click
         if (inquiryModalOverlay) {
             inquiryModalOverlay.addEventListener('click', closeInquiryModal);
         }
 
-        // Close modal on escape key
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'Escape') closeInquiryModal();
-        });
+        // Close inquiry modal close buttons (scoped to inquiry modal only)
+        const inquiryCloseButtons = document.querySelectorAll('#inquiryModal [data-modal-close]');
+        inquiryCloseButtons.forEach(btn => btn.addEventListener('click', closeInquiryModal));
 
-        // Close modal on close button click
-        const closeButtons = document.querySelectorAll('[data-modal-close]');
-        closeButtons.forEach(btn => btn.addEventListener('click', closeInquiryModal));
+        // Result Modal - close handling (scoped to result modal only)
+        const resultModal = document.getElementById('conferenceBookingResult');
+        const resultModalOverlay = document.getElementById('conferenceBookingResult-overlay');
+
+        function closeResultModal() {
+            if (resultModal) {
+                resultModal.classList.remove('active');
+                if (resultModalOverlay) resultModalOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        if (resultModalOverlay) {
+            resultModalOverlay.addEventListener('click', closeResultModal);
+        }
+
+        const resultCloseButtons = document.querySelectorAll('#conferenceBookingResult [data-modal-close]');
+        resultCloseButtons.forEach(btn => btn.addEventListener('click', closeResultModal));
+
+        // Close any active modal on escape key
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Escape') {
+                if (resultModal && resultModal.classList.contains('active')) {
+                    closeResultModal();
+                } else if (inquiryModal && inquiryModal.classList.contains('active')) {
+                    closeInquiryModal();
+                }
+            }
+        });
 
         // Consent checkbox validation - grey out submit button until consent is checked
         const consentCheckbox = document.getElementById('consentCheckbox');
@@ -1124,10 +1152,12 @@ function resolveConferenceImage(?string $imagePath): string
         <?php if ($inquiry_success || $inquiry_error): ?>
             // Auto-open result modal on page load when there's a result
             window.addEventListener('load', function() {
-                const resultModal = document.getElementById('conferenceBookingResult');
-                if (resultModal) {
+                const resultModalEl = document.getElementById('conferenceBookingResult');
+                const resultOverlay = document.getElementById('conferenceBookingResult-overlay');
+                if (resultModalEl) {
                     setTimeout(function() {
-                        resultModal.classList.add('active');
+                        resultModalEl.classList.add('active');
+                        if (resultOverlay) resultOverlay.classList.add('active');
                         document.body.style.overflow = 'hidden';
                     }, 600);
                 }

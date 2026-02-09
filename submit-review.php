@@ -893,6 +893,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </main>
     
     <?php include 'includes/footer.php'; ?>
+    <script src="js/modal.js"></script>
+    <script src="js/main.js"></script>
     
     <!-- JavaScript for Star Rating and Form Validation -->
     <script>
