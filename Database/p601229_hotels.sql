@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Feb 08, 2026 at 01:09 AM
+-- Generation Time: Feb 09, 2026 at 10:13 AM
 -- Server version: 8.0.44-cll-lve
--- PHP Version: 8.4.16
+-- PHP Version: 8.4.17
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -99,7 +99,8 @@ INSERT INTO `admin_activity_log` (`id`, `user_id`, `username`, `action`, `detail
 (7, 2, 'receptionist', 'logout', 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-07 14:07:00'),
 (8, 1, 'admin', 'login_success', 'Role: admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-07 14:07:10'),
 (9, 1, 'admin', 'login_success', 'Role: admin', '51.37.179.253', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-07 18:44:39'),
-(10, 1, 'admin', 'login_success', 'Role: admin', '51.37.179.253', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-07 22:35:49');
+(10, 1, 'admin', 'login_success', 'Role: admin', '51.37.179.253', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-07 22:35:49'),
+(11, 1, 'admin', 'login_success', 'Role: admin', '51.37.179.253', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', '2026-02-08 19:10:10');
 
 -- --------------------------------------------------------
 
@@ -126,7 +127,7 @@ CREATE TABLE `admin_users` (
 --
 
 INSERT INTO `admin_users` (`id`, `username`, `email`, `password_hash`, `full_name`, `role`, `is_active`, `last_login`, `created_at`, `updated_at`, `failed_login_attempts`) VALUES
-(1, 'admin', 'johnpaulchirwa@gmail.com', '$2y$10$OFHlFcgoqltOd7X6Z3IqVeg0961Adk9LxyfW8UBBfENSawMRZ3fF6', 'System Administrator', 'admin', 1, '2026-02-07 22:35:49', '2026-01-20 19:08:40', '2026-02-07 22:35:49', 0),
+(1, 'admin', 'johnpaulchirwa@gmail.com', '$2y$10$OFHlFcgoqltOd7X6Z3IqVeg0961Adk9LxyfW8UBBfENSawMRZ3fF6', 'System Administrator', 'admin', 1, '2026-02-08 19:10:10', '2026-01-20 19:08:40', '2026-02-08 19:10:10', 0),
 (2, 'receptionist', 'reception@liwondesunhotel.com', '$2y$10$OFHlFcgoqltOd7X6Z3IqVeg0961Adk9LxyfW8UBBfENSawMRZ3fF6', 'Front Desk', 'receptionist', 1, '2026-02-07 13:45:29', '2026-01-20 19:08:40', '2026-02-07 13:45:29', 0);
 
 -- --------------------------------------------------------
@@ -229,7 +230,7 @@ CREATE TABLE `bookings` (
 --
 
 INSERT INTO `bookings` (`id`, `booking_reference`, `room_id`, `guest_name`, `guest_email`, `guest_phone`, `guest_country`, `guest_address`, `number_of_guests`, `check_in_date`, `check_out_date`, `number_of_nights`, `total_amount`, `amount_paid`, `amount_due`, `vat_rate`, `vat_amount`, `total_with_vat`, `last_payment_date`, `special_requests`, `status`, `is_tentative`, `tentative_expires_at`, `deposit_required`, `deposit_amount`, `deposit_paid`, `deposit_paid_at`, `reminder_sent`, `reminder_sent_at`, `converted_to_confirmed_at`, `expired_at`, `tentative_notes`, `payment_status`, `payment_amount`, `payment_date`, `created_at`, `updated_at`, `expires_at`, `converted_from_tentative`, `occupancy_type`) VALUES
-(26, 'LSH20262435', 4, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-02-08', '2026-02-11', 3, 405000.00, 471825.00, 0.00, 16.50, 66825.00, 471825.00, '2026-02-07', '', 'confirmed', 0, '2026-02-07 17:02:29', 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, 'paid', 0.00, NULL, '2026-02-05 14:05:05', '2026-02-07 00:24:20', NULL, 0, 'double'),
+(26, 'LSH20262435', 4, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-02-08', '2026-02-11', 3, 405000.00, 471825.00, 0.00, 16.50, 66825.00, 471825.00, '2026-02-07', '', 'checked-in', 0, '2026-02-07 17:02:29', 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, 'paid', 0.00, NULL, '2026-02-05 14:05:05', '2026-02-08 19:10:31', NULL, 0, 'double'),
 (27, 'LSH20262851', 5, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-02-11', '2026-02-19', 8, 920000.00, 1071800.00, 0.00, 16.50, 151800.00, 1071800.00, '2026-02-07', '', 'confirmed', 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, 'paid', 0.00, NULL, '2026-02-07 00:19:44', '2026-02-07 00:22:33', NULL, 0, 'double'),
 (28, 'LSH20264267', 2, 'JOHN-PAUL CHIRWA', 'johnpaulchirwa@gmail.com', '0860081635', 'Ireland', '10 Lois na Coille\r\nBallykilmurray, Tullamore', 2, '2026-02-09', '2026-02-13', 4, 660000.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, '', 'pending', 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, 'unpaid', 0.00, NULL, '2026-02-08 00:36:43', '2026-02-08 00:36:43', NULL, 0, 'double');
 
@@ -344,6 +345,20 @@ INSERT INTO `conference_rooms` (`id`, `name`, `description`, `capacity`, `size_s
 (1, 'Executive Boardroom', 'Small meeting room suitable for business meetings and presentations. Includes basic presentation equipment.', 12, 35.00, 15000.00, 100000.00, 'Video Conferencing, Smart TV, Whiteboard, High-Speed WiFi, Coffee Service', 'images/conference/Conference_Room1.jpeg', 1, 1, '2026-01-20 22:35:58', '2026-02-07 02:40:53'),
 (2, 'Grand Conference Hall', 'Large conference space for seminars, workshops, and corporate events. Can be divided for smaller groups.', 150, 200.00, 35000.00, 250000.00, 'Stage & Podium, Professional Sound System, Projection Screen, WiFi, Air Conditioning, Breakout Rooms', 'images/conference/grand-hall.jpg', 1, 2, '2026-01-20 22:35:58', '2026-02-07 02:40:53'),
 (3, 'Lakeside Meeting Room', 'Meeting room with nice views. Good for training sessions and medium-sized gatherings.', 30, 60.00, 20000.00, 140000.00, 'Projector & Screen, Video Conferencing, Whiteboard, WiFi, Lake View, Terrace Access', 'images/conference/lakeside-room.jpg', 1, 3, '2026-01-20 22:35:58', '2026-02-07 02:40:53');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cookie_consent_log`
+--
+
+CREATE TABLE `cookie_consent_log` (
+  `id` int UNSIGNED NOT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_agent` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `consent_level` enum('all','essential','declined') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1418,6 +1433,28 @@ INSERT INTO `section_headers` (`id`, `section_key`, `page`, `section_label`, `se
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `session_logs`
+--
+
+CREATE TABLE `session_logs` (
+  `id` int UNSIGNED NOT NULL,
+  `session_id` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `device_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'unknown',
+  `browser` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `os` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `page_url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `referrer_domain` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `session_start` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_activity` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `page_count` int DEFAULT '1',
+  `consent_level` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `site_pages`
 --
 
@@ -1824,6 +1861,13 @@ ALTER TABLE `conference_rooms`
   ADD KEY `idx_conference_room_active` (`is_active`,`display_order`);
 
 --
+-- Indexes for table `cookie_consent_log`
+--
+ALTER TABLE `cookie_consent_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_created` (`created_at`);
+
+--
 -- Indexes for table `drink_menu`
 --
 ALTER TABLE `drink_menu`
@@ -2055,6 +2099,17 @@ ALTER TABLE `section_headers`
   ADD KEY `idx_active` (`is_active`);
 
 --
+-- Indexes for table `session_logs`
+--
+ALTER TABLE `session_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_session_id` (`session_id`),
+  ADD KEY `idx_sl_session` (`session_id`),
+  ADD KEY `idx_sl_ip` (`ip_address`),
+  ADD KEY `idx_sl_start` (`session_start`),
+  ADD KEY `idx_sl_device` (`device_type`);
+
+--
 -- Indexes for table `site_pages`
 --
 ALTER TABLE `site_pages`
@@ -2118,7 +2173,7 @@ ALTER TABLE `about_us`
 -- AUTO_INCREMENT for table `admin_activity_log`
 --
 ALTER TABLE `admin_activity_log`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `admin_users`
@@ -2167,6 +2222,12 @@ ALTER TABLE `conference_inquiries`
 --
 ALTER TABLE `conference_rooms`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `cookie_consent_log`
+--
+ALTER TABLE `cookie_consent_log`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `drink_menu`
@@ -2341,6 +2402,12 @@ ALTER TABLE `room_blocked_dates`
 --
 ALTER TABLE `section_headers`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+
+--
+-- AUTO_INCREMENT for table `session_logs`
+--
+ALTER TABLE `session_logs`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `site_pages`

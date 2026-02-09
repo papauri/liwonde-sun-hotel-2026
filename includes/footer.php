@@ -259,3 +259,5 @@ function sharePage(platform) {
     }
 }
 </script>
+
+<?php require_once __DIR__ . '/cookie-consent.php'; ?>
