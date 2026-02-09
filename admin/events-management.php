@@ -120,6 +120,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $updateValues[] = $videoPath;
                 $updateFields[] = 'video_type = ?';
                 $updateValues[] = $videoType;
+            } elseif (!empty($_POST['remove_video'])) {
+                // User explicitly wants to remove the video
+                $updateFields[] = 'video_path = ?';
+                $updateValues[] = null;
+                $updateFields[] = 'video_type = ?';
+                $updateValues[] = null;
             }
 
             $updateValues[] = $_POST['id'];
@@ -747,6 +753,16 @@ try {
                 
                 <div style="text-align: center; color: #999; font-size: 12px; margin-bottom: 12px;">— OR upload a file —</div>
                 
+                <input type="hidden" name="remove_video" id="removeVideoFlag" value="0">
+                <div id="removeVideoSection" style="display: none; margin-bottom: 12px;">
+                    <div style="background: #fff3cd; padding: 10px 14px; border-radius: 8px; border: 1px solid #ffc107; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 13px; color: #856404;"><i class="fas fa-video"></i> <span id="currentVideoLabel">Current video attached</span></span>
+                        <button type="button" onclick="removeEventVideo()" style="background: #dc3545; color: white; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: 600;">
+                            <i class="fas fa-trash-alt"></i> Remove Video
+                        </button>
+                    </div>
+                </div>
+                
                 <div class="video-upload-wrapper">
                     <div class="image-upload-area" onclick="document.getElementById(\'eventVideo\').click()" style="border-color: #9b59b6;">
                         <i class="fas fa-video" style="color: #9b59b6;"></i>
@@ -794,6 +810,9 @@ try {
             document.getElementById('eventActive').checked = true;
             document.getElementById('imagePreviewContainer').style.display = 'none';
             document.getElementById('videoPreviewContainer').style.display = 'none';
+            document.getElementById('removeVideoSection').style.display = 'none';
+            document.getElementById('removeVideoFlag').value = '0';
+            document.getElementById('eventVideoUrl').value = '';
             
             // Update the modal header
             const modalHeader = document.querySelector('#eventModal .modal-header');
@@ -806,6 +825,20 @@ try {
                 }
             }
             Modal.open('eventModal');
+        }
+
+        function removeEventVideo() {
+            // Set the hidden flag to tell backend to clear video
+            document.getElementById('removeVideoFlag').value = '1';
+            // Clear the video URL input
+            document.getElementById('eventVideoUrl').value = '';
+            // Hide video preview
+            document.getElementById('videoPreviewContainer').style.display = 'none';
+            // Hide the remove section and show confirmation
+            document.getElementById('removeVideoSection').innerHTML = 
+                '<div style="background: #f8d7da; padding: 10px 14px; border-radius: 8px; border: 1px solid #f5c6cb;">' +
+                '<span style="font-size: 13px; color: #721c24;"><i class="fas fa-check-circle"></i> Video will be removed when you save.</span>' +
+                '</div>';
         }
 
         function openEditModal(event) {
@@ -843,9 +876,16 @@ try {
                     document.getElementById('videoFileName').textContent = 'Current: ' + (event.video_path.split('/').pop() || 'video file');
                     document.getElementById('videoPreviewContainer').style.display = 'block';
                 }
+                // Show remove video section
+                const videoName = event.video_path.split('/').pop() || 'video';
+                document.getElementById('currentVideoLabel').textContent = 'Current: ' + videoName;
+                document.getElementById('removeVideoSection').style.display = 'block';
+                document.getElementById('removeVideoFlag').value = '0';
             } else {
                 document.getElementById('eventVideoUrl').value = '';
                 document.getElementById('videoPreviewContainer').style.display = 'none';
+                document.getElementById('removeVideoSection').style.display = 'none';
+                document.getElementById('removeVideoFlag').value = '0';
             }
             
             // Update the modal header
