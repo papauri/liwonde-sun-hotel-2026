@@ -12,6 +12,11 @@
  * Requires: config/database.php (for $pdo and getSetting)
  */
 
+// Ensure section-headers helper is available
+if (!function_exists('renderSectionHeader')) {
+    require_once __DIR__ . '/section-headers.php';
+}
+
 // Wrap everything in a try-catch to guarantee the page never breaks
 try {
 
@@ -83,11 +88,11 @@ $ue_currency = getSetting('currency_symbol', 'MWK');
 <!-- Upcoming Events Section -->
 <section class="upcoming-events-section" id="upcoming-events">
     <div class="container">
-        <div class="section-header">
-            <span class="section-label">What's Happening</span>
-            <h2 class="section-title">Upcoming Events</h2>
-            <p class="section-description">Don't miss out on our carefully curated experiences and celebrations</p>
-        </div>
+        <?php renderSectionHeader('upcoming_events', 'index', [
+            'label' => "What's Happening",
+            'title' => 'Upcoming Events',
+            'description' => "Don't miss out on our carefully curated experiences and celebrations"
+        ]); ?>
 
         <div class="ue-timeline">
             <?php foreach ($upcoming_events_list as $ue_index => $ue_event): 

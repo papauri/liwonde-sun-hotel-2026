@@ -5,6 +5,7 @@
  */
 require_once 'config/security.php';
 require_once 'config/database.php';
+require_once 'includes/page-guard.php';
 
 sendSecurityHeaders();
 

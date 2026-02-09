@@ -1,5 +1,6 @@
 <?php
 require_once 'config/database.php';
+require_once 'includes/page-guard.php';
 require_once 'includes/reviews-display.php';
 require_once 'includes/section-headers.php';
 
