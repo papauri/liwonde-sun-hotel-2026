@@ -512,6 +512,12 @@ foreach ($footer_links_raw as $link) {
         </div>
     </section>
 
+    <!-- Upcoming Events Section -->
+    <?php 
+    $upcoming_events_page = 'index';
+    include 'includes/upcoming-events.php'; 
+    ?>
+
     <!-- Hotel Gallery Carousel Section -->
     <?php include 'includes/hotel-gallery.php'; ?>
 

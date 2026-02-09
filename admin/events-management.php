@@ -12,7 +12,32 @@ require_once 'video-upload-handler.php';
 $message = '';
 $error = '';
 
-// Simple helper to process uploaded event images with optimization
+// Auto-ensure show_in_upcoming column exists
+try {
+    $col_check = $pdo->query("SHOW COLUMNS FROM events LIKE 'show_in_upcoming'");
+    if ($col_check->rowCount() === 0) {
+        $pdo->exec("ALTER TABLE events ADD COLUMN show_in_upcoming TINYINT(1) NOT NULL DEFAULT 0 AFTER is_featured");
+        $pdo->exec("UPDATE events SET show_in_upcoming = 1 WHERE is_featured = 1");
+    }
+} catch (\Throwable $e) {
+    error_log("Auto-migration show_in_upcoming: " . $e->getMessage());
+}
+
+// Ensure upcoming_events settings exist in site_settings
+try {
+    $settings_check = $pdo->prepare("SELECT COUNT(*) FROM site_settings WHERE setting_key = ?");
+    $settings_check->execute(['upcoming_events_enabled']);
+    if ($settings_check->fetchColumn() == 0) {
+        $pdo->exec("INSERT INTO site_settings (setting_key, setting_value, setting_group) VALUES 
+            ('upcoming_events_enabled', '1', 'upcoming_events'),
+            ('upcoming_events_pages', '[\"index\"]', 'upcoming_events'),
+            ('upcoming_events_max_display', '4', 'upcoming_events')");
+    }
+} catch (\Throwable $e) {
+    error_log("Auto-migration upcoming_events settings: " . $e->getMessage());
+}
+
+// Helper: upload event image (same pattern as gallery/conference)
 function uploadEventImage($fileInput)
 {
     if (!$fileInput || !isset($fileInput['tmp_name']) || $fileInput['error'] !== UPLOAD_ERR_OK) {
@@ -24,85 +49,40 @@ function uploadEventImage($fileInput)
         mkdir($uploadDir, 0755, true);
     }
 
-    $ext = strtolower(pathinfo($fileInput['name'], PATHINFO_EXTENSION) ?: 'jpg');
-    $filename = 'event_' . time() . '_' . random_int(1000, 9999) . '.jpg'; // Always save as optimized JPEG
-    $relativePath = 'images/events/' . $filename;
-    $destination = $uploadDir . $filename;
-
-    // Try to optimize the image (resize + compress)
-    if (function_exists('imagecreatefromjpeg')) {
-        $sourceImage = null;
-        $mimeType = mime_content_type($fileInput['tmp_name']);
-
-        switch ($mimeType) {
-            case 'image/jpeg':
-                $sourceImage = @imagecreatefromjpeg($fileInput['tmp_name']);
-                break;
-            case 'image/png':
-                $sourceImage = @imagecreatefrompng($fileInput['tmp_name']);
-                break;
-            case 'image/webp':
-                if (function_exists('imagecreatefromwebp')) {
-                    $sourceImage = @imagecreatefromwebp($fileInput['tmp_name']);
-                }
-                break;
-            case 'image/gif':
-                $sourceImage = @imagecreatefromgif($fileInput['tmp_name']);
-                break;
-        }
-
-        if ($sourceImage) {
-            $origWidth = imagesx($sourceImage);
-            $origHeight = imagesy($sourceImage);
-            
-            // Max dimensions - optimized for event cards (16:10 aspect, max 1200px wide)
-            $maxWidth = 1200;
-            $maxHeight = 800;
-            
-            $newWidth = $origWidth;
-            $newHeight = $origHeight;
-            
-            // Scale down if larger than max dimensions
-            if ($origWidth > $maxWidth || $origHeight > $maxHeight) {
-                $ratioW = $maxWidth / $origWidth;
-                $ratioH = $maxHeight / $origHeight;
-                $ratio = min($ratioW, $ratioH);
-                $newWidth = (int)round($origWidth * $ratio);
-                $newHeight = (int)round($origHeight * $ratio);
-            }
-            
-            // Create optimized image
-            $optimized = imagecreatetruecolor($newWidth, $newHeight);
-            
-            // Preserve transparency for PNG source (fill white background for JPEG output)
-            $white = imagecolorallocate($optimized, 255, 255, 255);
-            imagefill($optimized, 0, 0, $white);
-            
-            // High-quality resampling
-            imagecopyresampled($optimized, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
-            
-            // Save as JPEG with 85% quality (good balance of quality vs file size)
-            $saved = imagejpeg($optimized, $destination, 85);
-            
-            imagedestroy($sourceImage);
-            imagedestroy($optimized);
-            
-            if ($saved) {
-                return $relativePath;
-            }
-        }
+    $ext = strtolower(pathinfo($fileInput['name'], PATHINFO_EXTENSION)) ?: 'jpg';
+    $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+    if (!in_array($ext, $allowed, true)) {
+        return null;
     }
-    
-    // Fallback: just move the file if GD is not available
+
     $filename = 'event_' . time() . '_' . random_int(1000, 9999) . '.' . $ext;
-    $relativePath = 'images/events/' . $filename;
     $destination = $uploadDir . $filename;
 
     if (move_uploaded_file($fileInput['tmp_name'], $destination)) {
-        return $relativePath;
+        return 'images/events/' . $filename;
     }
 
     return null;
+}
+
+// Helper: get user-friendly upload error message
+function getUploadErrorMessage($errorCode)
+{
+    switch ($errorCode) {
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE:
+            return 'File is too large. Please resize or compress the image and try again.';
+        case UPLOAD_ERR_PARTIAL:
+            return 'File was only partially uploaded. Please try again.';
+        case UPLOAD_ERR_NO_TMP_DIR:
+            return 'Server error: No temporary folder. Please contact the administrator.';
+        case UPLOAD_ERR_CANT_WRITE:
+            return 'Server error: Failed to write file to disk.';
+        case UPLOAD_ERR_EXTENSION:
+            return 'Upload was blocked by a server extension.';
+        default:
+            return 'Unknown upload error. Please try again.';
+    }
 }
 
 // Handle event actions
@@ -111,7 +91,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
 
         if ($action === 'add') {
-            $imagePath = uploadEventImage($_FILES['image'] ?? null);
+            // Handle image upload
+            $imagePath = null;
+            if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+                if ($_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+                    $error = getUploadErrorMessage($_FILES['image']['error']);
+                } else {
+                    $imagePath = uploadEventImage($_FILES['image']);
+                    if (!$imagePath) {
+                        $error = 'Invalid image type. Only JPG, PNG, and WebP files are allowed.';
+                    }
+                }
+            }
             
             // Check for video URL first, then file upload
             $videoUrl = processVideoUrl($_POST['video_url'] ?? '');
@@ -125,8 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $stmt = $pdo->prepare("
-                INSERT INTO events (title, description, event_date, start_time, end_time, location, ticket_price, capacity, is_featured, is_active, display_order, image_path, video_path, video_type)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO events (title, description, event_date, start_time, end_time, location, ticket_price, capacity, is_featured, show_in_upcoming, is_active, display_order, image_path, video_path, video_type)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $_POST['title'],
@@ -138,16 +129,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_POST['ticket_price'] ?? 0,
                 $_POST['capacity'],
                 isset($_POST['is_featured']) ? 1 : 0,
+                isset($_POST['show_in_upcoming']) ? 1 : 0,
                 isset($_POST['is_active']) ? 1 : 0,
                 $_POST['display_order'] ?? 0,
                 $imagePath,
                 $videoPath,
                 $videoType
             ]);
-            $message = 'Event added successfully!';
+            if (!$error) {
+                $message = 'Event added successfully!';
+            }
 
         } elseif ($action === 'update') {
-            $imagePath = uploadEventImage($_FILES['image'] ?? null);
+            // Handle image upload
+            $imagePath = null;
+            if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+                if ($_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+                    $error = getUploadErrorMessage($_FILES['image']['error']);
+                } else {
+                    $imagePath = uploadEventImage($_FILES['image']);
+                    if (!$imagePath) {
+                        $error = 'Invalid image type. Only JPG, PNG, and WebP files are allowed.';
+                    }
+                }
+            }
             
             // Check for video URL first, then file upload
             $videoUrl = processVideoUrl($_POST['video_url'] ?? '');
@@ -163,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Build the update query dynamically based on what's being updated
             $updateFields = [
                 'title = ?', 'description = ?', 'event_date = ?', 'start_time = ?', 'end_time = ?',
-                'location = ?', 'ticket_price = ?', 'capacity = ?', 'is_featured = ?', 'is_active = ?', 'display_order = ?'
+                'location = ?', 'ticket_price = ?', 'capacity = ?', 'is_featured = ?', 'show_in_upcoming = ?', 'is_active = ?', 'display_order = ?'
             ];
             $updateValues = [
                 $_POST['title'],
@@ -175,6 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_POST['ticket_price'] ?? 0,
                 $_POST['capacity'],
                 isset($_POST['is_featured']) ? 1 : 0,
+                isset($_POST['show_in_upcoming']) ? 1 : 0,
                 isset($_POST['is_active']) ? 1 : 0,
                 $_POST['display_order'] ?? 0
             ];
@@ -202,7 +208,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sql = "UPDATE events SET " . implode(', ', $updateFields) . " WHERE id = ?";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($updateValues);
-            $message = 'Event updated successfully!';
+            if (!$error) {
+                $message = 'Event updated successfully!';
+            }
 
         } elseif ($action === 'delete') {
             $stmt = $pdo->prepare("DELETE FROM events WHERE id = ?");
@@ -219,14 +227,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$_POST['id']]);
             $message = 'Featured status updated!';
 
+        } elseif ($action === 'toggle_upcoming') {
+            $stmt = $pdo->prepare("UPDATE events SET show_in_upcoming = NOT show_in_upcoming WHERE id = ?");
+            $stmt->execute([$_POST['id']]);
+            $message = 'Upcoming display status updated!';
+
+        } elseif ($action === 'save_upcoming_settings') {
+            // Save upcoming events section settings
+            $ue_enabled = isset($_POST['ue_enabled']) ? '1' : '0';
+            $ue_max = max(1, min(8, intval($_POST['ue_max_display'] ?? 4)));
+            $ue_pages = $_POST['ue_pages'] ?? [];
+            $ue_pages_json = json_encode(array_values($ue_pages));
+            
+            $stmtSetting = $pdo->prepare("INSERT INTO site_settings (setting_key, setting_value, setting_group) VALUES (?, ?, 'upcoming_events') ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+            $stmtSetting->execute(['upcoming_events_enabled', $ue_enabled]);
+            $stmtSetting->execute(['upcoming_events_max_display', (string)$ue_max]);
+            $stmtSetting->execute(['upcoming_events_pages', $ue_pages_json]);
+            
+            // Clear cached settings (in-memory + file cache)
+            global $_SITE_SETTINGS;
+            unset($_SITE_SETTINGS['upcoming_events_enabled'], $_SITE_SETTINGS['upcoming_events_max_display'], $_SITE_SETTINGS['upcoming_events_pages']);
+            if (function_exists('clearCacheByPattern')) {
+                clearCacheByPattern('setting_upcoming_events*');
+            }
+            
+            $message = 'Upcoming events section settings saved!';
+
         } elseif ($action === 'update_image') {
-            $imagePath = uploadEventImage($_FILES['image'] ?? null);
-            if ($imagePath) {
-                $stmt = $pdo->prepare("UPDATE events SET image_path = ? WHERE id = ?");
-                $stmt->execute([$imagePath, $_POST['id']]);
-                $message = 'Event image updated!';
+            if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+                if ($_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+                    $error = getUploadErrorMessage($_FILES['image']['error']);
+                } else {
+                    $imagePath = uploadEventImage($_FILES['image']);
+                    if ($imagePath) {
+                        $stmt = $pdo->prepare("UPDATE events SET image_path = ? WHERE id = ?");
+                        $stmt->execute([$imagePath, $_POST['id']]);
+                        $message = 'Event image updated!';
+                    } else {
+                        $error = 'Invalid image type. Only JPG, PNG, and WebP files are allowed.';
+                    }
+                }
             } else {
-                $error = 'Please select a valid image to upload.';
+                $error = 'Please select an image to upload.';
             }
         }
 
@@ -448,6 +490,11 @@ try {
             color: #856404;
         }
         
+        .badge-upcoming {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
         .badge-expired {
             background: #dc3545;
             color: white;
@@ -523,6 +570,14 @@ try {
         }
         .btn-featured:hover {
             background: #c19b2e;
+        }
+        
+        .btn-upcoming {
+            background: #4caf50;
+            color: white;
+        }
+        .btn-upcoming:hover {
+            background: #388e3c;
         }
         
         .btn-delete {
@@ -625,6 +680,75 @@ try {
             <?php showAlert($error, 'error'); ?>
         <?php endif; ?>
 
+        <!-- Upcoming Events Section Settings -->
+        <?php
+        $ue_enabled = getSetting('upcoming_events_enabled', '1');
+        $ue_max_display = getSetting('upcoming_events_max_display', '4');
+        $ue_pages_json = getSetting('upcoming_events_pages', '["index"]');
+        $ue_pages = json_decode($ue_pages_json, true) ?: ['index'];
+        
+        // Available pages where the section can be shown
+        $available_pages = [
+            'index' => 'Homepage',
+            'rooms-showcase' => 'Rooms Showcase',
+            'restaurant' => 'Restaurant',
+            'conference' => 'Conference',
+            'gym' => 'Gym'
+        ];
+        ?>
+        <div style="background: linear-gradient(135deg, #e8f5e9, #f1f8e9); border: 1px solid #c8e6c9; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="document.getElementById('ueSettingsBody').style.display = document.getElementById('ueSettingsBody').style.display === 'none' ? 'block' : 'none'; this.querySelector('.ue-chevron').classList.toggle('fa-chevron-down'); this.querySelector('.ue-chevron').classList.toggle('fa-chevron-up');">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-bullhorn" style="color: #2e7d32; font-size: 18px;"></i>
+                    <span style="font-weight: 600; color: #1b5e20; font-size: 15px;">Upcoming Events Section Settings</span>
+                    <span style="font-size: 12px; padding: 2px 10px; border-radius: 10px; background: <?php echo $ue_enabled === '1' ? '#4caf50' : '#999'; ?>; color: white;"><?php echo $ue_enabled === '1' ? 'Enabled' : 'Disabled'; ?></span>
+                </div>
+                <i class="fas fa-chevron-down ue-chevron" style="color: #666; font-size: 13px;"></i>
+            </div>
+            <div id="ueSettingsBody" style="display: none; margin-top: 16px;">
+                <form method="POST" style="display: flex; flex-direction: column; gap: 14px;">
+                    <input type="hidden" name="action" value="save_upcoming_settings">
+                    
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" name="ue_enabled" id="ueEnabled" <?php echo $ue_enabled === '1' ? 'checked' : ''; ?> style="width: auto;">
+                        <label for="ueEnabled" style="font-weight: 500; font-size: 14px; color: #333;">Enable Upcoming Events section on public pages</label>
+                    </div>
+                    
+                    <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;">
+                        <div style="flex: 1; min-width: 180px;">
+                            <label style="font-size: 13px; font-weight: 500; color: #555; display: block; margin-bottom: 4px;">Max Events to Display</label>
+                            <select name="ue_max_display" style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; background: white;">
+                                <?php for ($i = 1; $i <= 8; $i++): ?>
+                                <option value="<?php echo $i; ?>" <?php echo $ue_max_display == $i ? 'selected' : ''; ?>><?php echo $i; ?> event<?php echo $i > 1 ? 's' : ''; ?></option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label style="font-size: 13px; font-weight: 500; color: #555; display: block; margin-bottom: 6px;">Show on Pages</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px 16px;">
+                            <?php foreach ($available_pages as $page_key => $page_label): ?>
+                            <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #444; cursor: pointer;">
+                                <input type="checkbox" name="ue_pages[]" value="<?php echo $page_key; ?>" <?php echo in_array($page_key, $ue_pages) ? 'checked' : ''; ?> style="width: auto;">
+                                <?php echo $page_label; ?>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button type="submit" style="background: #2e7d32; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#1b5e20'" onmouseout="this.style.background='#2e7d32'">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+                <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                    <i class="fas fa-info-circle"></i> Use the <strong>"Upcoming"</strong> button on each event card below to choose which events appear in this section. Only active, future-dated events marked for the upcoming section will display.
+                </p>
+            </div>
+        </div>
+
         <div class="events-section">
             <?php if (!empty($events)): ?>
                 <div class="events-grid">
@@ -696,6 +820,9 @@ try {
                                 <?php if ($event['is_featured']): ?>
                                     <span class="event-badge badge-featured"><i class="fas fa-star"></i> Featured</span>
                                 <?php endif; ?>
+                                <?php if (!empty($event['show_in_upcoming'])): ?>
+                                    <span class="event-badge badge-upcoming"><i class="fas fa-bullhorn"></i> Upcoming Section</span>
+                                <?php endif; ?>
                                 <?php if ($event['ticket_price'] == 0): ?>
                                     <span class="event-badge badge-free"><i class="fas fa-ticket-alt"></i> Free</span>
                                 <?php else: ?>
@@ -717,6 +844,9 @@ try {
                                 <button class="btn-action btn-featured" type="button" onclick="toggleFeatured(<?php echo $event['id']; ?>)">
                                     <i class="fas fa-star"></i> Featured
                                 </button>
+                                <button class="btn-action btn-upcoming" type="button" onclick="toggleUpcoming(<?php echo $event['id']; ?>)">
+                                    <i class="fas fa-bullhorn"></i> Upcoming
+                                </button>
                                 <button class="btn-action btn-delete" type="button" onclick="if(confirm('Delete this event?')) deleteEvent(<?php echo $event['id']; ?>)">
                                     <i class="fas fa-trash-alt"></i> Delete
                                 </button>
@@ -737,7 +867,7 @@ try {
     <!-- Add Event Modal -->
     <?php
     renderModal('eventModal', 'Add New Event', '
-        <form method="POST" id="eventForm" enctype="multipart/form-data">
+        <form method="POST" action="events-management.php" id="eventForm" enctype="multipart/form-data">
             <input type="hidden" name="action" id="formAction" value="add">
             <input type="hidden" name="id" id="eventId">
             
@@ -854,20 +984,26 @@ try {
             </div>
             
             <div class="form-group checkbox-group">
+                <input type="checkbox" name="show_in_upcoming" id="eventUpcoming">
+                <label for="eventUpcoming">Show in Upcoming Events section (homepage)</label>
+            </div>
+            
+            <div class="form-group checkbox-group">
                 <input type="checkbox" name="is_active" id="eventActive" checked>
                 <label for="eventActive">Active (visible on website)</label>
             </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #eee; margin-top: 20px;">
+                <button type="button" class="btn-action btn-cancel" onclick="Modal.close(\'eventModal\')">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="submit" class="btn-action btn-save">
+                    <i class="fas fa-save"></i> Save
+                </button>
+            </div>
         </form>
     ', [
-        'size' => 'lg',
-        'footer' => '
-            <button type="button" class="btn-action btn-cancel" onclick="Modal.close(\'eventModal\')">
-                <i class="fas fa-times"></i> Cancel
-            </button>
-            <button type="submit" form="eventForm" class="btn-action btn-save">
-                <i class="fas fa-save"></i> Save
-            </button>
-        '
+        'size' => 'lg'
     ]);
     ?>
 
@@ -923,6 +1059,7 @@ try {
             document.getElementById('eventCapacity').value = event.capacity || '';
             document.getElementById('eventOrder').value = event.display_order || 0;
             document.getElementById('eventFeatured').checked = event.is_featured == 1;
+            document.getElementById('eventUpcoming').checked = event.show_in_upcoming == 1;
             document.getElementById('eventActive').checked = event.is_active == 1;
             
             // Show existing image if available
@@ -1057,6 +1194,36 @@ try {
                     Alert.show('Error toggling featured status', 'error');
                 } else {
                     alert('Error toggling featured status');
+                }
+            });
+        }
+
+        function toggleUpcoming(id) {
+            const formData = new FormData();
+            formData.append('action', 'toggle_upcoming');
+            formData.append('id', id);
+
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    if (typeof Alert !== 'undefined') {
+                        Alert.show('Error toggling upcoming status', 'error');
+                    } else {
+                        alert('Error toggling upcoming status');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (typeof Alert !== 'undefined') {
+                    Alert.show('Error toggling upcoming status', 'error');
+                } else {
+                    alert('Error toggling upcoming status');
                 }
             });
         }
