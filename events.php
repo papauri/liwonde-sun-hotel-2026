@@ -102,7 +102,7 @@ $site_logo = getSetting('site_logo');
         .event-image-container {
             position: relative;
             width: 100%;
-            height: 260px;
+            aspect-ratio: 16 / 10;
             overflow: hidden;
         }
 
@@ -321,7 +321,7 @@ $site_logo = getSetting('site_logo');
             }
 
             .event-image-container {
-                height: 200px;
+                aspect-ratio: 16 / 10;
             }
 
             .event-date-badge {
@@ -399,7 +399,7 @@ $site_logo = getSetting('site_logo');
         @media (max-width: 480px) {
 
             .event-image-container {
-                height: 180px;
+                aspect-ratio: 16 / 9;
             }
 
             .event-title {
@@ -571,6 +571,8 @@ $site_logo = getSetting('site_logo');
                                     <img src="<?php echo htmlspecialchars($event_image); ?>"
                                          alt="<?php echo htmlspecialchars($event['title']); ?>"
                                          class="event-image"
+                                         loading="lazy"
+                                         width="600" height="375"
                                          onerror="this.src='images/hero/slide2.jpg'">
                                 <?php endif; ?>
                                 
@@ -677,6 +679,8 @@ $site_logo = getSetting('site_logo');
                                         <img src="<?php echo htmlspecialchars($event_image); ?>"
                                              alt="<?php echo htmlspecialchars($event['title']); ?>"
                                              class="event-image"
+                                             loading="lazy"
+                                             width="600" height="375"
                                              onerror="this.src='images/hero/slide2.jpg'">
                                     <?php endif; ?>
                                     

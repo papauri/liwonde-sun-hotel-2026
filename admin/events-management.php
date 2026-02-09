@@ -12,7 +12,7 @@ require_once 'video-upload-handler.php';
 $message = '';
 $error = '';
 
-// Simple helper to process uploaded event images
+// Simple helper to process uploaded event images with optimization
 function uploadEventImage($fileInput)
 {
     if (!$fileInput || !isset($fileInput['tmp_name']) || $fileInput['error'] !== UPLOAD_ERR_OK) {
@@ -24,8 +24,77 @@ function uploadEventImage($fileInput)
         mkdir($uploadDir, 0755, true);
     }
 
-    $ext = pathinfo($fileInput['name'], PATHINFO_EXTENSION) ?: 'jpg';
-    $filename = 'event_' . time() . '_' . random_int(1000, 9999) . '.' . strtolower($ext);
+    $ext = strtolower(pathinfo($fileInput['name'], PATHINFO_EXTENSION) ?: 'jpg');
+    $filename = 'event_' . time() . '_' . random_int(1000, 9999) . '.jpg'; // Always save as optimized JPEG
+    $relativePath = 'images/events/' . $filename;
+    $destination = $uploadDir . $filename;
+
+    // Try to optimize the image (resize + compress)
+    if (function_exists('imagecreatefromjpeg')) {
+        $sourceImage = null;
+        $mimeType = mime_content_type($fileInput['tmp_name']);
+
+        switch ($mimeType) {
+            case 'image/jpeg':
+                $sourceImage = @imagecreatefromjpeg($fileInput['tmp_name']);
+                break;
+            case 'image/png':
+                $sourceImage = @imagecreatefrompng($fileInput['tmp_name']);
+                break;
+            case 'image/webp':
+                if (function_exists('imagecreatefromwebp')) {
+                    $sourceImage = @imagecreatefromwebp($fileInput['tmp_name']);
+                }
+                break;
+            case 'image/gif':
+                $sourceImage = @imagecreatefromgif($fileInput['tmp_name']);
+                break;
+        }
+
+        if ($sourceImage) {
+            $origWidth = imagesx($sourceImage);
+            $origHeight = imagesy($sourceImage);
+            
+            // Max dimensions - optimized for event cards (16:10 aspect, max 1200px wide)
+            $maxWidth = 1200;
+            $maxHeight = 800;
+            
+            $newWidth = $origWidth;
+            $newHeight = $origHeight;
+            
+            // Scale down if larger than max dimensions
+            if ($origWidth > $maxWidth || $origHeight > $maxHeight) {
+                $ratioW = $maxWidth / $origWidth;
+                $ratioH = $maxHeight / $origHeight;
+                $ratio = min($ratioW, $ratioH);
+                $newWidth = (int)round($origWidth * $ratio);
+                $newHeight = (int)round($origHeight * $ratio);
+            }
+            
+            // Create optimized image
+            $optimized = imagecreatetruecolor($newWidth, $newHeight);
+            
+            // Preserve transparency for PNG source (fill white background for JPEG output)
+            $white = imagecolorallocate($optimized, 255, 255, 255);
+            imagefill($optimized, 0, 0, $white);
+            
+            // High-quality resampling
+            imagecopyresampled($optimized, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
+            
+            // Save as JPEG with 85% quality (good balance of quality vs file size)
+            $saved = imagejpeg($optimized, $destination, 85);
+            
+            imagedestroy($sourceImage);
+            imagedestroy($optimized);
+            
+            if ($saved) {
+                return $relativePath;
+            }
+        }
+    }
+    
+    // Fallback: just move the file if GD is not available
+    $filename = 'event_' . time() . '_' . random_int(1000, 9999) . '.' . $ext;
     $relativePath = 'images/events/' . $filename;
     $destination = $uploadDir . $filename;
 
@@ -269,14 +338,14 @@ try {
         
         .event-card-image {
             width: 100%;
-            height: 200px;
+            aspect-ratio: 16 / 10;
             object-fit: cover;
             background: linear-gradient(135deg, var(--gold) 0%, #c19b2e 100%);
         }
         
         .no-image-placeholder {
             width: 100%;
-            height: 200px;
+            aspect-ratio: 16 / 10;
             background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
             display: flex;
             align-items: center;
@@ -571,8 +640,8 @@ try {
                         ?>
                         
                         <?php if ($hasVideo): ?>
-                            <div style="width: 100%; height: 200px; overflow: hidden; background: #000;">
-                                <?php echo renderVideoEmbed($event['video_path'], $event['video_type'], ['autoplay' => false, 'muted' => false, 'style' => 'width: 100%; height: 200px; object-fit: cover;']); ?>
+                            <div style="width: 100%; aspect-ratio: 16/10; overflow: hidden; background: #000;">
+                                <?php echo renderVideoEmbed($event['video_path'], $event['video_type'], ['autoplay' => false, 'muted' => false, 'style' => 'width: 100%; height: 100%; object-fit: cover;']); ?>
                             </div>
                         <?php elseif ($imgSrc): ?>
                             <img src="<?php echo htmlspecialchars($imgSrc); ?>" 
