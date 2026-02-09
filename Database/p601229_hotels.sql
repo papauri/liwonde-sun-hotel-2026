@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Feb 09, 2026 at 10:13 AM
+-- Generation Time: Feb 09, 2026 at 11:58 AM
 -- Server version: 8.0.44-cll-lve
 -- PHP Version: 8.4.17
 
@@ -100,7 +100,8 @@ INSERT INTO `admin_activity_log` (`id`, `user_id`, `username`, `action`, `detail
 (8, 1, 'admin', 'login_success', 'Role: admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-07 14:07:10'),
 (9, 1, 'admin', 'login_success', 'Role: admin', '51.37.179.253', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-07 18:44:39'),
 (10, 1, 'admin', 'login_success', 'Role: admin', '51.37.179.253', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-07 22:35:49'),
-(11, 1, 'admin', 'login_success', 'Role: admin', '51.37.179.253', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', '2026-02-08 19:10:10');
+(11, 1, 'admin', 'login_success', 'Role: admin', '51.37.179.253', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', '2026-02-08 19:10:10'),
+(12, 1, 'admin', 'login_success', 'Role: admin', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-09 10:30:03');
 
 -- --------------------------------------------------------
 
@@ -127,7 +128,7 @@ CREATE TABLE `admin_users` (
 --
 
 INSERT INTO `admin_users` (`id`, `username`, `email`, `password_hash`, `full_name`, `role`, `is_active`, `last_login`, `created_at`, `updated_at`, `failed_login_attempts`) VALUES
-(1, 'admin', 'johnpaulchirwa@gmail.com', '$2y$10$OFHlFcgoqltOd7X6Z3IqVeg0961Adk9LxyfW8UBBfENSawMRZ3fF6', 'System Administrator', 'admin', 1, '2026-02-08 19:10:10', '2026-01-20 19:08:40', '2026-02-08 19:10:10', 0),
+(1, 'admin', 'johnpaulchirwa@gmail.com', '$2y$10$OFHlFcgoqltOd7X6Z3IqVeg0961Adk9LxyfW8UBBfENSawMRZ3fF6', 'System Administrator', 'admin', 1, '2026-02-09 10:30:03', '2026-01-20 19:08:40', '2026-02-09 10:30:03', 0),
 (2, 'receptionist', 'reception@liwondesunhotel.com', '$2y$10$OFHlFcgoqltOd7X6Z3IqVeg0961Adk9LxyfW8UBBfENSawMRZ3fF6', 'Front Desk', 'receptionist', 1, '2026-02-07 13:45:29', '2026-01-20 19:08:40', '2026-02-07 13:45:29', 0);
 
 -- --------------------------------------------------------
@@ -327,7 +328,6 @@ CREATE TABLE `conference_rooms` (
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `capacity` int NOT NULL,
   `size_sqm` decimal(10,2) DEFAULT NULL,
-  `hourly_rate` decimal(10,2) NOT NULL,
   `daily_rate` decimal(10,2) NOT NULL,
   `amenities` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -341,10 +341,10 @@ CREATE TABLE `conference_rooms` (
 -- Dumping data for table `conference_rooms`
 --
 
-INSERT INTO `conference_rooms` (`id`, `name`, `description`, `capacity`, `size_sqm`, `hourly_rate`, `daily_rate`, `amenities`, `image_path`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'Executive Boardroom', 'Small meeting room suitable for business meetings and presentations. Includes basic presentation equipment.', 12, 35.00, 15000.00, 100000.00, 'Video Conferencing, Smart TV, Whiteboard, High-Speed WiFi, Coffee Service', 'images/conference/Conference_Room1.jpeg', 1, 1, '2026-01-20 22:35:58', '2026-02-07 02:40:53'),
-(2, 'Grand Conference Hall', 'Large conference space for seminars, workshops, and corporate events. Can be divided for smaller groups.', 150, 200.00, 35000.00, 250000.00, 'Stage & Podium, Professional Sound System, Projection Screen, WiFi, Air Conditioning, Breakout Rooms', 'images/conference/grand-hall.jpg', 1, 2, '2026-01-20 22:35:58', '2026-02-07 02:40:53'),
-(3, 'Lakeside Meeting Room', 'Meeting room with nice views. Good for training sessions and medium-sized gatherings.', 30, 60.00, 20000.00, 140000.00, 'Projector & Screen, Video Conferencing, Whiteboard, WiFi, Lake View, Terrace Access', 'images/conference/lakeside-room.jpg', 1, 3, '2026-01-20 22:35:58', '2026-02-07 02:40:53');
+INSERT INTO `conference_rooms` (`id`, `name`, `description`, `capacity`, `size_sqm`, `daily_rate`, `amenities`, `image_path`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
+(1, 'Njobvu Room', 'Large conference space for seminars, workshops, and corporate events. Can be divided for smaller groups.', 250, 35.00, 400000.00, 'Video Conferencing, Smart TV, Whiteboard, High-Speed WiFi, Coffee Service, Sweets, Projector hire', 'images/conference/Conference_Room1.jpeg', 1, 1, '2026-01-20 22:35:58', '2026-02-09 11:44:39'),
+(2, 'Kasupe Room', 'Small meeting room suitable for business meetings and presentations. Includes basic presentation equipment.', 120, 200.00, 200000.00, 'Stage & Podium, Professional Sound System, Projection Screen, WiFi, Air Conditioning, Breakout Rooms', 'images/conference/kasupe.jpeg', 1, 2, '2026-01-20 22:35:58', '2026-02-09 11:46:36'),
+(3, 'Gwape Room', 'Meeting room with nice views. Good for training sessions and medium-sized gatherings.', 30, 60.00, 150000.00, 'Projector & Screen, Video Conferencing, Whiteboard, WiFi, Lake View, Terrace Access', 'images/conference/lakeside-room.jpg', 1, 3, '2026-01-20 22:35:58', '2026-02-09 11:46:41');
 
 -- --------------------------------------------------------
 
@@ -359,6 +359,15 @@ CREATE TABLE `cookie_consent_log` (
   `consent_level` enum('all','essential','declined') COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `cookie_consent_log`
+--
+
+INSERT INTO `cookie_consent_log` (`id`, `ip_address`, `user_agent`, `consent_level`, `created_at`) VALUES
+(1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'all', '2026-02-09 10:14:29'),
+(2, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'all', '2026-02-09 10:21:31'),
+(3, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'all', '2026-02-09 11:51:54');
 
 -- --------------------------------------------------------
 
@@ -1452,6 +1461,14 @@ CREATE TABLE `session_logs` (
   `consent_level` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `session_logs`
+--
+
+INSERT INTO `session_logs` (`id`, `session_id`, `ip_address`, `device_type`, `browser`, `os`, `page_url`, `referrer_domain`, `country`, `session_start`, `last_activity`, `page_count`, `consent_level`) VALUES
+(1, 'l56joh70ku2j1qb27jpfsnf9hd', '::1', 'desktop', 'Chrome', 'Windows 10/11', '/conference.php', 'localhost', 'Local', '2026-02-09 11:42:50', '2026-02-09 11:45:47', 5, 'all'),
+(6, 'p7nj9em2l885n6mfkfgf6ea72m', '::1', 'desktop', 'Chrome', 'Windows 10/11', '/conference.php', 'localhost', 'Local', '2026-02-09 11:53:31', '2026-02-09 11:53:31', 1, 'all');
+
 -- --------------------------------------------------------
 
 --
@@ -1606,6 +1623,18 @@ CREATE TABLE `site_visitors` (
   `visit_duration` int DEFAULT NULL COMMENT 'Seconds on page',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `site_visitors`
+--
+
+INSERT INTO `site_visitors` (`id`, `session_id`, `ip_address`, `user_agent`, `device_type`, `browser`, `os`, `referrer`, `referrer_domain`, `country`, `page_url`, `page_title`, `is_first_visit`, `visit_duration`, `created_at`) VALUES
+(1, 'l56joh70ku2j1qb27jpfsnf9hd', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop', 'Chrome', 'Windows 10/11', 'http://localhost:8000/', 'localhost', 'Local', '/conference.php', NULL, 1, NULL, '2026-02-09 11:42:50'),
+(2, 'l56joh70ku2j1qb27jpfsnf9hd', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop', 'Chrome', 'Windows 10/11', 'http://localhost:8000/', 'localhost', 'Local', '/conference.php', NULL, 0, NULL, '2026-02-09 11:43:54'),
+(3, 'l56joh70ku2j1qb27jpfsnf9hd', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop', 'Chrome', 'Windows 10/11', 'http://localhost:8000/', 'localhost', 'Local', '/conference.php', NULL, 0, NULL, '2026-02-09 11:44:44'),
+(4, 'l56joh70ku2j1qb27jpfsnf9hd', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop', 'Chrome', 'Windows 10/11', 'http://localhost:8000/', 'localhost', 'Local', '/conference.php', NULL, 0, NULL, '2026-02-09 11:45:32'),
+(5, 'l56joh70ku2j1qb27jpfsnf9hd', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop', 'Chrome', 'Windows 10/11', 'http://localhost:8000/', 'localhost', 'Local', '/conference.php', NULL, 0, NULL, '2026-02-09 11:45:47'),
+(6, 'p7nj9em2l885n6mfkfgf6ea72m', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop', 'Chrome', 'Windows 10/11', 'http://localhost:8000/rooms-gallery.php', 'localhost', 'Local', '/conference.php', NULL, 1, NULL, '2026-02-09 11:53:31');
 
 -- --------------------------------------------------------
 
@@ -2173,7 +2202,7 @@ ALTER TABLE `about_us`
 -- AUTO_INCREMENT for table `admin_activity_log`
 --
 ALTER TABLE `admin_activity_log`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `admin_users`
@@ -2227,7 +2256,7 @@ ALTER TABLE `conference_rooms`
 -- AUTO_INCREMENT for table `cookie_consent_log`
 --
 ALTER TABLE `cookie_consent_log`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `drink_menu`
@@ -2407,7 +2436,7 @@ ALTER TABLE `section_headers`
 -- AUTO_INCREMENT for table `session_logs`
 --
 ALTER TABLE `session_logs`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `site_pages`
@@ -2425,7 +2454,7 @@ ALTER TABLE `site_settings`
 -- AUTO_INCREMENT for table `site_visitors`
 --
 ALTER TABLE `site_visitors`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `tentative_booking_log`

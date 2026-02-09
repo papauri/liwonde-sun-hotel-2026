@@ -45,16 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'add') {
             $stmt = $pdo->prepare("
                 INSERT INTO conference_rooms (
-                    name, description, capacity, size_sqm, hourly_rate, daily_rate,
+                    name, description, capacity, size_sqm, daily_rate,
                     amenities, image_path, is_active, display_order
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $_POST['name'],
                 $_POST['description'],
                 $_POST['capacity'],
                 $_POST['size_sqm'] ?: null,
-                $_POST['hourly_rate'],
                 $_POST['daily_rate'],
                 $_POST['amenities'] ?? '',
                 $imagePath,
@@ -68,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($imagePath) {
                 $stmt = $pdo->prepare("
                     UPDATE conference_rooms
-                    SET name = ?, description = ?, capacity = ?, size_sqm = ?, hourly_rate = ?, daily_rate = ?,
+                    SET name = ?, description = ?, capacity = ?, size_sqm = ?, daily_rate = ?,
                         amenities = ?, image_path = ?, is_active = ?, display_order = ?
                     WHERE id = ?
                 ");
@@ -77,7 +76,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_POST['description'],
                     $_POST['capacity'],
                     $_POST['size_sqm'] ?: null,
-                    $_POST['hourly_rate'],
                     $_POST['daily_rate'],
                     $_POST['amenities'] ?? '',
                     $imagePath,
@@ -88,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $stmt = $pdo->prepare("
                     UPDATE conference_rooms
-                    SET name = ?, description = ?, capacity = ?, size_sqm = ?, hourly_rate = ?, daily_rate = ?,
+                    SET name = ?, description = ?, capacity = ?, size_sqm = ?, daily_rate = ?,
                         amenities = ?, is_active = ?, display_order = ?
                     WHERE id = ?
                 ");
@@ -97,7 +95,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_POST['description'],
                     $_POST['capacity'],
                     $_POST['size_sqm'] ?: null,
-                    $_POST['hourly_rate'],
                     $_POST['daily_rate'],
                     $_POST['amenities'] ?? '',
                     isset($_POST['is_active']) ? 1 : 0,
@@ -542,11 +539,7 @@ try {
                         <input type="number" step="0.01" name="size_sqm">
                     </div>
                     <div class="form-group">
-                        <label>Hourly Rate *</label>
-                        <input type="number" step="0.01" name="hourly_rate" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Daily Rate *</label>
+                        <label>Full Day Rate *</label>
                         <input type="number" step="0.01" name="daily_rate" required>
                     </div>
                     <div class="form-group">
@@ -706,7 +699,6 @@ try {
                         <div class="room-meta">
                             <span><i class="fas fa-users"></i> <?php echo (int) $room['capacity']; ?> Guests</span>
                             <span><i class="fas fa-expand-arrows-alt"></i> <?php echo number_format($room['size_sqm'] ?? 0, 0); ?> sqm</span>
-                            <span><i class="fas fa-coins"></i> K <?php echo number_format($room['hourly_rate'], 0); ?>/hr</span>
                             <span><i class="fas fa-calendar-day"></i> K <?php echo number_format($room['daily_rate'], 0); ?>/day</span>
                         </div>
 
@@ -728,11 +720,7 @@ try {
                                         <input type="number" step="0.01" name="size_sqm" value="<?php echo htmlspecialchars($room['size_sqm']); ?>">
                                     </div>
                                     <div class="form-group">
-                                        <label>Hourly Rate *</label>
-                                        <input type="number" step="0.01" name="hourly_rate" value="<?php echo htmlspecialchars($room['hourly_rate']); ?>" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Daily Rate *</label>
+                                        <label>Full Day Rate *</label>
                                         <input type="number" step="0.01" name="daily_rate" value="<?php echo htmlspecialchars($room['daily_rate']); ?>" required>
                                     </div>
                                     <div class="form-group">

@@ -221,11 +221,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception('Selected conference room is not available.');
         }
 
-        // Calculate hours and cost
-        $start = new DateTime($start_time);
-        $end = new DateTime($end_time);
-        $hours = $start->diff($end)->h + ($start->diff($end)->i / 60);
-        $total_amount = $hours * $room['hourly_rate'];
+        // Use full day rate for pricing
+        $total_amount = $room['daily_rate'];
 
         // Generate unique inquiry reference
         do {
@@ -823,10 +820,6 @@ function resolveConferenceImage(?string $imagePath): string
                                 <?php endif; ?>
 
                                 <div class="pricing-section">
-                                    <div class="pricing-row">
-                                        <span class="pricing-label">Hourly Rate</span>
-                                        <span class="pricing-value"><?php echo $currency_symbol . number_format($room['hourly_rate'], 0); ?>/hour</span>
-                                    </div>
                                     <div class="pricing-row">
                                         <span class="pricing-label">Full Day Rate</span>
                                         <span class="pricing-value"><?php echo $currency_symbol . number_format($room['daily_rate'], 0); ?>/day</span>
