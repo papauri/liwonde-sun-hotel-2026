@@ -56,7 +56,7 @@ $site_logo = getSetting('site_logo');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#0A1929">
+    <meta name="theme-color" content="#1A1A1A">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=yes">
@@ -155,7 +155,7 @@ $site_logo = getSetting('site_logo');
             border-radius: 12px;
             text-align: center;
             font-weight: 700;
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 4px 16px rgba(139, 115, 85, 0.4);
         }
 
         .event-date-day {
@@ -249,12 +249,12 @@ $site_logo = getSetting('site_logo');
             gap: 10px;
             padding: 10px 16px;
             border-radius: 12px;
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+            background: linear-gradient(135deg, rgba(139, 115, 85, 0.15), rgba(139, 115, 85, 0.05));
             color: var(--navy);
             font-weight: 700;
             font-size: 18px;
-            border: 1px solid rgba(212, 175, 55, 0.35);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.15);
+            border: 1px solid rgba(139, 115, 85, 0.35);
+            box-shadow: 0 6px 20px rgba(139, 115, 85, 0.15);
         }
 
         .event-price .price-label {
@@ -265,7 +265,7 @@ $site_logo = getSetting('site_logo');
             font-size: 12px;
             letter-spacing: 0.5px;
             text-transform: uppercase;
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 4px 12px rgba(139, 115, 85, 0.3);
         }
 
         .event-price .price-value {
@@ -521,128 +521,24 @@ $site_logo = getSetting('site_logo');
     <!-- Hero Section -->
     <?php include 'includes/hero.php'; ?>
 
-    <!-- Events Section -->
-    <section class="events-section">
-        <div class="container">
-            <?php renderSectionHeader('events_overview', 'events', [
-                'label' => 'Upcoming Events',
-                'title' => 'Special Events & Occasions',
-                'description' => 'Join us for memorable celebrations and special gatherings'
-            ], 'text-center'); ?>
-            <?php if (empty($upcoming_events)): ?>
-                <div class="no-events">
-                    <i class="fas fa-calendar-times"></i>
-                    <h3>No Upcoming Events</h3>
-                    <p>Check back soon for exciting events and special occasions!</p>
-                </div>
-            <?php else: ?>
-                <div class="events-grid">
-                    <?php foreach ($upcoming_events as $event): ?>
-                        <?php
-                        $event_date = new DateTime($event['event_date']);
-                        $day = $event_date->format('d');
-                        $month = $event_date->format('M');
-                        $formatted_date = $event_date->format('F j, Y');
-                        $start_time = !empty($event['start_time']) ? date('g:i A', strtotime($event['start_time'])) : '';
-                        $end_time = !empty($event['end_time']) ? date('g:i A', strtotime($event['end_time'])) : '';
-                        ?>
-                        <div class="event-card <?php echo $event['is_featured'] ? 'featured' : ''; ?>">
-                            <div class="event-image-container">
-                                <?php if (!empty($event['video_path'])): ?>
-                                    <!-- Display video if available -->
-                                    <?php echo renderVideoEmbed($event['video_path'], $event['video_type'], [
-                                        'autoplay' => true,
-                                        'muted' => true,
-                                        'controls' => true,
-                                        'loop' => true,
-                                        'class' => 'event-image',
-                                        'style' => 'width: 100%; height: 100%; object-fit: cover; display: block;'
-                                    ]); ?>
-                                <?php else: ?>
-                                    <!-- Display image if no video -->
-                                    <?php
-                                    // Use event image if exists, otherwise fallback to hero image
-                                    $event_image = !empty($event['image_path']) && file_exists($event['image_path'])
-                                        ? $event['image_path']
-                                        : 'images/hero/slide2.jpg';
-                                    // Apply proxy for external images (Facebook, etc.)
-                                    $event_image = proxyImageUrl($event_image);
-                                    ?>
-                                    <img src="<?php echo htmlspecialchars($event_image); ?>"
-                                         alt="<?php echo htmlspecialchars($event['title']); ?>"
-                                         class="event-image"
-                                         loading="lazy"
-                                         width="600" height="375"
-                                         onerror="this.src='images/hero/slide2.jpg'">
-                                <?php endif; ?>
-                                
-                                <div class="event-date-badge">
-                                    <span class="event-date-day"><?php echo $day; ?></span>
-                                    <span class="event-date-month"><?php echo $month; ?></span>
-                                </div>
 
-                                <?php if ($event['is_featured']): ?>
-                                    <div class="featured-badge">
-                                        <i class="fas fa-star"></i> Featured
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-
-                            <div class="event-content">
-                                <h3 class="event-title"><?php echo htmlspecialchars($event['title']); ?></h3>
-
-                                <div class="event-meta">
-                                    <div class="event-meta-item">
-                                        <i class="fas fa-calendar-alt"></i>
-                                        <span><?php echo $formatted_date; ?></span>
-                                    </div>
-                                    <?php if ($start_time && $end_time): ?>
-                                        <div class="event-meta-item">
-                                            <i class="fas fa-clock"></i>
-                                            <span><?php echo $start_time . ' - ' . $end_time; ?></span>
-                                        </div>
-                                    <?php endif; ?>
-                                    <?php if (!empty($event['location'])): ?>
-                                        <div class="event-meta-item">
-                                            <i class="fas fa-map-marker-alt"></i>
-                                            <span><?php echo htmlspecialchars($event['location']); ?></span>
-                                        </div>
-                                    <?php endif; ?>
-                                    <?php if ($event['capacity']): ?>
-                                        <div class="event-meta-item">
-                                            <i class="fas fa-users"></i>
-                                            <span>Limited to <?php echo $event['capacity']; ?> guests</span>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-
-                                <p class="event-description"><?php echo htmlspecialchars($event['description']); ?></p>
-
-                                <div class="event-footer">
-                                    <div class="event-price <?php echo $event['ticket_price'] == 0 ? 'free' : ''; ?>">
-                                        <?php if ($event['ticket_price'] == 0): ?>
-                                            <span class="price-label">Free</span>
-                                            <span class="price-value">Event</span>
-                                        <?php else: ?>
-                                            <span class="price-label">From</span>
-                                            <span class="price-value"><?php echo $currency_symbol . number_format($event['ticket_price'], 0); ?></span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-            
-            <!-- Expired Events Section -->
-            <?php if (!empty($expired_events)): ?>
-                <div class="expired-events-section">
-                    <h2 class="expired-section-title">Past Events</h2>
-                    <p class="expired-section-subtitle">Events that have already taken place</p>
-                    
-                    <div class="events-grid">
-                        <?php foreach ($expired_events as $event): ?>
+        <!-- Passalacqua-Inspired Editorial Events Section -->
+        <section class="editorial-events-section">
+            <div class="container">
+                <?php renderSectionHeader('events_overview', 'events', [
+                    'label' => 'Upcoming Events',
+                    'title' => 'Special Events & Occasions',
+                    'description' => 'Join us for memorable celebrations and special gatherings'
+                ], 'text-center'); ?>
+                <?php if (empty($upcoming_events)): ?>
+                    <div class="editorial-no-events">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>No Upcoming Events</h3>
+                        <p>Check back soon for exciting events and special occasions!</p>
+                    </div>
+                <?php else: ?>
+                    <div class="editorial-events-grid">
+                        <?php foreach ($upcoming_events as $event): ?>
                             <?php
                             $event_date = new DateTime($event['event_date']);
                             $day = $event_date->format('d');
@@ -651,22 +547,15 @@ $site_logo = getSetting('site_logo');
                             $start_time = !empty($event['start_time']) ? date('g:i A', strtotime($event['start_time'])) : '';
                             $end_time = !empty($event['end_time']) ? date('g:i A', strtotime($event['end_time'])) : '';
                             ?>
-                            <div class="event-card expired">
-                                <div class="expired-badge-overlay">
-                                    <div class="expired-badge">
-                                        <i class="fas fa-calendar-times"></i>
-                                        <span>Expired</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="event-image-container">
+                            <div class="editorial-event-card <?php echo $event['is_featured'] ? 'featured' : ''; ?>">
+                                <div class="editorial-event-image-container">
                                     <?php if (!empty($event['video_path'])): ?>
                                         <?php echo renderVideoEmbed($event['video_path'], $event['video_type'], [
-                                            'autoplay' => false,
+                                            'autoplay' => true,
                                             'muted' => true,
-                                            'controls' => false,
-                                            'loop' => false,
-                                            'class' => 'event-image',
+                                            'controls' => true,
+                                            'loop' => true,
+                                            'class' => 'editorial-event-image',
                                             'style' => 'width: 100%; height: 100%; object-fit: cover; display: block;'
                                         ]); ?>
                                     <?php else: ?>
@@ -677,51 +566,57 @@ $site_logo = getSetting('site_logo');
                                         $event_image = proxyImageUrl($event_image);
                                         ?>
                                         <img src="<?php echo htmlspecialchars($event_image); ?>"
-                                             alt="<?php echo htmlspecialchars($event['title']); ?>"
-                                             class="event-image"
-                                             loading="lazy"
-                                             width="600" height="375"
-                                             onerror="this.src='images/hero/slide2.jpg'">
+                                                 alt="<?php echo htmlspecialchars($event['title']); ?>"
+                                                 class="editorial-event-image"
+                                                 loading="lazy"
+                                                 width="600" height="375"
+                                                 onerror="this.src='images/hero/slide2.jpg'">
                                     <?php endif; ?>
-                                    
-                                    <div class="event-date-badge">
-                                        <span class="event-date-day"><?php echo $day; ?></span>
-                                        <span class="event-date-month"><?php echo $month; ?></span>
+                                    <div class="editorial-event-date-badge">
+                                        <span class="editorial-event-date-day"><?php echo $day; ?></span>
+                                        <span class="editorial-event-date-month"><?php echo $month; ?></span>
                                     </div>
+                                    <?php if ($event['is_featured']): ?>
+                                        <div class="editorial-featured-badge">
+                                            <i class="fas fa-star"></i> Featured
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
-
-                                <div class="event-content">
-                                    <h3 class="event-title"><?php echo htmlspecialchars($event['title']); ?></h3>
-
-                                    <div class="event-meta">
-                                        <div class="event-meta-item">
+                                <div class="editorial-event-content">
+                                    <h3 class="editorial-event-title"><?php echo htmlspecialchars($event['title']); ?></h3>
+                                    <div class="editorial-event-meta">
+                                        <div class="editorial-event-meta-item">
                                             <i class="fas fa-calendar-alt"></i>
                                             <span><?php echo $formatted_date; ?></span>
                                         </div>
                                         <?php if ($start_time && $end_time): ?>
-                                            <div class="event-meta-item">
+                                            <div class="editorial-event-meta-item">
                                                 <i class="fas fa-clock"></i>
                                                 <span><?php echo $start_time . ' - ' . $end_time; ?></span>
                                             </div>
                                         <?php endif; ?>
                                         <?php if (!empty($event['location'])): ?>
-                                            <div class="event-meta-item">
+                                            <div class="editorial-event-meta-item">
                                                 <i class="fas fa-map-marker-alt"></i>
                                                 <span><?php echo htmlspecialchars($event['location']); ?></span>
                                             </div>
                                         <?php endif; ?>
+                                        <?php if ($event['capacity']): ?>
+                                            <div class="editorial-event-meta-item">
+                                                <i class="fas fa-users"></i>
+                                                <span>Limited to <?php echo $event['capacity']; ?> guests</span>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
-
-                                    <p class="event-description"><?php echo htmlspecialchars($event['description']); ?></p>
-
-                                    <div class="event-footer">
-                                        <div class="event-price <?php echo $event['ticket_price'] == 0 ? 'free' : ''; ?>">
+                                    <p class="editorial-event-description"><?php echo htmlspecialchars($event['description']); ?></p>
+                                    <div class="editorial-event-footer">
+                                        <div class="editorial-event-price <?php echo $event['ticket_price'] == 0 ? 'free' : ''; ?>">
                                             <?php if ($event['ticket_price'] == 0): ?>
-                                                <span class="price-label">Free</span>
-                                                <span class="price-value">Event</span>
+                                                <span class="editorial-price-label">Free</span>
+                                                <span class="editorial-price-value">Event</span>
                                             <?php else: ?>
-                                                <span class="price-label">Was</span>
-                                                <span class="price-value"><?php echo $currency_symbol . number_format($event['ticket_price'], 0); ?></span>
+                                                <span class="editorial-price-label">From</span>
+                                                <span class="editorial-price-value"><?php echo $currency_symbol . number_format($event['ticket_price'], 0); ?></span>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -729,10 +624,98 @@ $site_logo = getSetting('site_logo');
                             </div>
                         <?php endforeach; ?>
                     </div>
-                </div>
-            <?php endif; ?>
-        </div>
-    </section>
+                <?php endif; ?>
+                <!-- Expired Events Section -->
+                <?php if (!empty($expired_events)): ?>
+                    <div class="editorial-expired-events-section">
+                        <h2 class="editorial-expired-section-title">Past Events</h2>
+                        <p class="editorial-expired-section-subtitle">Events that have already taken place</p>
+                        <div class="editorial-events-grid">
+                            <?php foreach ($expired_events as $event): ?>
+                                <?php
+                                $event_date = new DateTime($event['event_date']);
+                                $day = $event_date->format('d');
+                                $month = $event_date->format('M');
+                                $formatted_date = $event_date->format('F j, Y');
+                                $start_time = !empty($event['start_time']) ? date('g:i A', strtotime($event['start_time'])) : '';
+                                $end_time = !empty($event['end_time']) ? date('g:i A', strtotime($event['end_time'])) : '';
+                                ?>
+                                <div class="editorial-event-card expired">
+                                    <div class="editorial-expired-badge-overlay">
+                                        <div class="editorial-expired-badge">
+                                            <i class="fas fa-calendar-times"></i>
+                                            <span>Expired</span>
+                                        </div>
+                                    </div>
+                                    <div class="editorial-event-image-container">
+                                        <?php if (!empty($event['video_path'])): ?>
+                                            <?php echo renderVideoEmbed($event['video_path'], $event['video_type'], [
+                                                'autoplay' => false,
+                                                'muted' => true,
+                                                'controls' => false,
+                                                'loop' => false,
+                                                'class' => 'editorial-event-image',
+                                                'style' => 'width: 100%; height: 100%; object-fit: cover; display: block;'
+                                            ]); ?>
+                                        <?php else: ?>
+                                            <?php
+                                            $event_image = !empty($event['image_path']) && file_exists($event['image_path'])
+                                                ? $event['image_path']
+                                                : 'images/hero/slide2.jpg';
+                                            $event_image = proxyImageUrl($event_image);
+                                            ?>
+                                            <img src="<?php echo htmlspecialchars($event_image); ?>"
+                                                     alt="<?php echo htmlspecialchars($event['title']); ?>"
+                                                     class="editorial-event-image"
+                                                     loading="lazy"
+                                                     width="600" height="375"
+                                                     onerror="this.src='images/hero/slide2.jpg'">
+                                        <?php endif; ?>
+                                        <div class="editorial-event-date-badge">
+                                            <span class="editorial-event-date-day"><?php echo $day; ?></span>
+                                            <span class="editorial-event-date-month"><?php echo $month; ?></span>
+                                        </div>
+                                    </div>
+                                    <div class="editorial-event-content">
+                                        <h3 class="editorial-event-title"><?php echo htmlspecialchars($event['title']); ?></h3>
+                                        <div class="editorial-event-meta">
+                                            <div class="editorial-event-meta-item">
+                                                <i class="fas fa-calendar-alt"></i>
+                                                <span><?php echo $formatted_date; ?></span>
+                                            </div>
+                                            <?php if ($start_time && $end_time): ?>
+                                                <div class="editorial-event-meta-item">
+                                                    <i class="fas fa-clock"></i>
+                                                    <span><?php echo $start_time . ' - ' . $end_time; ?></span>
+                                                </div>
+                                            <?php endif; ?>
+                                            <?php if (!empty($event['location'])): ?>
+                                                <div class="editorial-event-meta-item">
+                                                    <i class="fas fa-map-marker-alt"></i>
+                                                    <span><?php echo htmlspecialchars($event['location']); ?></span>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                        <p class="editorial-event-description"><?php echo htmlspecialchars($event['description']); ?></p>
+                                        <div class="editorial-event-footer">
+                                            <div class="editorial-event-price <?php echo $event['ticket_price'] == 0 ? 'free' : ''; ?>">
+                                                <?php if ($event['ticket_price'] == 0): ?>
+                                                    <span class="editorial-price-label">Free</span>
+                                                    <span class="editorial-price-value">Event</span>
+                                                <?php else: ?>
+                                                    <span class="editorial-price-label">Was</span>
+                                                    <span class="editorial-price-value"><?php echo $currency_symbol . number_format($event['ticket_price'], 0); ?></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </section>
 
     <!-- Footer -->
     <?php include 'includes/footer.php'; ?>

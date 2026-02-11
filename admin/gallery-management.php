@@ -178,7 +178,7 @@ sort($categories);
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -277,8 +277,8 @@ sort($categories);
         .btn-delete { background: #dc3545; color: white; }
         .btn-delete:hover { background: #c82333; }
         .btn-add-gallery {
-            background: var(--gold, #D4AF37);
-            color: var(--deep-navy, #05090F);
+            background: var(--gold, #8B7355);
+            color: var(--deep-navy, #111111);
             padding: 12px 24px;
             border: none;
             border-radius: 8px;
@@ -291,7 +291,7 @@ sort($categories);
         }
         .btn-add-gallery:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(212,175,55,0.3);
+            box-shadow: 0 4px 12px rgba(139, 115, 85,0.3);
         }
         .filter-bar {
             display: flex;
@@ -312,7 +312,7 @@ sort($categories);
         }
         .filter-btn:hover, .filter-btn.active {
             border-color: var(--gold);
-            background: rgba(212,175,55,0.1);
+            background: rgba(139, 115, 85,0.1);
             color: var(--navy);
         }
         /* Modal */
@@ -347,7 +347,7 @@ sort($categories);
         }
         .modal-header h3 {
             margin: 0;
-            color: var(--navy, #0A1929);
+            color: var(--navy, #1A1A1A);
         }
         .modal-close {
             background: none;
@@ -568,7 +568,7 @@ sort($categories);
                 
                 <div class="form-actions">
                     <button type="button" onclick="closeModal()" style="padding:10px 24px; border:1px solid #ddd; border-radius:6px; background:white; cursor:pointer;">Cancel</button>
-                    <button type="submit" id="formSubmitBtn" style="padding:10px 24px; border:none; border-radius:6px; background:var(--gold, #D4AF37); color:var(--deep-navy, #05090F); font-weight:600; cursor:pointer;">
+                    <button type="submit" id="formSubmitBtn" style="padding:10px 24px; border:none; border-radius:6px; background:var(--gold, #8B7355); color:var(--deep-navy, #111111); font-weight:600; cursor:pointer;">
                         <i class="fas fa-save"></i> Save
                     </button>
                 </div>

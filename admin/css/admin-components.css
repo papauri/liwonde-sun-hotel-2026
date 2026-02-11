@@ -16,7 +16,7 @@
     --modal-header-bg: linear-gradient(135deg, #f5f2e8 0%, #ece6d6 100%);
     --modal-header-color: var(--deep-navy, #0f1d2e);
     --modal-close-color: var(--deep-navy, #0f1d2e);
-    --modal-close-hover: var(--gold, #d4af37);
+    --modal-close-hover: var(--gold, #8B7355);
 }
 
 /* Modal Overlay */
@@ -118,7 +118,7 @@
 }
 
 .modal-close:focus {
-    outline: 2px solid var(--gold, #d4af37);
+    outline: 2px solid var(--gold, #8B7355);
     outline-offset: 2px;
 }
 
@@ -132,7 +132,7 @@
 
 .modal-title {
     margin: 0;
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: 22px;
     font-weight: 600;
     color: var(--deep-navy, #0f1d2e);

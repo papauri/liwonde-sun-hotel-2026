@@ -104,7 +104,7 @@
 .form-control:focus {
     outline: none;
     border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+    box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.1);
 }
 
 select.form-control {
@@ -141,7 +141,7 @@ textarea.form-control {
 
 .room-option:hover {
     border-color: var(--gold);
-    background: rgba(212, 175, 55, 0.05);
+    background: rgba(139, 115, 85, 0.05);
 }
 
 .room-option input[type="radio"] {
@@ -153,7 +153,7 @@ textarea.form-control {
 
 .room-option.selected {
     border-color: var(--gold);
-    background: rgba(212, 175, 55, 0.1);
+    background: rgba(139, 115, 85, 0.1);
 }
 
 .room-info {
@@ -241,8 +241,8 @@ textarea.form-control {
 .btn-submit {
     width: 100%;
     padding: 16px 32px;
-    background: linear-gradient(135deg, var(--gold) 0%, #c49b2e 100%);
-    color: var(--deep-navy);
+    background: linear-gradient(135deg, #8B7355 0%, #6B5740 100%);
+    color: #fff;
     border: none;
     border-radius: 12px;
     font-size: 16px;
@@ -256,7 +256,7 @@ textarea.form-control {
 
 .btn-submit:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+    box-shadow: 0 8px 25px rgba(139, 115, 85, 0.4);
 }
 
 .btn-submit:disabled {
@@ -324,8 +324,8 @@ textarea.form-control {
 }
 
 .flatpickr-day.inRange {
-    background: rgba(212, 175, 55, 0.2) !important;
-    border-color: rgba(212, 175, 55, 0.3) !important;
+    background: rgba(139, 115, 85, 0.2) !important;
+    border-color: rgba(139, 115, 85, 0.3) !important;
 }
 
 .flatpickr-day.startRange,
@@ -445,15 +445,15 @@ textarea.form-control {
 
 .booking-type-option:hover {
     border-color: var(--gold);
-    background: rgba(212, 175, 55, 0.05);
+    background: rgba(139, 115, 85, 0.05);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .booking-type-option.selected {
     border-color: var(--gold);
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);
-    box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+    background: linear-gradient(135deg, rgba(139, 115, 85, 0.1) 0%, rgba(139, 115, 85, 0.05) 100%);
+    box-shadow: 0 4px 16px rgba(139, 115, 85, 0.3);
 }
 
 .booking-type-option input[type="radio"] {
@@ -503,8 +503,8 @@ textarea.form-control {
 }
 
 .booking-type-badge.recommended {
-    background: linear-gradient(135deg, var(--gold) 0%, #c49b2e 100%);
-    color: var(--deep-navy);
+    background: linear-gradient(135deg, #8B7355 0%, #6B5740 100%);
+    color: #fff;
 }
 
 .booking-type-badge.info {
@@ -513,7 +513,7 @@ textarea.form-control {
 }
 
 .booking-type-option.selected .booking-type-badge.recommended {
-    background: linear-gradient(135deg, #c49b2e 0%, #b88a1f 100%);
+    background: linear-gradient(135deg, #6B5740 0%, #5A4632 100%);
 }
 
 /* Mobile Responsive */

@@ -1827,3 +1827,487 @@ function canConvertTentativeBooking($booking_id) {
         ];
     }
 }
+
+/**
+ * ============================================================================
+ * INDIVIDUAL ROOM MANAGEMENT FUNCTIONS
+ * ============================================================================
+ */
+
+/**
+ * Get available individual rooms for a room type and date range
+ *
+ * @param int $roomTypeId Room type ID
+ * @param string $checkIn Check-in date (YYYY-MM-DD)
+ * @param string $checkOut Check-out date (YYYY-MM-DD)
+ * @param int $excludeBookingId Optional booking ID to exclude from conflicts
+ * @return array Available individual rooms
+ */
+function getAvailableIndividualRooms($roomTypeId, $checkIn, $checkOut, $excludeBookingId = null) {
+    global $pdo;
+    
+    try {
+        // Get all active individual rooms for this type
+        $sql = "
+            SELECT
+                ir.id,
+                ir.room_number,
+                ir.room_name,
+                ir.floor,
+                ir.status,
+                ir.specific_amenities
+            FROM individual_rooms ir
+            WHERE ir.room_type_id = ?
+            AND ir.is_active = 1
+            AND ir.status IN ('available', 'cleaning')
+            ORDER BY ir.display_order ASC, ir.room_number ASC
+        ";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$roomTypeId]);
+        $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $availableRooms = [];
+        
+        foreach ($rooms as $room) {
+            // Check for booking conflicts
+            $conflictSql = "
+                SELECT COUNT(*) as count
+                FROM bookings b
+                WHERE b.individual_room_id = ?
+                AND b.status IN ('pending', 'confirmed', 'checked-in')
+                AND NOT (b.check_out_date <= ? OR b.check_in_date >= ?)
+            ";
+            
+            $params = [$room['id'], $checkIn, $checkOut];
+            
+            if ($excludeBookingId) {
+                $conflictSql .= " AND b.id != ?";
+                $params[] = $excludeBookingId;
+            }
+            
+            $conflictStmt = $pdo->prepare($conflictSql);
+            $conflictStmt->execute($params);
+            $hasConflict = $conflictStmt->fetch(PDO::FETCH_ASSOC)['count'] > 0;
+            
+            if (!$hasConflict) {
+                $availableRooms[] = [
+                    'id' => $room['id'],
+                    'room_number' => $room['room_number'],
+                    'room_name' => $room['room_name'],
+                    'floor' => $room['floor'],
+                    'status' => $room['status'],
+                    'specific_amenities' => $room['specific_amenities'] ? json_decode($room['specific_amenities'], true) : []
+                ];
+            }
+        }
+        
+        return $availableRooms;
+        
+    } catch (PDOException $e) {
+        error_log("Error getting available individual rooms: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Check if an individual room is available for specific dates
+ *
+ * @param int $individualRoomId Individual room ID
+ * @param string $checkIn Check-in date (YYYY-MM-DD)
+ * @param string $checkOut Check-out date (YYYY-MM-DD)
+ * @param int $excludeBookingId Optional booking ID to exclude
+ * @return bool True if available, false otherwise
+ */
+function isIndividualRoomAvailable($individualRoomId, $checkIn, $checkOut, $excludeBookingId = null) {
+    global $pdo;
+    
+    try {
+        // Get room status
+        $stmt = $pdo->prepare("SELECT status FROM individual_rooms WHERE id = ?");
+        $stmt->execute([$individualRoomId]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$room) {
+            return false;
+        }
+        
+        // Check if room status allows booking
+        if (!in_array($room['status'], ['available', 'cleaning'])) {
+            return false;
+        }
+        
+        // Check for booking conflicts
+        $sql = "
+            SELECT COUNT(*) as count
+            FROM bookings b
+            WHERE b.individual_room_id = ?
+            AND b.status IN ('pending', 'confirmed', 'checked-in')
+            AND NOT (b.check_out_date <= ? OR b.check_in_date >= ?)
+        ";
+        
+        $params = [$individualRoomId, $checkIn, $checkOut];
+        
+        if ($excludeBookingId) {
+            $sql .= " AND b.id != ?";
+            $params[] = $excludeBookingId;
+        }
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $conflicts = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+        
+        return $conflicts == 0;
+        
+    } catch (PDOException $e) {
+        error_log("Error checking individual room availability: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Update individual room status with logging
+ *
+ * @param int $individualRoomId Individual room ID
+ * @param string $newStatus New status
+ * @param string $reason Optional reason for status change
+ * @param int $performedBy User ID who performed the change
+ * @return bool True on success, false on failure
+ */
+function updateIndividualRoomStatus($individualRoomId, $newStatus, $reason = null, $performedBy = null) {
+    global $pdo;
+    
+    try {
+        $pdo->beginTransaction();
+        
+        // Get current status
+        $stmt = $pdo->prepare("SELECT status FROM individual_rooms WHERE id = ?");
+        $stmt->execute([$individualRoomId]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$room) {
+            $pdo->rollBack();
+            return false;
+        }
+        
+        $oldStatus = $room['status'];
+        
+        // Update status
+        $updateStmt = $pdo->prepare("UPDATE individual_rooms SET status = ? WHERE id = ?");
+        $updateStmt->execute([$newStatus, $individualRoomId]);
+        
+        // Log the change
+        $logStmt = $pdo->prepare("
+            INSERT INTO room_maintenance_log (individual_room_id, status_from, status_to, reason, performed_by)
+            VALUES (?, ?, ?, ?, ?)
+        ");
+        $logStmt->execute([
+            $individualRoomId,
+            $oldStatus,
+            $newStatus,
+            $reason,
+            $performedBy
+        ]);
+        
+        $pdo->commit();
+        
+        // Clear cache
+        require_once __DIR__ . '/cache.php';
+        clearRoomCache();
+        
+        return true;
+        
+    } catch (PDOException $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log("Error updating individual room status: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Get room type with individual rooms count
+ *
+ * @param int $roomTypeId Room type ID
+ * @return array Room type data with counts
+ */
+function getRoomTypeWithCounts($roomTypeId) {
+    global $pdo;
+    
+    try {
+        $stmt = $pdo->prepare("
+            SELECT
+                rt.*,
+                COUNT(DISTINCT ir.id) as individual_rooms_count,
+                SUM(CASE WHEN ir.status = 'available' THEN 1 ELSE 0 END) as available_count,
+                SUM(CASE WHEN ir.status = 'occupied' THEN 1 ELSE 0 END) as occupied_count,
+                SUM(CASE WHEN ir.status = 'cleaning' THEN 1 ELSE 0 END) as cleaning_count,
+                SUM(CASE WHEN ir.status = 'maintenance' THEN 1 ELSE 0 END) as maintenance_count
+            FROM room_types rt
+            LEFT JOIN individual_rooms ir ON rt.id = ir.room_type_id AND ir.is_active = 1
+            WHERE rt.id = ?
+            GROUP BY rt.id
+        ");
+        $stmt->execute([$roomTypeId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result) {
+            // Decode amenities JSON
+            if ($result['amenities']) {
+                $result['amenities'] = json_decode($result['amenities'], true);
+            } else {
+                $result['amenities'] = [];
+            }
+        }
+        
+        return $result;
+        
+    } catch (PDOException $e) {
+        error_log("Error getting room type with counts: " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Get all room types with individual room counts
+ *
+ * @param bool $activeOnly Only return active room types
+ * @return array Room types with counts
+ */
+function getAllRoomTypesWithCounts($activeOnly = true) {
+    global $pdo;
+    
+    try {
+        $sql = "
+            SELECT
+                rt.id,
+                rt.name,
+                rt.slug,
+                rt.price_per_night,
+                rt.image_url,
+                rt.is_featured,
+                rt.is_active,
+                rt.display_order,
+                COUNT(DISTINCT ir.id) as individual_rooms_count,
+                SUM(CASE WHEN ir.status = 'available' THEN 1 ELSE 0 END) as available_count
+            FROM room_types rt
+            LEFT JOIN individual_rooms ir ON rt.id = ir.room_type_id AND ir.is_active = 1
+        ";
+        
+        if ($activeOnly) {
+            $sql .= " WHERE rt.is_active = 1";
+        }
+        
+        $sql .= " GROUP BY rt.id ORDER BY rt.display_order ASC, rt.name ASC";
+        
+        $stmt = $pdo->query($sql);
+        $roomTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Process amenities
+        foreach ($roomTypes as &$type) {
+            $type['amenities'] = [];
+            $type['available_count'] = (int)($type['available_count'] ?? 0);
+            $type['individual_rooms_count'] = (int)($type['individual_rooms_count'] ?? 0);
+        }
+        
+        return $roomTypes;
+        
+    } catch (PDOException $e) {
+        error_log("Error getting all room types with counts: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Assign individual room to booking
+ *
+ * @param int $bookingId Booking ID
+ * @param int $individualRoomId Individual room ID
+ * @return bool True on success, false on failure
+ */
+function assignIndividualRoomToBooking($bookingId, $individualRoomId) {
+    global $pdo;
+    
+    try {
+        $pdo->beginTransaction();
+        
+        // Verify booking exists
+        $bookingStmt = $pdo->prepare("SELECT id, room_id, check_in_date, check_out_date FROM bookings WHERE id = ?");
+        $bookingStmt->execute([$bookingId]);
+        $booking = $bookingStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$booking) {
+            $pdo->rollBack();
+            return false;
+        }
+        
+        // Verify individual room exists and is available
+        $roomStmt = $pdo->prepare("SELECT id, room_type_id, status FROM individual_rooms WHERE id = ?");
+        $roomStmt->execute([$individualRoomId]);
+        $room = $roomStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$room) {
+            $pdo->rollBack();
+            return false;
+        }
+        
+        // Check if room is available for booking dates
+        if (!isIndividualRoomAvailable($individualRoomId, $booking['check_in_date'], $booking['check_out_date'], $bookingId)) {
+            $pdo->rollBack();
+            return false;
+        }
+        
+        // Update booking with individual room
+        $updateStmt = $pdo->prepare("UPDATE bookings SET individual_room_id = ? WHERE id = ?");
+        $updateStmt->execute([$individualRoomId, $bookingId]);
+        
+        $pdo->commit();
+        
+        // Clear cache
+        require_once __DIR__ . '/cache.php';
+        clearRoomCache();
+        
+        return true;
+        
+    } catch (PDOException $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log("Error assigning individual room to booking: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Get individual room details with booking info
+ *
+ * @param int $individualRoomId Individual room ID
+ * @return array Room details with current/upcoming bookings
+ */
+function getIndividualRoomDetails($individualRoomId) {
+    global $pdo;
+    
+    try {
+        $stmt = $pdo->prepare("
+            SELECT
+                ir.*,
+                rt.name as room_type_name,
+                rt.slug as room_type_slug,
+                rt.price_per_night,
+                rt.amenities as room_type_amenities
+            FROM individual_rooms ir
+            JOIN room_types rt ON ir.room_type_id = rt.id
+            WHERE ir.id = ?
+        ");
+        $stmt->execute([$individualRoomId]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$room) {
+            return null;
+        }
+        
+        // Decode amenities
+        $room['specific_amenities'] = $room['specific_amenities'] ? json_decode($room['specific_amenities'], true) : [];
+        $room['room_type_amenities'] = $room['room_type_amenities'] ? json_decode($room['room_type_amenities'], true) : [];
+        
+        // Get current booking if occupied
+        if ($room['status'] === 'occupied') {
+            $bookingStmt = $pdo->prepare("
+                SELECT id, booking_reference, guest_name, guest_email,
+                       guest_phone, check_in_date, check_out_date, status
+                FROM bookings
+                WHERE individual_room_id = ?
+                AND status IN ('confirmed', 'checked-in')
+                AND check_out_date >= CURDATE()
+                ORDER BY check_in_date DESC
+                LIMIT 1
+            ");
+            $bookingStmt->execute([$individualRoomId]);
+            $room['current_booking'] = $bookingStmt->fetch(PDO::FETCH_ASSOC);
+        }
+        
+        // Get upcoming bookings
+        $upcomingStmt = $pdo->prepare("
+            SELECT id, booking_reference, guest_name, check_in_date, check_out_date
+            FROM bookings
+            WHERE individual_room_id = ?
+            AND status IN ('confirmed', 'pending')
+            AND check_in_date > CURDATE()
+            ORDER BY check_in_date ASC
+            LIMIT 5
+        ");
+        $upcomingStmt->execute([$individualRoomId]);
+        $room['upcoming_bookings'] = $upcomingStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Get maintenance log
+        $logStmt = $pdo->prepare("
+            SELECT
+                rml.*,
+                u.username as performed_by_name
+            FROM room_maintenance_log rml
+            LEFT JOIN users u ON rml.performed_by = u.id
+            WHERE rml.individual_room_id = ?
+            ORDER BY rml.created_at DESC
+            LIMIT 20
+        ");
+        $logStmt->execute([$individualRoomId]);
+        $room['maintenance_log'] = $logStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        return $room;
+        
+    } catch (PDOException $e) {
+        error_log("Error getting individual room details: " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Get room status summary for a room type
+ *
+ * @param int $roomTypeId Room type ID
+ * @return array Status summary
+ */
+function getRoomTypeStatusSummary($roomTypeId) {
+    global $pdo;
+    
+    try {
+        $stmt = $pdo->prepare("
+            SELECT
+                status,
+                COUNT(*) as count
+            FROM individual_rooms
+            WHERE room_type_id = ? AND is_active = 1
+            GROUP BY status
+        ");
+        $stmt->execute([$roomTypeId]);
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $summary = [
+            'available' => 0,
+            'occupied' => 0,
+            'cleaning' => 0,
+            'maintenance' => 0,
+            'out_of_order' => 0,
+            'total' => 0
+        ];
+        
+        foreach ($results as $row) {
+            $summary[$row['status']] = (int)$row['count'];
+            $summary['total'] += (int)$row['count'];
+        }
+        
+        return $summary;
+        
+    } catch (PDOException $e) {
+        error_log("Error getting room type status summary: " . $e->getMessage());
+        return [
+            'available' => 0,
+            'occupied' => 0,
+            'cleaning' => 0,
+            'maintenance' => 0,
+            'out_of_order' => 0,
+            'total' => 0
+        ];
+    }
+}

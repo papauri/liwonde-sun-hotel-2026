@@ -42,7 +42,7 @@ try {
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/theme-dynamic.php">
     <link rel="stylesheet" href="css/header.css">
@@ -58,76 +58,59 @@ try {
     <?php include 'includes/hero.php'; ?>
 
     <main>
-        <section class="section" id="collection">
+        <!-- Passalacqua-Inspired Editorial Rooms Gallery Section -->
+        <section class="editorial-events-section editorial-rooms-gallery-section">
             <div class="container">
                 <?php if (!empty($rooms)): ?>
-                    <div class="rooms-grid modern-grid fancy-3d-grid" data-room-count="<?php echo (int)count($rooms); ?>">
+                    <div class="editorial-events-grid editorial-rooms-gallery-grid" data-room-count="<?php echo (int)count($rooms); ?>">
                         <?php foreach ($rooms as $room):
                             $amenities_raw = $room['amenities'] ?? '';
                             $amenities = array_filter(array_map('trim', explode(',', $amenities_raw)));
                             $amenities = array_slice($amenities, 0, 4);
-
                             $max_guests = $room['max_guests'] ?? 2;
                             $size_sqm = $room['size_sqm'];
                             $bed_type = $room['bed_type'];
                         ?>
-                            <article class="room-tile fancy-3d-card" tabindex="0" data-room-id="<?php echo (int)$room['id']; ?>" data-room-slug="<?php echo htmlspecialchars($room['slug']); ?>">
-                                <div class="room-tile__3d-bg"></div>
-
-                                <a class="room-tile__image" href="room.php?room=<?php echo urlencode($room['slug']); ?>" aria-label="Open details for <?php echo htmlspecialchars($room['name']); ?>">
-                                    <img src="<?php echo htmlspecialchars($room['image_url']); ?>" alt="<?php echo htmlspecialchars($room['name']); ?>" loading="lazy">
-                                    <?php if (!empty($room['badge'])): ?>
-                                        <span class="room-tile__badge"><?php echo htmlspecialchars($room['badge']); ?></span>
-                                    <?php endif; ?>
-
-                                    <span class="room-tile__price-badge" aria-label="Price per night">
-                                        <span class="amount"><?php echo htmlspecialchars($currency_symbol); ?><?php echo number_format((float)($room['price_per_night'] ?? 0), 0); ?></span>
-                                        <small>per night</small>
-                                    </span>
-                                </a>
-
-                                <div class="room-tile__body">
-                                    <div class="room-tile__header">
-                                        <div>
-                                            <h3><?php echo htmlspecialchars($room['name']); ?></h3>
-                                            <p><?php echo htmlspecialchars($room['short_description']); ?></p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Compact Rating Display -->
-                                    <div class="room-tile__rating" data-room-id="<?php echo (int)$room['id']; ?>">
-                                        <div class="compact-rating compact-rating--loading">
-                                            <i class="fas fa-spinner fa-spin"></i>
-                                        </div>
-                                    </div>
-
-                                    <div class="room-tile__meta">
-                                        <span><i class="fas fa-user-friends"></i> <?php echo htmlspecialchars($max_guests); ?> guests</span>
-                                        <span><i class="fas fa-ruler-combined"></i> <?php echo htmlspecialchars($size_sqm); ?> sqm</span>
-                                        <span><i class="fas fa-bed"></i> <?php echo htmlspecialchars($bed_type); ?></span>
-                                    </div>
-
-                                    <?php if (!empty($amenities)): ?>
-                                        <div class="room-tile__amenities">
-                                            <?php foreach ($amenities as $amenity): ?>
-                                                <span class="pill-small"><?php echo htmlspecialchars($amenity); ?></span>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <div class="room-tile__actions">
-                                        <a class="btn btn-primary" href="room.php?room=<?php echo urlencode($room['slug']); ?>#book">View & Book</a>
-                                    </div>
+                        <div class="editorial-event-card editorial-room-card">
+                            <a class="editorial-event-image-container editorial-room-image-container" href="room.php?room=<?php echo urlencode($room['slug']); ?>" aria-label="Open details for <?php echo htmlspecialchars($room['name']); ?>">
+                                <img src="<?php echo htmlspecialchars($room['image_url']); ?>" alt="<?php echo htmlspecialchars($room['name']); ?>" class="editorial-event-image editorial-room-image" loading="lazy">
+                                <?php if (!empty($room['badge'])): ?>
+                                    <span class="editorial-featured-badge editorial-room-badge"><?php echo htmlspecialchars($room['badge']); ?></span>
+                                <?php endif; ?>
+                                <span class="editorial-room-price-badge">
+                                    <span class="amount"><?php echo htmlspecialchars($currency_symbol); ?><?php echo number_format((float)($room['price_per_night'] ?? 0), 0); ?></span>
+                                    <small>per night</small>
+                                </span>
+                            </a>
+                            <div class="editorial-event-content editorial-room-content">
+                                <h3 class="editorial-event-title editorial-room-title"><?php echo htmlspecialchars($room['name']); ?></h3>
+                                <p class="editorial-event-description editorial-room-description"><?php echo htmlspecialchars($room['short_description']); ?></p>
+                                <div class="editorial-room-meta">
+                                    <span><i class="fas fa-user-friends"></i> <?php echo htmlspecialchars($max_guests); ?> guests</span>
+                                    <span><i class="fas fa-ruler-combined"></i> <?php echo htmlspecialchars($size_sqm); ?> sqm</span>
+                                    <span><i class="fas fa-bed"></i> <?php echo htmlspecialchars($bed_type); ?></span>
                                 </div>
-                            </article>
+                                <?php if (!empty($amenities)): ?>
+                                <div class="editorial-room-amenities">
+                                    <?php foreach ($amenities as $amenity): ?>
+                                        <span class="editorial-room-amenity"><i class="fas fa-check"></i> <?php echo htmlspecialchars($amenity); ?></span>
+                                    <?php endforeach; ?>
+                                </div>
+                                <?php endif; ?>
+                                <div class="editorial-room-actions">
+                                    <a class="editorial-btn-primary" href="room.php?room=<?php echo urlencode($room['slug']); ?>#book">View & Book</a>
+                                </div>
+                            </div>
+                        </div>
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <div class="gallery-empty" style="margin-top: 50px;">
-                        <h2>Rooms are preparing for launch</h2>
+                    <div class="editorial-no-events" style="margin-top: 50px;">
+                        <i class="fas fa-bed"></i>
+                        <h3>Rooms are preparing for launch</h3>
                         <p>Our suites are being curated. Please check back soon or reach out to our reservations team for availability.</p>
                         <div style="margin-top: 18px;">
-                            <a class="btn btn-primary" href="mailto:<?php echo htmlspecialchars($email_reservations); ?>?subject=Room%20Availability">Email Reservations</a>
+                            <a class="editorial-btn-primary" href="mailto:<?php echo htmlspecialchars($email_reservations); ?>?subject=Room%20Availability">Email Reservations</a>
                         </div>
                     </div>
                 <?php endif; ?>

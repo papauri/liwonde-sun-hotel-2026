@@ -199,7 +199,7 @@ foreach ($all_permissions as $key => $info) {
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -216,8 +216,8 @@ foreach ($all_permissions as $key => $info) {
             gap: 16px;
         }
         .page-header h2 {
-            font-family: 'Playfair Display', serif;
-            color: var(--deep-navy, #05090F);
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            color: var(--deep-navy, #111111);
             margin: 0;
         }
         
@@ -231,7 +231,7 @@ foreach ($all_permissions as $key => $info) {
             box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         }
         .users-table thead {
-            background: linear-gradient(135deg, var(--deep-navy, #05090F) 0%, var(--navy, #0A1929) 100%);
+            background: linear-gradient(135deg, var(--deep-navy, #111111) 0%, var(--navy, #1A1A1A) 100%);
             color: white;
         }
         .users-table th {
@@ -453,8 +453,8 @@ foreach ($all_permissions as $key => $info) {
         }
         .modal-header h3 {
             margin: 0;
-            font-family: 'Playfair Display', serif;
-            color: var(--deep-navy, #05090F);
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            color: var(--deep-navy, #111111);
             font-size: 20px;
         }
         .modal-close {
@@ -500,7 +500,7 @@ foreach ($all_permissions as $key => $info) {
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 14px;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Jost', sans-serif;
             transition: border-color 0.2s;
             box-sizing: border-box;
         }
@@ -526,7 +526,7 @@ foreach ($all_permissions as $key => $info) {
         }
         .permissions-header {
             padding: 20px 28px;
-            background: linear-gradient(135deg, var(--deep-navy, #05090F) 0%, var(--navy, #0A1929) 100%);
+            background: linear-gradient(135deg, var(--deep-navy, #111111) 0%, var(--navy, #1A1A1A) 100%);
             color: white;
             display: flex;
             justify-content: space-between;
@@ -534,7 +534,7 @@ foreach ($all_permissions as $key => $info) {
         }
         .permissions-header h3 {
             margin: 0;
-            font-family: 'Playfair Display', serif;
+            font-family: 'Cormorant Garamond', Georgia, serif;
             font-size: 18px;
         }
         .permissions-header .perm-user-info {
@@ -557,9 +557,9 @@ foreach ($all_permissions as $key => $info) {
             margin-bottom: 0;
         }
         .perm-category-title {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Cormorant Garamond', Georgia, serif;
             font-size: 16px;
-            color: var(--deep-navy, #05090F);
+            color: var(--deep-navy, #111111);
             margin: 0 0 14px 0;
             padding-bottom: 8px;
             border-bottom: 2px solid var(--gold, #c9a44a);
@@ -639,7 +639,7 @@ foreach ($all_permissions as $key => $info) {
             font-size: 12px;
             cursor: pointer;
             transition: all 0.2s;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Jost', sans-serif;
         }
         .btn-select-all:hover { background: #e8f5e9; border-color: #4caf50; color: #2e7d32; }
         .btn-select-none:hover { background: #fbe9e7; border-color: #ef5350; color: #c62828; }

@@ -303,46 +303,46 @@ function sendBookingReceivedEmail($booking) {
         
         // Prepare email content
         $htmlBody = '
-        <h1 style="color: #0A1929; text-align: center;">Booking Received - Awaiting Confirmation</h1>
+        <h1 style="color: #1A1A1A; text-align: center;">Booking Received - Awaiting Confirmation</h1>
         <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
         <p>Thank you for your booking request with <strong>' . htmlspecialchars($email_site_name) . '</strong>. We have received your reservation and it is currently being reviewed by our team.</p>
         
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+        <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #1A1A1A; margin-top: 0;">Booking Details</h2>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Booking Reference:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Room:</span>
                 <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-in Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-out Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Nights:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Nights:</span>
                 <span style="color: #333;">' . $booking['number_of_nights'] . ' night' . ($booking['number_of_nights'] != 1 ? 's' : '') . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Guests:</span>
                 <span style="color: #333;">' . $booking['number_of_guests'] . ' guest' . ($booking['number_of_guests'] != 1 ? 's' : '') . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Total Amount:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
             </div>
         </div>
         
@@ -374,7 +374,7 @@ function sendBookingReceivedEmail($booking) {
         
         <p>Thank you for choosing ' . htmlspecialchars($email_site_name) . '!</p>
         
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
             <p style="color: #666; font-size: 14px;">
                 <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
                 <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -416,46 +416,46 @@ function sendBookingConfirmedEmail($booking) {
         
         // Prepare email content
         $htmlBody = '
-        <h1 style="color: #0A1929; text-align: center;">Booking Confirmed!</h1>
+        <h1 style="color: #1A1A1A; text-align: center;">Booking Confirmed!</h1>
         <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
         <p>Great news! Your booking with <strong>' . htmlspecialchars($email_site_name) . '</strong> has been confirmed by our team.</p>
         
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+        <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #1A1A1A; margin-top: 0;">Booking Details</h2>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Booking Reference:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Room:</span>
                 <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-in Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-out Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Nights:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Nights:</span>
                 <span style="color: #333;">' . $booking['number_of_nights'] . ' night' . ($booking['number_of_nights'] != 1 ? 's' : '') . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Guests:</span>
                 <span style="color: #333;">' . $booking['number_of_guests'] . ' guest' . ($booking['number_of_guests'] != 1 ? 's' : '') . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Total Amount:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
             </div>
         </div>
         
@@ -497,7 +497,7 @@ function sendBookingConfirmedEmail($booking) {
         
         <p>We look forward to welcoming you to ' . htmlspecialchars($email_site_name) . '!</p>
         
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
             <p style="color: #666; font-size: 14px;">
                 <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
                 <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -563,39 +563,39 @@ function sendBookingModifiedEmail($booking, $changes = []) {
         }
         
         $htmlBody = '
-        <h1 style="color: #0A1929; text-align: center;">Booking Updated</h1>
+        <h1 style="color: #1A1A1A; text-align: center;">Booking Updated</h1>
         <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
         <p>Your booking with <strong>' . htmlspecialchars($email_site_name) . '</strong> has been updated by our team. Please review the details below.</p>
         ' . $changesHtml . '
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Updated Booking Details</h2>
+        <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #1A1A1A; margin-top: 0;">Updated Booking Details</h2>
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Booking Reference:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Room:</span>
                 <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-in Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-out Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Nights:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Nights:</span>
                 <span style="color: #333;">' . $booking['number_of_nights'] . ' night' . ($booking['number_of_nights'] != 1 ? 's' : '') . '</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Guests:</span>
                 <span style="color: #333;">' . $booking['number_of_guests'] . ' guest' . ($booking['number_of_guests'] != 1 ? 's' : '') . '</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Total Amount:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
             </div>
         </div>
         <div style="background: #d4edda; padding: 15px; border-left: 4px solid #28a745; border-radius: 5px; margin: 20px 0;">
@@ -608,7 +608,7 @@ function sendBookingModifiedEmail($booking, $changes = []) {
         </div>
         <p>If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
         <p>Thank you for choosing ' . htmlspecialchars($email_site_name) . '!</p>
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
             <p style="color: #666; font-size: 14px;">
                 <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
                 <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -635,50 +635,50 @@ function sendAdminNotificationEmail($booking) {
     
     try {
         $htmlBody = '
-        <h1 style="color: #0A1929; text-align: center;">📋 New Booking Received</h1>
+        <h1 style="color: #1A1A1A; text-align: center;">📋 New Booking Received</h1>
         <p>A new booking has been made on the website.</p>
         
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+        <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #1A1A1A; margin-top: 0;">Booking Details</h2>
             
             <div style=\'display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;\'>
-                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
-                <span style="color: #D4AF37; font-weight: bold;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Booking Reference:</span>
+                <span style="color: #8B7355; font-weight: bold;">' . htmlspecialchars($booking['booking_reference']) . '</span>
             </div>
             
             <div style=\'display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;\'>
-                <span style="font-weight: bold; color: #0A1929;">Guest Name:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Guest Name:</span>
                 <span style="color: #333;">' . htmlspecialchars($booking['guest_name']) . '</span>
             </div>
             
             <div style=\'display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;\'>
-                <span style="font-weight: bold; color: #0A1929;">Guest Email:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Guest Email:</span>
                 <span style="color: #333;">' . htmlspecialchars($booking['guest_email']) . '</span>
             </div>
             
             <div style=\'display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;\'>
-                <span style="font-weight: bold; color: #0A1929;">Guest Phone:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Guest Phone:</span>
                 <span style="color: #333;">' . htmlspecialchars($booking['guest_phone']) . '</span>
             </div>
             
             <div style=\'display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;\'>
-                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-in Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
             </div>
             
             <div style=\'display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;\'>
-                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-out Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
             </div>
             
             <div style=\'display: flex; justify-content: space-between; padding: 10px 0;\'>
-                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Total Amount:</span>
+                <span style="color: #8B7355; font-weight: bold;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
             </div>
         </div>
         
         <div style="text-align: center; margin-top: 30px;">
-            <a href="' . htmlspecialchars($email_site_url) . '/admin/bookings.php" style="display: inline-block; background: #D4AF37; color: #0A1929; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+            <a href="' . htmlspecialchars($email_site_url) . '/admin/bookings.php" style="display: inline-block; background: #8B7355; color: #1A1A1A; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
                 View Booking in Admin Panel
             </a>
         </div>';
@@ -742,46 +742,46 @@ function sendConferenceEnquiryEmail($data) {
         if (empty($htmlBody)) {
             // Fallback to hardcoded HTML if template fails
             $htmlBody = '
-            <h1 style="color: #0A1929; text-align: center;">Conference Enquiry Received</h1>
+            <h1 style="color: #1A1A1A; text-align: center;">Conference Enquiry Received</h1>
             <p>Dear ' . htmlspecialchars($data['contact_person']) . ',</p>
             <p>Thank you for your conference enquiry with <strong>' . htmlspecialchars($email_site_name) . '</strong>. We have received your request and it is currently being reviewed by our team.</p>
             
-            <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-                <h2 style="color: #0A1929; margin-top: 0;">Enquiry Details</h2>
+            <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+                <h2 style="color: #1A1A1A; margin-top: 0;">Enquiry Details</h2>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Enquiry Reference:</span>
-                    <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($data['inquiry_reference']) . '</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Enquiry Reference:</span>
+                    <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . htmlspecialchars($data['inquiry_reference']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Company:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Company:</span>
                     <span style="color: #333;">' . htmlspecialchars($data['company_name']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Conference Room:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Conference Room:</span>
                     <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Event Date:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Event Date:</span>
                     <span style="color: #333;">' . date('F j, Y', strtotime($data['event_date'])) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Event Time:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Event Time:</span>
                     <span style="color: #333;">' . date('H:i', strtotime($data['start_time'])) . ' - ' . date('H:i', strtotime($data['end_time'])) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Number of Attendees:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Number of Attendees:</span>
                     <span style="color: #333;">' . (int) $data['number_of_attendees'] . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                    <span style="font-weight: bold; color: #0A1929;">Estimated Amount:</span>
-                    <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . $currency_symbol . ' ' . $total_amount . '</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Estimated Amount:</span>
+                    <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . $currency_symbol . ' ' . $total_amount . '</span>
                 </div>
             </div>
             
@@ -830,7 +830,7 @@ function sendConferenceEnquiryEmail($data) {
             
             <p>Thank you for considering ' . htmlspecialchars($email_site_name) . ' for your event!</p>
             
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
                 <p style="color: #666; font-size: 14px;">
                     <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
                     <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -904,65 +904,65 @@ function sendConferenceAdminNotificationEmail($data) {
         if (empty($htmlBody)) {
             // Fallback to hardcoded HTML if template fails
             $htmlBody = '
-            <h1 style="color: #0A1929; text-align: center;">📋 New Conference Enquiry Received</h1>
+            <h1 style="color: #1A1A1A; text-align: center;">📋 New Conference Enquiry Received</h1>
             <p>A new conference enquiry has been submitted on the website.</p>
             
-            <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-                <h2 style="color: #0A1929; margin-top: 0;">Enquiry Details</h2>
+            <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+                <h2 style="color: #1A1A1A; margin-top: 0;">Enquiry Details</h2>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Enquiry Reference:</span>
-                    <span style="color: #D4AF37; font-weight: bold;">' . htmlspecialchars($data['inquiry_reference']) . '</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Enquiry Reference:</span>
+                    <span style="color: #8B7355; font-weight: bold;">' . htmlspecialchars($data['inquiry_reference']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Company:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Company:</span>
                     <span style="color: #333;">' . htmlspecialchars($data['company_name']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Contact Person:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Contact Person:</span>
                     <span style="color: #333;">' . htmlspecialchars($data['contact_person']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Email:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Email:</span>
                     <span style="color: #333;">' . htmlspecialchars($data['email']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Phone:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Phone:</span>
                     <span style="color: #333;">' . htmlspecialchars($data['phone']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Conference Room:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Conference Room:</span>
                     <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Event Date:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Event Date:</span>
                     <span style="color: #333;">' . date('F j, Y', strtotime($data['event_date'])) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Event Time:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Event Time:</span>
                     <span style="color: #333;">' . date('H:i', strtotime($data['start_time'])) . ' - ' . date('H:i', strtotime($data['end_time'])) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Number of Attendees:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Number of Attendees:</span>
                     <span style="color: #333;">' . (int) $data['number_of_attendees'] . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Event Type:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Event Type:</span>
                     <span style="color: #333;">' . htmlspecialchars($data['event_type'] ?: 'Not specified') . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                    <span style="font-weight: bold; color: #0A1929;">Estimated Amount:</span>
-                    <span style="color: #D4AF37; font-weight: bold;">' . $currency_symbol . ' ' . $total_amount . '</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Estimated Amount:</span>
+                    <span style="color: #8B7355; font-weight: bold;">' . $currency_symbol . ' ' . $total_amount . '</span>
                 </div>
             </div>';
             
@@ -992,7 +992,7 @@ function sendConferenceAdminNotificationEmail($data) {
             
             $htmlBody .= '
             <div style="text-align: center; margin-top: 30px;">
-                <a href="' . htmlspecialchars($email_site_url) . '/admin/conference-management.php" style="display: inline-block; background: #D4AF37; color: #0A1929; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+                <a href="' . htmlspecialchars($email_site_url) . '/admin/conference-management.php" style="display: inline-block; background: #8B7355; color: #1A1A1A; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
                     View Enquiry in Admin Panel
                 </a>
             </div>';
@@ -1038,7 +1038,7 @@ function sendConferencePaymentEmail($data) {
         
         // Prepare email content
         $htmlBody = '
-        <h1 style="color: #0A1929; text-align: center;">Payment Confirmation</h1>
+        <h1 style="color: #1A1A1A; text-align: center;">Payment Confirmation</h1>
         <p>Dear ' . htmlspecialchars($data['contact_person']) . ',</p>
         <p>We are pleased to confirm that we have received your payment for the conference booking at <strong>' . htmlspecialchars($email_site_name) . '</strong>.</p>
         
@@ -1052,42 +1052,42 @@ function sendConferencePaymentEmail($data) {
             </p>
         </div>
         
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Final Booking Summary</h2>
+        <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #1A1A1A; margin-top: 0;">Final Booking Summary</h2>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($data['inquiry_reference']) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Booking Reference:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . htmlspecialchars($data['inquiry_reference']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Company:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Company:</span>
                 <span style="color: #333;">' . htmlspecialchars($data['company_name']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Conference Room:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Conference Room:</span>
                 <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Event Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Event Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($data['event_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Event Time:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Event Time:</span>
                 <span style="color: #333;">' . date('H:i', strtotime($data['start_time'])) . ' - ' . date('H:i', strtotime($data['end_time'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Attendees:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Attendees:</span>
                 <span style="color: #333;">' . (int) $data['number_of_attendees'] . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . $currency_symbol . ' ' . $total_amount . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Total Amount:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . $currency_symbol . ' ' . $total_amount . '</span>
             </div>
         </div>
         
@@ -1137,7 +1137,7 @@ function sendConferencePaymentEmail($data) {
         
         <p>Thank you for your payment! We look forward to hosting your event at ' . htmlspecialchars($email_site_name) . '.</p>
         
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
             <p style="color: #666; font-size: 14px;">
                 <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
                 <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -1182,46 +1182,46 @@ function sendConferenceConfirmedEmail($enquiry) {
             
             // Prepare email content
             $htmlBody = '
-            <h1 style="color: #0A1929; text-align: center;">Conference Booking Confirmed!</h1>
+            <h1 style="color: #1A1A1A; text-align: center;">Conference Booking Confirmed!</h1>
             <p>Dear ' . htmlspecialchars($enquiry['contact_person']) . ',</p>
             <p>Great news! Your conference booking with <strong>' . htmlspecialchars($email_site_name) . '</strong> has been confirmed by our team.</p>
             
-            <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-                <h2 style="color: #0A1929; margin-top: 0;">Conference Details</h2>
+            <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+                <h2 style="color: #1A1A1A; margin-top: 0;">Conference Details</h2>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Reference:</span>
-                    <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($enquiry['inquiry_reference']) . '</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Reference:</span>
+                    <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . htmlspecialchars($enquiry['inquiry_reference']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Company:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Company:</span>
                     <span style="color: #333;">' . htmlspecialchars($enquiry['company_name']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Conference Room:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Conference Room:</span>
                     <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Event Date:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Event Date:</span>
                     <span style="color: #333;">' . date('F j, Y', strtotime($enquiry['event_date'])) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Event Time:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Event Time:</span>
                     <span style="color: #333;">' . date('H:i', strtotime($enquiry['start_time'])) . ' - ' . date('H:i', strtotime($enquiry['end_time'])) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Number of Attendees:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Number of Attendees:</span>
                     <span style="color: #333;">' . (int) $enquiry['number_of_attendees'] . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                    <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                    <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . $currency_symbol . ' ' . $total_amount . '</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Total Amount:</span>
+                    <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . $currency_symbol . ' ' . $total_amount . '</span>
                 </div>
             </div>
             
@@ -1271,7 +1271,7 @@ function sendConferenceConfirmedEmail($enquiry) {
             
             <p>We look forward to hosting your event at ' . htmlspecialchars($email_site_name) . '!</p>
             
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
                 <p style="color: #666; font-size: 14px;">
                     <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
                     <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -1317,27 +1317,27 @@ function sendConferenceCancelledEmail($enquiry) {
                 <h2 style="color: #dc3545; margin-top: 0;">Cancelled Booking Details</h2>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Reference:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Reference:</span>
                     <span style="color: #dc3545; font-weight: bold; font-size: 18px;">' . htmlspecialchars($enquiry['inquiry_reference']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Company:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Company:</span>
                     <span style="color: #333;">' . htmlspecialchars($enquiry['company_name']) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Conference Room:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Conference Room:</span>
                     <span style="color: #333;">' . htmlspecialchars($room['name'] ?? 'N/A') . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                    <span style="font-weight: bold; color: #0A1929;">Event Date:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Event Date:</span>
                     <span style="color: #333;">' . date('F j, Y', strtotime($enquiry['event_date'])) . '</span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                    <span style="font-weight: bold; color: #0A1929;">Event Time:</span>
+                    <span style="font-weight: bold; color: #1A1A1A;">Event Time:</span>
                     <span style="color: #333;">' . date('H:i', strtotime($enquiry['start_time'])) . ' - ' . date('H:i', strtotime($enquiry['end_time'])) . '</span>
                 </div>
             </div>
@@ -1354,7 +1354,7 @@ function sendConferenceCancelledEmail($enquiry) {
             
             <p>We hope to have the opportunity to serve you in the future.</p>
             
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
                 <p style="color: #666; font-size: 14px;">
                     <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
                     <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -1404,38 +1404,38 @@ function sendBookingCancelledEmail($booking, $cancellation_reason = '') {
             <h2 style="color: #dc3545; margin-top: 0;">Cancelled Booking Details</h2>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Booking Reference:</span>
                 <span style="color: #dc3545; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Room:</span>
                 <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-in Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-out Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Nights:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Nights:</span>
                 <span style="color: #333;">' . $booking['number_of_nights'] . ' night' . ($booking['number_of_nights'] != 1 ? 's' : '') . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Guests:</span>
                 <span style="color: #333;">' . $booking['number_of_guests'] . ' guest' . ($booking['number_of_guests'] != 1 ? 's' : '') . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Total Amount:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
             </div>
         </div>';
         
@@ -1460,7 +1460,7 @@ function sendBookingCancelledEmail($booking, $cancellation_reason = '') {
         
         <p>We hope to have the opportunity to serve you in the future.</p>
         
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
             <p style="color: #666; font-size: 14px;">
                 <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
                 <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -1651,7 +1651,7 @@ function sendTentativeBookingConfirmedEmail($booking) {
         
         // Prepare email content
         $htmlBody = '
-        <h1 style="color: #0A1929; text-align: center;">Tentative Booking Confirmed</h1>
+        <h1 style="color: #1A1A1A; text-align: center;">Tentative Booking Confirmed</h1>
         <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
         <p>Thank you for your interest in <strong>' . htmlspecialchars($email_site_name) . '</strong>. Your room has been placed on tentative hold.</p>
         
@@ -1664,42 +1664,42 @@ function sendTentativeBookingConfirmedEmail($booking) {
             </p>
         </div>
         
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+        <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #1A1A1A; margin-top: 0;">Booking Details</h2>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Booking Reference:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Room:</span>
                 <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-in Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-out Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Nights:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Nights:</span>
                 <span style="color: #333;">' . $booking['number_of_nights'] . ' night' . ($booking['number_of_nights'] != 1 ? 's' : '') . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Guests:</span>
                 <span style="color: #333;">' . $booking['number_of_guests'] . ' guest' . ($booking['number_of_guests'] != 1 ? 's' : '') . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Total Amount:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
             </div>
         </div>
         
@@ -1733,7 +1733,7 @@ function sendTentativeBookingConfirmedEmail($booking) {
         
         <p>Thank you for considering ' . htmlspecialchars($email_site_name) . '!</p>
         
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
             <p style="color: #666; font-size: 14px;">
                 <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
                 <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -1790,22 +1790,22 @@ function sendTentativeBookingReminderEmail($booking) {
             </p>
         </div>
         
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Your Booking</h2>
+        <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #1A1A1A; margin-top: 0;">Your Booking</h2>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-in:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-in:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-out:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-out:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Total Amount:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
             </div>
         </div>
         
@@ -1819,7 +1819,7 @@ function sendTentativeBookingReminderEmail($booking) {
         
         <p style="margin-top: 20px;">If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
         
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
             <p style="color: #666; font-size: 14px;">
                 <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
                 <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -1869,26 +1869,26 @@ function sendTentativeBookingExpiredEmail($booking) {
             </p>
         </div>
         
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Expired Booking Details</h2>
+        <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #1A1A1A; margin-top: 0;">Expired Booking Details</h2>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Booking Reference:</span>
                 <span style="color: #6c757d; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Room:</span>
                 <span style="color: #333;">' . htmlspecialchars($room['name'] ?? 'N/A') . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-in Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-out Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
             </div>
         </div>
@@ -1897,14 +1897,14 @@ function sendTentativeBookingExpiredEmail($booking) {
         
         <div style="text-align: center; margin-top: 30px;">
             <a href="' . htmlspecialchars($email_site_url) . '/booking.php"
-               style="display: inline-block; background: #D4AF37; color: #0A1929; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+               style="display: inline-block; background: #8B7355; color: #1A1A1A; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
                 Make a New Booking
             </a>
         </div>
         
         <p style="margin-top: 20px;">If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
         
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
             <p style="color: #666; font-size: 14px;">
                 <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
                 <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -1956,7 +1956,7 @@ function sendTentativeBookingConvertedEmail($booking) {
         
         // Prepare email content specifically for conversion
         $htmlBody = '
-        <h1 style="color: #0A1929; text-align: center;">Booking Confirmed!</h1>
+        <h1 style="color: #1A1A1A; text-align: center;">Booking Confirmed!</h1>
         <p>Dear ' . htmlspecialchars($booking['guest_name']) . ',</p>
         
         <div style="background: #d4edda; padding: 15px; border-left: 4px solid #28a745; border-radius: 5px; margin: 20px 0;">
@@ -1967,42 +1967,42 @@ function sendTentativeBookingConvertedEmail($booking) {
             </p>
         </div>
         
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+        <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #1A1A1A; margin-top: 0;">Booking Details</h2>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Booking Reference:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Room:</span>
                 <span style="color: #333;">' . htmlspecialchars($room['name']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-in Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-out Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Nights:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Nights:</span>
                 <span style="color: #333;">' . $booking['number_of_nights'] . ' night' . ($booking['number_of_nights'] != 1 ? 's' : '') . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Guests:</span>
                 <span style="color: #333;">' . $booking['number_of_guests'] . ' guest' . ($booking['number_of_guests'] != 1 ? 's' : '') . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Total Amount:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
             </div>
         </div>
         
@@ -2044,7 +2044,7 @@ function sendTentativeBookingConvertedEmail($booking) {
         
         <p>We look forward to welcoming you to ' . htmlspecialchars($email_site_name) . '!</p>
         
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
             <p style="color: #666; font-size: 14px;">
                 <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
                 <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -2097,32 +2097,32 @@ function sendPendingBookingExpiredEmail($booking, $room = null) {
             </p>
         </div>
         
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Expired Booking Details</h2>
+        <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #1A1A1A; margin-top: 0;">Expired Booking Details</h2>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Booking Reference:</span>
                 <span style="color: #6c757d; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Room:</span>
                 <span style="color: #333;">' . htmlspecialchars($room['name'] ?? 'N/A') . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-in Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-out Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Total Amount:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
             </div>
         </div>
         
@@ -2130,14 +2130,14 @@ function sendPendingBookingExpiredEmail($booking, $room = null) {
         
         <div style="text-align: center; margin-top: 30px;">
             <a href="' . htmlspecialchars($email_site_url) . '/booking.php"
-               style="display: inline-block; background: #D4AF37; color: #0A1929; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+               style="display: inline-block; background: #8B7355; color: #1A1A1A; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
                 Make a New Booking
             </a>
         </div>
         
         <p style="margin-top: 20px;">If you have any questions, please contact us at <a href="mailto:' . htmlspecialchars($email_from_email) . '">' . htmlspecialchars($email_from_email) . '</a> or call ' . getSetting('phone_main') . '.</p>
         
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
             <p style="color: #666; font-size: 14px;">
                 <strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong><br>
                 <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -2200,47 +2200,47 @@ function sendAdminBookingExpiredNotification($booking, $booking_type = 'tentativ
             </p>
         </div>
         
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+        <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #1A1A1A; margin-top: 0;">Booking Details</h2>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Booking Reference:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Booking Reference:</span>
                 <span style="color: #dc3545; font-weight: bold; font-size: 18px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Guest Name:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Guest Name:</span>
                 <span style="color: #333;">' . htmlspecialchars($booking['guest_name']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Guest Email:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Guest Email:</span>
                 <span style="color: #333;">' . htmlspecialchars($booking['guest_email']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Guest Phone:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Guest Phone:</span>
                 <span style="color: #333;">' . htmlspecialchars($booking['guest_phone']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Room:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Room:</span>
                 <span style="color: #333;">' . htmlspecialchars($room['name'] ?? 'N/A') . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-in Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-in Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_in_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Check-out Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Check-out Date:</span>
                 <span style="color: #333;">' . date('F j, Y', strtotime($booking['check_out_date'])) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                <span style="font-weight: bold; color: #0A1929;">Total Amount:</span>
-                <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Total Amount:</span>
+                <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . getSetting('currency_symbol') . ' ' . number_format($booking['total_amount'], 0) . '</span>
             </div>
         </div>
         
@@ -2256,7 +2256,7 @@ function sendAdminBookingExpiredNotification($booking, $booking_type = 'tentativ
         
         <div style="text-align: center; margin-top: 30px;">
             <a href="' . htmlspecialchars($email_site_url) . '/admin/tentative-bookings.php?status=expired"
-               style="display: inline-block; background: #D4AF37; color: #0A1929; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+               style="display: inline-block; background: #8B7355; color: #1A1A1A; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
                 View Expired Bookings
             </a>
         </div>';
@@ -2292,40 +2292,40 @@ function sendGymBookingEmail($data) {
         
         // Prepare email content
         $htmlBody = '
-        <h1 style="color: #0A1929; text-align: center;">Gym Booking Request Received</h1>
+        <h1 style="color: #1A1A1A; text-align: center;">Gym Booking Request Received</h1>
         <p>Dear ' . htmlspecialchars($data['name']) . ',</p>
         <p>Thank you for your gym booking request with <strong>' . htmlspecialchars($site_name) . '</strong>. We have received your submission and will confirm your booking shortly.</p>
         
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+        <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #1A1A1A; margin-top: 0;">Booking Details</h2>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Name:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Name:</span>
                 <span style="color: #333;">' . htmlspecialchars($data['name']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Email:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Email:</span>
                 <span style="color: #333;">' . htmlspecialchars($data['email']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Phone:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Phone:</span>
                 <span style="color: #333;">' . htmlspecialchars($data['phone']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Preferred Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Preferred Date:</span>
                 <span style="color: #333;">' . htmlspecialchars($data['preferred_date']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Preferred Time:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Preferred Time:</span>
                 <span style="color: #333;">' . htmlspecialchars($data['preferred_time']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Package:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Package:</span>
                 <span style="color: #333;">' . htmlspecialchars($data['package_choice']) . '</span>
             </div>
             
@@ -2333,12 +2333,12 @@ function sendGymBookingEmail($data) {
         
         if (!empty($data['guests']) && $data['guests'] > 1) {
             $htmlBody .= '
-                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Guests:</span>
                 <span style="color: #333;">' . (int)$data['guests'] . '</span>
             </div>';
         } else {
             $htmlBody .= '
-                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Guests:</span>
                 <span style="color: #333;">1</span>
             </div>';
         }
@@ -2367,7 +2367,7 @@ function sendGymBookingEmail($data) {
         
         <p>Thank you for choosing ' . htmlspecialchars($site_name) . '!</p>
         
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #0A1929;">
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
             <p style="color: #666; font-size: 14px;">
                 <strong>The ' . htmlspecialchars($site_name) . ' Team</strong><br>
                 <a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a>
@@ -2414,39 +2414,39 @@ function sendGymAdminNotificationEmail($data) {
         
         // Prepare email content
         $htmlBody = '
-        <h1 style="color: #0A1929; text-align: center;">📋 New Gym Booking Request</h1>
+        <h1 style="color: #1A1A1A; text-align: center;">📋 New Gym Booking Request</h1>
         <p>A new gym booking request has been submitted on the website.</p>
         
-        <div style="background: #f8f9fa; border: 2px solid #0A1929; padding: 20px; margin: 20px 0; border-radius: 10px;">
-            <h2 style="color: #0A1929; margin-top: 0;">Booking Details</h2>
+        <div style="background: #f8f9fa; border: 2px solid #1A1A1A; padding: 20px; margin: 20px 0; border-radius: 10px;">
+            <h2 style="color: #1A1A1A; margin-top: 0;">Booking Details</h2>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Name:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Name:</span>
                 <span style="color: #333;">' . htmlspecialchars($data['name']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Email:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Email:</span>
                 <span style="color: #333;">' . htmlspecialchars($data['email']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Phone:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Phone:</span>
                 <span style="color: #333;">' . htmlspecialchars($data['phone']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Preferred Date:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Preferred Date:</span>
                 <span style="color: #333;">' . htmlspecialchars($data['preferred_date']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Preferred Time:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Preferred Time:</span>
                 <span style="color: #333;">' . htmlspecialchars($data['preferred_time']) . '</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
-                <span style="font-weight: bold; color: #0A1929;">Package:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Package:</span>
                 <span style="color: #333;">' . htmlspecialchars($data['package_choice']) . '</span>
             </div>
             
@@ -2454,12 +2454,12 @@ function sendGymAdminNotificationEmail($data) {
         
         if (!empty($data['guests']) && $data['guests'] > 1) {
             $htmlBody .= '
-                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Guests:</span>
                 <span style="color: #333;">' . (int)$data['guests'] . '</span>
             </div>';
         } else {
             $htmlBody .= '
-                <span style="font-weight: bold; color: #0A1929;">Number of Guests:</span>
+                <span style="font-weight: bold; color: #1A1A1A;">Number of Guests:</span>
                 <span style="color: #333;">1</span>
             </div>';
         }
@@ -2478,7 +2478,7 @@ function sendGymAdminNotificationEmail($data) {
         $htmlBody .= '
         <div style="text-align: center; margin-top: 30px;">
             <a href="mailto:' . htmlspecialchars($data['email']) . '"
-               style="display: inline-block; background: #D4AF37; color: #0A1929; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+               style="display: inline-block; background: #8B7355; color: #1A1A1A; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
                 Reply to Customer
             </a>
         </div>';

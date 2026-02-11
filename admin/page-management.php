@@ -225,11 +225,11 @@ $csrf_token = generateCsrfToken();
         .btn-toggle:hover { transform: translateY(-1px); }
         .btn-enable  { background: #28a745; color: #fff; }
         .btn-disable { background: #dc3545; color: #fff; }
-        .btn-nav-toggle { background: var(--gold, #D4AF37); color: var(--navy, #0A1929); }
+        .btn-nav-toggle { background: var(--gold, #8B7355); color: var(--navy, #1A1A1A); }
         .btn-edit { background: #17a2b8; color: #fff; }
         .btn-save-order {
-            background: var(--gold, #D4AF37);
-            color: var(--navy, #0A1929);
+            background: var(--gold, #8B7355);
+            color: var(--navy, #1A1A1A);
             border: none;
             padding: 10px 22px;
             border-radius: 8px;
@@ -252,8 +252,8 @@ $csrf_token = generateCsrfToken();
             width: 32px;
             height: 32px;
             border-radius: 8px;
-            background: var(--navy, #0A1929);
-            color: var(--gold, #D4AF37);
+            background: var(--navy, #1A1A1A);
+            color: var(--gold, #8B7355);
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -630,7 +630,7 @@ $csrf_token = generateCsrfToken();
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'move';
                 if (dragging && dragging !== this) {
-                    this.style.borderTop = '3px solid var(--gold, #D4AF37)';
+                    this.style.borderTop = '3px solid var(--gold, #8B7355)';
                 }
             });
 

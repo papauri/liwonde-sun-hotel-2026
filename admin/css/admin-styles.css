@@ -35,7 +35,7 @@ footer {
    ADMIN HEADER STYLES
    ============================================ */
 .admin-header {
-    background: linear-gradient(135deg, var(--deep-navy, #05090F) 0%, var(--navy, #0A1929) 100%);
+    background: linear-gradient(135deg, var(--deep-navy, #111111) 0%, var(--navy, #1A1A1A) 100%);
     color: white;
     padding: 16px 32px;
     display: flex;
@@ -51,7 +51,7 @@ footer {
 }
 
 .admin-header h1 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: 24px;
     color: var(--gold);
     margin: 0;
@@ -116,7 +116,7 @@ footer {
     flex-grow: 0 !important;
     /* Custom scrollbar styling */
     scrollbar-width: thin;
-    scrollbar-color: var(--gold, #D4AF37) #f0f0f0;
+    scrollbar-color: var(--gold, #8B7355) #f0f0f0;
 }
 
 /* Webkit scrollbar styling */
@@ -170,8 +170,8 @@ footer {
 
 .admin-nav a:hover,
 .admin-nav a.active {
-    color: var(--gold, #D4AF37);
-    border-bottom-color: var(--gold, #D4AF37);
+    color: var(--gold, #8B7355);
+    border-bottom-color: var(--gold, #8B7355);
 }
 
 /* ============================================
@@ -198,14 +198,14 @@ footer {
 }
 
 .page-title {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: 28px;
     color: var(--navy);
     margin: 0;
 }
 
 .section-title {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: 24px;
     color: var(--navy);
     margin-bottom: 20px;
@@ -430,14 +430,14 @@ footer {
     border: 2px solid var(--border-color);
     border-radius: var(--radius-sm);
     font-size: 14px;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Jost', sans-serif;
     transition: all 0.3s ease;
 }
 
 .form-control:focus {
     outline: none;
     border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+    box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.1);
 }
 
 textarea.form-control {
@@ -1126,7 +1126,7 @@ select.form-control {
 
 .picture-card.featured {
     border-color: var(--gold);
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+    box-shadow: 0 4px 12px rgba(139, 115, 85, 0.2);
 }
 
 .picture-image-wrapper {

@@ -155,7 +155,7 @@ try {
     <title>Visitor Analytics - <?php echo htmlspecialchars($site_name); ?> Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -164,9 +164,9 @@ try {
     <style>
         .analytics-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
-        .page-title { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--navy); }
+        .page-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 28px; color: var(--navy); }
         .filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 24px; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .filter-bar select, .filter-bar input[type="date"] { padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; }
+        .filter-bar select, .filter-bar input[type="date"] { padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Jost', sans-serif; font-size: 13px; }
         .filter-bar select:focus, .filter-bar input:focus { outline: none; border-color: var(--gold); }
         .filter-bar .btn-filter { padding: 8px 20px; background: var(--gold); color: var(--deep-navy); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; }
 
@@ -191,7 +191,7 @@ try {
         .visitors-table { width: 100%; border-collapse: collapse; }
         .visitors-table th { background: var(--navy); color: white; padding: 12px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; }
         .visitors-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
-        .visitors-table tr:hover { background: rgba(212, 175, 55, 0.05); }
+        .visitors-table tr:hover { background: rgba(139, 115, 85, 0.05); }
         .device-badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-block; }
         .device-desktop { background: #e3f2fd; color: #1565c0; }
         .device-mobile { background: #f3e5f5; color: #7b1fa2; }

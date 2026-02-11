@@ -744,3 +744,64 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCarousel(false);
     }
 });
+
+/* ============================================
+   ELEGANT SCROLL-TRIGGERED ANIMATIONS
+   Subtle reveal effects for Passalacqua-style luxury
+   ============================================ */
+(function() {
+    'use strict';
+
+    // ── Scroll Reveal (refined IntersectionObserver) ──
+    function initScrollReveal() {
+        const revealEls = document.querySelectorAll(
+            '.about-section, .rooms-section, .facilities-section, ' +
+            '.testimonials-section, .gallery-section, .events-section, ' +
+            '.section-header, .room-tile, .facility-card, .hotel-review-card, ' +
+            '.about-content, .about-image-wrapper, .booking-cta'
+        );
+
+        if (!revealEls.length) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('lakeside-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        revealEls.forEach((el) => {
+            el.classList.add('lakeside-reveal');
+            observer.observe(el);
+        });
+    }
+
+    // ── Subtle card hover (no heavy tilt) ──
+    function initCardHover() {
+        const cards = document.querySelectorAll('.room-tile, .facility-card, .fancy-3d-card');
+
+        cards.forEach((card) => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-4px)';
+                card.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+            });
+        });
+    }
+
+    // ── Boot up ──
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot);
+    } else {
+        boot();
+    }
+
+    function boot() {
+        initScrollReveal();
+        initCardHover();
+    }
+})();

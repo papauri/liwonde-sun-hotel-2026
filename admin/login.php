@@ -172,14 +172,14 @@ $site_name = getSetting('site_name');
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     
     <style>
         :root {
-            --gold: #D4AF37;
-            --navy: #0A1929;
+            --gold: #8B7355;
+            --navy: #1A1A1A;
             --deep-navy: #050D14;
         }
         * {
@@ -188,8 +188,8 @@ $site_name = getSetting('site_name');
             box-sizing: border-box;
         }
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 50%, #1a2f45 100%);
+            font-family: 'Jost', sans-serif;
+            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 50%, #252525 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -205,8 +205,8 @@ $site_name = getSetting('site_name');
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(ellipse at 30% 20%, rgba(212, 175, 55, 0.06) 0%, transparent 50%),
-                        radial-gradient(ellipse at 70% 80%, rgba(212, 175, 55, 0.04) 0%, transparent 50%);
+            background: radial-gradient(ellipse at 30% 20%, rgba(139, 115, 85, 0.06) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(139, 115, 85, 0.04) 0%, transparent 50%);
             animation: bgFloat 15s ease-in-out infinite;
         }
         @keyframes bgFloat {
@@ -223,7 +223,7 @@ $site_name = getSetting('site_name');
             background: white;
             border-radius: 24px;
             padding: 48px 40px;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(212, 175, 55, 0.1);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(139, 115, 85, 0.1);
         }
         .login-header {
             text-align: center;
@@ -238,14 +238,14 @@ $site_name = getSetting('site_name');
             align-items: center;
             justify-content: center;
             margin: 0 auto 20px;
-            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.35);
+            box-shadow: 0 8px 30px rgba(139, 115, 85, 0.35);
         }
         .login-header .logo i {
             font-size: 36px;
             color: var(--deep-navy);
         }
         .login-header h1 {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Cormorant Garamond', Georgia, serif;
             font-size: 26px;
             color: var(--navy);
             margin-bottom: 6px;
@@ -255,6 +255,9 @@ $site_name = getSetting('site_name');
             color: #888;
             font-size: 13px;
             font-weight: 400;
+            }
+            .login-header p {
+                color: #888;
         }
         .alert-danger {
             background: #fff0f0;
@@ -327,7 +330,7 @@ $site_name = getSetting('site_name');
             border-radius: 12px;
             font-size: 14px;
             transition: all 0.3s ease;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Jost', sans-serif;
             background: #fafafa;
             color: var(--navy);
         }
@@ -338,7 +341,7 @@ $site_name = getSetting('site_name');
         .form-control:focus {
             outline: none;
             border-color: var(--gold);
-            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+            box-shadow: 0 0 0 4px rgba(139, 115, 85, 0.1);
             background: #fff;
         }
         .form-control:hover {
@@ -388,7 +391,7 @@ $site_name = getSetting('site_name');
         }
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 8px 30px rgba(139, 115, 85, 0.4);
         }
         .btn-login:hover::after {
             transform: translateX(100%);

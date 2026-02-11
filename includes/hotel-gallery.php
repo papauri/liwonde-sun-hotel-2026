@@ -45,84 +45,55 @@ if (!function_exists('resolveImageUrl')) {
 }
 ?>
 
-<!-- Hotel Gallery Carousel Section -->
+
+<!-- Passalacqua-Inspired Editorial Gallery Section: Masonry/Grid, Large Images, Minimal Overlay -->
 <?php if (!empty($gallery_images)): ?>
-<section class="section hotel-gallery-section" id="gallery">
+<section class="editorial-gallery-section" id="gallery">
     <div class="container">
         <?php 
-        // Get section header from database
-        $gallery_description = isset($site_name) 
-            ? 'Immerse yourself in the beauty and luxury of ' . htmlspecialchars($site_name) 
-            : 'Immerse yourself in the beauty and luxury of our hotel';
-        
-        renderSectionHeader('hotel_gallery', 'index', [
-            'label' => 'Visual Journey',
-            'title' => 'Explore Our Hotel',
-            'description' => $gallery_description
-        ]); 
+            $gallery_description = isset($site_name) 
+                ? 'Immerse yourself in the beauty and luxury of ' . htmlspecialchars($site_name) 
+                : 'Immerse yourself in the beauty and luxury of our hotel';
+            renderSectionHeader('hotel_gallery', 'index', [
+                'label' => 'Visual Journey',
+                'title' => 'Explore Our Hotel',
+                'description' => $gallery_description
+            ]); 
         ?>
-        
-        <div class="gallery-carousel-wrapper">
-            <button class="gallery-nav-btn gallery-nav-prev" aria-label="Previous">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            
-            <div class="gallery-carousel-container">
-                <div class="gallery-carousel-track">
-                    <?php 
-// Include video display helper
-require_once __DIR__ . '/video-display.php';
-
-foreach ($gallery_images as $index => $image): ?>
-                    <div class="gallery-carousel-item" data-index="<?php echo $index; ?>">
-                        <div class="gallery-item-inner">
-                            <?php if (!empty($image['video_path'])): ?>
-                                <!-- Display video if available -->
-                                <div class="gallery-video">
-                                    <?php echo renderVideoEmbed($image['video_path'], $image['video_type'], [
-                                        'autoplay' => true,
-                                        'muted' => true,
-                                        'controls' => false,
-                                        'loop' => true,
-                                        'class' => 'gallery-video-embed',
-                                        'style' => 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;'
-                                    ]); ?>
-                                </div>
-                            <?php else: ?>
-                                <!-- Display image if no video -->
-                                <img src="<?php echo htmlspecialchars(resolveImageUrl($image['image_url'])); ?>" 
-                                     alt="<?php echo htmlspecialchars($image['title']); ?>" 
-                                     loading="lazy">
-                            <?php endif; ?>
-                            <div class="gallery-item-overlay">
-                                <div class="gallery-item-content">
-                                    <h4><?php echo htmlspecialchars($image['title']); ?></h4>
-                                    <?php if (!empty($image['description'])): ?>
-                                    <p><?php echo htmlspecialchars($image['description']); ?></p>
-                                    <?php endif; ?>
-                                    <?php if (!empty($image['category'])): ?>
-                                    <span class="gallery-category-badge">
-                                        <i class="fas fa-tag"></i> <?php echo htmlspecialchars($image['category']); ?>
-                                    </span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
+        <div class="editorial-gallery-grid">
+            <?php require_once __DIR__ . '/video-display.php'; ?>
+            <?php foreach ($gallery_images as $index => $image): ?>
+            <div class="editorial-gallery-item">
+                <?php if (!empty($image['video_path'])): ?>
+                <div class="editorial-gallery-video">
+                    <?php echo renderVideoEmbed($image['video_path'], $image['video_type'], [
+                        'autoplay' => true,
+                        'muted' => true,
+                        'controls' => false,
+                        'loop' => true,
+                        'class' => 'gallery-video-embed',
+                        'style' => 'width: 100%; height: 100%; object-fit: cover; border-radius: 0;'
+                    ]); ?>
+                </div>
+                <?php else: ?>
+                <img src="<?php echo htmlspecialchars(resolveImageUrl($image['image_url'])); ?>" 
+                         alt="<?php echo htmlspecialchars($image['title']); ?>" 
+                         loading="lazy">
+                <?php endif; ?>
+                <div class="editorial-gallery-overlay">
+                    <div class="editorial-gallery-content">
+                        <h4><?php echo htmlspecialchars($image['title']); ?></h4>
+                        <?php if (!empty($image['description'])): ?>
+                        <p><?php echo htmlspecialchars($image['description']); ?></p>
+                        <?php endif; ?>
+                        <?php if (!empty($image['category'])): ?>
+                        <span class="editorial-gallery-category">
+                            <i class="fas fa-tag"></i> <?php echo htmlspecialchars($image['category']); ?>
+                        </span>
+                        <?php endif; ?>
                     </div>
-                    <?php endforeach; ?>
                 </div>
             </div>
-            
-            <button class="gallery-nav-btn gallery-nav-next" aria-label="Next">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        </div>
-        
-        <div class="gallery-dots">
-            <?php foreach ($gallery_images as $index => $image): ?>
-            <button class="gallery-dot <?php echo $index === 0 ? 'active' : ''; ?>" 
-                    data-index="<?php echo $index; ?>" 
-                    aria-label="Go to image <?php echo $index + 1; ?>"></button>
             <?php endforeach; ?>
         </div>
     </div>

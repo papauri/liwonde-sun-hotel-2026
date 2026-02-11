@@ -27,7 +27,7 @@ $site_name = getSetting('site_name');
 $site_tagline = getSetting('site_tagline');
 $site_logo = getSetting('site_logo');
 $site_url = getSetting('site_url');
-$theme_color = getSetting('theme_color') ?: '#0A1929';
+$theme_color = getSetting('theme_color') ?: '#1A1A1A';
 $default_keywords = getSetting('default_keywords');
 
 // Use database URL if available, otherwise construct from host

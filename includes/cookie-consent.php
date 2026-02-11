@@ -3,7 +3,7 @@
     <div class="cookie-banner-inner">
         <div class="cookie-banner-content">
             <div class="cookie-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#D4AF37" stroke-width="1.5"/><circle cx="8" cy="10" r="1.2" fill="#D4AF37"/><circle cx="14" cy="8" r="1" fill="#D4AF37"/><circle cx="10" cy="15" r="1.1" fill="#D4AF37"/><circle cx="15" cy="13" r="0.9" fill="#D4AF37"/><circle cx="6" cy="13" r="0.7" fill="#D4AF37"/></svg>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#8B7355" stroke-width="1.5"/><circle cx="8" cy="10" r="1.2" fill="#8B7355"/><circle cx="14" cy="8" r="1" fill="#8B7355"/><circle cx="10" cy="15" r="1.1" fill="#8B7355"/><circle cx="15" cy="13" r="0.9" fill="#8B7355"/><circle cx="6" cy="13" r="0.7" fill="#8B7355"/></svg>
             </div>
             <div class="cookie-text">
                 <h4>We Value Your Privacy</h4>
@@ -35,7 +35,7 @@
     z-index: 99999;
     padding: 0;
     animation: cookieSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Jost', sans-serif;
 }
 
 @keyframes cookieSlideUp {
@@ -50,7 +50,7 @@
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-radius: 18px;
-    box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(212, 175, 55, 0.15);
+    box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(139, 115, 85, 0.15);
     padding: 24px 32px;
     display: flex;
     align-items: center;
@@ -76,8 +76,8 @@
     margin: 0 0 6px 0;
     font-size: 16px;
     font-weight: 700;
-    color: #1a1a2e;
-    font-family: 'Playfair Display', serif;
+    color: #1A1A1A;
+    font-family: 'Cormorant Garamond', Georgia, serif;
 }
 
 .cookie-text p {
@@ -88,7 +88,7 @@
 }
 
 .cookie-policy-link {
-    color: #D4AF37;
+    color: #8B7355;
     text-decoration: underline;
     font-weight: 600;
     transition: color 0.2s;
@@ -112,19 +112,19 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.25s ease;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Jost', sans-serif;
     white-space: nowrap;
 }
 
 .cookie-btn-accept {
-    background: linear-gradient(135deg, #D4AF37, #B8860B);
+    background: linear-gradient(135deg, #8B7355, #B8860B);
     color: #fff;
-    box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+    box-shadow: 0 4px 14px rgba(139, 115, 85, 0.35);
 }
 
 .cookie-btn-accept:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+    box-shadow: 0 6px 20px rgba(139, 115, 85, 0.5);
 }
 
 .cookie-btn-essential {
@@ -152,7 +152,7 @@
 @media (prefers-color-scheme: dark) {
     .cookie-banner-inner {
         background: rgba(26, 26, 46, 0.97);
-        box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(212, 175, 55, 0.2);
+        box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(139, 115, 85, 0.2);
     }
     .cookie-text h4 { color: #fff; }
     .cookie-text p { color: #bbb; }
@@ -167,7 +167,7 @@
         flex-direction: column;
         padding: 20px;
         margin: 0 12px 12px;
-        border-radius: 14px;
+           font-family: 'Cormorant Garamond', Georgia, serif;
         gap: 16px;
     }
     .cookie-banner-content { gap: 12px; }

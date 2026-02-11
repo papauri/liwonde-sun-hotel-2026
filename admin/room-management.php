@@ -367,7 +367,7 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -399,11 +399,11 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
         .room-card.dragging {
             opacity: 0.5;
             transform: scale(0.98);
-            border-color: var(--gold, #D4AF37);
+            border-color: var(--gold, #8B7355);
         }
         .room-card.drag-over {
-            border-color: var(--gold, #D4AF37);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.3);
+            border-color: var(--gold, #8B7355);
+            box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.3);
         }
         .room-card-image {
             width: 100%;
@@ -434,7 +434,7 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
         .room-card-title {
             font-size: 17px;
             font-weight: 700;
-            color: var(--deep-navy, #0A1929);
+            color: var(--deep-navy, #1A1A1A);
             margin-bottom: 6px;
             display: flex;
             align-items: center;
@@ -453,7 +453,7 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
         .room-card-price {
             font-size: 20px;
             font-weight: 700;
-            color: var(--gold, #D4AF37);
+            color: var(--gold, #8B7355);
             margin-bottom: 10px;
         }
         .room-card-price small {
@@ -475,7 +475,7 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
             gap: 6px;
         }
         .room-card-details .detail-item i {
-            color: var(--gold, #D4AF37);
+            color: var(--gold, #8B7355);
             width: 14px;
             text-align: center;
         }
@@ -523,8 +523,8 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
         .btn-edit:hover { background: #138496; box-shadow: 0 2px 6px rgba(23,162,184,0.3); }
         .btn-toggle-active { background: #ffc107; color: #212529; }
         .btn-toggle-active:hover { background: #e0a800; }
-        .btn-toggle-featured { background: var(--gold, #D4AF37); color: var(--deep-navy, #0A1929); }
-        .btn-toggle-featured:hover { background: #c19b2e; }
+        .btn-toggle-featured { background: var(--gold, #8B7355); color: var(--deep-navy, #1A1A1A); }
+        .btn-toggle-featured:hover { background: #6B5740; }
         .btn-image { background: #6f42c1; color: white; }
         .btn-image:hover { background: #5a32a3; }
         .btn-pictures { background: #20c997; color: white; }
@@ -605,7 +605,7 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
         .modal-header h3 {
             margin: 0;
             font-size: 18px;
-            color: var(--deep-navy, #0A1929);
+            color: var(--deep-navy, #1A1A1A);
         }
         .modal-close {
             background: none;
@@ -646,9 +646,9 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
         .form-group input:focus,
         .form-group textarea:focus,
         .form-group select:focus {
-            border-color: var(--gold, #D4AF37);
+            border-color: var(--gold, #8B7355);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(212,175,55,0.15);
+            box-shadow: 0 0 0 3px rgba(139, 115, 85,0.15);
         }
         .form-row {
             display: grid;
@@ -675,13 +675,13 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
         .form-section-title {
             font-size: 14px;
             font-weight: 700;
-            color: var(--deep-navy, #0A1929);
+            color: var(--deep-navy, #1A1A1A);
             margin-bottom: 14px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        .form-section-title i { color: var(--gold, #D4AF37); }
+        .form-section-title i { color: var(--gold, #8B7355); }
 
         /* Upload area */
         .upload-area {
@@ -693,7 +693,7 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
             cursor: pointer;
             transition: all 0.3s;
         }
-        .upload-area:hover { border-color: var(--gold, #D4AF37); background: #fff; }
+        .upload-area:hover { border-color: var(--gold, #8B7355); background: #fff; }
         .upload-area.dragover { border-color: var(--gold); background: #fffbf0; }
         .upload-area i { font-size: 36px; color: #ddd; margin-bottom: 8px; }
 
@@ -750,7 +750,7 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
             <h2 class="page-title"><i class="fas fa-bed"></i> Manage Hotel Rooms</h2>
             <div style="display:flex; gap:10px; align-items:center;">
                 <span style="font-size:12px; color:#999;"><i class="fas fa-arrows-alt"></i> Drag cards to reorder</span>
-                <button class="btn-action" type="button" style="background:var(--gold,#D4AF37); color:var(--deep-navy,#05090F); padding:12px 24px; font-size:14px; border-radius:8px;" onclick="openAddModal()">
+                <button class="btn-action" type="button" style="background:var(--gold,#8B7355); color:var(--deep-navy,#111111); padding:12px 24px; font-size:14px; border-radius:8px;" onclick="openAddModal()">
                     <i class="fas fa-plus"></i> Add New Room
                 </button>
             </div>
@@ -965,7 +965,7 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
 
                 <div class="form-actions">
                     <button type="button" onclick="closeEditModal()" style="padding:10px 24px; border:1px solid #ddd; border-radius:6px; background:white; cursor:pointer;">Cancel</button>
-                    <button type="submit" style="padding:10px 24px; border:none; border-radius:6px; background:var(--gold,#D4AF37); color:var(--deep-navy,#05090F); font-weight:600; cursor:pointer;">
+                    <button type="submit" style="padding:10px 24px; border:none; border-radius:6px; background:var(--gold,#8B7355); color:var(--deep-navy,#111111); font-weight:600; cursor:pointer;">
                         <i class="fas fa-save"></i> Save Changes
                     </button>
                 </div>
@@ -1081,7 +1081,7 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
 
                 <div class="form-actions">
                     <button type="button" onclick="closeAddModal()" style="padding:10px 24px; border:1px solid #ddd; border-radius:6px; background:white; cursor:pointer;">Cancel</button>
-                    <button type="submit" style="padding:10px 24px; border:none; border-radius:6px; background:var(--gold,#D4AF37); color:var(--deep-navy,#05090F); font-weight:600; cursor:pointer;">
+                    <button type="submit" style="padding:10px 24px; border:none; border-radius:6px; background:var(--gold,#8B7355); color:var(--deep-navy,#111111); font-weight:600; cursor:pointer;">
                         <i class="fas fa-plus"></i> Add Room
                     </button>
                 </div>
@@ -1187,7 +1187,7 @@ $currency = htmlspecialchars(getSetting('currency_symbol', 'MWK'));
                         <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:13px; white-space:nowrap;">
                             <input type="checkbox" name="set_featured"> Featured
                         </label>
-                        <button type="submit" class="btn-action" style="background:var(--gold,#D4AF37); color:var(--deep-navy); padding:8px 16px;">
+                        <button type="submit" class="btn-action" style="background:var(--gold,#8B7355); color:var(--deep-navy); padding:8px 16px;">
                             <i class="fas fa-upload"></i> Upload
                         </button>
                     </div>

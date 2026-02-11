@@ -248,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
@@ -286,7 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, var(--gold) 0%, #FFD700 50%, var(--dark-gold) 100%);
+            background: linear-gradient(90deg, var(--gold) 0%, #8B7355 50%, var(--dark-gold) 100%);
         }
         
         .review-hero h1 {
@@ -314,7 +314,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 20px;
             padding: 40px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(212, 175, 55, 0.15);
+            border: 1px solid rgba(139, 115, 85, 0.15);
             position: relative;
         }
         
@@ -325,7 +325,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, var(--gold) 0%, #FFD700 50%, var(--dark-gold) 100%);
+            background: linear-gradient(90deg, var(--gold) 0%, #8B7355 50%, var(--dark-gold) 100%);
             border-radius: 20px 20px 0 0;
         }
         
@@ -335,7 +335,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: var(--navy);
             margin-bottom: 24px;
             padding-bottom: 12px;
-            border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+            border-bottom: 2px solid rgba(139, 115, 85, 0.2);
             display: flex;
             align-items: center;
             gap: 12px;
@@ -404,7 +404,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             outline: none;
             border-color: var(--gold);
             background: #fff;
-            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+            box-shadow: 0 0 0 4px rgba(139, 115, 85, 0.1);
         }
         
         .form-group textarea {
@@ -474,11 +474,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         /* Optional Ratings Section */
         .optional-ratings {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(212, 175, 55, 0.02) 100%);
+            background: linear-gradient(135deg, rgba(139, 115, 85, 0.05) 0%, rgba(139, 115, 85, 0.02) 100%);
             border-radius: 16px;
             padding: 24px;
             margin-top: 30px;
-            border: 1px solid rgba(212, 175, 55, 0.15);
+            border: 1px solid rgba(139, 115, 85, 0.15);
         }
         
         .optional-ratings-title {
@@ -500,7 +500,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             align-items: center;
             justify-content: space-between;
             padding: 16px 0;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+            border-bottom: 1px solid rgba(139, 115, 85, 0.1);
         }
         
         .optional-rating-item:last-child {
@@ -523,7 +523,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .submit-btn {
             width: 100%;
             padding: 16px 32px;
-            background: linear-gradient(135deg, var(--gold) 0%, #E5D047 50%, var(--dark-gold) 100%);
+            background: linear-gradient(135deg, var(--gold) 0%, #A08B6D 50%, var(--dark-gold) 100%);
             color: var(--navy);
             border: none;
             border-radius: 12px;
@@ -533,14 +533,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             letter-spacing: 1.5px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 24px rgba(139, 115, 85, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
             position: relative;
             overflow: hidden;
         }
         
         .submit-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 32px rgba(212, 175, 55, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            box-shadow: 0 12px 32px rgba(139, 115, 85, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
         }
         
         .submit-btn:active {
@@ -583,8 +583,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: rgba(212, 175, 55, 0.15);
-            border: 1px solid rgba(212, 175, 55, 0.3);
+            background: rgba(139, 115, 85, 0.15);
+            border: 1px solid rgba(139, 115, 85, 0.3);
             border-radius: 20px;
             color: var(--navy);
             font-size: 13px;

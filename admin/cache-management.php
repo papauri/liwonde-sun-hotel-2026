@@ -283,7 +283,7 @@ $cache_types = [
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -319,7 +319,7 @@ $cache_types = [
         }
         
         .cache-stat-icon.primary {
-            background: rgba(212, 175, 55, 0.1);
+            background: rgba(139, 115, 85, 0.1);
             color: var(--gold);
         }
         
@@ -502,9 +502,9 @@ $cache_types = [
         }
         
         .btn-primary:hover {
-            background: #d4af37;
+            background: #8B7355;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 4px 12px rgba(139, 115, 85, 0.3);
         }
         
         .schedule-form {
@@ -755,7 +755,7 @@ $cache_types = [
                         <span><i class="fas fa-cog"></i> Site Settings (<?php echo count(array_filter($caches, function($c) { return strpos($c['key'], 'setting_') === 0; })); ?> files)</span>
                     </label>
                     
-                    <label class="cache-checkbox-item" style="border-color: var(--gold); background: rgba(212, 175, 55, 0.05);">
+                    <label class="cache-checkbox-item" style="border-color: var(--gold); background: rgba(139, 115, 85, 0.05);">
                         <input type="checkbox" name="cache_types[]" value="rooms">
                         <span><i class="fas fa-bed"></i> <strong>Rooms & Prices</strong> (<?php 
                             $room_count = count(array_filter($caches, function($c) { 

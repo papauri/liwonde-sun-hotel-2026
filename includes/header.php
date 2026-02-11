@@ -12,8 +12,8 @@
                         <path d="M6 10H8M6 14H8M16 10H18M16 14H18" stroke="url(#logoGradient)" stroke-width="1.5" stroke-linecap="round"/>
                         <defs>
                             <linearGradient id="logoGradient" x1="2" y1="2" x2="22" y2="22">
-                                <stop offset="0%" stop-color="#D4AF37"/>
-                                <stop offset="50%" stop-color="#FFD700"/>
+                                <stop offset="0%" stop-color="#8B7355"/>
+                                <stop offset="50%" stop-color="#8B7355"/>
                                 <stop offset="100%" stop-color="#B8860B"/>
                             </linearGradient>
                         </defs>
@@ -36,8 +36,8 @@
                         <path d="M6 10H8M6 14H8M16 10H18M16 14H18" stroke="url(#logoGradient)" stroke-width="1.5" stroke-linecap="round"/>
                         <defs>
                             <linearGradient id="logoGradient2" x1="2" y1="2" x2="22" y2="22">
-                                <stop offset="0%" stop-color="#D4AF37"/>
-                                <stop offset="50%" stop-color="#FFD700"/>
+                                <stop offset="0%" stop-color="#8B7355"/>
+                                <stop offset="50%" stop-color="#8B7355"/>
                                 <stop offset="100%" stop-color="#B8860B"/>
                             </linearGradient>
                         </defs>

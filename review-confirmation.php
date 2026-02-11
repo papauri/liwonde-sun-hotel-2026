@@ -29,7 +29,7 @@ if (file_exists(__DIR__ . '/config/database.php')) {
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
@@ -43,7 +43,7 @@ if (file_exists(__DIR__ . '/config/database.php')) {
     <style>
         :root {
             /* Page-specific variables not in theme */
-            --gold-light: #f4d03f;
+            --gold-light: #A08B6D;
             --gold-dark: #b8962e;
             --black: #1a1a1a;
         }
@@ -124,7 +124,7 @@ if (file_exists(__DIR__ . '/config/database.php')) {
         }
         
         .confirmation-title {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Cormorant Garamond', Georgia, serif;
             font-size: 2rem;
             font-weight: 600;
             color: var(--black);
@@ -132,7 +132,7 @@ if (file_exists(__DIR__ . '/config/database.php')) {
         }
         
         .confirmation-message {
-            font-size: 1.05rem;
+                font-family: 'Cormorant Garamond', Georgia, serif;
             color: #666;
             line-height: 1.7;
             margin-bottom: 30px;
@@ -186,12 +186,12 @@ if (file_exists(__DIR__ . '/config/database.php')) {
         .btn-primary {
             background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
             color: var(--white);
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 4px 15px rgba(139, 115, 85, 0.3);
         }
         
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 6px 20px rgba(139, 115, 85, 0.4);
         }
         
         .btn-secondary {

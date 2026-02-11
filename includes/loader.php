@@ -16,7 +16,7 @@ if (function_exists('getPageLoader') && $page_slug) {
     $loaderSubtext = getPageLoader($page_slug);
 }
 ?>
-<!-- Fancy Page Loader -->
+<!-- Elegant Page Loader -->
 <div id="page-loader">
     <div class="loader-content">
         <div class="loader-spinner">
@@ -27,5 +27,8 @@ if (function_exists('getPageLoader') && $page_slug) {
         </div>
         <div class="loader-text"><?php echo htmlspecialchars($siteName); ?></div>
         <div class="loader-subtext"><?php echo htmlspecialchars($loaderSubtext); ?></div>
+        <div class="loader-progress">
+            <div class="loader-progress-bar"></div>
+        </div>
     </div>
 </div>

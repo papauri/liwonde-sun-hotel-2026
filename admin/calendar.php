@@ -140,7 +140,7 @@ $today = date('Y-m-d');
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -165,7 +165,7 @@ $today = date('Y-m-d');
         }
         .calendar-header h2 {
             margin: 0;
-            color: #0A1929;
+            color: #1A1A1A;
             font-size: 24px;
         }
         .calendar-nav {
@@ -174,21 +174,21 @@ $today = date('Y-m-d');
         }
         .calendar-nav a {
             padding: 10px 20px;
-            background: #D4AF37;
-            color: #0A1929;
+            background: #8B7355;
+            color: #1A1A1A;
             text-decoration: none;
             border-radius: 5px;
             font-weight: 600;
             transition: all 0.3s ease;
         }
         .calendar-nav a:hover {
-            background: #c19b2e;
+            background: #6B5740;
             transform: translateY(-2px);
         }
         .calendar-nav .current {
             padding: 10px 20px;
-            background: #0A1929;
-            color: #D4AF37;
+            background: #1A1A1A;
+            color: #8B7355;
             border-radius: 5px;
             font-weight: 600;
             cursor: default;
@@ -204,7 +204,7 @@ $today = date('Y-m-d');
             overflow: hidden;
         }
         .room-header {
-            background: linear-gradient(135deg, #0A1929 0%, #1a3a52 100%);
+            background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%);
             color: white;
             padding: 15px 20px;
             display: flex;
@@ -216,8 +216,8 @@ $today = date('Y-m-d');
             font-size: 18px;
         }
         .room-price {
-            background: #D4AF37;
-            color: #0A1929;
+            background: #8B7355;
+            color: #1A1A1A;
             padding: 5px 15px;
             border-radius: 20px;
             font-weight: 600;
@@ -232,7 +232,7 @@ $today = date('Y-m-d');
             text-align: center;
             font-weight: 600;
             border: 1px solid #e0e0e0;
-            color: #0A1929;
+            color: #1A1A1A;
         }
         .calendar-day {
             min-height: 100px;
@@ -253,13 +253,13 @@ $today = date('Y-m-d');
         }
         .day-number {
             font-weight: 600;
-            color: #0A1929;
+            color: #1A1A1A;
             font-size: 14px;
             margin-bottom: 5px;
         }
         .booking-indicator {
-            background: #D4AF37;
-            color: #0A1929;
+            background: #8B7355;
+            color: #1A1A1A;
             padding: 2px 5px;
             border-radius: 3px;
             font-size: 11px;
@@ -270,9 +270,44 @@ $today = date('Y-m-d');
             text-overflow: ellipsis;
             transition: all 0.2s ease;
         }
+        .booking-indicator {
+            position: relative;
+        }
         .booking-indicator:hover {
-            background: #c19b2e;
+            background: #6B5740;
             transform: scale(1.02);
+            z-index: 100;
+        }
+        .booking-indicator:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 25, 41, 0.95);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: pre-line;
+            min-width: 200px;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            pointer-events: none;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        .booking-indicator:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(10, 25, 41, 0.95);
+            margin-bottom: -4px;
+            z-index: 1001;
         }
         .booking-indicator.pending {
             background: #ffc107;
@@ -487,11 +522,25 @@ $today = date('Y-m-d');
                                                     $statusClass = strtolower($booking['status']);
                                                     $guestName = htmlspecialchars($booking['guest_name']);
                                                     $ref = htmlspecialchars($booking['booking_reference']);
+                                                    $nights = $booking['number_of_nights'];
+                                                    $guests = $booking['number_of_guests'];
+                                                    $checkIn = date('M j', strtotime($booking['check_in_date']));
+                                                    $checkOut = date('M j', strtotime($booking['check_out_date']));
+                                                    $individualRoom = '';
+                                                    if (!empty($booking['individual_room_id'])) {
+                                                        $irStmt = $pdo->prepare("SELECT room_number, room_name FROM individual_rooms WHERE id = ?");
+                                                        $irStmt->execute([$booking['individual_room_id']]);
+                                                        $ir = $irStmt->fetch(PDO::FETCH_ASSOC);
+                                                        if ($ir) {
+                                                            $individualRoom = ' | Room: ' . htmlspecialchars($ir['room_number']);
+                                                        }
+                                                    }
+                                                    $tooltip = "$guestName ($ref)\nCheck-in: $checkIn\nCheck-out: $checkOut\nNights: $nights\nGuests: $guests" . $individualRoom;
                                             ?>
                                                 <div class="booking-indicator <?php echo $statusClass; ?>"
-                                                     title="<?php echo "$guestName ($ref)"; ?>"
+                                                     data-tooltip="<?php echo htmlspecialchars($tooltip); ?>"
                                                      onclick="window.location.href='booking-details.php?id=<?php echo $booking['id']; ?>'">
-                                                    <?php echo substr($guestName, 0, 15) . '...'; ?>
+                                                    <?php echo substr($guestName, 0, 12); ?>
                                                 </div>
                                             <?php
                                                 }

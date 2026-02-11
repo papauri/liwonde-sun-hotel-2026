@@ -81,8 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <head><meta charset="UTF-8"></head>
                 <body style="margin: 0; padding: 0; background: #f5f5f5; font-family: Arial, sans-serif;">
                     <div style="max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-                        <div style="background: linear-gradient(135deg, #0A1929 0%, #1a2f45 100%); padding: 40px 30px; text-align: center;">
-                            <h1 style="color: #D4AF37; font-size: 24px; margin: 0 0 8px;">Password Reset</h1>
+                        <div style="background: linear-gradient(135deg, #1A1A1A 0%, #252525 100%); padding: 40px 30px; text-align: center;">
+                            <h1 style="color: #8B7355; font-size: 24px; margin: 0 0 8px;">Password Reset</h1>
                             <p style="color: rgba(255,255,255,0.7); font-size: 14px; margin: 0;">' . htmlspecialchars($site_name) . '</p>
                         </div>
                         <div style="padding: 40px 30px;">
@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <p style="color: #555; font-size: 14px; line-height: 1.6;">We received a request to reset the password for your admin account (<strong>' . htmlspecialchars($user['username']) . '</strong>).</p>
                             <p style="color: #555; font-size: 14px; line-height: 1.6;">Click the button below to create a new password. This link expires in <strong>1 hour</strong>.</p>
                             <div style="text-align: center; margin: 32px 0;">
-                                <a href="' . htmlspecialchars($reset_url) . '" style="display: inline-block; background: linear-gradient(135deg, #D4AF37 0%, #c49b2e 100%); color: #050D14; padding: 14px 40px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px; letter-spacing: 0.5px;">
+                                <a href="' . htmlspecialchars($reset_url) . '" style="display: inline-block; background: linear-gradient(135deg, #8B7355 0%, #c49b2e 100%); color: #050D14; padding: 14px 40px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px; letter-spacing: 0.5px;">
                                     Reset Password
                                 </a>
                             </div>
@@ -141,19 +141,19 @@ $site_name = getSetting('site_name');
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --gold: #D4AF37;
-            --navy: #0A1929;
+            --gold: #8B7355;
+            --navy: #1A1A1A;
             --deep-navy: #050D14;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 50%, #1a2f45 100%);
+            font-family: 'Jost', sans-serif;
+            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 50%, #252525 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -166,8 +166,8 @@ $site_name = getSetting('site_name');
             content: '';
             position: absolute;
             top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(ellipse at 30% 20%, rgba(212, 175, 55, 0.06) 0%, transparent 50%),
-                        radial-gradient(ellipse at 70% 80%, rgba(212, 175, 55, 0.04) 0%, transparent 50%);
+            background: radial-gradient(ellipse at 30% 20%, rgba(139, 115, 85, 0.06) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(139, 115, 85, 0.04) 0%, transparent 50%);
             animation: bgFloat 15s ease-in-out infinite;
         }
         @keyframes bgFloat { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-2%, -1%); } }
@@ -176,7 +176,7 @@ $site_name = getSetting('site_name');
             background: white;
             border-radius: 24px;
             padding: 48px 40px;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(212, 175, 55, 0.1);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(139, 115, 85, 0.1);
         }
         .login-header { text-align: center; margin-bottom: 36px; }
         .login-header .logo {
@@ -185,10 +185,10 @@ $site_name = getSetting('site_name');
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 20px;
-            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.35);
+            box-shadow: 0 8px 30px rgba(139, 115, 85, 0.35);
         }
         .login-header .logo i { font-size: 36px; color: var(--deep-navy); }
-        .login-header h1 { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--navy); margin-bottom: 10px; }
+        .login-header h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 24px; color: var(--navy); margin-bottom: 10px; }
         .login-header p { color: #888; font-size: 13px; line-height: 1.5; }
         .alert-danger {
             background: #fff0f0; border-left: 4px solid #dc3545; color: #721c24;
@@ -205,10 +205,10 @@ $site_name = getSetting('site_name');
         .form-control {
             width: 100%; padding: 14px 16px 14px 46px;
             border: 2px solid #e8e8e8; border-radius: 12px; font-size: 14px;
-            transition: all 0.3s; font-family: 'Poppins', sans-serif; background: #fafafa; color: var(--navy);
+            transition: all 0.3s; font-family: 'Jost', sans-serif; background: #fafafa; color: var(--navy);
         }
         .form-control::placeholder { color: #bbb; font-weight: 300; }
-        .form-control:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); background: #fff; }
+        .form-control:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(139, 115, 85, 0.1); background: #fff; }
         .form-control:hover { border-color: #ccc; }
         .btn-login {
             width: 100%; padding: 15px;
@@ -216,7 +216,7 @@ $site_name = getSetting('site_name');
             color: var(--deep-navy); border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
             cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 8px;
         }
-        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(212, 175, 55, 0.4); }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(139, 115, 85, 0.4); }
         .login-footer {
             margin-top: 28px; text-align: center; padding-top: 20px; border-top: 1px solid #f0f0f0;
         }

@@ -1,7 +1,7 @@
 /**
  * Hotel Website - Footer Styles
- * Passalacqua-inspired — Warm Minimal Italian Luxury
- * Clean, understated footer with generous whitespace
+ * Consolidated footer styles - Minimalist Professional Design
+ * All footer-related CSS in one place
  */
 
 /* ============================================
@@ -9,8 +9,8 @@
    ============================================ */
 
 .minimalist-footer {
-    background: var(--charcoal, #1A1A1A);
-    padding: 80px 0 40px;
+    background: linear-gradient(160deg, var(--deep-navy) 0%, var(--navy) 60%, rgba(27, 77, 255, 0.08) 100%);
+    padding: 70px 0 30px;
     margin-top: auto;
     position: relative;
     overflow: hidden;
@@ -22,15 +22,15 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 1px;
-    background: rgba(139, 115, 85, 0.3);
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold) 0%, #4D7AFF 50%, var(--dark-gold) 100%);
 }
 
 .minimalist-footer-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 50px;
-    margin-bottom: 50px;
+    gap: 40px;
+    margin-bottom: 40px;
 }
 
 .minimalist-footer-column {
@@ -39,19 +39,25 @@
 }
 
 .minimalist-footer-column h4 {
-    color: var(--gold, #8B7355);
-    font-family: var(--font-sans, 'Jost', sans-serif);
-    font-size: 11px;
-    font-weight: 400;
-    letter-spacing: 3px;
+    color: var(--gold);
+    font-family: var(--font-serif);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     position: relative;
-    padding-bottom: 0;
+    padding-bottom: 12px;
 }
 
 .minimalist-footer-column h4::after {
-    display: none;
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
 }
 
 .minimalist-footer-links {
@@ -60,7 +66,7 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
 }
 
 .minimalist-footer-links li {
@@ -68,22 +74,19 @@
 }
 
 .minimalist-footer-links a {
-    color: rgba(250, 248, 245, 0.6);
+    color: rgba(251, 248, 243, 0.8);
     text-decoration: none;
-    font-family: var(--font-sans, 'Jost', sans-serif);
     font-size: 14px;
-    font-weight: 300;
-    letter-spacing: 0.3px;
-    transition: color 0.4s ease;
+    transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
-    gap: 0;
-    padding: 4px 0;
+    gap: 8px;
+    padding: 6px 0;
 }
 
 .minimalist-footer-links a:hover {
-    color: var(--gold, #8B7355);
-    transform: none;
+    color: var(--gold);
+    transform: translateX(5px);
 }
 
 .minimalist-footer-links a.policy-link {
@@ -100,47 +103,43 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
 }
 
 .minimalist-contact-info li {
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 8px 0;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    transition: color 0.4s ease;
+    padding: 12px;
+    background: rgba(27, 77, 255, 0.04);
+    border: 1px solid rgba(27, 77, 255, 0.08);
+    border-radius: 12px;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .minimalist-contact-info li:hover {
-    background: transparent;
-    border-color: transparent;
-    transform: none;
+    background: rgba(27, 77, 255, 0.08);
+    border-color: rgba(27, 77, 255, 0.2);
+    transform: translateX(4px);
 }
 
 .minimalist-contact-info li i {
-    color: var(--gold, #8B7355);
-    font-size: 14px;
-    margin-top: 3px;
+    color: var(--gold);
+    font-size: 16px;
+    margin-top: 2px;
     flex-shrink: 0;
-    opacity: 0.7;
 }
 
 .minimalist-contact-info li a,
 .minimalist-contact-info li span {
-    color: rgba(250, 248, 245, 0.6);
-    font-family: var(--font-sans, 'Jost', sans-serif);
+    color: rgba(251, 248, 243, 0.85);
     font-size: 14px;
-    font-weight: 300;
-    line-height: 1.6;
+    line-height: 1.5;
     text-decoration: none;
-    transition: color 0.4s ease;
 }
 
 .minimalist-contact-info li a:hover {
-    color: var(--gold, #8B7355);
+    color: var(--gold);
 }
 
 /* ============================================
@@ -149,7 +148,7 @@
 
 .minimalist-social-links {
     display: flex;
-    gap: 16px;
+    gap: 12px;
     margin-bottom: 24px;
     flex-wrap: wrap;
 }
@@ -160,21 +159,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: transparent;
-    border-radius: 0;
-    color: rgba(250, 248, 245, 0.5);
+    background: rgba(27, 77, 255, 0.08);
+    border-radius: 50%;
+    color: var(--gold);
     font-size: 16px;
-    transition: color 0.4s ease;
-    border: 1px solid rgba(250, 248, 245, 0.15);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(27, 77, 255, 0.15);
     text-decoration: none;
 }
 
 .minimalist-social-icon:hover {
-    background: transparent;
-    border-color: var(--gold, #8B7355);
-    color: var(--gold, #8B7355);
-    transform: none;
-    box-shadow: none;
+    background: rgba(27, 77, 255, 0.15);
+    border-color: rgba(27, 77, 255, 0.35);
+    color: #4D7AFF;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(27, 77, 255, 0.25);
 }
 
 /* ============================================
@@ -182,13 +181,13 @@
    ============================================ */
 
 .share-section-title {
-    color: var(--gold, #8B7355);
-    font-family: var(--font-sans, 'Jost', sans-serif);
-    font-size: 11px;
-    font-weight: 400;
-    letter-spacing: 3px;
+    color: var(--gold);
+    font-family: var(--font-serif);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
     text-transform: uppercase;
-    margin: 20px 0 12px;
+    margin: 16px 0 12px;
 }
 
 .minimalist-share-buttons {
@@ -203,31 +202,28 @@
     justify-content: center;
     gap: 6px;
     padding: 10px 14px;
-    background: transparent;
-    border-radius: 0;
-    border: 1px solid rgba(250, 248, 245, 0.15);
-    color: rgba(250, 248, 245, 0.6);
-    font-family: var(--font-sans, 'Jost', sans-serif);
-    font-size: 11px;
-    font-weight: 400;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    color: var(--navy);
+    font-size: 12px;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
+    letter-spacing: 0.4px;
     cursor: pointer;
-    transition: all 0.4s ease;
+    transition: all 0.3s ease;
 }
 
 .minimalist-share-btn:hover {
-    border-color: var(--gold, #8B7355);
-    color: var(--gold, #8B7355);
-    background: transparent;
-    transform: none;
-    box-shadow: none;
+    background: rgba(212, 175, 55, 0.1);
+    border-color: rgba(212, 175, 55, 0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(212, 175, 55, 0.25);
 }
 
 .minimalist-share-btn i {
     font-size: 14px;
-    color: var(--gold, #8B7355);
-    opacity: 0.7;
+    color: var(--gold);
 }
 
 /* ============================================
@@ -238,9 +234,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: 40px;
-    margin-top: 50px;
-    border-top: 1px solid rgba(250, 248, 245, 0.08);
+    padding-top: 30px;
+    margin-top: 40px;
+    border-top: 1px solid rgba(27, 77, 255, 0.12);
 }
 
 .minimalist-footer-copyright,
@@ -250,19 +246,15 @@
 
 .minimalist-footer-copyright p,
 .minimalist-footer-credits p {
-    color: rgba(250, 248, 245, 0.35);
-    font-family: var(--font-sans, 'Jost', sans-serif);
-    font-size: 12px;
-    font-weight: 300;
-    letter-spacing: 0.5px;
+    color: rgba(251, 248, 243, 0.6);
+    font-size: 13px;
     margin: 0;
     line-height: 1.6;
 }
 
 .minimalist-footer-copyright p i,
 .minimalist-footer-credits p i {
-    color: var(--gold, #8B7355);
-    opacity: 0.6;
+    color: var(--gold);
 }
 
 /* ============================================
@@ -272,11 +264,11 @@
 .policy-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.3s ease;
     z-index: 900;
 }
 
@@ -298,8 +290,8 @@
 
 .policy-modal {
     opacity: 0;
-    transform: translateY(15px);
-    transition: all 0.4s ease;
+    transform: translateY(20px) scale(0.98);
+    transition: all 0.3s ease;
     max-width: 620px;
     width: 100%;
     pointer-events: none;
@@ -307,53 +299,48 @@
 
 .policy-modal.active {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     pointer-events: auto;
 }
 
 .policy-modal__content {
-    background: var(--cream-light, #FAF8F5);
-    border-radius: 4px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-    padding: 36px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    padding: 28px;
     position: relative;
     border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .policy-modal__header h3 {
     margin: 8px 0 6px 0;
-    font-family: var(--font-serif, 'Cormorant Garamond', Georgia, serif);
-    font-size: 24px;
-    font-weight: 500;
-    color: var(--charcoal, #1A1A1A);
+    font-size: 22px;
+    color: var(--navy);
 }
 
 .policy-summary {
     margin: 0 0 14px 0;
-    color: var(--text-secondary, #6B6B6B);
-    font-family: var(--font-sans, 'Jost', sans-serif);
+    color: #555;
     font-size: 14px;
     font-style: italic;
 }
 
 .policy-modal__body {
     margin-top: 14px;
-    color: var(--dark-gray, #333333);
-    font-family: var(--font-sans, 'Jost', sans-serif);
+    color: #444;
     font-size: 14px;
-    line-height: 1.7;
+    line-height: 1.6;
 }
 
 .policy-pill {
     display: inline-block;
-    padding: 6px 14px;
-    background: rgba(139, 115, 85, 0.1);
-    color: var(--gold, #8B7355);
-    font-family: var(--font-sans, 'Jost', sans-serif);
-    font-weight: 400;
-    font-size: 10px;
-    border-radius: 0;
-    letter-spacing: 2px;
+    padding: 6px 12px;
+    background: rgba(212, 175, 55, 0.15);
+    color: var(--gold);
+    font-weight: 600;
+    font-size: 11px;
+    border-radius: 999px;
+    letter-spacing: 0.6px;
     text-transform: uppercase;
 }
 
@@ -364,7 +351,7 @@
 .trust-badges {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 16px;
     align-items: center;
     margin-top: 24px;
     padding: 0;
@@ -376,43 +363,41 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 16px;
-    background: transparent;
-    border: 1px solid rgba(250, 248, 245, 0.1);
-    border-radius: 0;
-    color: rgba(250, 248, 245, 0.5);
-    font-family: var(--font-sans, 'Jost', sans-serif);
-    font-size: 10px;
-    font-weight: 400;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    border-radius: 10px;
+    color: #666;
+    font-size: 12px;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    transition: all 0.4s ease;
+    letter-spacing: 0.6px;
+    transition: all 0.3s ease;
 }
 
 .trust-badge:hover {
-    background: transparent;
-    border-color: rgba(139, 115, 85, 0.3);
-    color: var(--gold, #8B7355);
-    transform: none;
+    background: rgba(212, 175, 55, 0.08);
+    border-color: rgba(212, 175, 55, 0.3);
+    transform: translateY(-1px);
 }
 
 .trust-badge i {
-    color: var(--gold, #8B7355);
-    font-size: 14px;
-    margin-right: 4px;
-    opacity: 0.6;
+    color: var(--gold);
+    font-size: 16px;
+    margin-right: 6px;
 }
 
 .trust-badge .verified-icon {
-    color: var(--success, #4A7C59);
-    font-size: 11px;
-    margin-left: 4px;
+    color: #00C853;
+    font-size: 12px;
+    margin-left: 6px;
 }
 
 /* ============================================
    LEGACY FOOTER STYLES (Backward Compatibility)
    ============================================ */
 
+/* Original footer class styles */
 .footer {
     padding: 50px 0 30px;
 }
@@ -455,6 +440,7 @@
    ============================================ */
 
 @media (min-width: 769px) and (max-width: 1190px) {
+    /* Enhanced contact info */
     .minimalist-contact-info {
         display: flex;
         flex-direction: row;
@@ -464,21 +450,30 @@
 
     .minimalist-contact-info li {
         width: auto;
-        background: transparent;
-        border: none;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(212, 175, 55, 0.1);
+        border-radius: 10px;
     }
 
+    .minimalist-contact-info li:hover {
+        background: rgba(212, 175, 55, 0.08);
+        border-color: rgba(212, 175, 55, 0.25);
+    }
+
+    /* Enhanced social links */
     .minimalist-social-links {
         margin-top: 12px;
     }
 
+    /* Trust badges */
     .trust-badges {
         margin-top: 20px;
     }
 
+    /* Minimalist footer grid */
     .minimalist-footer-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 40px;
+        gap: 30px;
     }
 }
 
@@ -487,61 +482,68 @@
    ============================================ */
 
 @media (max-width: 768px) {
+    /* Footer base */
     .minimalist-footer,
     .footer {
-        padding: 50px 0 25px;
+        padding: 40px 0 20px;
         overflow-x: hidden;
     }
 
+    /* Footer grid - stack columns */
     .minimalist-footer-grid,
     .footer-grid {
         grid-template-columns: 1fr;
         display: flex;
         flex-direction: column;
-        gap: 36px;
+        gap: 32px;
     }
 
+    /* Footer columns */
     .minimalist-footer-column,
     .footer-column {
         width: 100%;
-        padding: 0 20px;
-        background: transparent;
-        border: none;
-        border-radius: 0;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(212, 175, 55, 0.1);
+        border-radius: 12px;
     }
 
+    /* Footer column headings */
     .minimalist-footer-column h4,
     .footer-column h4 {
-        font-size: 11px;
-        text-align: left;
-        margin-bottom: 16px;
+        font-size: 16px;
+        text-align: center;
+        margin-bottom: 12px;
     }
 
     .minimalist-footer-column h4::after {
-        display: none;
+        left: 50%;
+        transform: translateX(-50%);
     }
 
+    /* Footer links */
     .minimalist-footer-links,
     .footer-links {
-        text-align: left;
+        text-align: center;
     }
 
     .minimalist-footer-links a,
     .footer-links a {
         font-size: 14px;
-        padding: 6px 0;
-        justify-content: flex-start;
+        padding: 10px;
+        justify-content: center;
     }
 
     .minimalist-footer-links a:hover,
     .footer-links a:hover {
-        transform: none;
+        transform: translateX(0);
     }
 
+    /* Contact info */
     .minimalist-contact-info {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
     }
 
     .minimalist-contact-info li {
@@ -550,21 +552,22 @@
         justify-content: flex-start;
         width: 100%;
         gap: 12px;
-        padding: 6px 0;
+        padding: 12px;
         background: transparent;
         border: none;
     }
 
     .minimalist-contact-info li:hover {
-        background: transparent;
-        border: none;
-        transform: none;
+        background: rgba(212, 175, 55, 0.05);
+        border-left: 3px solid rgba(212, 175, 55, 0.2);
+        border-radius: 8px;
+        transform: translateX(4px);
     }
 
     .minimalist-contact-info li i {
-        width: 20px;
-        height: 20px;
-        font-size: 14px;
+        width: 24px;
+        height: 24px;
+        font-size: 16px;
         margin: 2px 0 0 0;
         flex-shrink: 0;
         display: flex;
@@ -572,46 +575,50 @@
         justify-content: center;
     }
 
-    .minimalist-contact-info li span,
+    .minimalist-contact-info li span {
+        flex: 1;
+        line-height: 1.5;
+    }
+
     .minimalist-contact-info li a {
         flex: 1;
         line-height: 1.5;
     }
 
-    /* Social links */
+    /* Social links - center on mobile */
     .minimalist-social-links {
-        justify-content: flex-start;
+        justify-content: center;
         gap: 12px;
     }
 
     .minimalist-social-icon {
-        width: 42px;
-        height: 42px;
-        font-size: 15px;
+        width: 45px;
+        height: 45px;
+        font-size: 16px;
     }
 
-    /* Share buttons */
+    /* Share buttons - smaller on mobile */
     .minimalist-share-buttons {
-        justify-content: flex-start;
-        padding: 0;
+        justify-content: center;
+        padding: 12px;
     }
 
     .minimalist-share-btn {
         padding: 8px 12px;
-        font-size: 10px;
+        font-size: 12px;
     }
 
-    /* Trust badges */
+    /* Trust badges - stack on mobile */
     .trust-badges {
         flex-direction: row;
-        justify-content: flex-start;
-        padding: 0;
+        justify-content: center;
+        padding: 12px;
         gap: 8px;
     }
 
     .trust-badge {
         padding: 6px 12px;
-        font-size: 9px;
+        font-size: 10px;
     }
 
     /* Footer bottom */
@@ -619,7 +626,7 @@
     .footer-bottom {
         flex-direction: column;
         gap: 12px;
-        padding: 20px 0 0;
+        padding: 16px;
         text-align: center;
     }
 
@@ -627,17 +634,17 @@
     .minimalist-footer-credits,
     .footer-copyright,
     .footer-credits {
-        font-size: 11px;
-        margin-bottom: 4px;
+        font-size: 12px;
+        margin-bottom: 8px;
     }
 
     /* Policy modals */
     .policy-modal__content {
-        padding: 24px;
+        padding: 22px;
     }
 
     .policy-modal__header h3 {
-        font-size: 20px;
+        font-size: 19px;
     }
 
     .policy-modal__body {
@@ -652,12 +659,18 @@
 @media (max-width: 480px) {
     .minimalist-footer-grid,
     .footer-grid {
-        gap: 28px;
+        gap: 24px;
     }
 
     .minimalist-footer-column,
     .footer-column {
-        padding: 0 16px;
+        padding: 16px;
+    }
+
+    .minimalist-footer-column h4,
+    .footer-column h4 {
+        font-size: 14px;
+        margin-bottom: 10px;
     }
 
     .minimalist-social-links {
@@ -665,36 +678,39 @@
     }
 
     .minimalist-social-icon {
-        width: 38px;
-        height: 38px;
+        width: 40px;
+        height: 40px;
         font-size: 14px;
     }
 
     .minimalist-contact-info i {
-        width: 18px;
-        height: 18px;
-        font-size: 12px;
+        width: 20px;
+        height: 20px;
+        font-size: 13px;
     }
 
     .trust-badges {
         flex-wrap: wrap;
+        justify-content: center;
         gap: 6px;
+        padding: 12px;
     }
 
     .trust-badge {
-        padding: 5px 10px;
-        font-size: 9px;
+        padding: 6px 10px;
+        font-size: 10px;
     }
 
     .minimalist-share-buttons {
         flex-direction: row;
-        gap: 6px;
+        gap: 8px;
+        padding: 12px;
         flex-wrap: wrap;
     }
 
     .minimalist-share-btn {
         padding: 6px 10px;
-        font-size: 10px;
+        font-size: 11px;
     }
 
     .minimalist-share-btn span {
@@ -703,7 +719,7 @@
 
     .minimalist-footer-bottom,
     .footer-bottom {
-        padding: 16px 0 0;
+        padding: 12px;
     }
 }
 
@@ -734,6 +750,14 @@
         transition: none !important;
         animation: none !important;
     }
+
+    .minimalist-footer-links a:hover,
+    .minimalist-contact-info li:hover,
+    .minimalist-social-icon:hover,
+    .minimalist-share-btn:hover,
+    .trust-badge:hover {
+        transform: none !important;
+    }
 }
 
 /* ============================================
@@ -744,7 +768,7 @@
 .minimalist-contact-info li a:focus-visible,
 .minimalist-social-icon:focus-visible,
 .minimalist-share-btn:focus-visible {
-    outline: 1px solid var(--gold, #8B7355);
+    outline: 2px solid var(--gold);
     outline-offset: 2px;
 }
 

@@ -520,7 +520,7 @@ try {
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -530,10 +530,10 @@ try {
         .reports-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         
         .reports-header {
-            background: linear-gradient(135deg, #0A1929 0%, #1a3a5c 100%);
+            background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%);
             color: white; padding: 30px; border-radius: 10px; margin-bottom: 24px;
         }
-        .reports-header h1 { color: #D4AF37; margin-bottom: 8px; font-size: 24px; }
+        .reports-header h1 { color: #8B7355; margin-bottom: 8px; font-size: 24px; }
         .reports-header p { color: #ccc; margin: 0; }
 
         .report-tabs {
@@ -546,8 +546,8 @@ try {
             font-size: 14px; border-bottom: 3px solid transparent; transition: all 0.2s;
             display: flex; align-items: center; gap: 8px; white-space: nowrap;
         }
-        .report-tab:hover { background: #f8f9fa; color: #0A1929; }
-        .report-tab.active { color: #0A1929; border-bottom-color: #D4AF37; background: #fdf9ef; }
+        .report-tab:hover { background: #f8f9fa; color: #1A1A1A; }
+        .report-tab.active { color: #1A1A1A; border-bottom-color: #8B7355; background: #fdf9ef; }
         .report-tab i { font-size: 16px; }
 
         .date-filter {
@@ -567,7 +567,7 @@ try {
             padding: 8px 18px; border: none; border-radius: 6px; cursor: pointer;
             font-weight: 600; font-size: 14px; transition: all 0.2s;
         }
-        .btn-filter-primary { background: #D4AF37; color: #0A1929; }
+        .btn-filter-primary { background: #8B7355; color: #1A1A1A; }
         .btn-filter-primary:hover { background: #c49f2f; }
         .btn-filter-secondary { background: #6c757d; color: white; }
         .btn-filter-secondary:hover { background: #5a6268; }
@@ -575,7 +575,7 @@ try {
             background: transparent; color: #555; border: 1px solid #ddd;
             padding: 6px 12px; font-size: 12px;
         }
-        .btn-filter-outline:hover { background: #f8f9fa; border-color: #D4AF37; color: #0A1929; }
+        .btn-filter-outline:hover { background: #f8f9fa; border-color: #8B7355; color: #1A1A1A; }
 
         .summary-cards {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -583,10 +583,10 @@ try {
         }
         .summary-card {
             background: white; padding: 20px; border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08); border-left: 4px solid #D4AF37;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08); border-left: 4px solid #8B7355;
         }
         .summary-card h3 { color: #888; font-size: 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .summary-card .value { font-size: 24px; font-weight: 700; color: #0A1929; }
+        .summary-card .value { font-size: 24px; font-weight: 700; color: #1A1A1A; }
         .summary-card .subtitle { font-size: 12px; color: #999; margin-top: 4px; }
         .summary-card.green { border-left-color: #28a745; }
         .summary-card.red { border-left-color: #dc3545; }
@@ -600,16 +600,16 @@ try {
             margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
         .report-section h2 {
-            color: #0A1929; border-bottom: 2px solid #D4AF37;
+            color: #1A1A1A; border-bottom: 2px solid #8B7355;
             padding-bottom: 10px; margin-bottom: 20px; font-size: 18px;
         }
-        .report-section h2 i { margin-right: 8px; color: #D4AF37; }
+        .report-section h2 i { margin-right: 8px; color: #8B7355; }
 
         .report-table { width: 100%; border-collapse: collapse; }
         .report-table th, .report-table td {
             padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px;
         }
-        .report-table th { background: #f8f9fa; font-weight: 600; color: #0A1929; font-size: 13px; }
+        .report-table th { background: #f8f9fa; font-weight: 600; color: #1A1A1A; font-size: 13px; }
         .report-table tr:hover { background: #fafbfc; }
         .report-table tfoot td { font-weight: 700; background: #f8f9fa; }
 
@@ -660,20 +660,20 @@ try {
         .metric-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
         .metric-row:last-child { border-bottom: none; }
         .metric-label { color: #666; font-size: 14px; }
-        .metric-value { font-weight: 600; color: #0A1929; }
+        .metric-value { font-weight: 600; color: #1A1A1A; }
 
         .occupancy-bar { width: 100%; height: 20px; background: #e9ecef; border-radius: 10px; overflow: hidden; }
         .occupancy-fill { height: 100%; background: linear-gradient(90deg, #28a745, #20c997); border-radius: 10px;
             display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 600; }
 
-        .star-rating { color: #D4AF37; }
+        .star-rating { color: #8B7355; }
 
         @media (max-width: 768px) {
             .summary-cards { grid-template-columns: 1fr; }
             .two-col { grid-template-columns: 1fr; }
             .report-tabs { flex-direction: column; }
             .report-tab { border-bottom: none; border-left: 3px solid transparent; }
-            .report-tab.active { border-left-color: #D4AF37; border-bottom: none; }
+            .report-tab.active { border-left-color: #8B7355; border-bottom: none; }
             .report-table { font-size: 12px; }
             .date-filter form { flex-direction: column; }
             .quick-filters { flex-direction: column; align-items: flex-start; }
@@ -1344,9 +1344,9 @@ try {
                                 <span class="star-rating">
                                     <?php for ($s = 1; $s <= 5; $s++): ?>
                                         <?php if ($s <= floor($reviewStats['avg_rating'])): ?>
-                                            <i class="fas fa-star" style="color: #D4AF37;"></i>
+                                            <i class="fas fa-star" style="color: #8B7355;"></i>
                                         <?php elseif ($s == ceil($reviewStats['avg_rating']) && $reviewStats['avg_rating'] != floor($reviewStats['avg_rating'])): ?>
-                                            <i class="fas fa-star-half-alt" style="color: #D4AF37;"></i>
+                                            <i class="fas fa-star-half-alt" style="color: #8B7355;"></i>
                                         <?php else: ?>
                                             <i class="far fa-star" style="color: #ddd;"></i>
                                         <?php endif; ?>

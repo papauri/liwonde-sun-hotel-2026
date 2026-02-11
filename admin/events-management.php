@@ -306,7 +306,7 @@ try {
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -344,11 +344,11 @@ try {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 2px 8px rgba(139, 115, 85, 0.3);
         }
         .btn-add:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 4px 12px rgba(139, 115, 85, 0.4);
         }
         
         /* Events Grid Layout (matching gallery) */
@@ -382,7 +382,7 @@ try {
             width: 100%;
             aspect-ratio: 16 / 10;
             object-fit: cover;
-            background: linear-gradient(135deg, var(--gold) 0%, #c19b2e 100%);
+            background: linear-gradient(135deg, var(--gold) 0%, #6B5740 100%);
         }
         
         .no-image-placeholder {
@@ -569,7 +569,7 @@ try {
             color: var(--deep-navy);
         }
         .btn-featured:hover {
-            background: #c19b2e;
+            background: #6B5740;
         }
         
         .btn-upcoming {

@@ -215,15 +215,15 @@ try {
                     <meta charset='UTF-8'>
                     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
                     <style>
-                        body { font-family: 'Poppins', Arial, sans-serif; line-height: 1.6; color: #333; }
+                        body { font-family: 'Jost', Arial, sans-serif; line-height: 1.6; color: #333; }
                         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                        .header { background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .header { background: linear-gradient(135deg, #8B7355 0%, #A08B6D 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
                         .header h1 { color: #fff; margin: 0; font-size: 24px; }
                         .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-                        .review-box { background: #fff; padding: 20px; border-left: 4px solid #d4af37; margin: 20px 0; }
-                        .response-box { background: #fff8e1; padding: 20px; border-left: 4px solid #f4d03f; margin: 20px 0; }
+                        .review-box { background: #fff; padding: 20px; border-left: 4px solid #8B7355; margin: 20px 0; }
+                        .response-box { background: #fff8e1; padding: 20px; border-left: 4px solid #A08B6D; margin: 20px 0; }
                         .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
-                        .btn { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%); color: #fff; text-decoration: none; border-radius: 50px; margin-top: 20px; }
+                        .btn { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #8B7355 0%, #A08B6D 100%); color: #fff; text-decoration: none; border-radius: 50px; margin-top: 20px; }
                     </style>
                 </head>
                 <body>
@@ -328,15 +328,15 @@ try {
                     <meta charset='UTF-8'>
                     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
                     <style>
-                        body { font-family: 'Poppins', Arial, sans-serif; line-height: 1.6; color: #333; }
+                        body { font-family: 'Jost', Arial, sans-serif; line-height: 1.6; color: #333; }
                         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                        .header { background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .header { background: linear-gradient(135deg, #8B7355 0%, #A08B6D 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
                         .header h1 { color: #fff; margin: 0; font-size: 24px; }
                         .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-                        .review-box { background: #fff; padding: 20px; border-left: 4px solid #d4af37; margin: 20px 0; }
-                        .response-box { background: #fff8e1; padding: 20px; border-left: 4px solid #f4d03f; margin: 20px 0; }
+                        .review-box { background: #fff; padding: 20px; border-left: 4px solid #8B7355; margin: 20px 0; }
+                        .response-box { background: #fff8e1; padding: 20px; border-left: 4px solid #A08B6D; margin: 20px 0; }
                         .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
-                        .btn { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%); color: #fff; text-decoration: none; border-radius: 50px; margin-top: 20px; }
+                        .btn { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #8B7355 0%, #A08B6D 100%); color: #fff; text-decoration: none; border-radius: 50px; margin-top: 20px; }
                     </style>
                 </head>
                 <body>

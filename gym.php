@@ -242,7 +242,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#0A1929">
+    <meta name="theme-color" content="#1A1A1A">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=yes">
@@ -268,13 +268,13 @@ try {
     
     <!-- Preload Critical Resources -->
     <link rel="preload" href="css/style.css" as="style">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" as="style">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" as="style">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet"></noscript>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
@@ -361,125 +361,131 @@ try {
     <!-- Hero Section -->
     <?php include 'includes/hero.php'; ?>
 
-    <!-- Wellness Overview -->
-    <section class="wellness-intro section-padding">
-        <div class="container">
-            <?php renderSectionHeader('gym_wellness', 'gym', [
-                'label' => 'Your Wellness Journey',
-                'title' => $gymContent['wellness_title'] ?? 'Wellness & Fitness',
-                'description' => $gymContent['wellness_description'] ?? 'Experience comprehensive wellness facilities'
-            ]); ?>
-            <div class="wellness-content-grid">
-                <div class="wellness-text" data-aos="fade-right">
-                    
-                    <div class="wellness-features">
-                        <?php if (!empty($gymFeatures)): ?>
-                            <?php foreach ($gymFeatures as $feature): ?>
-                                <div class="feature-item">
-                                    <i class="<?php echo htmlspecialchars($feature['icon_class']); ?>"></i>
+
+        <!-- Passalacqua-Inspired Editorial Wellness Overview -->
+        <section class="editorial-wellness-intro section-padding">
+            <div class="container">
+                <?php renderSectionHeader('gym_wellness', 'gym', [
+                    'label' => 'Your Wellness Journey',
+                    'title' => $gymContent['wellness_title'] ?? 'Wellness & Fitness',
+                    'description' => $gymContent['wellness_description'] ?? 'Experience comprehensive wellness facilities'
+                ]); ?>
+                <div class="editorial-wellness-content-grid">
+                    <div class="editorial-wellness-text">
+                        <div class="editorial-wellness-features">
+                            <?php if (!empty($gymFeatures)): ?>
+                                <?php foreach ($gymFeatures as $feature): ?>
+                                    <div class="editorial-feature-item">
+                                        <i class="<?php echo htmlspecialchars($feature['icon_class']); ?>"></i>
+                                        <div>
+                                            <h4><?php echo htmlspecialchars($feature['title']); ?></h4>
+                                            <p><?php echo htmlspecialchars($feature['description']); ?></p>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="editorial-feature-item">
+                                    <i class="fas fa-dumbbell"></i>
                                     <div>
-                                        <h4><?php echo htmlspecialchars($feature['title']); ?></h4>
-                                        <p><?php echo htmlspecialchars($feature['description']); ?></p>
+                                        <h4>Modern Equipment</h4>
+                                        <p>Latest cardio machines, free weights, and resistance training equipment</p>
                                     </div>
                                 </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="feature-item">
-                                <i class="fas fa-dumbbell"></i>
-                                <div>
-                                    <h4>Modern Equipment</h4>
-                                    <p>Latest cardio machines, free weights, and resistance training equipment</p>
+                                <div class="editorial-feature-item">
+                                    <i class="fas fa-user-md"></i>
+                                    <div>
+                                        <h4>Personal Training</h4>
+                                        <p>Certified trainers available for one-on-one sessions and customized programs</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-user-md"></i>
-                                <div>
-                                    <h4>Personal Training</h4>
-                                    <p>Certified trainers available for one-on-one sessions and customized programs</p>
+                                <div class="editorial-feature-item">
+                                    <i class="fas fa-spa"></i>
+                                    <div>
+                                        <h4>Spa & Recovery</h4>
+                                        <p>Massage therapy, sauna, and steam rooms for post-workout relaxation</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-spa"></i>
-                                <div>
-                                    <h4>Spa & Recovery</h4>
-                                    <p>Massage therapy, sauna, and steam rooms for post-workout relaxation</p>
+                                <div class="editorial-feature-item">
+                                    <i class="fas fa-clock"></i>
+                                    <div>
+                                        <h4>Flexible Hours</h4>
+                                        <p>Open daily from 5:30 AM to 10:00 PM for your convenience</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-clock"></i>
-                                <div>
-                                    <h4>Flexible Hours</h4>
-                                    <p>Open daily from 5:30 AM to 10:00 PM for your convenience</p>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                
-                <div class="wellness-image" data-aos="fade-left">
-                    <img src="<?php echo htmlspecialchars(proxyImageUrl($gymContent['wellness_image_path'])); ?>" alt="Modern Fitness Center" loading="lazy">
-                    <div class="image-badge">
-                        <i class="fas fa-trophy"></i>
-                        <span><?php echo htmlspecialchars($gymContent['badge_text']); ?></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Gym Facilities -->
-    <section class="gym-facilities section-padding bg-dark">
-        <div class="container">
-            <?php renderSectionHeader('gym_facilities', 'gym', [
-                'label' => 'What We Offer',
-                'title' => 'Comprehensive Fitness Facilities',
-                'description' => 'Everything you need for a complete wellness experience'
-            ], 'text-center'); ?>
-
-            <div class="facilities-grid">
-                <?php if (!empty($gymFacilities)): ?>
-                    <?php foreach ($gymFacilities as $index => $facility): ?>
-                        <div class="facility-card" data-aos="fade-up" data-aos-delay="<?php echo $index * 100; ?>">
-                            <div class="facility-icon"><i class="<?php echo htmlspecialchars($facility['icon_class']); ?>"></i></div>
-                            <h3><?php echo htmlspecialchars($facility['title']); ?></h3>
-                            <p><?php echo htmlspecialchars($facility['description']); ?></p>
+                            <?php endif; ?>
                         </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="facility-card" data-aos="fade-up">
-                        <div class="facility-icon"><i class="fas fa-running"></i></div>
-                        <h3>Cardio Zone</h3>
-                        <p>Treadmills, ellipticals, stationary bikes, and rowing machines with entertainment screens and heart rate monitoring</p>
                     </div>
-                    <div class="facility-card" data-aos="fade-up" data-aos-delay="100">
-                        <div class="facility-icon"><i class="fas fa-dumbbell"></i></div>
-                        <h3>Strength Training</h3>
-                        <p>Complete range of free weights, barbells, resistance machines, and functional training equipment</p>
+                    <div class="editorial-wellness-image">
+                        <img src="<?php echo htmlspecialchars(proxyImageUrl($gymContent['wellness_image_path'])); ?>" alt="Modern Fitness Center" loading="lazy">
+                        <div class="editorial-image-badge">
+                            <i class="fas fa-trophy"></i>
+                            <span><?php echo htmlspecialchars($gymContent['badge_text']); ?></span>
+                        </div>
                     </div>
-                    <div class="facility-card" data-aos="fade-up" data-aos-delay="200">
-                        <div class="facility-icon"><i class="fas fa-child"></i></div>
-                        <h3>Yoga & Pilates Studio</h3>
-                        <p>Dedicated studio space for yoga, pilates, and meditation with daily group classes</p>
-                    </div>
-                    <div class="facility-card" data-aos="fade-up" data-aos-delay="300">
-                        <div class="facility-icon"><i class="fas fa-swimming-pool"></i></div>
-                        <h3>Lap Pool</h3>
-                        <p>25-meter heated pool perfect for swimming workouts and aqua aerobics sessions</p>
-                    </div>
-                    <div class="facility-card" data-aos="fade-up" data-aos-delay="400">
-                        <div class="facility-icon"><i class="fas fa-hot-tub"></i></div>
-                        <h3>Spa & Sauna</h3>
-                        <p>Traditional sauna, steam room, and jacuzzi for relaxation and muscle recovery</p>
-                    </div>
-                    <div class="facility-card" data-aos="fade-up" data-aos-delay="500">
-                        <div class="facility-icon"><i class="fas fa-apple-alt"></i></div>
-                        <h3>Nutrition Bar</h3>
-                        <p>Fresh smoothies, protein shakes, and healthy snacks to fuel your workout</p>
-                    </div>
-                <?php endif; ?>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+
+
+        <!-- Passalacqua-Inspired Editorial Gym Facilities -->
+        <section class="editorial-gym-facilities section-padding">
+            <div class="container">
+                <?php renderSectionHeader('gym_facilities', 'gym', [
+                    'label' => 'What We Offer',
+                    'title' => 'Comprehensive Fitness Facilities',
+                    'description' => 'Everything you need for a complete wellness experience'
+                ], 'text-center'); ?>
+                <div class="editorial-facilities-grid">
+                    <?php if (!empty($gymFacilities)): ?>
+                        <?php foreach ($gymFacilities as $index => $facility): ?>
+                            <div class="editorial-facility-card">
+                                <div class="editorial-facility-icon"><i class="<?php echo htmlspecialchars($facility['icon_class']); ?>"></i></div>
+                                <h3><?php echo htmlspecialchars($facility['title']); ?></h3>
+                                <div class="editorial-facility-divider"></div>
+                                <p><?php echo htmlspecialchars($facility['description']); ?></p>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="editorial-facility-card">
+                            <div class="editorial-facility-icon"><i class="fas fa-running"></i></div>
+                            <h3>Cardio Zone</h3>
+                            <div class="editorial-facility-divider"></div>
+                            <p>Treadmills, ellipticals, stationary bikes, and rowing machines with entertainment screens and heart rate monitoring</p>
+                        </div>
+                        <div class="editorial-facility-card">
+                            <div class="editorial-facility-icon"><i class="fas fa-dumbbell"></i></div>
+                            <h3>Strength Training</h3>
+                            <div class="editorial-facility-divider"></div>
+                            <p>Complete range of free weights, barbells, resistance machines, and functional training equipment</p>
+                        </div>
+                        <div class="editorial-facility-card">
+                            <div class="editorial-facility-icon"><i class="fas fa-child"></i></div>
+                            <h3>Yoga & Pilates Studio</h3>
+                            <div class="editorial-facility-divider"></div>
+                            <p>Dedicated studio space for yoga, pilates, and meditation with daily group classes</p>
+                        </div>
+                        <div class="editorial-facility-card">
+                            <div class="editorial-facility-icon"><i class="fas fa-swimming-pool"></i></div>
+                            <h3>Lap Pool</h3>
+                            <div class="editorial-facility-divider"></div>
+                            <p>25-meter heated pool perfect for swimming workouts and aqua aerobics sessions</p>
+                        </div>
+                        <div class="editorial-facility-card">
+                            <div class="editorial-facility-icon"><i class="fas fa-hot-tub"></i></div>
+                            <h3>Spa & Sauna</h3>
+                            <div class="editorial-facility-divider"></div>
+                            <p>Traditional sauna, steam room, and jacuzzi for relaxation and muscle recovery</p>
+                        </div>
+                        <div class="editorial-facility-card">
+                            <div class="editorial-facility-icon"><i class="fas fa-apple-alt"></i></div>
+                            <h3>Nutrition Bar</h3>
+                            <div class="editorial-facility-divider"></div>
+                            <p>Fresh smoothies, protein shakes, and healthy snacks to fuel your workout</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </section>
 
     <!-- Class Schedule -->
     <section class="class-schedule section-padding">

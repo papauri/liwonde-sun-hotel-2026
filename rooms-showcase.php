@@ -4,80 +4,53 @@ require_once 'includes/page-guard.php';
 require_once 'includes/reviews-display.php';
 require_once 'includes/section-headers.php';
 
-// Core settings
-$site_name = getSetting('site_name');
-$site_logo = getSetting('site_logo');
-$site_tagline = getSetting('site_tagline');
-$currency_symbol = getSetting('currency_symbol');
-$email_reservations = getSetting('email_reservations');
-$phone_main = getSetting('phone_main');
-
-
-// Policies for modals
-$policies = [];
-try {
-    $policyStmt = $pdo->query("SELECT slug, title, summary, content FROM policies WHERE is_active = 1 ORDER BY display_order ASC, id ASC");
-    $policies = $policyStmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $policies = [];
-}
-
-// Rooms collection
-$rooms = [];
-try {
-    $roomStmt = $pdo->query("SELECT * FROM rooms WHERE is_active = 1 ORDER BY is_featured DESC, display_order ASC, id ASC");
-    $rooms = $roomStmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $rooms = [];
-}
-
-$hero_room = $rooms[0] ?? [
-    'name' => 'Signature Suites',
-    'short_description' => 'Elevated riverfront stays crafted for discerning guests',
-    'description' => 'Discover contemporary suites with panoramic views, elevated amenities, and seamless technology for effortless stays.',
-    'price_per_night' => 320,
-    'image_url' => 'images/hero/slide1.jpg',
-    'badge' => 'Featured',
-    'size_sqm' => 60,
-    'max_guests' => 3,
-    'bed_type' => 'King Bed',
-];
-
-$active_slug = isset($_GET['room']) ? $_GET['room'] : ($rooms[0]['slug'] ?? null);
-if ($active_slug) {
-    foreach ($rooms as $room) {
-        if ($room['slug'] === $active_slug) {
-            $hero_room = $room;
-            break;
-        }
-    }
-}
-
-// Contact settings
-$contact_settings = getSettingsByGroup('contact');
-$contact = [];
-foreach ($contact_settings as $setting) {
-    $contact[$setting['setting_key']] = $setting['setting_value'];
-}
-
-// Social settings
-$social_settings = getSettingsByGroup('social');
-$social = [];
-foreach ($social_settings as $setting) {
-    $social[$setting['setting_key']] = $setting['setting_value'];
-}
-
-// Footer links
-$footer_links_raw = [];
-try {
-    $footerStmt = $pdo->query("SELECT column_name, link_text, link_url FROM footer_links WHERE is_active = 1 ORDER BY column_name, display_order");
-    $footer_links_raw = $footerStmt->fetchAll();
-} catch (PDOException $e) {
-    $footer_links_raw = [];
-}
-
-$footer_links = [];
-foreach ($footer_links_raw as $link) {
+    <!-- Passalacqua-Inspired Editorial Room Hero Section -->
+    <section class="editorial-events-section editorial-room-hero-section">
+        <div class="container">
+            <?php
+            // Fetch gallery images for hero room
+            $hero_gallery = [];
+            try {
+                $stmt = $pdo->prepare("SELECT title, image_url FROM gallery WHERE room_id = ? AND is_active = 1 AND image_url IS NOT NULL AND image_url != '' ORDER BY display_order ASC, id ASC LIMIT 4");
+                $stmt->execute([$hero_room['id']]);
+                $hero_gallery = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if (empty($hero_gallery) && !empty($hero_room['image_url'])) {
+                    $hero_gallery = [['image_url' => $hero_room['image_url'], 'title' => $hero_room['name']]];
+                }
+            } catch (PDOException $e) {
+                $hero_gallery = [['image_url' => $hero_room['image_url'], 'title' => $hero_room['name']]];
+            }
+            ?>
+            <?php if (!empty($hero_gallery)): ?>
+            <div class="editorial-rooms-gallery-grid" style="margin-bottom: 40px;">
+                <?php foreach ($hero_gallery as $img): ?>
+                <div class="editorial-room-image-container">
+                    <img src="<?php echo htmlspecialchars($img['image_url']); ?>" alt="<?php echo htmlspecialchars($img['title'] ?? $hero_room['name']); ?>" class="editorial-room-image">
+                    <div class="gallery-item-label"><?php echo htmlspecialchars($img['title'] ?? $hero_room['name']); ?></div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+            <div class="editorial-room-content">
+                <h2 class="editorial-room-title"><?php echo htmlspecialchars($hero_room['name']); ?></h2>
+                <p class="editorial-room-description"><?php echo htmlspecialchars($hero_room['description'] ?? $hero_room['short_description']); ?></p>
+                <div class="editorial-room-meta">
+                    <span><i class="fas fa-users"></i> Up to <?php echo htmlspecialchars($hero_room['max_guests'] ?? 2); ?> guests</span>
+                    <span><i class="fas fa-ruler-combined"></i> <?php echo htmlspecialchars($hero_room['size_sqm'] ?? 40); ?> sqm</span>
+                    <span><i class="fas fa-bed"></i> <?php echo htmlspecialchars($hero_room['bed_type']); ?></span>
+                    <span><i class="fas fa-tag"></i> <?php echo htmlspecialchars($currency_symbol); ?><?php echo number_format($hero_room['price_per_night'], 0); ?> per night</span>
+                </div>
+                <div class="editorial-room-amenities">
+                    <?php 
+                    $amenities = explode(',', $hero_room['amenities'] ?? '');
+                    foreach ($amenities as $amenity): 
+                    ?>
+                    <span class="editorial-room-amenity"><i class="fas fa-check"></i> <?php echo htmlspecialchars(trim($amenity)); ?></span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </section>
     $footer_links[$link['column_name']][] = $link;
 }
 
@@ -98,7 +71,7 @@ foreach ($rooms as $room) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#0A1929">
+    <meta name="theme-color" content="#1A1A1A">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=yes">
@@ -107,7 +80,7 @@ foreach ($rooms as $room) {
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/theme-dynamic.php">
     <link rel="stylesheet" href="css/header.css">
@@ -191,7 +164,7 @@ foreach ($rooms as $room) {
                         $amenities = explode(',', $hero_room['amenities'] ?? '');
                         foreach ($amenities as $amenity): 
                         ?>
-                        <span style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.08) 100%); color: var(--navy); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; border: 1px solid rgba(212, 175, 55, 0.25);">
+                        <span style="background: linear-gradient(135deg, rgba(139, 115, 85, 0.15) 0%, rgba(139, 115, 85, 0.08) 100%); color: var(--navy); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; border: 1px solid rgba(139, 115, 85, 0.25);">
                             <i class="fas fa-check" style="color: var(--gold); margin-right: 6px;"></i><?php echo htmlspecialchars(trim($amenity)); ?>
                         </span>
                         <?php endforeach; ?>

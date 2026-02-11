@@ -26,58 +26,75 @@ header('ETag: ' . $etag);
 header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
 
 // Get theme colors using cached getSetting function (much faster)
-$navy = getSetting('navy_color', '#0A1929');
-$deep_navy = getSetting('deep_navy_color', '#05090F');
-$gold = getSetting('gold_color', '#D4AF37');
-$dark_gold = getSetting('dark_gold_color', '#B8941F');
-$theme_color = getSetting('theme_color', '#0A1929');
-$accent_color = getSetting('accent_color', $gold);
+// Passalacqua-inspired warm cream & charcoal palette
+$navy = getSetting('navy_color', '#1A1A1A');
+$deep_navy = getSetting('deep_navy_color', '#111111');
+$gold = getSetting('gold_color', '#8B7355');
+$dark_gold = getSetting('dark_gold_color', '#6B5740');
+$theme_color = getSetting('theme_color', '#1A1A1A');
+$accent_color = getSetting('accent_color', '#8B7355');
 ?>
 
 :root {
-    /* Primary Colors */
+    /* ============================================
+       PASSALACQUA-INSPIRED — WARM LUXURY PALETTE
+       ============================================ */
+    
+    /* Primary — Deep Charcoal (near-black) */
     --navy: <?php echo $navy; ?>;
     --deep-navy: <?php echo $deep_navy; ?>;
     --theme-color: <?php echo $theme_color; ?>;
     
-    /* Accent Colors */
+    /* Accent — Warm Bronze / Olive */
     --gold: <?php echo $gold; ?>;
     --dark-gold: <?php echo $dark_gold; ?>;
     --accent-color: <?php echo $accent_color; ?>;
     
+    /* Warm Cream Backgrounds */
+    --cream: #F5F0EB;
+    --cream-light: #FAF8F5;
+    --cream-dark: #EDE7E0;
+    
     /* Neutral Colors */
     --white: #ffffff;
-    --cream: #FBF8F3;
-    --light-gray: #f8f9fa;
-    --medium-gray: #6c757d;
-    --dark-gray: #343a40;
+    --light-gray: #F0ECE6;
+    --medium-gray: #999999;
+    --dark-gray: #333333;
+    --charcoal: #1A1A1A;
+    --text-primary: #1A1A1A;
+    --text-secondary: #6B6B6B;
+    --text-muted: #999999;
     
     /* Status Colors */
-    --success: #28a745;
-    --danger: #dc3545;
-    --warning: #ffc107;
-    --info: #17a2b8;
+    --success: #4A7C59;
+    --danger: #C45B5B;
+    --warning: #C49B2E;
+    --info: #5B7FA5;
     
-    /* Typography */
-    --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-serif: 'Playfair Display', Georgia, serif;
+    /* Typography — Elegant Serif + Clean Geometric Sans */
+    --font-sans: 'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
     
-    /* Shadows */
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
-    --shadow-luxury: 0 8px 30px rgba(212, 175, 55, 0.15);
+    /* Shadows — Extremely Subtle */
+    --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.10);
+    --shadow-xl: 0 16px 50px rgba(0, 0, 0, 0.12);
+    --shadow-premium: 0 20px 60px rgba(0, 0, 0, 0.08);
+    --shadow-luxury: 0 8px 40px rgba(0, 0, 0, 0.06);
+    --shadow-glow: none;
     
-    /* Transitions */
-    --transition-fast: 0.15s ease;
-    --transition-base: 0.3s ease;
-    --transition-slow: 0.5s ease;
+    /* Transitions — Smooth & Understated */
+    --transition-fast: 0.2s ease;
+    --transition-base: 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+    --transition-slow: 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
+    --transition-spring: 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
     
-    /* Border Radius */
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 24px;
+    /* Border Radius — Minimal & Clean */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
     --radius-full: 9999px;
 }

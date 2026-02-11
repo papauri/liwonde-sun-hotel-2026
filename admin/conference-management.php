@@ -294,7 +294,7 @@ try {
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -449,7 +449,7 @@ try {
         .room-form-section textarea:focus {
             border-color: var(--gold);
             background: white;
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+            box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.1);
         }
         .room-form-section textarea {
             min-height: 80px;
@@ -471,7 +471,7 @@ try {
         }
         .room-actions .btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 4px 12px rgba(139, 115, 85, 0.3);
         }
         .room-actions .btn-secondary:hover {
             box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);

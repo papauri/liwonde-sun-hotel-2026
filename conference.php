@@ -459,12 +459,12 @@ function resolveConferenceImage(?string $imagePath): string
         }
 
         .pricing-section {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+            background: linear-gradient(135deg, rgba(139, 115, 85, 0.15), rgba(139, 115, 85, 0.05));
             color: var(--navy);
             padding: 16px;
             border-radius: 12px;
-            border: 1px solid rgba(212, 175, 55, 0.35);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.15);
+            border: 1px solid rgba(139, 115, 85, 0.35);
+            box-shadow: 0 6px 20px rgba(139, 115, 85, 0.15);
         }
 
         .pricing-row {
@@ -472,7 +472,7 @@ function resolveConferenceImage(?string $imagePath): string
             justify-content: space-between;
             align-items: center;
             padding: 8px 0;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+            border-bottom: 1px solid rgba(139, 115, 85, 0.15);
         }
 
         .pricing-row:last-child {
@@ -507,7 +507,7 @@ function resolveConferenceImage(?string $imagePath): string
 
         .btn-inquire:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 8px 24px rgba(139, 115, 85, 0.4);
         }
 
         .inquiry-modal {
@@ -753,8 +753,9 @@ function resolveConferenceImage(?string $imagePath): string
     <!-- Hero Section -->
     <?php include 'includes/hero.php'; ?>
 
-    <!-- Conference Rooms Section -->
-    <section class="conference-rooms-section">
+
+    <!-- Passalacqua-Inspired Editorial Conference Rooms Section -->
+    <section class="editorial-events-section editorial-conference-section">
         <div class="container">
             <?php renderSectionHeader('conference_overview', 'conference', [
                 'label' => 'Our Meeting Spaces',
@@ -762,73 +763,59 @@ function resolveConferenceImage(?string $imagePath): string
                 'description' => 'State-of-the-art venues for your business meetings and events'
             ], 'text-center'); ?>
             <?php if (empty($conference_rooms)): ?>
-                <div class="conference-empty">
-                    <h2>No conference rooms available</h2>
+                <div class="editorial-no-events">
+                    <i class="fas fa-calendar-times"></i>
+                    <h3>No Conference Rooms Available</h3>
                     <p>Our team is preparing the conference lineup. Please check back soon or contact us for tailored corporate options.</p>
                 </div>
             <?php else: ?>
-                <div class="conference-rooms-grid">
+                <div class="editorial-events-grid editorial-conference-grid">
                     <?php foreach ($conference_rooms as $room): ?>
                         <?php
                         $amenities = !empty($room['amenities']) ? explode(',', $room['amenities']) : [];
                         $image_path = resolveConferenceImage($room['image_path'] ?? '');
                         ?>
-                        <div class="conference-room-card">
-                            <?php if (!empty($image_path)): ?>
-                                <img src="<?php echo htmlspecialchars($image_path); ?>"
-                                     alt="<?php echo htmlspecialchars($room['name']); ?>"
-                                     class="conference-room-image">
-                            <?php else: ?>
-                                <div class="conference-room-image" style="background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%); display: flex; align-items: center; justify-content: center; color: #999;">
-                                    <i class="fas fa-image" style="font-size: 32px;"></i>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <div class="conference-room-content">
-                                <div class="conference-room-header">
-                                    <h2 class="conference-room-title"><?php echo htmlspecialchars($room['name']); ?></h2>
-                                    <span class="conference-room-capacity">
-                                        <i class="fas fa-users"></i> Up to <?php echo $room['capacity']; ?> People
-                                    </span>
-                                </div>
-
-                                <p class="conference-room-description"><?php echo htmlspecialchars($room['description']); ?></p>
-
-                                <div class="conference-room-details">
-                                    <div class="detail-item">
+                        <div class="editorial-event-card editorial-conference-card">
+                            <div class="editorial-event-image-container editorial-conference-image-container">
+                                <?php if (!empty($image_path)): ?>
+                                    <img src="<?php echo htmlspecialchars($image_path); ?>"
+                                         alt="<?php echo htmlspecialchars($room['name']); ?>"
+                                         class="editorial-event-image editorial-conference-image">
+                                <?php else: ?>
+                                    <div class="editorial-event-image editorial-conference-image" style="background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%); display: flex; align-items: center; justify-content: center; color: #999; min-height: 180px;">
+                                        <i class="fas fa-image" style="font-size: 32px;"></i>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="editorial-event-content editorial-conference-content">
+                                <div class="editorial-event-meta editorial-conference-meta">
+                                    <div class="editorial-event-meta-item">
+                                        <i class="fas fa-users"></i>
+                                        <span>Up to <?php echo $room['capacity']; ?> People</span>
+                                    </div>
+                                    <div class="editorial-event-meta-item">
                                         <i class="fas fa-expand-arrows-alt"></i>
                                         <span><?php echo number_format($room['size_sqm'], 0); ?> sqm</span>
                                     </div>
-                                    <div class="detail-item">
-                                        <i class="fas fa-users"></i>
-                                        <span>Capacity: <?php echo $room['capacity']; ?> people</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <i class="fas fa-briefcase"></i>
-                                        <span>Executive-ready service</span>
-                                    </div>
                                 </div>
-
+                                <h3 class="editorial-event-title editorial-conference-title"><?php echo htmlspecialchars($room['name']); ?></h3>
+                                <p class="editorial-event-description editorial-conference-description"><?php echo htmlspecialchars($room['description']); ?></p>
                                 <?php if (!empty($amenities)): ?>
-                                <div class="amenities-list">
+                                <div class="editorial-event-meta editorial-conference-amenities">
                                     <?php foreach ($amenities as $amenity): ?>
-                                        <span class="amenity-tag">
-                                            <i class="fas fa-check"></i> <?php echo trim(htmlspecialchars($amenity)); ?>
-                                        </span>
+                                        <span class="editorial-featured-badge editorial-conference-amenity"><i class="fas fa-check"></i> <?php echo trim(htmlspecialchars($amenity)); ?></span>
                                     <?php endforeach; ?>
                                 </div>
                                 <?php endif; ?>
-
-                                <div class="pricing-section">
-                                    <div class="pricing-row">
-                                        <span class="pricing-label">Full Day Rate</span>
-                                        <span class="pricing-value"><?php echo $currency_symbol . number_format($room['daily_rate'], 0); ?>/day</span>
+                                <div class="editorial-event-footer editorial-conference-footer">
+                                    <div class="editorial-event-price editorial-conference-price">
+                                        <span class="editorial-price-label">Full Day Rate</span>
+                                        <span class="editorial-price-value"><?php echo $currency_symbol . number_format($room['daily_rate'], 0); ?>/day</span>
                                     </div>
+                                    <button class="editorial-btn-primary editorial-conference-inquire" onclick="openInquiryModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name']); ?>')">
+                                        <i class="fas fa-envelope"></i> Send Inquiry
+                                    </button>
                                 </div>
-
-                                <button class="btn-inquire" onclick="openInquiryModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name']); ?>')">
-                                    <i class="fas fa-envelope"></i> Send Inquiry
-                                </button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -948,7 +935,7 @@ function resolveConferenceImage(?string $imagePath): string
             <i class="fas fa-check-circle" style="font-size: 64px; color: #28a745;"></i>
             <h2 style="color: var(--navy); margin: 20px 0 15px 0; font-size: 28px; font-weight: 700;">Conference Enquiry Submitted Successfully!</h2>
             <p style="color: #666; margin: 0 0 25px 0; font-size: 16px; line-height: 1.6;">Thank you for your conference enquiry. Our events team will review your request and contact you within 24 hours to confirm availability and finalize details.</p>
-            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05)); padding: 20px 30px; border-radius: 12px; margin: 25px 0; border: 2px solid rgba(212, 175, 55, 0.35);">
+            <div style="background: linear-gradient(135deg, rgba(139, 115, 85, 0.15), rgba(139, 115, 85, 0.05)); padding: 20px 30px; border-radius: 12px; margin: 25px 0; border: 2px solid rgba(139, 115, 85, 0.35);">
                 <p style="color: var(--navy); margin: 0; font-size: 14px; font-weight: 600;">Your Reference Number:</p>
                 <p style="color: var(--navy); margin: 8px 0 0 0; font-size: 24px; font-weight: 700; letter-spacing: 1px;">' . htmlspecialchars($success_reference) . '</p>
             </div>

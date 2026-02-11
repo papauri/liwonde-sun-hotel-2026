@@ -46,12 +46,12 @@ $payment_policy = getSetting('payment_policy');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#0A1929">
+    <meta name="theme-color" content="#1A1A1A">
     <title>Booking Confirmed | <?php echo htmlspecialchars($site_name); ?></title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/theme-dynamic.php">
     <link rel="stylesheet" href="css/header.css">
@@ -89,7 +89,7 @@ $payment_policy = getSetting('payment_policy');
         }
         .success-icon.tentative i {
             color: var(--gold);
-            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 10px 40px rgba(139, 115, 85, 0.3);
         }
         @keyframes scaleIn {
             from {
@@ -223,7 +223,7 @@ $payment_policy = getSetting('payment_policy');
         }
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 6px 20px rgba(139, 115, 85, 0.4);
         }
         .btn-secondary {
             background: white;
@@ -310,7 +310,7 @@ $payment_policy = getSetting('payment_policy');
         .tentative-info-box .expires-at {
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid rgba(212, 175, 55, 0.3);
+            border-top: 1px solid rgba(139, 115, 85, 0.3);
             font-weight: 600;
             color: var(--navy);
         }

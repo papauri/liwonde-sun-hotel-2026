@@ -146,15 +146,15 @@ function generateInvoicePDF($booking_id) {
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
         .invoice-container { max-width: 800px; margin: 0 auto; border: 1px solid #ddd; }
-        .invoice-header { background: linear-gradient(135deg, #0A1929 0%, #1a3a5c 100%); color: white; padding: 30px; }
-        .invoice-header h1 { margin: 0; color: #D4AF37; }
+        .invoice-header { background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%); color: white; padding: 30px; }
+        .invoice-header h1 { margin: 0; color: #8B7355; }
         .invoice-body { padding: 30px; }
         .invoice-details { margin-bottom: 30px; }
         .invoice-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
         .invoice-label { font-weight: bold; color: #333; }
         .invoice-value { color: #666; }
         .total-section { background: #f8f9fa; padding: 20px; border-radius: 5px; margin-top: 20px; }
-        .total-row { display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: #D4AF37; }
+        .total-row { display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: #8B7355; }
         .footer { text-align: center; padding: 20px; background: #f8f9fa; border-top: 1px solid #ddd; }
     </style>
 </head>
@@ -218,7 +218,7 @@ function buildInvoiceHTML($booking, $invoice_number, $site_name, $email_address,
     $paymentDetailsHTML = '';
     if (!empty($payments)) {
         $paymentDetailsHTML = '<div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
-                    <h4 style="color: #0A1929; margin-top: 0;">Payment History</h4>';
+                    <h4 style="color: #1A1A1A; margin-top: 0;">Payment History</h4>';
         
         foreach ($payments as $payment) {
             $paymentDetailsHTML .= '<div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
@@ -252,7 +252,7 @@ function buildInvoiceHTML($booking, $invoice_number, $site_name, $email_address,
     return '
     <div class="invoice-container">
         <div class="invoice-header">
-            <h1 style="color: #D4AF37; margin: 0 0 10px 0; font-size: 32px;">PAYMENT RECEIPT / INVOICE</h1>
+            <h1 style="color: #8B7355; margin: 0 0 10px 0; font-size: 32px;">PAYMENT RECEIPT / INVOICE</h1>
             <p style="margin: 5px 0; font-size: 18px;">' . htmlspecialchars($site_name) . '</p>
             <p style="margin: 5px 0;">Invoice Number: <strong>' . htmlspecialchars($invoice_number) . '</strong></p>
             <p style="margin: 5px 0;">Date: ' . date('F j, Y') . '</p>
@@ -260,7 +260,7 @@ function buildInvoiceHTML($booking, $invoice_number, $site_name, $email_address,
         
         <div class="invoice-body">
             <div class="invoice-details">
-                <h3 style="color: #0A1929; border-bottom: 2px solid #D4AF37; padding-bottom: 10px; margin-bottom: 20px;">Guest Information</h3>
+                <h3 style="color: #1A1A1A; border-bottom: 2px solid #8B7355; padding-bottom: 10px; margin-bottom: 20px;">Guest Information</h3>
                 
                 <div class="invoice-row">
                     <span class="invoice-label">Guest Name:</span>
@@ -277,11 +277,11 @@ function buildInvoiceHTML($booking, $invoice_number, $site_name, $email_address,
             </div>
             
             <div class="invoice-details">
-                <h3 style="color: #0A1929; border-bottom: 2px solid #D4AF37; padding-bottom: 10px; margin-bottom: 20px;">Booking Details</h3>
+                <h3 style="color: #1A1A1A; border-bottom: 2px solid #8B7355; padding-bottom: 10px; margin-bottom: 20px;">Booking Details</h3>
                 
                 <div class="invoice-row">
                     <span class="invoice-label">Booking Reference:</span>
-                    <span class="invoice-value" style="color: #D4AF37; font-weight: bold; font-size: 16px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
+                    <span class="invoice-value" style="color: #8B7355; font-weight: bold; font-size: 16px;">' . htmlspecialchars($booking['booking_reference']) . '</span>
                 </div>
                 <div class="invoice-row">
                     <span class="invoice-label">Room Type:</span>
@@ -496,8 +496,8 @@ function sendInvoiceEmailToGuestWithCC($booking, $invoice_file, $cc_recipients =
         // Prepare email content
         $htmlBody = '
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #0A1929 0%, #1a3a5c 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-                <h1 style="color: #D4AF37; margin: 0; font-size: 32px;">✓ PAYMENT CONFIRMED</h1>
+            <div style="background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="color: #8B7355; margin: 0; font-size: 32px;">✓ PAYMENT CONFIRMED</h1>
                 <p style="color: white; margin: 10px 0 0 0; font-size: 18px;">Thank you for your payment!</p>
             </div>
             
@@ -506,8 +506,8 @@ function sendInvoiceEmailToGuestWithCC($booking, $invoice_file, $cc_recipients =
                 
                 <p>We are pleased to confirm that your payment has been received. Please find attached your official invoice/receipt for booking <strong>' . htmlspecialchars($booking['booking_reference']) . '</strong>.</p>
                 
-                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #D4AF37;">
-                    <h3 style="color: #0A1929; margin-top: 0;">Booking Summary</h3>
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #8B7355;">
+                    <h3 style="color: #1A1A1A; margin-top: 0;">Booking Summary</h3>
                     
                     <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
                         <span style="font-weight: bold; color: #333;">Room:</span>
@@ -525,8 +525,8 @@ function sendInvoiceEmailToGuestWithCC($booking, $invoice_file, $cc_recipients =
                     </div>
                     
                     <div style="display: flex; justify-content: space-between; padding: 15px 0;">
-                        <span style="font-weight: bold; color: #D4AF37; font-size: 18px;">Total Paid:</span>
-                        <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . $currency_symbol . ' ' . number_format($booking['total_amount'], 0) . '</span>
+                        <span style="font-weight: bold; color: #8B7355; font-size: 18px;">Total Paid:</span>
+                        <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . $currency_symbol . ' ' . number_format($booking['total_amount'], 0) . '</span>
                     </div>
                 </div>
                 
@@ -549,7 +549,7 @@ function sendInvoiceEmailToGuestWithCC($booking, $invoice_file, $cc_recipients =
                 
                 <p style="margin-top: 20px;">We look forward to welcoming you to <strong>' . htmlspecialchars($email_site_name) . '</strong>!</p>
                 
-                <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #0A1929;">
+                <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
                     <p style="color: #666; font-size: 14px; margin: 5px 0;"><strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong></p>
                     <p style="color: #666; font-size: 14px; margin: 5px 0;"><a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a></p>
                 </div>
@@ -585,8 +585,8 @@ function sendInvoiceCopyEmails($booking, $invoice_file, $recipients) {
     
     $htmlBody = '
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #0A1929; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: #D4AF37; margin: 0; font-size: 24px;">INVOICE COPY</h1>
+        <div style="background: #1A1A1A; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: #8B7355; margin: 0; font-size: 24px;">INVOICE COPY</h1>
             <p style="color: white; margin: 10px 0 0 0;">Administrative Copy</p>
         </div>
         
@@ -594,10 +594,10 @@ function sendInvoiceCopyEmails($booking, $invoice_file, $recipients) {
             <p>A payment has been received for booking <strong>' . htmlspecialchars($booking['booking_reference']) . '</strong>.</p>
             
             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="color: #0A1929; margin-top: 0;">Payment Details</h3>
+                <h3 style="color: #1A1A1A; margin-top: 0;">Payment Details</h3>
                 <p><strong>Guest:</strong> ' . htmlspecialchars($booking['guest_name']) . '</p>
                 <p><strong>Email:</strong> ' . htmlspecialchars($booking['guest_email']) . '</p>
-                <p><strong>Amount Paid:</strong> <span style="color: #D4AF37; font-weight: bold;">' . $currency_symbol . ' ' . number_format($booking['total_amount'], 0) . '</span></p>
+                <p><strong>Amount Paid:</strong> <span style="color: #8B7355; font-weight: bold;">' . $currency_symbol . ' ' . number_format($booking['total_amount'], 0) . '</span></p>
                 <p><strong>Payment Date:</strong> ' . date('F j, Y g:i A') . '</p>
             </div>
             
@@ -840,15 +840,15 @@ function generateConferenceInvoicePDF($enquiry_id) {
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
         .invoice-container { max-width: 800px; margin: 0 auto; border:1px solid #ddd; }
-        .invoice-header { background: linear-gradient(135deg, #0A1929 0%, #1a3a5c 100%); color: white; padding: 30px; }
-        .invoice-header h1 { margin: 0; color: #D4AF37; }
+        .invoice-header { background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%); color: white; padding: 30px; }
+        .invoice-header h1 { margin: 0; color: #8B7355; }
         .invoice-body { padding: 30px; }
         .invoice-details { margin-bottom: 30px; }
         .invoice-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom:1px solid #eee; }
         .invoice-label { font-weight: bold; color: #333; }
         .invoice-value { color: #666; }
         .total-section { background: #f8f9fa; padding: 20px; border-radius:5px; margin-top: 20px; }
-        .total-row { display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: #D4AF37; }
+        .total-row { display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: #8B7355; }
         .footer { text-align: center; padding: 20px; background: #f8f9fa; border-top: 1px solid #ddd; }
     </style>
 </head>
@@ -911,7 +911,7 @@ function buildConferenceInvoiceHTML($enquiry, $invoice_number, $site_name, $emai
     $paymentDetailsHTML = '';
     if (!empty($payments)) {
         $paymentDetailsHTML = '<div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
-                    <h4 style="color: #0A1929; margin-top: 0;">Payment History</h4>';
+                    <h4 style="color: #1A1A1A; margin-top: 0;">Payment History</h4>';
         
         foreach ($payments as $payment) {
             $paymentDetailsHTML .= '<div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
@@ -958,7 +958,7 @@ function buildConferenceInvoiceHTML($enquiry, $invoice_number, $site_name, $emai
     return '
     <div class="invoice-container">
         <div class="invoice-header">
-            <h1 style="color: #D4AF37; margin: 0 0 10px 0; font-size: 32px;">CONFERENCE INVOICE</h1>
+            <h1 style="color: #8B7355; margin: 0 0 10px 0; font-size: 32px;">CONFERENCE INVOICE</h1>
             <p style="margin: 5px 0; font-size: 18px;">' . htmlspecialchars($site_name) . '</p>
             <p style="margin: 5px 0;">Invoice Number: <strong>' . htmlspecialchars($invoice_number) . '</strong></p>
             <p style="margin: 5px 0;">Date: ' . date('F j, Y') . '</p>
@@ -966,7 +966,7 @@ function buildConferenceInvoiceHTML($enquiry, $invoice_number, $site_name, $emai
         
         <div class="invoice-body">
             <div class="invoice-details">
-                <h3 style="color: #0A1929; border-bottom: 2px solid #D4AF37; padding-bottom: 10px; margin-bottom: 20px;">Client Information</h3>
+                <h3 style="color: #1A1A1A; border-bottom: 2px solid #8B7355; padding-bottom: 10px; margin-bottom: 20px;">Client Information</h3>
                 
                 <div class="invoice-row">
                     <span class="invoice-label">Company:</span>
@@ -987,11 +987,11 @@ function buildConferenceInvoiceHTML($enquiry, $invoice_number, $site_name, $emai
             </div>
             
             <div class="invoice-details">
-                <h3 style="color: #0A1929; border-bottom: 2px solid #D4AF37; padding-bottom: 10px; margin-bottom: 20px;">Event Details</h3>
+                <h3 style="color: #1A1A1A; border-bottom: 2px solid #8B7355; padding-bottom: 10px; margin-bottom: 20px;">Event Details</h3>
                 
                 <div class="invoice-row">
                     <span class="invoice-label">Reference:</span>
-                    <span class="invoice-value" style="color: #D4AF37; font-weight: bold; font-size: 16px;">' . htmlspecialchars($enquiry['inquiry_reference']) . '</span>
+                    <span class="invoice-value" style="color: #8B7355; font-weight: bold; font-size: 16px;">' . htmlspecialchars($enquiry['inquiry_reference']) . '</span>
                 </div>
                 <div class="invoice-row">
                     <span class="invoice-label">Conference Room:</span>
@@ -1016,7 +1016,7 @@ function buildConferenceInvoiceHTML($enquiry, $invoice_number, $site_name, $emai
             </div>
             
             <div class="invoice-details">
-                <h3 style="color: #0A1929; border-bottom: 2px solid #D4AF37; padding-bottom: 10px; margin-bottom: 20px;">Services</h3>
+                <h3 style="color: #1A1A1A; border-bottom: 2px solid #8B7355; padding-bottom: 10px; margin-bottom: 20px;">Services</h3>
                 
                 <div class="invoice-row">
                     <span class="invoice-label">Catering:</span>
@@ -1220,8 +1220,8 @@ function sendConferenceInvoiceEmailToClient($enquiry, $invoice_file, $cc_recipie
         // Prepare email content
         $htmlBody = '
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #0A1929 0%, #1a3a5c 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-                <h1 style="color: #D4AF37; margin: 0; font-size: 32px;">✓ PAYMENT CONFIRMED</h1>
+            <div style="background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="color: #8B7355; margin: 0; font-size: 32px;">✓ PAYMENT CONFIRMED</h1>
                 <p style="color: white; margin: 10px 0 0 0; font-size: 18px;">Thank you for your conference payment!</p>
             </div>
             
@@ -1230,8 +1230,8 @@ function sendConferenceInvoiceEmailToClient($enquiry, $invoice_file, $cc_recipie
                 
                 <p>We are pleased to confirm that your payment has been received. Please find attached your official invoice/receipt for conference booking <strong>' . htmlspecialchars($enquiry['inquiry_reference']) . '</strong>.</p>
                 
-                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #D4AF37;">
-                    <h3 style="color: #0A1929; margin-top: 0;">Conference Summary</h3>
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #8B7355;">
+                    <h3 style="color: #1A1A1A; margin-top: 0;">Conference Summary</h3>
                     
                     <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom:1px solid #eee;">
                         <span style="font-weight: bold; color: #333;">Conference Room:</span>
@@ -1249,8 +1249,8 @@ function sendConferenceInvoiceEmailToClient($enquiry, $invoice_file, $cc_recipie
                     </div>
                     
                     <div style="display: flex; justify-content: space-between; padding: 15px 0;">
-                        <span style="font-weight: bold; color: #D4AF37; font-size: 18px;">Total Paid:</span>
-                        <span style="color: #D4AF37; font-weight: bold; font-size: 18px;">' . $currency_symbol . ' ' . number_format($enquiry['total_amount'], 0) . '</span>
+                        <span style="font-weight: bold; color: #8B7355; font-size: 18px;">Total Paid:</span>
+                        <span style="color: #8B7355; font-weight: bold; font-size: 18px;">' . $currency_symbol . ' ' . number_format($enquiry['total_amount'], 0) . '</span>
                     </div>
                 </div>
                 
@@ -1272,7 +1272,7 @@ function sendConferenceInvoiceEmailToClient($enquiry, $invoice_file, $cc_recipie
                 
                 <p style="margin-top: 20px;">We look forward to hosting your event at <strong>' . htmlspecialchars($email_site_name) . '</strong>!</p>
                 
-                <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #0A1929;">
+                <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #1A1A1A;">
                     <p style="color: #666; font-size: 14px; margin: 5px 0;"><strong>The ' . htmlspecialchars($email_site_name) . ' Team</strong></p>
                     <p style="color: #666; font-size: 14px; margin: 5px 0;"><a href="' . htmlspecialchars($email_site_url) . '">' . htmlspecialchars($email_site_url) . '</a></p>
                 </div>

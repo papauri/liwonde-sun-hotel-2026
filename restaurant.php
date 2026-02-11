@@ -147,7 +147,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#0A1929">
+    <meta name="theme-color" content="#1A1A1A">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=yes">
@@ -173,13 +173,13 @@ try {
     
     <!-- Preload Critical Resources -->
     <link rel="preload" href="css/style.css" as="style">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" as="style">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" as="style">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet"></noscript>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
@@ -289,7 +289,7 @@ try {
             padding: 13px 30px;
             border-radius: 50px;
             cursor: pointer;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Jost', sans-serif;
             font-size: 0.88rem;
             font-weight: 500;
             letter-spacing: 0.3px;
@@ -305,7 +305,7 @@ try {
             font-size: 0.92rem;
             transition: transform 0.3s ease;
         }
-        .menu-type-tab:hover {
+                font-family: 'Jost', sans-serif;
             color: var(--japandi-text-primary);
         }
         .menu-type-tab:hover i {
@@ -349,7 +349,7 @@ try {
             color: var(--japandi-text-secondary);
             padding: 12px 24px;
             cursor: pointer;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Jost', sans-serif;
             font-size: 0.85rem;
             font-weight: 400;
             letter-spacing: 1px;
@@ -459,7 +459,7 @@ try {
             border-bottom: 1px solid var(--japandi-border);
         }
         .menu-item-name {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Cormorant Garamond', Georgia, serif;
             font-size: 1.35rem;
             font-weight: 500;
             color: var(--japandi-text-primary);
@@ -467,7 +467,7 @@ try {
             line-height: 1.3;
         }
         .menu-item-price {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Jost', sans-serif;
             font-size: 1.15rem;
             font-weight: 600;
             color: var(--japandi-accent);
@@ -543,7 +543,7 @@ try {
             margin-bottom: 24px;
         }
         .menu-empty-state h3 {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Cormorant Garamond', Georgia, serif;
             font-size: 1.5rem;
             color: var(--japandi-text-primary);
             margin-bottom: 12px;
@@ -584,7 +584,7 @@ try {
             border: 1px solid rgba(255, 255, 255, 0.12);
         }
         .qr-menu-title {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Cormorant Garamond', Georgia, serif;
             font-size: 1.85rem;
             margin: 0;
             color: #ffffff;
@@ -688,37 +688,35 @@ try {
     <!-- Hero Section -->
     <?php include 'includes/hero.php'; ?>
 
-    <!-- Restaurant Gallery Grid -->
-    <section class="restaurant-gallery section-padding">
-        <div class="container">
-            <?php renderSectionHeader('restaurant_gallery', 'restaurant', [
-                'label' => 'Visual Journey',
-                'title' => 'Our Dining Spaces',
-                'description' => 'From elegant interiors to breathtaking views, every detail creates the perfect ambiance'
-            ], 'text-center'); ?>
 
-            <div class="gallery-grid">
-                <?php if (!empty($gallery_images)): ?>
-                    <?php foreach ($gallery_images as $index => $image): ?>
-                        <div class="gallery-item" data-aos="fade-up" data-aos-delay="<?php echo $index * 100; ?>">
-                            <img src="<?php echo htmlspecialchars($image['image_path']); ?>" alt="<?php echo htmlspecialchars($image['caption']); ?>" loading="lazy">
-                            <div class="gallery-overlay">
-                                <p class="gallery-caption"><?php echo htmlspecialchars($image['caption']); ?></p>
+        <!-- Passalacqua-Inspired Editorial Restaurant Gallery Grid -->
+        <section class="editorial-gallery-section section-padding">
+            <div class="container">
+                <?php renderSectionHeader('restaurant_gallery', 'restaurant', [
+                    'label' => 'Visual Journey',
+                    'title' => 'Our Dining Spaces',
+                    'description' => 'From elegant interiors to breathtaking views, every detail creates the perfect ambiance'
+                ], 'text-center'); ?>
+                <div class="editorial-gallery-grid">
+                    <?php if (!empty($gallery_images)): ?>
+                        <?php foreach ($gallery_images as $index => $image): ?>
+                            <div class="editorial-gallery-item">
+                                <img src="<?php echo htmlspecialchars($image['image_path']); ?>" alt="<?php echo htmlspecialchars($image['caption']); ?>" loading="lazy">
+                                <div class="editorial-gallery-caption"><?php echo htmlspecialchars($image['caption']); ?></div>
                             </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <!-- Fallback images if database is empty -->
-                    <div class="gallery-item"><img src="images/restaurant/dining-area-1.jpg" alt="Elegant Dining Area" loading="lazy"><div class="gallery-overlay"><p class="gallery-caption">Elegant Dining Area</p></div></div>
-                    <div class="gallery-item"><img src="images/restaurant/dining-area-2.jpg" alt="Intimate Indoor Seating" loading="lazy"><div class="gallery-overlay"><p class="gallery-caption">Intimate Indoor Seating</p></div></div>
-                    <div class="gallery-item"><img src="images/restaurant/bar-area.jpg" alt="Premium Bar" loading="lazy"><div class="gallery-overlay"><p class="gallery-caption">Premium Bar</p></div></div>
-                    <div class="gallery-item"><img src="images/restaurant/food-platter.jpg" alt="Fresh Seafood" loading="lazy"><div class="gallery-overlay"><p class="gallery-caption">Fresh Seafood</p></div></div>
-                    <div class="gallery-item"><img src="images/restaurant/fine-dining.jpg" alt="Fine Dining Experience" loading="lazy"><div class="gallery-overlay"><p class="gallery-caption">Fine Dining Experience</p></div></div>
-                    <div class="gallery-item"><img src="images/restaurant/outdoor-terrace.jpg" alt="Alfresco Terrace" loading="lazy"><div class="gallery-overlay"><p class="gallery-caption">Alfresco Terrace</p></div></div>
-                <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <!-- Fallback images if database is empty -->
+                        <div class="editorial-gallery-item"><img src="images/restaurant/dining-area-1.jpg" alt="Elegant Dining Area" loading="lazy"><div class="editorial-gallery-caption">Elegant Dining Area</div></div>
+                        <div class="editorial-gallery-item"><img src="images/restaurant/dining-area-2.jpg" alt="Intimate Indoor Seating" loading="lazy"><div class="editorial-gallery-caption">Intimate Indoor Seating</div></div>
+                        <div class="editorial-gallery-item"><img src="images/restaurant/bar-area.jpg" alt="Premium Bar" loading="lazy"><div class="editorial-gallery-caption">Premium Bar</div></div>
+                        <div class="editorial-gallery-item"><img src="images/restaurant/food-platter.jpg" alt="Fresh Seafood" loading="lazy"><div class="editorial-gallery-caption">Fresh Seafood</div></div>
+                        <div class="editorial-gallery-item"><img src="images/restaurant/fine-dining.jpg" alt="Fine Dining Experience" loading="lazy"><div class="editorial-gallery-caption">Fine Dining Experience</div></div>
+                        <div class="editorial-gallery-item"><img src="images/restaurant/outdoor-terrace.jpg" alt="Alfresco Terrace" loading="lazy"><div class="editorial-gallery-caption">Alfresco Terrace</div></div>
+                    <?php endif; ?>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
     <!-- Menu Section -->
     <section class="restaurant-menu section-padding" style="background: var(--japandi-bg);">
@@ -792,33 +790,38 @@ try {
         </div>
     </section>
 
-    <!-- Experience Section -->
-    <section class="restaurant-experience section-padding">
-        <div class="container">
-            <div class="experience-grid">
-                <div class="experience-item" data-aos="fade-up">
-                    <div class="experience-icon"><i class="fas fa-utensils"></i></div>
-                    <h3>Fine Dining</h3>
-                    <p>Experience culinary artistry with our carefully crafted menu featuring local Malawian flavors and international cuisine</p>
-                </div>
-                <div class="experience-item" data-aos="fade-up" data-aos-delay="100">
-                    <div class="experience-icon"><i class="fas fa-cocktail"></i></div>
-                    <h3>Premium Bar</h3>
-                    <p>Enjoy handcrafted cocktails, fine wines, and premium spirits in our elegant bar lounge</p>
-                </div>
-                <div class="experience-item" data-aos="fade-up" data-aos-delay="200">
-                    <div class="experience-icon"><i class="fas fa-fish"></i></div>
-                    <h3>Fresh Local Ingredients</h3>
-                    <p>We source the freshest chambo from Lake Malawi and seasonal produce from local farms</p>
-                </div>
-                <div class="experience-item" data-aos="fade-up" data-aos-delay="300">
-                    <div class="experience-icon"><i class="fas fa-sun"></i></div>
-                    <h3>Alfresco Dining</h3>
-                    <p>Dine under the stars on our terrace with breathtaking views of the surrounding landscape</p>
+
+        <!-- Passalacqua-Inspired Editorial Restaurant Experience Section -->
+        <section class="editorial-experience-section section-padding">
+            <div class="container">
+                <div class="editorial-experience-grid">
+                    <div class="editorial-experience-item">
+                        <div class="editorial-experience-icon"><i class="fas fa-utensils"></i></div>
+                        <h3>Fine Dining</h3>
+                        <div class="editorial-experience-divider"></div>
+                        <p>Experience culinary artistry with our carefully crafted menu featuring local Malawian flavors and international cuisine</p>
+                    </div>
+                    <div class="editorial-experience-item">
+                        <div class="editorial-experience-icon"><i class="fas fa-cocktail"></i></div>
+                        <h3>Premium Bar</h3>
+                        <div class="editorial-experience-divider"></div>
+                        <p>Enjoy handcrafted cocktails, fine wines, and premium spirits in our elegant bar lounge</p>
+                    </div>
+                    <div class="editorial-experience-item">
+                        <div class="editorial-experience-icon"><i class="fas fa-fish"></i></div>
+                        <h3>Fresh Local Ingredients</h3>
+                        <div class="editorial-experience-divider"></div>
+                        <p>We source the freshest chambo from Lake Malawi and seasonal produce from local farms</p>
+                    </div>
+                    <div class="editorial-experience-item">
+                        <div class="editorial-experience-icon"><i class="fas fa-sun"></i></div>
+                        <h3>Alfresco Dining</h3>
+                        <div class="editorial-experience-divider"></div>
+                        <p>Dine under the stars on our terrace with breathtaking views of the surrounding landscape</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
     </main>
     <?php include 'includes/footer.php'; ?>

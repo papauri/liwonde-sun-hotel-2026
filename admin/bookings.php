@@ -621,10 +621,17 @@ try {
                r.name as room_name,
                COALESCE(p.payment_status, b.payment_status) as actual_payment_status,
                p.payment_reference,
-               p.payment_date as last_payment_date
+               p.payment_date as last_payment_date,
+               ir.room_number as individual_room_number,
+               ir.room_name as individual_room_name,
+               ir.floor as individual_room_floor,
+               ir.status as individual_room_status,
+               rt.name as room_type_name
         FROM bookings b
         LEFT JOIN rooms r ON b.room_id = r.id
         LEFT JOIN payments p ON b.id = p.booking_id AND p.booking_type = 'room' AND p.status = 'completed'
+        LEFT JOIN individual_rooms ir ON b.individual_room_id = ir.id
+        LEFT JOIN room_types rt ON ir.room_type_id = rt.id
         {$where_sql}
         ORDER BY b.created_at DESC
     ");
@@ -714,7 +721,7 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
     <title>All Bookings - Admin Panel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -831,7 +838,7 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             color: var(--deep-navy);
         }
         .quick-action.paid:hover {
-            background: #c19b2e;
+            background: #6B5740;
         }
         .empty-state {
             text-align: center;
@@ -885,7 +892,7 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             margin-bottom: 24px;
         }
         .page-title {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Cormorant Garamond', Georgia, serif;
             font-size: 28px;
             color: var(--navy);
         }
@@ -956,7 +963,7 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             border: none;
             border-bottom: 3px solid transparent;
             cursor: pointer;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Jost', sans-serif;
             font-size: 14px;
             font-weight: 500;
             color: #666;
@@ -1160,9 +1167,9 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                     <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999;"></i>
                     <input type="text" name="search" value="<?php echo htmlspecialchars($search_query); ?>" 
                            placeholder="Search by name, reference, email, phone..."
-                           style="width: 100%; padding: 10px 12px 10px 36px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                           style="width: 100%; padding: 10px 12px 10px 36px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Jost', sans-serif;">
                 </div>
-                <select name="filter_status" style="padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Poppins', sans-serif; min-width: 140px;">
+                <select name="filter_status" style="padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Jost', sans-serif; min-width: 140px;">
                     <option value="">All Statuses</option>
                     <option value="pending" <?php echo $filter_status === 'pending' ? 'selected' : ''; ?>>Pending</option>
                     <option value="tentative" <?php echo $filter_status === 'tentative' ? 'selected' : ''; ?>>Tentative</option>
@@ -1174,11 +1181,11 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                 </select>
                 <input type="date" name="date_from" value="<?php echo htmlspecialchars($filter_date_from); ?>" 
                        placeholder="From" title="Check-in from"
-                       style="padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                       style="padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Jost', sans-serif;">
                 <input type="date" name="date_to" value="<?php echo htmlspecialchars($filter_date_to); ?>" 
                        placeholder="To" title="Check-out to"
-                       style="padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Poppins', sans-serif;">
-                <button type="submit" style="padding: 10px 20px; background: var(--navy, #1a1a2e); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                       style="padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Jost', sans-serif;">
+                <button type="submit" style="padding: 10px 20px; background: var(--navy, #1A1A1A); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
                     <i class="fas fa-filter"></i> Filter
                 </button>
                 <?php if (!empty($search_query) || !empty($filter_status) || !empty($filter_date_from) || !empty($filter_date_to)): ?>
@@ -1323,7 +1330,7 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                                     $expires_soon = $hours_until_expiry <= 24 && $hours_until_expiry > 0;
                                 }
                             ?>
-                            <tr <?php echo $is_tentative ? 'style="background: linear-gradient(90deg, rgba(212, 175, 55, 0.05) 0%, white 10%);"' : ''; ?>>
+                            <tr <?php echo $is_tentative ? 'style="background: linear-gradient(90deg, rgba(139, 115, 85, 0.05) 0%, white 10%);"' : ''; ?>>
                                 <td>
                                     <strong><?php echo htmlspecialchars($booking['booking_reference']); ?></strong>
                                     <?php if ($is_tentative): ?>
@@ -1334,7 +1341,19 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                                     <?php echo htmlspecialchars($booking['guest_name']); ?>
                                     <br><small style="color: #666;"><?php echo htmlspecialchars($booking['guest_phone']); ?></small>
                                 </td>
-                                <td><?php echo htmlspecialchars($booking['room_name']); ?></td>
+                                <td>
+                                    <?php echo htmlspecialchars($booking['room_name']); ?>
+                                    <?php if ($booking['individual_room_id']): ?>
+                                        <br><small style="color: var(--gold); font-weight: 600;">
+                                            <i class="fas fa-door-open"></i>
+                                            <?php if ($booking['individual_room_name']): ?>
+                                                <?php echo htmlspecialchars($booking['individual_room_name']); ?>
+                                            <?php else: ?>
+                                                <?php echo htmlspecialchars($booking['room_type_name'] ?: 'Room'); ?> <?php echo htmlspecialchars($booking['individual_room_number']); ?>
+                                            <?php endif; ?>
+                                        </small>
+                                    <?php endif; ?>
+                                </td>
                                 <td><?php echo date('M d, Y', strtotime($booking['check_in_date'])); ?></td>
                                 <td><?php echo date('M d, Y', strtotime($booking['check_out_date'])); ?></td>
                                 <td><?php echo $booking['number_of_nights']; ?></td>
@@ -1396,6 +1415,15 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
                                     <button class="quick-action" style="background: #007bff; color: white;" onclick="openResendEmailModal(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars($booking['booking_reference'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($booking['status']); ?>')">
                                         <i class="fas fa-envelope"></i> Email
                                     </button>
+                                    <?php if (!$booking['individual_room_id'] && in_array($booking['status'], ['confirmed', 'pending', 'checked-in'])): ?>
+                                        <button class="quick-action" style="background: var(--gold); color: var(--deep-navy);" onclick="openQuickRoomAssignModal(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars($booking['booking_reference'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($booking['check_in_date']); ?>', '<?php echo htmlspecialchars($booking['check_out_date']); ?>', <?php echo $booking['room_id']; ?>)">
+                                            <i class="fas fa-door-open"></i> Assign Room
+                                        </button>
+                                    <?php elseif ($booking['individual_room_id']): ?>
+                                        <button class="quick-action" style="background: #28a745; color: white;" onclick="openQuickRoomAssignModal(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars($booking['booking_reference'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($booking['check_in_date']); ?>', '<?php echo htmlspecialchars($booking['check_out_date']); ?>', <?php echo $booking['room_id']; ?>)">
+                                            <i class="fas fa-edit"></i> Change Room
+                                        </button>
+                                    <?php endif; ?>
                                     <?php if ($is_tentative): ?>
                                         <button class="quick-action confirm" onclick="convertTentativeBooking(<?php echo $booking['id']; ?>)">
                                             <i class="fas fa-check"></i> Convert
@@ -2002,6 +2030,40 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
         </div>
     </div>
     
+    <!-- Quick Room Assignment Modal -->
+    <div id="quickRoomAssignModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-door-open"></i> Assign Room</h3>
+                <button class="close-modal" onclick="closeQuickRoomAssignModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label><i class="fas fa-hashtag"></i> Booking Reference:</label>
+                    <input type="text" id="quick_assign_booking_ref" class="form-control" readonly style="background: #f5f5f5;">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-calendar"></i> Dates:</label>
+                    <input type="text" id="quick_assign_dates" class="form-control" readonly style="background: #f5f5f5;">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-door-open"></i> Select Individual Room:</label>
+                    <div id="quick_assign_room_list" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
+                        <div style="text-align: center; padding: 20px; color: #666;">
+                            <i class="fas fa-spinner fa-spin"></i> Loading available rooms...
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="quick_assign_booking_id">
+                <input type="hidden" id="quick_assign_room_id">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeQuickRoomAssignModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitQuickRoomAssign()"><i class="fas fa-check"></i> Assign Room</button>
+            </div>
+        </div>
+    </div>
+    
     <style>
         @keyframes slideDown {
             from {
@@ -2053,7 +2115,7 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
         }
         
         .btn-primary:hover {
-            background: #c19b2e;
+            background: #6B5740;
             transform: translateY(-1px);
         }
         
@@ -2111,6 +2173,144 @@ $month_bookings = count(array_filter($bookings, fn($b) =>
             if (event.target === modal) {
                 closeResendEmailModal();
             }
+        }
+        
+        // Quick Room Assignment Modal Functions
+        let selectedRoomId = null;
+        
+        function openQuickRoomAssignModal(bookingId, bookingReference, checkIn, checkOut, roomId) {
+            document.getElementById('quickRoomAssignModal').style.display = 'flex';
+            document.getElementById('quick_assign_booking_id').value = bookingId;
+            document.getElementById('quick_assign_booking_ref').value = bookingReference;
+            document.getElementById('quick_assign_room_id').value = roomId;
+            
+            const checkInDate = new Date(checkIn);
+            const checkOutDate = new Date(checkOut);
+            document.getElementById('quick_assign_dates').value =
+                checkInDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+                ' - ' +
+                checkOutDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            
+            // Load available rooms
+            loadAvailableRooms(roomId, checkIn, checkOut, bookingId);
+        }
+        
+        function closeQuickRoomAssignModal() {
+            document.getElementById('quickRoomAssignModal').style.display = 'none';
+            document.getElementById('quick_assign_room_list').innerHTML = '';
+            selectedRoomId = null;
+        }
+        
+        function loadAvailableRooms(roomId, checkIn, checkOut, bookingId) {
+            const roomList = document.getElementById('quick_assign_room_list');
+            roomList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;"><i class="fas fa-spinner fa-spin"></i> Loading available rooms...</div>';
+            
+            // Fetch available individual rooms
+            fetch(`../api/availability.php?action=get_individual_rooms_availability&room_type_id=${roomId}&check_in=${checkIn}&check_out=${checkOut}&exclude_booking_id=${bookingId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.data && data.data.length > 0) {
+                        roomList.innerHTML = '';
+                        data.data.forEach(room => {
+                            const roomCard = document.createElement('div');
+                            roomCard.className = 'room-assign-card';
+                            roomCard.style.cssText = `
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                padding: 12px;
+                                margin-bottom: 8px;
+                                border: 2px solid ${room.available ? '#28a745' : '#dc3545'};
+                                border-radius: 8px;
+                                cursor: ${room.available ? 'pointer' : 'not-allowed'};
+                                background: ${room.available ? '#fff' : '#f8f8f8'};
+                                transition: all 0.2s;
+                            `;
+                            
+                            const roomName = room.room_name ||
+                                (room.room_type_name ? `${room.room_type_name} ${room.room_number}` : `Room ${room.room_number}`);
+                            
+                            roomCard.innerHTML = `
+                                <div>
+                                    <div style="font-weight: 600; color: var(--navy);">
+                                        <i class="fas fa-door-open" style="color: var(--gold);"></i>
+                                        ${roomName}
+                                    </div>
+                                    ${room.floor ? `<small style="color: #666;"><i class="fas fa-layer-group"></i> Floor: ${room.floor}</small>` : ''}
+                                </div>
+                                <div>
+                                    ${room.available
+                                        ? `<span class="badge" style="background: #d4edda; color: #155724; padding: 4px 12px; border-radius: 12px; font-size: 11px;">Available</span>`
+                                        : `<span class="badge" style="background: #f8d7da; color: #721c24; padding: 4px 12px; border-radius: 12px; font-size: 11px;">Unavailable</span>`
+                                    }
+                                </div>
+                            `;
+                            
+                            if (room.available) {
+                                roomCard.onclick = () => selectRoomForAssignment(room.id, roomCard);
+                            }
+                            
+                            roomList.appendChild(roomCard);
+                        });
+                    } else {
+                        roomList.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;"><i class="fas fa-exclamation-triangle"></i> No available rooms found for these dates.</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading rooms:', error);
+                    roomList.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;"><i class="fas fa-exclamation-circle"></i> Error loading available rooms.</div>';
+                });
+        }
+        
+        function selectRoomForAssignment(roomId, cardElement) {
+            selectedRoomId = roomId;
+            
+            // Remove previous selection
+            document.querySelectorAll('.room-assign-card').forEach(card => {
+                card.style.background = '#fff';
+                card.style.borderColor = card.dataset.available === 'true' ? '#28a745' : '#dc3545';
+            });
+            
+            // Highlight selected card
+            cardElement.style.background = '#fff8e1';
+            cardElement.style.borderColor = 'var(--gold)';
+        }
+        
+        function submitQuickRoomAssign() {
+            if (!selectedRoomId) {
+                Alert.show('Please select a room to assign.', 'error');
+                return;
+            }
+            
+            const bookingId = document.getElementById('quick_assign_booking_id').value;
+            
+            fetch('../api/individual-rooms.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'assign_to_booking',
+                    booking_id: bookingId,
+                    individual_room_id: selectedRoomId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Alert.show('Room assigned successfully!', 'success');
+                    closeQuickRoomAssignModal();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    Alert.show(data.message || 'Failed to assign room.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Alert.show('Error assigning room.', 'error');
+            });
         }
         
         // Form submission

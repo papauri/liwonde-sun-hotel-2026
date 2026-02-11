@@ -138,7 +138,7 @@ $currency_symbol = getSetting('currency_symbol');
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -647,7 +647,7 @@ $currency_symbol = getSetting('currency_symbol');
         <div style="overflow-x: auto;">
             <table class="table" style="width:100%; border-collapse:collapse; font-size:13px;">
                 <thead>
-                    <tr style="background:linear-gradient(135deg, var(--deep-navy, #05090F) 0%, var(--navy, #0A1929) 100%); color:white;">
+                    <tr style="background:linear-gradient(135deg, var(--deep-navy, #111111) 0%, var(--navy, #1A1A1A) 100%); color:white;">
                         <th style="padding:10px 14px; text-align:left; font-weight:600; font-size:12px; text-transform:uppercase;">Time</th>
                         <th style="padding:10px 14px; text-align:left; font-weight:600; font-size:12px; text-transform:uppercase;">User</th>
                         <th style="padding:10px 14px; text-align:left; font-weight:600; font-size:12px; text-transform:uppercase;">Action</th>

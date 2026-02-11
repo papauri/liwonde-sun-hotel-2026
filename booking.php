@@ -432,7 +432,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#0A1929">
+    <meta name="theme-color" content="#1A1A1A">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=yes">
@@ -440,7 +440,7 @@ try {
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/theme-dynamic.php">
     <link rel="stylesheet" href="css/header.css">
@@ -553,7 +553,7 @@ try {
             <div class="form-section">
                 <h3 class="form-section-title"><i class="fas fa-bed"></i> Selected Room</h3>
                 <div class="room-selection">
-                    <div class="room-option selected" style="border-color: var(--gold); background: rgba(212, 175, 55, 0.1);">
+                    <div class="room-option selected" style="border-color: var(--gold); background: rgba(139, 115, 85, 0.1);">
                         <input type="hidden" name="room_id" value="<?php echo $preselected_room['id']; ?>" id="preselectedRoomId">
                         <div class="room-info">
                             <h4><?php echo htmlspecialchars($preselected_room['name']); ?></h4>
@@ -660,7 +660,7 @@ try {
                                 <span style="font-size: 12px; color: #666;">1 Guest</span>
                                 <span id="singlePriceDisplay" style="font-weight: 600; color: var(--gold);">-</span>
                             </label>
-                            <label style="flex: 1; min-width: 100px; cursor: pointer; padding: 12px; border: 2px solid var(--gold); border-radius: 8px; text-align: center; transition: all 0.3s; background: rgba(212, 175, 55, 0.1); display: flex; flex-direction: column; align-items: center; gap: 5px;" id="doubleOccupancyLabel">
+                            <label style="flex: 1; min-width: 100px; cursor: pointer; padding: 12px; border: 2px solid var(--gold); border-radius: 8px; text-align: center; transition: all 0.3s; background: rgba(139, 115, 85, 0.1); display: flex; flex-direction: column; align-items: center; gap: 5px;" id="doubleOccupancyLabel">
                                 <input type="radio" name="occupancy_type" value="double" checked style="margin: 0;">
                                 <strong style="color: var(--navy);">Double</strong>
                                 <span style="font-size: 12px; color: #666;">2 Guests</span>
@@ -857,7 +857,7 @@ try {
                         const label = document.getElementById(type + 'OccupancyLabel');
                         if (label) {
                             label.style.borderColor = this.value === type ? 'var(--gold)' : '#ddd';
-                            label.style.background = this.value === type ? 'rgba(212, 175, 55, 0.1)' : 'white';
+                            label.style.background = this.value === type ? 'rgba(139, 115, 85, 0.1)' : 'white';
                         }
                     });
                 });

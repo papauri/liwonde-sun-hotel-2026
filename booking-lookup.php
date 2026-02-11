@@ -132,12 +132,12 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#0A1929">
+    <meta name="theme-color" content="#1A1A1A">
     <title>Check Booking Status | <?php echo htmlspecialchars($site_name); ?></title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/style.css">
@@ -146,7 +146,7 @@ try {
         .lookup-page { padding-top: 100px; min-height: 100vh; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); }
         .lookup-container { max-width: 700px; margin: 0 auto; padding: 0 20px 60px; }
         .lookup-header { text-align: center; margin-bottom: 40px; }
-        .lookup-header h1 { font-family: 'Playfair Display', serif; font-size: 36px; color: var(--navy); margin-bottom: 12px; }
+        .lookup-header h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 36px; color: var(--navy); margin-bottom: 12px; }
         .lookup-header p { color: #666; font-size: 16px; }
         .lookup-card {
             background: white; border-radius: 16px; padding: 40px;
@@ -156,7 +156,7 @@ try {
         .lookup-card label { display: block; font-weight: 600; color: var(--navy); margin-bottom: 8px; font-size: 14px; }
         .lookup-card .form-control {
             width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px;
-            font-size: 16px; font-family: 'Poppins', sans-serif; transition: border-color 0.3s;
+            font-size: 16px; font-family: 'Jost', sans-serif; transition: border-color 0.3s;
             box-sizing: border-box;
         }
         .lookup-card .form-control:focus { outline: none; border-color: var(--gold); }
@@ -165,7 +165,7 @@ try {
             color: var(--deep-navy); border: none; border-radius: 10px; font-size: 16px;
             font-weight: 700; cursor: pointer; transition: all 0.3s;
         }
-        .btn-lookup:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,175,55,0.4); }
+        .btn-lookup:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 115, 85,0.4); }
         
         .alert { padding: 16px 20px; border-radius: 10px; margin-bottom: 24px; font-size: 14px; }
         .alert-error { background: #f8d7da; color: #842029; border-left: 4px solid #dc3545; }
@@ -176,7 +176,7 @@ try {
             box-shadow: 0 10px 40px rgba(0,0,0,0.08); margin-top: 24px;
         }
         .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #f0f0f0; }
-        .result-header h2 { font-family: 'Playfair Display', serif; color: var(--navy); font-size: 22px; }
+        .result-header h2 { font-family: 'Cormorant Garamond', Georgia, serif; color: var(--navy); font-size: 22px; }
         .result-ref { font-family: 'Courier New', monospace; font-size: 18px; font-weight: 700; color: var(--gold); }
         
         .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
@@ -347,7 +347,7 @@ try {
                     <input type="hidden" name="booking_reference" value="<?php echo htmlspecialchars($booking['booking_reference']); ?>">
                     <input type="hidden" name="guest_email" value="<?php echo htmlspecialchars($booking['guest_email']); ?>">
                     <div class="form-group" style="margin-bottom: 12px;">
-                        <textarea name="cancel_reason" class="form-control" rows="2" placeholder="Reason for cancellation (optional)" style="width:100%; box-sizing:border-box; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Poppins', sans-serif;"></textarea>
+                        <textarea name="cancel_reason" class="form-control" rows="2" placeholder="Reason for cancellation (optional)" style="width:100%; box-sizing:border-box; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Jost', sans-serif;"></textarea>
                     </div>
                     <button type="submit" class="btn-cancel-booking">
                         <i class="fas fa-times"></i> Cancel My Booking

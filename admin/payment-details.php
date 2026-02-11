@@ -189,7 +189,7 @@ $dueAmount = $bookingTotalAmount - $paymentSummary['total_paid'];
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -414,7 +414,7 @@ $dueAmount = $bookingTotalAmount - $paymentSummary['total_paid'];
         
         /* Payment Summary Styles */
         .payment-summary-card {
-            background: linear-gradient(135deg, var(--navy) 0%, #1a3a5c 100%);
+            background: linear-gradient(135deg, var(--navy) 0%, #2A2A2A 100%);
             color: white;
             padding: 24px;
             border-radius: var(--radius-lg);
@@ -462,7 +462,7 @@ $dueAmount = $bookingTotalAmount - $paymentSummary['total_paid'];
         }
         
         .summary-item.total .summary-value {
-            color: #ffd700;
+            color: #8B7355;
         }
         
         .summary-item.paid .summary-value {

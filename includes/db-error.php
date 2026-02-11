@@ -20,7 +20,7 @@ try {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+            font-family: 'Jost', 'Segoe UI', Arial, sans-serif;
             margin: 0;
         }
         .db-error-container {
@@ -41,14 +41,14 @@ try {
         .zzz {
             font-size: 32px;
             color: #b0b8c1;
-            font-family: 'Playfair Display', serif;
+            font-family: 'Cormorant Garamond', Georgia, serif;
             margin-bottom: 8px;
             letter-spacing: 2px;
         }
         .db-error-title {
             font-size: 1.6rem;
-            font-family: 'Playfair Display', serif;
-            color: var(--navy, #0A1929);
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            color: var(--navy, #1A1A1A);
             font-weight: 700;
             margin-bottom: 10px;
         }
@@ -59,7 +59,7 @@ try {
             padding: 10px 0;
             font-size: 1.05rem;
             margin-bottom: 18px;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Jost', sans-serif;
         }
         .db-error-list {
             text-align: left;

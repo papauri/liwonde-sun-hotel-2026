@@ -16,12 +16,17 @@ if ($booking_id <= 0) {
 $message = '';
 $error = '';
 
-// Fetch booking
+// Fetch booking with individual room info
 try {
     $stmt = $pdo->prepare("
-        SELECT b.*, r.name as room_name, r.price_per_night, r.total_rooms, r.rooms_available, r.max_guests
+        SELECT b.*,
+               r.name as room_name, r.price_per_night, r.total_rooms, r.rooms_available, r.max_guests,
+               ir.id as individual_room_id, ir.room_number as individual_room_number, ir.room_name as individual_room_name,
+               rt.name as room_type_name, rt.id as room_type_id
         FROM bookings b
         LEFT JOIN rooms r ON b.room_id = r.id
+        LEFT JOIN individual_rooms ir ON b.individual_room_id = ir.id
+        LEFT JOIN room_types rt ON ir.room_type_id = rt.id
         WHERE b.id = ?
     ");
     $stmt->execute([$booking_id]);
@@ -34,6 +39,70 @@ try {
 } catch (PDOException $e) {
     $error = 'Error loading booking: ' . $e->getMessage();
     $booking = null;
+}
+
+// Fetch available individual rooms for this booking's dates
+$availableIndividualRooms = [];
+if ($booking && $booking['room_id']) {
+    $checkIn = $booking['check_in_date'];
+    $checkOut = $booking['check_out_date'];
+    
+    try {
+        // Get individual rooms for the booking's room type
+        $stmt = $pdo->prepare("
+            SELECT
+                ir.id,
+                ir.room_number,
+                ir.room_name,
+                ir.floor,
+                ir.status,
+                rt.name as room_type_name
+            FROM individual_rooms ir
+            JOIN room_types rt ON ir.room_type_id = rt.id
+            WHERE ir.is_active = 1
+            AND ir.room_type_id = (SELECT room_type_id FROM individual_rooms WHERE id = ?)
+            ORDER BY ir.floor ASC, ir.room_number ASC
+        ");
+        $stmt->execute([$booking['individual_room_id'] ?? 0]);
+        $allIndividualRooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Check availability for each room
+        foreach ($allIndividualRooms as $room) {
+            $isAvailable = true;
+            $reason = '';
+            
+            // Check status
+            if (!in_array($room['status'], ['available', 'cleaning'])) {
+                $isAvailable = false;
+                $reason = ucfirst(str_replace('_', ' ', $room['status']));
+            } else {
+                // Check for booking conflicts
+                $conflictStmt = $pdo->prepare("
+                    SELECT COUNT(*) as count, booking_reference
+                    FROM bookings
+                    WHERE individual_room_id = ?
+                    AND status IN ('pending', 'confirmed', 'checked-in')
+                    AND NOT (check_out_date <= ? OR check_in_date >= ?)
+                    AND id != ?
+                    LIMIT 1
+                ");
+                $conflictStmt->execute([$room['id'], $checkIn, $checkOut, $booking_id]);
+                $conflict = $conflictStmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($conflict['count'] > 0) {
+                    $isAvailable = false;
+                    $reason = 'Booked (' . $conflict['booking_reference'] . ')';
+                }
+            }
+            
+            $room['available'] = $isAvailable;
+            $room['unavailable_reason'] = $reason;
+            $availableIndividualRooms[] = $room;
+        }
+    } catch (PDOException $e) {
+        // Silently fail if individual rooms don't exist yet
+        $availableIndividualRooms = [];
+    }
 }
 
 // Fetch all active rooms
@@ -57,6 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $booking) {
         $error = 'Invalid security token. Please try again.';
     } else {
         $room_id = intval($_POST['room_id'] ?? $booking['room_id']);
+        $individual_room_id = !empty($_POST['individual_room_id']) ? intval($_POST['individual_room_id']) : null;
         $check_in = $_POST['check_in_date'] ?? $booking['check_in_date'];
         $check_out = $_POST['check_out_date'] ?? $booking['check_out_date'];
         $guest_name = trim($_POST['guest_name'] ?? '');
@@ -160,6 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $booking) {
                     $update = $pdo->prepare("
                         UPDATE bookings SET
                             room_id = ?,
+                            individual_room_id = ?,
                             guest_name = ?,
                             guest_email = ?,
                             guest_phone = ?,
@@ -177,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $booking) {
                         WHERE id = ?
                     ");
                     $update->execute([
-                        $room_id, $guest_name, $guest_email, $guest_phone, $guest_country,
+                        $room_id, $individual_room_id, $guest_name, $guest_email, $guest_phone, $guest_country,
                         $check_in, $check_out, $number_of_nights, $number_of_guests,
                         $occupancy_type, $total_amount, $vat_amount, $special_requests,
                         $admin_notes, $booking_id
@@ -229,7 +300,7 @@ if (!$booking) {
     <title>Edit Booking <?php echo htmlspecialchars($booking['booking_reference']); ?> - Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -242,7 +313,7 @@ if (!$booking) {
         .form-group label { display: block; font-weight: 600; margin-bottom: 6px; color: #333; font-size: 14px; }
         .form-group input, .form-group select, .form-group textarea { 
             width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; 
-            font-size: 14px; font-family: 'Poppins', sans-serif; box-sizing: border-box;
+            font-size: 14px; font-family: 'Jost', sans-serif; box-sizing: border-box;
         }
         .form-group textarea { resize: vertical; min-height: 80px; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
@@ -251,13 +322,68 @@ if (!$booking) {
         .form-full { grid-column: 1 / -1; }
         .btn-bar { display: flex; gap: 12px; margin-top: 24px; }
         .btn-save { padding: 12px 32px; background: var(--gold, #d4a843); color: var(--deep-navy, #0d0d1a); border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; }
-        .btn-save:hover { background: #c19b2e; }
+        .btn-save:hover { background: #6B5740; }
         .btn-back { padding: 12px 24px; background: #6c757d; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
         .btn-back:hover { background: #5a6268; }
         .booking-ref { font-size: 14px; color: #666; }
         .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
         .price-info { background: #f8f9fa; border-radius: 8px; padding: 16px; margin-top: 16px; }
         .price-info h4 { margin: 0 0 8px 0; font-size: 14px; color: #555; }
+        .individual-room-section {
+            background: #f0f7ff;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        .individual-room-section h4 {
+            margin: 0 0 12px 0;
+            color: #004085;
+            font-size: 14px;
+        }
+        .room-option {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .room-option:hover {
+            border-color: var(--gold, #8B7355);
+        }
+        .room-option.selected {
+            border-color: var(--gold, #8B7355);
+            background: #fffbf0;
+        }
+        .room-option.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #f8f9fa;
+        }
+        .room-option-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .room-option-title {
+            font-weight: 600;
+            color: var(--deep-navy, #1A1A1A);
+        }
+        .room-option-details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .room-option-status {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .status-available { background: #d4edda; color: #155724; }
+        .status-unavailable { background: #f8d7da; color: #721c24; }
         @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -268,7 +394,7 @@ if (!$booking) {
 <div class="content">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
-            <h1 style="font-family: 'Playfair Display', serif; color: var(--navy); margin: 0;">
+            <h1 style="font-family: 'Cormorant Garamond', Georgia, serif; color: var(--navy); margin: 0;">
                 Edit Booking
             </h1>
             <span class="booking-ref">
@@ -387,6 +513,49 @@ if (!$booking) {
                 </div>
             </div>
 
+            <?php if (!empty($availableIndividualRooms)): ?>
+            <div class="individual-room-section">
+                <h4><i class="fas fa-door-open"></i> Assign Specific Room (Optional)</h4>
+                <p style="font-size: 13px; color: #666; margin-bottom: 12px;">
+                    Select a specific individual room for this booking. Only available rooms are shown.
+                </p>
+                <input type="hidden" name="individual_room_id" id="individual_room_id" value="<?php echo $booking['individual_room_id'] ?? ''; ?>">
+                <div id="roomOptionsContainer">
+                    <?php foreach ($availableIndividualRooms as $room): ?>
+                        <div class="room-option <?php echo $room['available'] ? '' : 'disabled'; ?> <?php echo ($booking['individual_room_id'] == $room['id']) ? 'selected' : ''; ?>"
+                             data-room-id="<?php echo $room['id']; ?>"
+                             onclick="<?php echo $room['available'] ? 'selectRoom(' . $room['id'] . ')' : ''; ?>">
+                            <div class="room-option-header">
+                                <div>
+                                    <div class="room-option-title">
+                                        <?php echo htmlspecialchars($room['room_number']); ?>
+                                        <?php if ($room['room_name']): ?>
+                                            - <?php echo htmlspecialchars($room['room_name']); ?>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="room-option-details">
+                                        Floor <?php echo htmlspecialchars($room['floor'] ?? 'N/A'); ?>
+                                        <?php if (!$room['available']): ?>
+                                            • <?php echo htmlspecialchars($room['unavailable_reason']); ?>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <span class="room-option-status <?php echo $room['available'] ? 'status-available' : 'status-unavailable'; ?>">
+                                    <?php echo $room['available'] ? 'Available' : 'Unavailable'; ?>
+                                </span>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php if ($booking['individual_room_id']): ?>
+                    <p style="font-size: 12px; color: #666; margin-top: 8px;">
+                        <i class="fas fa-info-circle"></i> Currently assigned:
+                        <strong><?php echo htmlspecialchars($booking['individual_room_number'] ?? ''); ?></strong>
+                    </p>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
             <div class="price-info" id="priceCalculation">
                 <h4><i class="fas fa-calculator"></i> Price Calculation</h4>
                 <div id="priceBreakdown">
@@ -470,6 +639,17 @@ if (!$booking) {
             guestsInput.value = maxGuests;
         }
     });
+
+    // Individual room selection
+    function selectRoom(roomId) {
+        document.getElementById('individual_room_id').value = roomId;
+        
+        // Update visual selection
+        document.querySelectorAll('.room-option').forEach(option => {
+            option.classList.remove('selected');
+        });
+        document.querySelector('.room-option[data-room-id="' + roomId + '"]')?.classList.add('selected');
+    }
 </script>
 
 <script src="js/admin-components.js"></script>

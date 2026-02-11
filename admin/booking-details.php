@@ -235,10 +235,17 @@ try {
                p.payment_amount,
                p.vat_rate,
                p.vat_amount,
-               p.total_amount as payment_total_with_vat
+               p.total_amount as payment_total_with_vat,
+               ir.room_number as individual_room_number,
+               ir.room_name as individual_room_name,
+               ir.floor as individual_room_floor,
+               ir.status as individual_room_status,
+               rt.name as room_type_name
         FROM bookings b
         JOIN rooms r ON b.room_id = r.id
         LEFT JOIN payments p ON b.id = p.booking_id AND p.booking_type = 'room' AND p.status = 'completed'
+        LEFT JOIN individual_rooms ir ON b.individual_room_id = ir.id
+        LEFT JOIN room_types rt ON ir.room_type_id = rt.id
         WHERE b.id = ?
     ");
     $stmt->execute([$booking_id]);
@@ -371,7 +378,7 @@ $currency_symbol = getSetting('currency_symbol');
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -401,7 +408,7 @@ $currency_symbol = getSetting('currency_symbol');
             border-bottom: 2px solid #f0f0f0;
         }
         .card-header h2 {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Cormorant Garamond', Georgia, serif;
             font-size: 24px;
             color: var(--navy);
         }
@@ -508,7 +515,7 @@ $currency_symbol = getSetting('currency_symbol');
         .tentative-info .expires-at {
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid rgba(212, 175, 55, 0.3);
+            border-top: 1px solid rgba(139, 115, 85, 0.3);
             font-weight: 600;
             color: var(--navy);
         }
@@ -574,7 +581,7 @@ $currency_symbol = getSetting('currency_symbol');
             padding: 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Jost', sans-serif;
             font-size: 14px;
             resize: vertical;
             min-height: 80px;
@@ -646,6 +653,34 @@ $currency_symbol = getSetting('currency_symbol');
                     <label>Room</label>
                     <div class="value"><?php echo htmlspecialchars($booking['room_name']); ?></div>
                 </div>
+                <?php if ($booking['individual_room_id']): ?>
+                <div class="detail-item">
+                    <label>Assigned Room</label>
+                    <div class="value">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-door-open" style="color: var(--gold);"></i>
+                            <span>
+                                <?php if ($booking['individual_room_name']): ?>
+                                    <?php echo htmlspecialchars($booking['individual_room_name']); ?>
+                                <?php else: ?>
+                                    <?php echo htmlspecialchars($booking['room_type_name'] ?: 'Room'); ?> <?php echo htmlspecialchars($booking['individual_room_number']); ?>
+                                <?php endif; ?>
+                            </span>
+                        </div>
+                        <?php if ($booking['individual_room_floor']): ?>
+                        <small style="color: #666; font-size: 12px; display: block; margin-top: 4px;">
+                            <i class="fas fa-layer-group"></i> Floor: <?php echo htmlspecialchars($booking['individual_room_floor']); ?>
+                        </small>
+                        <?php endif; ?>
+                        <small style="color: #666; font-size: 12px; display: block; margin-top: 2px;">
+                            <i class="fas fa-info-circle"></i> Status:
+                            <span class="status-badge status-<?php echo $booking['individual_room_status']; ?>" style="font-size: 10px; padding: 2px 8px;">
+                                <?php echo ucfirst($booking['individual_room_status']); ?>
+                            </span>
+                        </small>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <div class="detail-item">
                     <label>Number of Guests</label>
                     <div class="value"><?php echo $booking['number_of_guests']; ?></div>

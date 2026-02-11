@@ -106,7 +106,7 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
     <title>Booking Settings - Admin Panel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -125,9 +125,9 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
             margin-bottom: 30px;
         }
         .settings-card h2 {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Cormorant Garamond', Georgia, serif;
             font-size: 22px;
-            color: #0A1929;
+            color: #1A1A1A;
             margin-top: 0;
             margin-bottom: 20px;
             padding-bottom: 15px;
@@ -139,7 +139,7 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
         .form-group label {
             display: block;
             font-weight: 600;
-            color: #0A1929;
+            color: #1A1A1A;
             margin-bottom: 8px;
             font-size: 14px;
         }
@@ -154,8 +154,8 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
         }
         .form-control:focus {
             outline: none;
-            border-color: #D4AF37;
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+            border-color: #8B7355;
+            box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.1);
         }
         .help-text {
             color: #666;
@@ -164,11 +164,11 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
             line-height: 1.5;
         }
         .help-text i {
-            color: #D4AF37;
+            color: #8B7355;
             margin-right: 5px;
         }
         .current-value {
-            background: linear-gradient(135deg, #0A1929 0%, #1a2a3a 100%);
+            background: linear-gradient(135deg, #1A1A1A 0%, #222222 100%);
             color: white;
             padding: 20px;
             border-radius: 8px;
@@ -179,7 +179,7 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
         }
         .current-value i {
             font-size: 32px;
-            color: #D4AF37;
+            color: #8B7355;
         }
         .current-value-info h3 {
             margin: 0 0 5px 0;
@@ -189,12 +189,12 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
         .current-value-info .value {
             font-size: 32px;
             font-weight: 700;
-            color: #D4AF37;
+            color: #8B7355;
         }
         .btn-submit {
             padding: 12px 30px;
-            background: linear-gradient(135deg, #D4AF37 0%, #c49b2e 100%);
-            color: #0A1929;
+            background: linear-gradient(135deg, #8B7355 0%, #c49b2e 100%);
+            color: #1A1A1A;
             border: none;
             border-radius: 8px;
             font-size: 15px;
@@ -204,20 +204,20 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
         }
         .btn-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 6px 20px rgba(139, 115, 85, 0.4);
         }
         .back-link {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: #0A1929;
+            color: #1A1A1A;
             text-decoration: none;
             font-weight: 500;
             margin-bottom: 15px;
             transition: color 0.3s ease;
         }
         .back-link:hover {
-            color: #D4AF37;
+            color: #8B7355;
         }
         .info-box {
             background: #e3f2fd;
@@ -258,7 +258,7 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
 
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-cog" style="color: #D4AF37; margin-right: 10px;"></i>
+                <i class="fas fa-cog" style="color: #8B7355; margin-right: 10px;"></i>
                 Booking Settings
             </h1>
         </div>
@@ -278,7 +278,7 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
         <?php endif; ?>
 
         <div class="settings-card">
-            <h2><i class="fas fa-calendar-alt" style="color: #D4AF37;"></i> Advance Booking Configuration</h2>
+            <h2><i class="fas fa-calendar-alt" style="color: #8B7355;"></i> Advance Booking Configuration</h2>
 
             <div class="current-value">
                 <i class="fas fa-clock"></i>
@@ -323,7 +323,7 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
         </div>
 
         <div class="settings-card">
-            <h2><i class="fas fa-envelope" style="color: #D4AF37;"></i> Email Configuration</h2>
+            <h2><i class="fas fa-envelope" style="color: #8B7355;"></i> Email Configuration</h2>
             
             <?php
             // Get current email settings
@@ -337,7 +337,7 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
             <form method="POST" action="booking-settings.php">
                 <input type="hidden" name="email_settings" value="1">
                 
-                <h3 style="color: #0A1929; margin-top: 25px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0;">
+                <h3 style="color: #1A1A1A; margin-top: 25px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0;">
                     <i class="fas fa-server"></i> SMTP Server Settings
                 </h3>
                 
@@ -412,7 +412,7 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
                     </p>
                 </div>
                 
-                <h3 style="color: #0A1929; margin-top: 30px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0;">
+                <h3 style="color: #1A1A1A; margin-top: 30px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0;">
                     <i class="fas fa-user"></i> Email Identity
                 </h3>
                 
@@ -457,7 +457,7 @@ $current_max_days = (int)getSetting('max_advance_booking_days', 30);
                     </p>
                 </div>
                 
-                <h3 style="color: #0A1929; margin-top: 30px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0;">
+                <h3 style="color: #1A1A1A; margin-top: 30px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0;">
                     <i class="fas fa-sliders-h"></i> Email Settings
                 </h3>
                 

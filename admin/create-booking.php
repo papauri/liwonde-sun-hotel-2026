@@ -26,11 +26,27 @@ try {
 
 $currency_symbol = getSetting('currency_symbol', 'MK');
 
+// Fetch available individual rooms
+try {
+    $individual_rooms_stmt = $pdo->query("
+        SELECT ir.id, ir.room_number, ir.room_name, ir.room_type_id, ir.status,
+               r.name as room_type_name, r.price_per_night
+        FROM individual_rooms ir
+        JOIN rooms r ON ir.room_type_id = r.id
+        WHERE ir.is_active = 1
+        ORDER BY r.name, ir.room_number
+    ");
+    $all_individual_rooms = $individual_rooms_stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $all_individual_rooms = [];
+}
+
 // Handle booking creation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_booking'])) {
     try {
         // Validate inputs
         $room_id = (int)($_POST['room_id'] ?? 0);
+        $individual_room_id = !empty($_POST['individual_room_id']) ? (int)$_POST['individual_room_id'] : null;
         $guest_name = trim($_POST['guest_name'] ?? '');
         $guest_email = trim($_POST['guest_email'] ?? '');
         $guest_phone = trim($_POST['guest_phone'] ?? '');
@@ -81,6 +97,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_booking'])) {
             throw new Exception('Number of guests (' . $number_of_guests . ') exceeds room capacity of ' . $room['max_guests'] . ' guests. Please reduce guests or book an additional room.');
         }
         
+        // Validate individual room if specified
+        if ($individual_room_id) {
+            $ir_check = $pdo->prepare("
+                SELECT ir.id, ir.room_type_id, ir.status
+                FROM individual_rooms ir
+                WHERE ir.id = ? AND ir.is_active = 1
+            ");
+            $ir_check->execute([$individual_room_id]);
+            $ir_room = $ir_check->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$ir_room) {
+                throw new Exception('Invalid individual room selected');
+            }
+            
+            if ($ir_room['room_type_id'] != $room_id) {
+                throw new Exception('Individual room does not match selected room type');
+            }
+            
+            if ($ir_room['status'] !== 'available' && $booking_status === 'confirmed') {
+                throw new Exception('Selected room is not available. Current status: ' . $ir_room['status']);
+            }
+        }
+        
         // Calculate pricing
         if ($occupancy_type === 'single' && !empty($room['price_single_occupancy'])) {
             $room_price = $room['price_single_occupancy'];
@@ -124,21 +163,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_booking'])) {
         
         $insert = $pdo->prepare("
             INSERT INTO bookings (
-                booking_reference, room_id, guest_name, guest_email, guest_phone,
+                booking_reference, room_id, individual_room_id, guest_name, guest_email, guest_phone,
                 guest_country, guest_address, number_of_guests, check_in_date,
                 check_out_date, number_of_nights, total_amount, special_requests, status,
                 payment_status, is_tentative, tentative_expires_at, occupancy_type, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
         
         $insert->execute([
-            $booking_reference, $room_id, $guest_name, $guest_email, $guest_phone,
+            $booking_reference, $room_id, $individual_room_id, $guest_name, $guest_email, $guest_phone,
             $guest_country, $guest_address, $number_of_guests, $check_in_date,
             $check_out_date, $number_of_nights, $total_amount, $special_requests,
             $booking_status, $payment_status, $is_tentative, $tentative_expires_at, $occupancy_type
         ]);
         
         $new_booking_id = $pdo->lastInsertId();
+        
+        // Update individual room status if assigned
+        if ($individual_room_id && $booking_status === 'confirmed') {
+            $pdo->prepare("UPDATE individual_rooms SET status = 'occupied' WHERE id = ?")->execute([$individual_room_id]);
+            
+            // Log the status change
+            $logStmt = $pdo->prepare("
+                INSERT INTO room_maintenance_log (individual_room_id, status_from, status_to, reason, performed_by)
+                VALUES (?, 'available', 'occupied', ?, ?)
+            ");
+            $logStmt->execute([$individual_room_id, 'Booking: ' . $booking_reference, $user['id']]);
+        }
         
         // If confirmed, decrement room availability
         if ($booking_status === 'confirmed') {
@@ -254,7 +305,7 @@ $rooms_json = json_encode(array_map(function($r) {
     <title>Create Booking - Admin Panel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -263,7 +314,7 @@ $rooms_json = json_encode(array_map(function($r) {
     <style>
         .create-booking-container { max-width: 900px; margin: 0 auto; padding: 20px; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .page-title { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--navy); }
+        .page-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 28px; color: var(--navy); }
         .form-card { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 24px; }
         .form-card h3 { color: var(--navy); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--gold); font-size: 18px; }
         .form-card h3 i { color: var(--gold); margin-right: 8px; }
@@ -274,7 +325,7 @@ $rooms_json = json_encode(array_map(function($r) {
         .form-group label .required { color: #dc3545; }
         .form-group input, .form-group select, .form-group textarea {
             width: 100%; padding: 10px 14px; border: 2px solid #e0e0e0; border-radius: 8px;
-            font-size: 14px; font-family: 'Poppins', sans-serif; box-sizing: border-box; transition: border-color 0.3s;
+            font-size: 14px; font-family: 'Jost', sans-serif; box-sizing: border-box; transition: border-color 0.3s;
         }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--gold); }
         .summary-box { background: #f8f9fa; border-radius: 10px; padding: 20px; border-left: 4px solid var(--gold); }
@@ -285,7 +336,7 @@ $rooms_json = json_encode(array_map(function($r) {
             color: var(--deep-navy); border: none; border-radius: 10px; font-size: 16px;
             font-weight: 700; cursor: pointer; transition: all 0.3s; width: 100%;
         }
-        .btn-create:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,175,55,0.4); }
+        .btn-create:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 115, 85,0.4); }
         .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
         .checkbox-group input[type="checkbox"] { width: auto; }
         .alert { padding: 16px; border-radius: 8px; margin-bottom: 20px; }
@@ -336,6 +387,34 @@ $rooms_json = json_encode(array_map(function($r) {
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label>Individual Room (Optional)</label>
+                            <select name="individual_room_id" id="individualRoomSelect">
+                                <option value="">-- Auto-assign --</option>
+                                <?php 
+                                $grouped_rooms = [];
+                                foreach ($all_individual_rooms as $ir) {
+                                    $grouped_rooms[$ir['room_type_name']][] = $ir;
+                                }
+                                foreach ($grouped_rooms as $type_name => $rooms_list): 
+                                ?>
+                                    <optgroup label="<?php echo htmlspecialchars($type_name); ?>">
+                                        <?php foreach ($rooms_list as $ir): ?>
+                                            <option value="<?php echo $ir['id']; ?>" 
+                                                    data-room-type-id="<?php echo $ir['room_type_id']; ?>"
+                                                    data-status="<?php echo $ir['status']; ?>"
+                                                    <?php echo ($ir['status'] !== 'available') ? 'disabled' : ''; ?>>
+                                                <?php echo htmlspecialchars($ir['room_number'] . ' - ' . ($ir['room_name'] ?: $ir['room_number'])); ?>
+                                                <?php echo ($ir['status'] !== 'available') ? ' (' . ucfirst($ir['status']) . ')' : ''; ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </optgroup>
+                                <?php endforeach; ?>
+                            </select>
+                            <small style="color: #666;">Assign to a specific room, or leave blank for auto-assignment</small>
+                        </div>
+                    </div>
+                    <div class="form-row">
                         <div class="form-group">
                             <label>Occupancy Type</label>
                             <select name="occupancy_type" id="occupancyType" onchange="calculateTotal()">
@@ -455,6 +534,10 @@ $rooms_json = json_encode(array_map(function($r) {
                             <span id="sumRoom">--</span>
                         </div>
                         <div class="summary-row">
+                            <span>Individual Room</span>
+                            <span id="sumIndividualRoom">--</span>
+                        </div>
+                        <div class="summary-row">
                             <span>Rate per Night</span>
                             <span id="sumRate">--</span>
                         </div>
@@ -483,6 +566,30 @@ $rooms_json = json_encode(array_map(function($r) {
         function updateRoomInfo() {
             const roomId = parseInt(document.getElementById('roomSelect').value);
             const room = roomsData.find(r => r.id === roomId);
+            
+            // Update individual room dropdown filter
+            const irSelect = document.getElementById('individualRoomSelect');
+            Array.from(irSelect.options).forEach(opt => {
+                if (opt.value) {
+                    const optRoomTypeId = parseInt(opt.getAttribute('data-room-type-id'));
+                    if (roomId && optRoomTypeId !== roomId) {
+                        opt.disabled = true;
+                    } else if (roomId && opt.getAttribute('data-status') !== 'available') {
+                        opt.disabled = true;
+                    } else if (roomId) {
+                        opt.disabled = false;
+                    }
+                }
+            });
+            
+            // Reset individual room selection if it doesn't match
+            if (roomId && irSelect.value) {
+                const selectedOpt = irSelect.options[irSelect.selectedIndex];
+                if (selectedOpt && parseInt(selectedOpt.getAttribute('data-room-type-id')) !== roomId) {
+                    irSelect.value = '';
+                }
+            }
+            
             if (room) {
                 const guestsInput = document.getElementById('numGuests');
                 guestsInput.max = room.max_guests;
@@ -501,6 +608,15 @@ $rooms_json = json_encode(array_map(function($r) {
             const checkOut = document.getElementById('checkOutDate').value;
             const occupancy = document.getElementById('occupancyType').value;
             const priceOverride = document.getElementById('priceOverride').value;
+            const irSelect = document.getElementById('individualRoomSelect');
+            
+            // Update individual room display
+            if (irSelect.value) {
+                const selectedOpt = irSelect.options[irSelect.selectedIndex];
+                document.getElementById('sumIndividualRoom').textContent = selectedOpt.text;
+            } else {
+                document.getElementById('sumIndividualRoom').textContent = 'Auto-assign';
+            }
             
             if (!room || !checkIn || !checkOut) {
                 document.getElementById('sumRoom').textContent = '--';
@@ -530,6 +646,9 @@ $rooms_json = json_encode(array_map(function($r) {
             const status = document.getElementById('paymentStatus').value;
             document.getElementById('paymentMethodGroup').style.display = (status === 'paid') ? 'block' : 'none';
         }
+        
+        // Update summary when individual room changes
+        document.getElementById('individualRoomSelect').addEventListener('change', calculateTotal);
     </script>
     <script src="js/admin-components.js"></script>
     <script src="js/admin-mobile.js"></script>

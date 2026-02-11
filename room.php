@@ -188,7 +188,7 @@ try {
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/theme-dynamic.php">
     <link rel="stylesheet" href="css/header.css">
@@ -335,69 +335,42 @@ try {
         </div>
     </section>
 
-    <!-- Reviews Section -->
-    <section class="reviews-section" id="reviews" data-room-id="<?php echo $room['id']; ?>">
-        <div class="container">
-            <div class="reviews-section__header">
-                <h2 class="reviews-section__title">Guest Reviews</h2>
-                <a class="btn-write-review" href="submit-review.php?room_id=<?php echo $room['id']; ?>">
-                    <i class="fas fa-pen-fancy"></i>
-                    <span>Write a Review</span>
-                    <i class="fas fa-arrow-right btn-arrow"></i>
-                </a>
-            </div>
 
-            <!-- Rating Summary -->
-            <div class="rating-summary" id="ratingSummary">
-                <div class="rating-summary__loading">
-                    <i class="fas fa-spinner fa-spin"></i> Loading reviews...
+        <!-- Passalacqua-Inspired Editorial Reviews Section: Borderless, Large Serif Quotes, Gold Divider -->
+        <section class="editorial-testimonials-section" id="reviews" data-room-id="<?php echo $room['id']; ?>">
+            <div class="container">
+                <div class="editorial-testimonials-header">
+                    <h2 class="editorial-testimonials-title">Guest Reviews</h2>
+                    <a class="editorial-btn-write-review" href="submit-review.php?room_id=<?php echo $room['id']; ?>">
+                        <i class="fas fa-pen-fancy"></i>
+                        <span>Write a Review</span>
+                        <i class="fas fa-arrow-right btn-arrow"></i>
+                    </a>
                 </div>
-            </div>
-
-            <!-- Filter Options -->
-            <div class="reviews-filter" id="reviewsFilter" style="display: none;">
-                <div class="reviews-filter__label">Sort by:</div>
-                <div class="reviews-filter__options">
-                    <button class="reviews-filter__btn reviews-filter__btn--active" data-sort="newest">
-                        <i class="fas fa-clock"></i> Newest First
+                <div class="editorial-testimonials-grid" id="reviewsList">
+                    <div class="editorial-testimonial-card editorial-testimonial-loading">
+                        <div class="editorial-testimonial-quote">“</div>
+                        <p class="editorial-testimonial-text"><i class="fas fa-spinner fa-spin"></i> Loading reviews...</p>
+                    </div>
+                </div>
+                <div class="editorial-testimonials-pagination" id="reviewsPagination" style="display: none;">
+                    <button class="editorial-testimonials-pagination-btn editorial-testimonials-pagination-btn--prev" disabled>
+                        <i class="fas fa-chevron-left"></i> Previous
                     </button>
-                    <button class="reviews-filter__btn" data-sort="highest">
-                        <i class="fas fa-star"></i> Highest Rated
-                    </button>
-                    <button class="reviews-filter__btn" data-sort="lowest">
-                        <i class="fas fa-star-half-alt"></i> Lowest Rated
+                    <div class="editorial-testimonials-pagination-info">
+                        Page <span id="currentPage">1</span> of <span id="totalPages">1</span>
+                    </div>
+                    <button class="editorial-testimonials-pagination-btn editorial-testimonials-pagination-btn--next" disabled>
+                        Next <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
-            </div>
-
-            <!-- Reviews List -->
-            <div class="reviews-list" id="reviewsList">
-                <div class="reviews-list__loading">
-                    <i class="fas fa-spinner fa-spin"></i> Loading reviews...
+                <div class="editorial-testimonials-empty" id="reviewsEmpty" style="display: none;">
+                    <i class="fas fa-comment-slash"></i>
+                    <h3>No Reviews Yet</h3>
+                    <p>Be the first to share your experience!</p>
                 </div>
             </div>
-
-            <!-- Pagination -->
-            <div class="reviews-pagination" id="reviewsPagination" style="display: none;">
-                <button class="reviews-pagination__btn reviews-pagination__btn--prev" disabled>
-                    <i class="fas fa-chevron-left"></i> Previous
-                </button>
-                <div class="reviews-pagination__info">
-                    Page <span id="currentPage">1</span> of <span id="totalPages">1</span>
-                </div>
-                <button class="reviews-pagination__btn reviews-pagination__btn--next" disabled>
-                    Next <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-
-            <!-- Empty State -->
-            <div class="reviews-empty" id="reviewsEmpty" style="display: none;">
-                <i class="fas fa-comment-slash"></i>
-                <h3>No Reviews Yet</h3>
-                <p>Be the first to share your experience!</p>
-            </div>
-        </div>
-    </section>
+        </section>
 
     <!-- Footer -->
     <?php include 'includes/footer.php'; ?>

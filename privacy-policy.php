@@ -29,7 +29,7 @@ $seo_description = "Learn how $site_name collects, uses, and protects your perso
     <meta name="robots" content="index, follow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/header.css">
@@ -39,28 +39,28 @@ $seo_description = "Learn how $site_name collects, uses, and protects your perso
         .privacy-page { padding-top: 120px; padding-bottom: 80px; }
         .privacy-container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
         .privacy-header { text-align: center; margin-bottom: 48px; }
-        .privacy-header h1 { font-family: 'Playfair Display', serif; font-size: 36px; color: var(--navy, #1a1a2e); margin-bottom: 12px; }
+        .privacy-header h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 36px; color: var(--navy, #1A1A1A); margin-bottom: 12px; }
         .privacy-header .subtitle { color: #888; font-size: 14px; }
-        .privacy-header .last-updated { display: inline-block; background: rgba(212,175,55,0.1); color: var(--gold, #D4AF37); padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 12px; }
+        .privacy-header .last-updated { display: inline-block; background: rgba(139, 115, 85,0.1); color: var(--gold, #8B7355); padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 12px; }
 
         .privacy-nav { background: #fff; border-radius: 14px; padding: 24px; margin-bottom: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
         .privacy-nav h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin: 0 0 12px 0; }
         .privacy-nav ul { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .privacy-nav a { color: var(--navy, #1a1a2e); text-decoration: none; font-size: 14px; padding: 6px 0; display: block; transition: color 0.2s; }
-        .privacy-nav a:hover { color: var(--gold, #D4AF37); }
-        .privacy-nav a i { color: var(--gold, #D4AF37); margin-right: 8px; width: 16px; }
+        .privacy-nav a { color: var(--navy, #1A1A1A); text-decoration: none; font-size: 14px; padding: 6px 0; display: block; transition: color 0.2s; }
+        .privacy-nav a:hover { color: var(--gold, #8B7355); }
+        .privacy-nav a i { color: var(--gold, #8B7355); margin-right: 8px; width: 16px; }
 
         .policy-section { background: #fff; border-radius: 14px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-        .policy-section h2 { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--navy, #1a1a2e); margin: 0 0 16px 0; padding-bottom: 12px; border-bottom: 2px solid var(--gold, #D4AF37); }
-        .policy-section h2 i { color: var(--gold, #D4AF37); margin-right: 10px; }
-        .policy-section h3 { font-size: 16px; color: var(--navy, #1a1a2e); margin: 20px 0 8px 0; }
+        .policy-section h2 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; color: var(--navy, #1A1A1A); margin: 0 0 16px 0; padding-bottom: 12px; border-bottom: 2px solid var(--gold, #8B7355); }
+        .policy-section h2 i { color: var(--gold, #8B7355); margin-right: 10px; }
+        .policy-section h3 { font-size: 16px; color: var(--navy, #1A1A1A); margin: 20px 0 8px 0; }
         .policy-section p, .policy-section li { font-size: 14px; line-height: 1.8; color: #555; }
         .policy-section ul { padding-left: 20px; }
         .policy-section ul li { margin-bottom: 6px; }
-        .policy-section ul li::marker { color: var(--gold, #D4AF37); }
+        .policy-section ul li::marker { color: var(--gold, #8B7355); }
 
         .data-table { width: 100%; border-collapse: collapse; margin: 16px 0; border-radius: 10px; overflow: hidden; }
-        .data-table th { background: var(--navy, #1a1a2e); color: #fff; padding: 12px 16px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .data-table th { background: var(--navy, #1A1A1A); color: #fff; padding: 12px 16px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
         .data-table td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; font-size: 13px; color: #555; }
         .data-table tr:last-child td { border-bottom: none; }
         .data-table tr:nth-child(even) { background: #fafafa; }
@@ -70,13 +70,13 @@ $seo_description = "Learn how $site_name collects, uses, and protects your perso
         .badge-analytics { background: #e3f2fd; color: #1565c0; }
         .badge-preference { background: #fff3e0; color: #e65100; }
 
-        .contact-card { background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02)); border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; padding: 24px; margin-top: 16px; }
+        .contact-card { background: linear-gradient(135deg, rgba(139, 115, 85,0.08), rgba(139, 115, 85,0.02)); border: 1px solid rgba(139, 115, 85,0.2); border-radius: 12px; padding: 24px; margin-top: 16px; }
         .contact-card p { margin: 6px 0; }
-        .contact-card i { color: var(--gold, #D4AF37); margin-right: 8px; width: 16px; }
+        .contact-card i { color: var(--gold, #8B7355); margin-right: 8px; width: 16px; }
 
         .rights-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-        .right-card { background: #f9f9f9; border-radius: 10px; padding: 16px; border-left: 3px solid var(--gold, #D4AF37); }
-        .right-card h4 { margin: 0 0 4px 0; font-size: 14px; color: var(--navy, #1a1a2e); }
+        .right-card { background: #f9f9f9; border-radius: 10px; padding: 16px; border-left: 3px solid var(--gold, #8B7355); }
+        .right-card h4 { margin: 0 0 4px 0; font-size: 14px; color: var(--navy, #1A1A1A); }
         .right-card p { margin: 0; font-size: 12px; }
 
         @media (max-width: 768px) {

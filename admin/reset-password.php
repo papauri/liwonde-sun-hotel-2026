@@ -128,39 +128,39 @@ $site_name = getSetting('site_name');
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        :root { --gold: #D4AF37; --navy: #0A1929; --deep-navy: #050D14; }
+        :root { --gold: #8B7355; --navy: #1A1A1A; --deep-navy: #050D14; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 50%, #1a2f45 100%);
+            font-family: 'Jost', sans-serif;
+            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--navy) 50%, #252525 100%);
             min-height: 100vh; display: flex; align-items: center; justify-content: center;
             padding: 20px; position: relative; overflow: hidden;
         }
         body::before {
             content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(ellipse at 30% 20%, rgba(212, 175, 55, 0.06) 0%, transparent 50%),
-                        radial-gradient(ellipse at 70% 80%, rgba(212, 175, 55, 0.04) 0%, transparent 50%);
+            background: radial-gradient(ellipse at 30% 20%, rgba(139, 115, 85, 0.06) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(139, 115, 85, 0.04) 0%, transparent 50%);
             animation: bgFloat 15s ease-in-out infinite;
         }
         @keyframes bgFloat { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-2%, -1%); } }
         .login-container { width: 100%; max-width: 440px; position: relative; z-index: 1; }
         .login-card {
             background: white; border-radius: 24px; padding: 48px 40px;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(212, 175, 55, 0.1);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(139, 115, 85, 0.1);
         }
         .login-header { text-align: center; margin-bottom: 36px; }
         .login-header .logo {
             width: 80px; height: 80px;
             background: linear-gradient(135deg, var(--gold) 0%, #c49b2e 100%);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 20px; box-shadow: 0 8px 30px rgba(212, 175, 55, 0.35);
+            margin: 0 auto 20px; box-shadow: 0 8px 30px rgba(139, 115, 85, 0.35);
         }
         .login-header .logo i { font-size: 36px; color: var(--deep-navy); }
-        .login-header h1 { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--navy); margin-bottom: 8px; }
+            .login-header h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 24px; color: var(--navy); margin-bottom: 8px; }
         .login-header p { color: #888; font-size: 13px; line-height: 1.5; }
         .alert-danger {
             background: #fff0f0; border-left: 4px solid #dc3545; color: #721c24;
@@ -179,10 +179,10 @@ $site_name = getSetting('site_name');
         .form-control {
             width: 100%; padding: 14px 46px 14px 46px;
             border: 2px solid #e8e8e8; border-radius: 12px; font-size: 14px;
-            transition: all 0.3s; font-family: 'Poppins', sans-serif; background: #fafafa; color: var(--navy);
+            transition: all 0.3s; font-family: 'Jost', sans-serif; background: #fafafa; color: var(--navy);
         }
         .form-control::placeholder { color: #bbb; font-weight: 300; }
-        .form-control:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); background: #fff; }
+        .form-control:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(139, 115, 85, 0.1); background: #fff; }
         .form-control:hover { border-color: #ccc; }
         .password-toggle {
             position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
@@ -198,7 +198,7 @@ $site_name = getSetting('site_name');
             color: var(--deep-navy); border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
             cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 8px;
         }
-        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(212, 175, 55, 0.4); }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(139, 115, 85, 0.4); }
         .login-footer { margin-top: 28px; text-align: center; padding-top: 20px; border-top: 1px solid #f0f0f0; }
         .login-footer a { color: #888; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.3s; }
         .login-footer a:hover { color: var(--gold); }

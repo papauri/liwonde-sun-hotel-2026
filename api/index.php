@@ -285,6 +285,16 @@ try {
             }
             break;
             
+        case 'room-types':
+        case strpos($endpoint, 'room-types/') === 0:
+            require_once __DIR__ . '/room-types.php';
+            break;
+            
+        case 'individual-rooms':
+        case strpos($endpoint, 'individual-rooms/') === 0:
+            require_once __DIR__ . '/individual-rooms.php';
+            break;
+            
         case 'availability':
             if ($method === 'GET') {
                 require_once __DIR__ . '/availability.php';
@@ -324,6 +334,17 @@ try {
                 'version' => '1.0.0',
                 'endpoints' => [
                     'GET /api/rooms' => 'List available rooms',
+                    'GET /api/room-types' => 'List room types',
+                    'POST /api/room-types' => 'Create room type',
+                    'GET /api/room-types/{id}' => 'Get room type details',
+                    'PUT /api/room-types/{id}' => 'Update room type',
+                    'DELETE /api/room-types/{id}' => 'Delete room type',
+                    'GET /api/individual-rooms' => 'List individual rooms',
+                    'POST /api/individual-rooms' => 'Create individual room',
+                    'GET /api/individual-rooms/{id}' => 'Get individual room details',
+                    'PUT /api/individual-rooms/{id}' => 'Update individual room',
+                    'PUT /api/individual-rooms/{id}/status' => 'Update room status',
+                    'DELETE /api/individual-rooms/{id}' => 'Delete individual room',
                     'GET /api/availability' => 'Check room availability',
                     'POST /api/bookings' => 'Create a new booking',
                     'GET /api/bookings?id={id}' => 'Get booking status',

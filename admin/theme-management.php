@@ -26,11 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'revert_default') {
             // Revert to default Navy & Gold theme
             $default_colors = [
-                'navy_color' => '#0A1929',
-                'deep_navy_color' => '#05090F',
-                'gold_color' => '#D4AF37',
-                'dark_gold_color' => '#B8941F',
-                'accent_color' => '#D4AF37'
+                'navy_color' => '#1A1A1A',
+                'deep_navy_color' => '#111111',
+                'gold_color' => '#8B7355',
+                'dark_gold_color' => '#6B5740',
+                'accent_color' => '#8B7355'
             ];
             
             foreach ($default_colors as $key => $value) {
@@ -50,11 +50,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = true;
         } elseif ($action === 'save_colors') {
             $colors = [
-                'navy_color' => $_POST['navy_color'] ?? '#0A1929',
-                'deep_navy_color' => $_POST['deep_navy_color'] ?? '#05090F',
-                'gold_color' => $_POST['gold_color'] ?? '#D4AF37',
-                'dark_gold_color' => $_POST['dark_gold_color'] ?? '#B8941F',
-                'accent_color' => $_POST['accent_color'] ?? '#D4AF37'
+                'navy_color' => $_POST['navy_color'] ?? '#1A1A1A',
+                'deep_navy_color' => $_POST['deep_navy_color'] ?? '#111111',
+                'gold_color' => $_POST['gold_color'] ?? '#8B7355',
+                'dark_gold_color' => $_POST['dark_gold_color'] ?? '#6B5740',
+                'accent_color' => $_POST['accent_color'] ?? '#8B7355'
             ];
             
             foreach ($colors as $key => $value) {
@@ -76,32 +76,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $preset = $_POST['preset'] ?? '';
             $presets = [
                 'navy-gold' => [
-                    'navy_color' => '#0A1929',
-                    'deep_navy_color' => '#05090F',
-                    'gold_color' => '#D4AF37',
-                    'dark_gold_color' => '#B8941F',
-                    'accent_color' => '#D4AF37'
+                    'navy_color' => '#1A1A1A',
+                    'deep_navy_color' => '#111111',
+                    'gold_color' => '#8B7355',
+                    'dark_gold_color' => '#6B5740',
+                    'accent_color' => '#8B7355'
                 ],
                 'burgundy-gold' => [
                     'navy_color' => '#722F37',
                     'deep_navy_color' => '#4A1A21',
-                    'gold_color' => '#D4AF37',
-                    'dark_gold_color' => '#B8941F',
-                    'accent_color' => '#D4AF37'
+                    'gold_color' => '#8B7355',
+                    'dark_gold_color' => '#6B5740',
+                    'accent_color' => '#8B7355'
                 ],
                 'forest-green' => [
                     'navy_color' => '#1B4D3E',
                     'deep_navy_color' => '#0F2E24',
-                    'gold_color' => '#D4AF37',
-                    'dark_gold_color' => '#B8941F',
-                    'accent_color' => '#FFD700'
+                    'gold_color' => '#8B7355',
+                    'dark_gold_color' => '#6B5740',
+                    'accent_color' => '#8B7355'
                 ],
                 'midnight-purple' => [
                     'navy_color' => '#2E1A47',
                     'deep_navy_color' => '#1A0D2E',
-                    'gold_color' => '#D4AF37',
-                    'dark_gold_color' => '#B8941F',
-                    'accent_color' => '#E5D047'
+                    'gold_color' => '#8B7355',
+                    'dark_gold_color' => '#6B5740',
+                    'accent_color' => '#A08B6D'
+                ],
+                'modern-lakeside' => [
+                    'navy_color' => '#1A1A1A',
+                    'deep_navy_color' => '#111111',
+                    'gold_color' => '#8B7355',
+                    'dark_gold_color' => '#6B5740',
+                    'accent_color' => '#8B7355'
+                ],
+                'passalacqua-classic' => [
+                    'navy_color' => '#1A1A1A',
+                    'deep_navy_color' => '#111111',
+                    'gold_color' => '#8B7355',
+                    'dark_gold_color' => '#6B5740',
+                    'accent_color' => '#8B7355'
                 ]
             ];
             
@@ -132,11 +146,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Get current theme colors
 $current_colors = [
-    'navy_color' => '#0A1929',
-    'deep_navy_color' => '#05090F',
-    'gold_color' => '#D4AF37',
-    'dark_gold_color' => '#B8941F',
-    'accent_color' => '#D4AF37'
+    'navy_color' => '#1A1A1A',
+    'deep_navy_color' => '#111111',
+    'gold_color' => '#8B7355',
+    'dark_gold_color' => '#6B5740',
+    'accent_color' => '#8B7355'
 ];
 
 // Determine which preset is currently active
@@ -150,32 +164,46 @@ try {
     // Check if current colors match any preset
     $presets = [
         'navy-gold' => [
-            'navy_color' => '#0A1929',
-            'deep_navy_color' => '#05090F',
-            'gold_color' => '#D4AF37',
-            'dark_gold_color' => '#B8941F',
-            'accent_color' => '#D4AF37'
+            'navy_color' => '#1A1A1A',
+            'deep_navy_color' => '#111111',
+            'gold_color' => '#8B7355',
+            'dark_gold_color' => '#6B5740',
+            'accent_color' => '#8B7355'
         ],
         'burgundy-gold' => [
             'navy_color' => '#722F37',
             'deep_navy_color' => '#4A1A21',
-            'gold_color' => '#D4AF37',
-            'dark_gold_color' => '#B8941F',
-            'accent_color' => '#D4AF37'
+            'gold_color' => '#8B7355',
+            'dark_gold_color' => '#6B5740',
+            'accent_color' => '#8B7355'
         ],
         'forest-green' => [
             'navy_color' => '#1B4D3E',
             'deep_navy_color' => '#0F2E24',
-            'gold_color' => '#D4AF37',
-            'dark_gold_color' => '#B8941F',
-            'accent_color' => '#FFD700'
+            'gold_color' => '#8B7355',
+            'dark_gold_color' => '#6B5740',
+            'accent_color' => '#8B7355'
         ],
         'midnight-purple' => [
             'navy_color' => '#2E1A47',
             'deep_navy_color' => '#1A0D2E',
-            'gold_color' => '#D4AF37',
-            'dark_gold_color' => '#B8941F',
-            'accent_color' => '#E5D047'
+            'gold_color' => '#8B7355',
+            'dark_gold_color' => '#6B5740',
+            'accent_color' => '#A08B6D'
+        ],
+        'modern-lakeside' => [
+            'navy_color' => '#1A1A1A',
+            'deep_navy_color' => '#111111',
+            'gold_color' => '#8B7355',
+            'dark_gold_color' => '#6B5740',
+            'accent_color' => '#8B7355'
+        ],
+        'passalacqua-classic' => [
+            'navy_color' => '#1A1A1A',
+            'deep_navy_color' => '#111111',
+            'gold_color' => '#8B7355',
+            'dark_gold_color' => '#6B5740',
+            'accent_color' => '#8B7355'
         ]
     ];
     
@@ -205,7 +233,7 @@ try {
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/theme-dynamic.php">
@@ -297,7 +325,7 @@ try {
         
         .preset-card.active {
             border-color: var(--gold);
-            background: rgba(212, 175, 55, 0.05);
+            background: rgba(139, 115, 85, 0.05);
         }
         
         .preset-preview {
@@ -418,7 +446,7 @@ try {
                 <div class="preset-grid">
                     <div class="preset-card <?php echo $current_preset === 'navy-gold' ? 'active' : ''; ?>" onclick="selectPreset(this, 'navy-gold')">
                         <input type="radio" name="preset" value="navy-gold" style="display: none;" <?php echo $current_preset === 'navy-gold' ? 'checked' : ''; ?>>
-                        <div class="preset-preview" style="background: linear-gradient(135deg, #0A1929 50%, #D4AF37 50%);"></div>
+                        <div class="preset-preview" style="background: linear-gradient(135deg, #1A1A1A 50%, #8B7355 50%);"></div>
                         <div class="preset-name">Navy & Gold</div>
                         <div class="preset-description">Classic luxury elegance</div>
                         <?php if ($current_preset === 'navy-gold'): ?>
@@ -428,7 +456,7 @@ try {
                     
                     <div class="preset-card <?php echo $current_preset === 'burgundy-gold' ? 'active' : ''; ?>" onclick="selectPreset(this, 'burgundy-gold')">
                         <input type="radio" name="preset" value="burgundy-gold" style="display: none;" <?php echo $current_preset === 'burgundy-gold' ? 'checked' : ''; ?>>
-                        <div class="preset-preview" style="background: linear-gradient(135deg, #722F37 50%, #D4AF37 50%);"></div>
+                        <div class="preset-preview" style="background: linear-gradient(135deg, #722F37 50%, #8B7355 50%);"></div>
                         <div class="preset-name">Burgundy & Gold</div>
                         <div class="preset-description">Warm, sophisticated ambiance</div>
                         <?php if ($current_preset === 'burgundy-gold'): ?>
@@ -438,7 +466,7 @@ try {
                     
                     <div class="preset-card <?php echo $current_preset === 'forest-green' ? 'active' : ''; ?>" onclick="selectPreset(this, 'forest-green')">
                         <input type="radio" name="preset" value="forest-green" style="display: none;" <?php echo $current_preset === 'forest-green' ? 'checked' : ''; ?>>
-                        <div class="preset-preview" style="background: linear-gradient(135deg, #1B4D3E 50%, #D4AF37 50%);"></div>
+                        <div class="preset-preview" style="background: linear-gradient(135deg, #1B4D3E 50%, #8B7355 50%);"></div>
                         <div class="preset-name">Forest Green</div>
                         <div class="preset-description">Nature-inspired tranquility</div>
                         <?php if ($current_preset === 'forest-green'): ?>
@@ -448,10 +476,30 @@ try {
                     
                     <div class="preset-card <?php echo $current_preset === 'midnight-purple' ? 'active' : ''; ?>" onclick="selectPreset(this, 'midnight-purple')">
                         <input type="radio" name="preset" value="midnight-purple" style="display: none;" <?php echo $current_preset === 'midnight-purple' ? 'checked' : ''; ?>>
-                        <div class="preset-preview" style="background: linear-gradient(135deg, #2E1A47 50%, #E5D047 50%);"></div>
+                        <div class="preset-preview" style="background: linear-gradient(135deg, #2E1A47 50%, #A08B6D 50%);"></div>
                         <div class="preset-name">Midnight Purple</div>
                         <div class="preset-description">Modern, regal atmosphere</div>
                         <?php if ($current_preset === 'midnight-purple'): ?>
+                            <div style="margin-top: 8px; color: var(--gold); font-weight: 600; font-size: 12px;"><i class="fas fa-check-circle"></i> Active</div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <div class="preset-card <?php echo $current_preset === 'modern-lakeside' ? 'active' : ''; ?>" onclick="selectPreset(this, 'modern-lakeside')">
+                        <input type="radio" name="preset" value="modern-lakeside" style="display: none;" <?php echo $current_preset === 'modern-lakeside' ? 'checked' : ''; ?>>
+                        <div class="preset-preview" style="background: linear-gradient(135deg, #1A1A1A 50%, #8B7355 50%);"></div>
+                        <div class="preset-name">Modern Lakeside</div>
+                        <div class="preset-description">Charcoal & warm bronze aesthetic</div>
+                        <?php if ($current_preset === 'modern-lakeside'): ?>
+                            <div style="margin-top: 8px; color: var(--gold); font-weight: 600; font-size: 12px;"><i class="fas fa-check-circle"></i> Active</div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <div class="preset-card <?php echo $current_preset === 'passalacqua-classic' ? 'active' : ''; ?>" onclick="selectPreset(this, 'passalacqua-classic')">
+                        <input type="radio" name="preset" value="passalacqua-classic" style="display: none;" <?php echo $current_preset === 'passalacqua-classic' ? 'checked' : ''; ?>>
+                        <div class="preset-preview" style="background: linear-gradient(135deg, #1A1A1A 50%, #8B7355 50%);"></div>
+                        <div class="preset-name">Passalacqua Classic</div>
+                        <div class="preset-description">Italian luxury editorial style</div>
+                        <?php if ($current_preset === 'passalacqua-classic'): ?>
                             <div style="margin-top: 8px; color: var(--gold); font-weight: 600; font-size: 12px;"><i class="fas fa-check-circle"></i> Active</div>
                         <?php endif; ?>
                     </div>
@@ -595,10 +643,12 @@ try {
         
         // Update custom color inputs and preview with preset colors
         const presets = {
-            'navy-gold': { navy_color: '#0A1929', deep_navy_color: '#05090F', gold_color: '#D4AF37', dark_gold_color: '#B8941F', accent_color: '#D4AF37' },
-            'burgundy-gold': { navy_color: '#722F37', deep_navy_color: '#4A1A21', gold_color: '#D4AF37', dark_gold_color: '#B8941F', accent_color: '#D4AF37' },
-            'forest-green': { navy_color: '#1B4D3E', deep_navy_color: '#0F2E24', gold_color: '#D4AF37', dark_gold_color: '#B8941F', accent_color: '#FFD700' },
-            'midnight-purple': { navy_color: '#2E1A47', deep_navy_color: '#1A0D2E', gold_color: '#D4AF37', dark_gold_color: '#B8941F', accent_color: '#E5D047' }
+            'navy-gold': { navy_color: '#1A1A1A', deep_navy_color: '#111111', gold_color: '#8B7355', dark_gold_color: '#6B5740', accent_color: '#8B7355' },
+            'burgundy-gold': { navy_color: '#722F37', deep_navy_color: '#4A1A21', gold_color: '#8B7355', dark_gold_color: '#6B5740', accent_color: '#8B7355' },
+            'forest-green': { navy_color: '#1B4D3E', deep_navy_color: '#0F2E24', gold_color: '#8B7355', dark_gold_color: '#6B5740', accent_color: '#8B7355' },
+            'midnight-purple': { navy_color: '#2E1A47', deep_navy_color: '#1A0D2E', gold_color: '#8B7355', dark_gold_color: '#6B5740', accent_color: '#A08B6D' },
+            'modern-lakeside': { navy_color: '#1A1A1A', deep_navy_color: '#111111', gold_color: '#8B7355', dark_gold_color: '#6B5740', accent_color: '#8B7355' },
+            'passalacqua-classic': { navy_color: '#1A1A1A', deep_navy_color: '#111111', gold_color: '#8B7355', dark_gold_color: '#6B5740', accent_color: '#8B7355' }
         };
         
         if (presets[presetValue]) {
